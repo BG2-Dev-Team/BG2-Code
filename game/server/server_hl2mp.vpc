@@ -1,0 +1,178 @@
+//-----------------------------------------------------------------------------
+//	SERVER_HL2MP.VPC
+//
+//	Project Script
+//-----------------------------------------------------------------------------
+
+$Macro SRCDIR		"..\.."
+$Macro GAMENAME 	"hl2mp" [!$SOURCESDK]
+$Macro GAMENAME 	"mod_hl2mp" [$SOURCESDK]
+
+$Include "$SRCDIR\game\server\server_base.vpc"
+$Include "$SRCDIR\game\server\nav_mesh.vpc" [$SOURCESDK]
+
+$Configuration
+{
+	$Compiler
+	{
+		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\hl2,.\hl2,.\hl2mp,$SRCDIR\game\shared\hl2mp"
+		$PreprocessorDefinitions		"$BASE;HL2MP;HL2_DLL"
+	}
+}
+
+$Project "Server (HL2MP)"
+{
+	$Folder	"Source Files"
+	{
+		$File	"ai_relationship.cpp"
+
+		$File	"EntityFlame.h"
+		$File	"hl2\Func_Monitor.cpp"
+		$File	"h_cycler.cpp"
+		$File	"h_cycler.h"
+		$File	"monstermaker.cpp"
+		$File	"monstermaker.h"
+		$File	"physics_bone_follower.h"
+		$File	"$SRCDIR\game\shared\predicted_viewmodel.cpp"
+		$File	"$SRCDIR\game\shared\predicted_viewmodel.h"
+		$File	"$SRCDIR\game\shared\ragdoll_shared.h"
+		$File	"$SRCDIR\game\shared\solidsetdefaults.h"
+		$File	"$SRCDIR\game\shared\hl2\survival_gamerules.cpp"
+		$File	"team_objectiveresource.cpp"
+		$File	"team_objectiveresource.h"
+		$File	"team_spawnpoint.cpp"
+		$File	"team_spawnpoint.h"
+		$File	"team_control_point.cpp"
+		$File	"team_control_point.h"
+		$File	"team_control_point_master.cpp"
+		$File	"team_control_point_master.h"
+		$File	"team_control_point_round.cpp"
+		$File	"team_control_point_round.h"
+		$File	"team_train_watcher.cpp"
+		$File	"team_train_watcher.h"
+		$File	"$SRCDIR\game\shared\teamplayroundbased_gamerules.cpp"
+		$File	"$SRCDIR\game\shared\touchlink.h"
+		$File	"trigger_area_capture.cpp"
+		$File	"trigger_area_capture.h"
+		$File   "$SRCDIR\game\shared\teamplay_round_timer.cpp"
+		$File   "$SRCDIR\game\shared\teamplay_round_timer.h"
+
+		$Folder	"HL2 DLL"
+		{
+			$File	"hl2\ai_behavior_functank.cpp"
+			$File	"hl2\ai_behavior_functank.h"
+			$File	"hl2\ai_interactions.h"
+			$File	"hl2\antlion_dust.cpp"
+			$File	"hl2\antlion_dust.h"
+			$File	"hl2\ar2_explosion.cpp"
+			$File	"hl2\ar2_explosion.h"
+			$File	"basebludgeonweapon.cpp"
+			$File	"basebludgeonweapon.h"
+			$File	"hl2\basehlcombatweapon.cpp"
+			$File	"hl2\basehlcombatweapon.h"
+			$File	"$SRCDIR\game\shared\hl2\basehlcombatweapon_shared.cpp"
+			$File	"$SRCDIR\game\shared\hl2\basehlcombatweapon_shared.h"
+			$File	"hl2\cbasespriteprojectile.cpp"
+			$File	"hl2\cbasespriteprojectile.h"
+			$File	"$SRCDIR\game\shared\hl2\citadel_effects_shared.h"
+			$File	"hl2\energy_wave.h"
+			$File	"hl2\env_alyxemp.cpp"
+			$File	"$SRCDIR\game\shared\hl2\env_alyxemp_shared.h"
+			$File	"$SRCDIR\game\shared\hl2\env_headcrabcanister_shared.cpp"
+			$File	"$SRCDIR\game\shared\hl2\env_headcrabcanister_shared.h"
+			$File	"hl2\env_speaker.cpp"
+			$File	"hl2\env_starfield.cpp"
+			$File	"hl2\func_recharge.cpp"
+			$File	"hl2\func_tank.cpp"
+			$File	"hl2\func_tank.h"
+			$File	"hl2\hl2_ai_network.cpp"
+			$File	"hl2\hl2_eventlog.cpp"
+			$File	"$SRCDIR\game\shared\hl2\hl2_gamerules.cpp"
+			$File	"$SRCDIR\game\shared\hl2\hl2_gamerules.h"
+			$File	"hl2\hl2_player.cpp"
+			$File	"hl2\hl2_player.h"
+			$File	"$SRCDIR\game\shared\hl2\hl2_player_shared.h"
+			$File	"hl2\hl2_playerlocaldata.cpp"
+			$File	"hl2\hl2_playerlocaldata.h"
+			$File	"$SRCDIR\game\shared\hl2\hl2_shareddefs.h"
+			$File	"hl2\hl2_triggers.cpp"
+			$File	"$SRCDIR\game\shared\hl2\hl2_usermessages.cpp"
+			$File	"$SRCDIR\game\shared\hl2\hl_gamemovement.cpp"
+			$File	"$SRCDIR\game\shared\hl2\hl_gamemovement.h"
+			$File	"$SRCDIR\game\shared\hl2\hl_movedata.h"
+			$File	"hl2\hl_playermove.cpp"
+			$File	"hl2\info_teleporter_countdown.cpp"
+			$File	"hl2\item_ammo.cpp"
+			$File	"hl2\item_battery.cpp"
+			$File	"hl2\item_dynamic_resupply.cpp"
+			$File	"hl2\item_dynamic_resupply.h"
+			$File	"hl2\item_healthkit.cpp"
+			$File	"hl2\item_itemcrate.cpp"
+			$File	"hl2\item_suit.cpp"
+			$File	"hl2\look_door.cpp"
+			$File	"hl2\monster_dummy.cpp"
+			$File	"hl2\point_apc_controller.cpp"
+			$File	"hl2\rotorwash.cpp"
+			$File	"hl2\rotorwash.h"
+			$File	"hl2\script_intro.cpp"
+			$File	"hl2\script_intro.h"
+			$File	"$SRCDIR\game\shared\script_intro_shared.cpp"
+			$File	"weapon_cubemap.cpp" 
+		}
+
+		$Folder	"HL2MP"
+		{
+			$File	"hl2mp\hl2mp_bot_temp.cpp"
+			$File	"hl2mp\hl2mp_bot_temp.h"
+			$File	"hl2mp\hl2mp_client.cpp"
+			$File	"hl2mp\hl2mp_cvars.cpp"
+			$File	"hl2mp\hl2mp_gameinterface.cpp"
+			$File	"hl2mp\hl2mp_gameinterface.h"
+			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_gamerules.cpp"
+			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_gamerules.h"
+			$File	"hl2mp\hl2mp_player.cpp"
+			$File	"hl2mp\hl2mp_player.h"
+			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_player_shared.cpp"
+			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_player_shared.h"
+			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_weapon_parse.cpp"
+			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_weapon_parse.h"
+			
+			$Folder	"Weapons"
+			{
+				$File	"hl2mp\te_hl2mp_shotgun_shot.cpp"
+				$File	"hl2mp\te_hl2mp_shotgun_shot.h"
+				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.cpp"
+				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.h"
+				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.cpp"
+				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.h"
+				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.cpp"
+				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.cpp"
+				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.h"
+				$File	"$SRCDIR\game\shared\hl2mp\weapon_physcannon.cpp"
+				$File	"$SRCDIR\game\shared\hl2mp\weapon_physcannon.h"
+			}
+		}
+		$Folder	"BG2"
+		{
+			$File	"bg2\bg2_maptriggers.cpp"
+			$File	"bg2\bg2_maptriggers.h"
+			$File	"bg2\bullet.cpp"
+			$File	"bg2\bullet.h"
+			$File	"bg2\ctfflag.cpp"
+			$File	"bg2\ctfflag.h"
+			$File	"bg2\flag.cpp"
+			$File	"bg2\flag.h"
+			$File	"bg2\mapfilter.cpp"
+			$File	"bg2\mapfilter.h"
+			$File	"bg2\spawnpoint.h"
+			$File	"bg2\vcomm.cpp"
+			$File	"bg2\vcomm.h"
+			$File	"bg2\weapon_bg2base.cpp"
+			$File	"bg2\weapon_bg2base.h"
+			$File	"bg2\weapon_bg2weapons.cpp"
+			$File	"$SRCDIR\game\shared\bg2\ironsights.h"
+			$File	"sdk\sdk_bot_temp.cpp"
+			$File	"sdk\sdk_bot_temp.h"
+		}
+	}
+}
