@@ -31,6 +31,7 @@
 	//BG2 - <name of contributer>[ - <small description>]
 */
 
+#include "cbase.h"
 #include "weapon_bg2base.h"
 
 const float	LONG_RANGE = 1000 * 3 * 12,		//since damage decreases with range, we can pick a very long range for all weapons, say 1000 yards

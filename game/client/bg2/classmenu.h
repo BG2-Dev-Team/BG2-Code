@@ -134,7 +134,7 @@ public:
 	void PerformCommand( void );
 };
 
-// BG2 - VisualMelon - hacky little class to make togglebuttons behaive
+// BG2 - VisualMelon - hacky little class to make togglebuttons behave
 class CLazyToggleButton : public vgui::ToggleButton
 {
 protected:

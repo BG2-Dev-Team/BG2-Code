@@ -31,12 +31,13 @@
 	//BG2 - <name of contributer>[ - <small description>]
 */
 
+#include "cbase.h"
+
 #define LIFETIME	3.f //10.f //3 seconds is definitely long enough lifetime.
 
 #ifndef USE_ENTITY_BULLET
 #ifndef CLIENT_DLL
 
-#include "cbase.h"
 #include "te_effect_dispatch.h"
 #include "bullet.h"
 #include "ndebugoverlay.h"
@@ -44,13 +45,13 @@
 #include "ipredictionsystem.h"
 
 //Needed for linux compile.
-#ifdef min 
-#undef min 
-#endif 
-     
-#ifdef max 
-#undef max 
-#endif
+//#ifdef min 
+//#undef min 
+//#endif 
+//     
+//#ifdef max 
+//#undef max 
+//#endif
 //
 
 #include <vector>
@@ -97,7 +98,7 @@ public:
 		m_flConstantDamageRange = flConstantDamageRange;
 		m_flRelativeDrag = flRelativeDrag;
 		m_flMuzzleVelocity = flMuzzleVelocity;
-		m_flDyingTime = gpGlobals->curtime + LIFETIME;
+		m_flDyingTime = gpGlobals->curtime + /*LIFETIME*/ 3.0f;
 		m_bHasPlayedNearmiss = false;
 		m_pOwner = pOwner;
 		m_iBounces = 0;
@@ -182,53 +183,53 @@ private:
 
 	void DoNearmiss()
 	{
-#if 0
-		//8 units "safety margin" to make sure we passed our victim's head
-		/*float	margin = 8, 
-				headTolerance = 32,	//how close to the head must the bullet be?
-				desiredBacktrace = margin + speed * gpGlobals->frametime * 2;	//*2 due to frametime variations*/
-		if( !m_bHasPlayedNearmiss /*&& (GetAbsOrigin() - m_vTrajStart).LengthSqr() > desiredBacktrace*desiredBacktrace*/ )
-		{
-			//has gone desiredBacktrace units and not played nearmiss so far. trace backward
-			//find any player except the shooter who is within the margin and desiredBacktrace distance when projected
-			//onto the ray
-			//the ray in this case extends behind the bullet
-
-			//re-normalize because overshoot messed it up
-			vecDir = m_vVelocity;
-			vecDir.NormalizeInPlace();
-
-			for( int x = 1; x <= gpGlobals->maxClients; x++ )
-			{
-				CBasePlayer *pPlayer = UTIL_PlayerByIndex( x );
-
-				//only want connected, alive players
-				if( !pPlayer || !pPlayer->IsAlive() || x == m_pOwner->entindex() )
-					continue;
-
-				//distance along ray, behind the bullet
-				//float d = vecDir.Dot(GetAbsOrigin() - pPlayer->EyePosition());//
-
-				//Msg( "%i: %f < %f < %f\t", x, desiredBacktrace, d, margin );
-
-				//if( d < margin || d > desiredBacktrace )//
-				//	continue;//
-
-				//shortest distance to eyes from ray must be less than headTolerance
-				//if( (GetAbsOrigin() - pPlayer->EyePosition()).LengthSqr() - d*d < headTolerance*headTolerance )//
-				{
-					//make sure only this player hears it
-					CSingleUserRecipientFilter filter( pPlayer );
-					EmitSound( filter, entindex(), "Bullets.DefaultNearmiss" ); //By using the entindex of the bullet itself, you're making IT play the sound, not the player. -HairyPotter
-					m_bHasPlayedNearmiss = true;
-
-					//break;
-				}
-			}
-
-			//Msg( "\n" );
-		}
-#endif
+//#if 0
+//		//8 units "safety margin" to make sure we passed our victim's head
+//		/*float	margin = 8, 
+//				headTolerance = 32,	//how close to the head must the bullet be?
+//				desiredBacktrace = margin + speed * gpGlobals->frametime * 2;	//*2 due to frametime variations*/
+//		if( !m_bHasPlayedNearmiss /*&& (GetAbsOrigin() - m_vTrajStart).LengthSqr() > desiredBacktrace*desiredBacktrace*/ )
+//		{
+//			//has gone desiredBacktrace units and not played nearmiss so far. trace backward
+//			//find any player except the shooter who is within the margin and desiredBacktrace distance when projected
+//			//onto the ray
+//			//the ray in this case extends behind the bullet
+//
+//			//re-normalize because overshoot messed it up
+//			vecDir = m_vVelocity;
+//			vecDir.NormalizeInPlace();
+//
+//			for( int x = 1; x <= gpGlobals->maxClients; x++ )
+//			{
+//				CBasePlayer *pPlayer = UTIL_PlayerByIndex( x );
+//
+//				//only want connected, alive players
+//				if( !pPlayer || !pPlayer->IsAlive() || x == m_pOwner->entindex() )
+//					continue;
+//
+//				//distance along ray, behind the bullet
+//				//float d = vecDir.Dot(GetAbsOrigin() - pPlayer->EyePosition());//
+//
+//				//Msg( "%i: %f < %f < %f\t", x, desiredBacktrace, d, margin );
+//
+//				//if( d < margin || d > desiredBacktrace )//
+//				//	continue;//
+//
+//				//shortest distance to eyes from ray must be less than headTolerance
+//				//if( (GetAbsOrigin() - pPlayer->EyePosition()).LengthSqr() - d*d < headTolerance*headTolerance )//
+//				{
+//					//make sure only this player hears it
+//					CSingleUserRecipientFilter filter( pPlayer );
+//					EmitSound( filter, entindex(), "Bullets.DefaultNearmiss" ); //By using the entindex of the bullet itself, you're making IT play the sound, not the player. -HairyPotter
+//					m_bHasPlayedNearmiss = true;
+//
+//					//break;
+//				}
+//			}
+//
+//			//Msg( "\n" );
+//		}
+//#endif
 	}
 
 	//return true if we hit something, false otherwise
@@ -470,10 +471,10 @@ void UpdateBullets()
 	#include "c_hl2mp_player.h"
 	#include "c_te_effect_dispatch.h"
 
-	#include "cbase.h"
+	//#include "cbase.h"
 	#include "model_types.h"
-	#include "ClientEffectPrecacheSystem.h"
-	#include "fx.h"
+	//#include "ClientEffectPrecacheSystem.h"
+	//#include "fx.h"
 #else
 	#include "hl2mp_player.h"
 	#include "te_effect_dispatch.h"

@@ -33,4 +33,5 @@
 
 //vcomm.cpp - arrays holding data for voice command menus and stuff
 
+#include "cbase.h"
 #include "vcomm.h"

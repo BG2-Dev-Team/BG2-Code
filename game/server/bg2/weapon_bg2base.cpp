@@ -31,6 +31,8 @@
 	//BG2 - <name of contributer>[ - <small description>]
 */
 
+
+#include "cbase.h"
 #include "weapon_bg2base.h"
 #include "ammodef.h"
 
@@ -40,10 +42,10 @@
 	#include "hl2mp_gamerules.h"
 	#include "c_te_effect_dispatch.h"
 
-	#include "cbase.h"
+	//#include "cbase.h"
 	#include "model_types.h"
-	#include "ClientEffectPrecacheSystem.h"
-	#include "fx.h"
+	//#include "clienteffectprecachesystem.h"
+	//#include "fx.h"
 #else
 	#include "hl2mp_player.h"
 	#include "te_effect_dispatch.h"
