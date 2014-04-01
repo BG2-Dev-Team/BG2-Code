@@ -48,30 +48,67 @@ public:
 	virtual void PerformLayout()
 	{
 		// re-position
-		SetPos(vgui::scheme()->GetProportionalScaledValue(defaultX), vgui::scheme()->GetProportionalScaledValue(defaultY));
+		//SetPos(vgui::scheme()->GetProportionalScaledValue(defaultX), vgui::scheme()->GetProportionalScaledValue(defaultY));
  
 		BaseClass::PerformLayout();
 	}
 	void CMainMenu::PerformDefaultLayout()
 	{
-		m_pButtonBegin->SetPos(0, 0);
-		m_pImgBegin->SetPos(0,0);
-		m_pButtonLoad->SetPos(0, 40);
-		m_pImgLoad->SetPos(0,40);
-		m_pButtonOptions->SetPos(0, 80);
-		m_pImgOptions->SetPos(0,80);
-		m_pButtonLeave->SetPos(0, 120);
-		m_pImgLeave->SetPos(0,120);
+		int x,y;
+		int verx;
+		verx = 296;
+		x = 270;
+		vgui::ImagePanel *imgarr[5];
+		vgui::Button *buttarr[5];
+		int width = ScreenWidth();
+		
+		imgarr[0] = m_pImgBegin;
+		imgarr[1] = m_pImgResume;
+		imgarr[2] = m_pImgSave;
+		imgarr[3] = m_pImgOptions;
+		imgarr[4] = m_pImgLeave;
+		buttarr[0] = m_pButtonBegin;
+		buttarr[1] = m_pButtonResume;
+		buttarr[2] = m_pButtonSave;
+		buttarr[3] = m_pButtonOptions;
+		buttarr[4] = m_pButtonLeave;
+
+		int border = (width - ( 5* (256+20)))/2;
+		verx = (width -2*border)/5;
+		for(int i = 0; i < 5; i++)
+		{
+			imgarr[i]->SetPos((border + i*verx), 200);
+			buttarr[i]->SetPos((border + i*verx), 200);
+		}
+		/*m_pImgBegin->SetPos(x,200);
+		m_pButtonBegin->SetPos(x,200);
+		x = x +verx;
+		m_pButtonResume->SetPos(x,200);
+		m_pImgResume->SetPos(x,200);
+		x = x +verx;
+		m_pImgOptions->SetPos(x,200);
+		m_pButtonOptions->SetPos(x,200);
+		x = x +verx;
+		m_pButtonSave->SetPos(x,200);
+		m_pImgSave->SetPos(x,200);
+		x = x +verx;
+		m_pButtonLeave->SetPos(x,200);
+		m_pImgLeave->SetPos(x, 200);*/
  
-		m_pImgSave->SetVisible(false);
-		m_pButtonSave->SetVisible(false);
+		//m_pImgSave->SetVisible(false);
+		//m_pButtonSave->SetVisible(false);
  
-		m_pImgResume->SetVisible(false);
-		m_pButtonResume->SetVisible(false);
- 
+		//m_pImgResume->SetVisible(false);
+		//m_pButtonResume->SetVisible(false);
+		
+		m_pImgBegin->SetSize(256, 64);
+		m_pImgResume->SetSize(256, 64);
+		m_pImgSave->SetSize(256, 64);
+		m_pImgOptions->SetSize(256, 64);
+		m_pImgLeave->SetSize(256, 64);
+
 		InRolloverResume=false;
 		InRolloverBegin=false;
-		InRolloverLoad=false;
 		InRolloverOptions=false;
 		InRolloverLeave=false;
 	}
@@ -83,9 +120,18 @@ public:
 			DevMsg("Performing menu layout\n");
 			int dy = 40; // delta y, shift value
 			int x,y;
+
+			m_pImgBegin->SetPos(300,200);
+			m_pButtonBegin->SetPos(300,200);
+			m_pButtonResume->SetPos(812,200);
+			m_pImgResume->SetPos(812,200);
+			m_pImgOptions->SetPos(1324,200);
+			m_pButtonOptions->SetPos(1324,200);
+			m_pButtonSave->SetPos(1836,200);
+			m_pImgSave->SetPos(1836,200);
 			// Resume
-			m_pButtonResume->SetPos(0,0);
-			m_pImgResume->SetPos(0,0);
+			/*m_pButtonResume->SetPos(300,200);
+			m_pImgResume->SetPos(300,200);
 			m_pButtonResume->SetVisible(true);
 			m_pImgResume->SetVisible(true);
  
@@ -93,11 +139,6 @@ public:
 			m_pButtonBegin->SetPos(x,y+dy);
 			m_pImgBegin->GetPos(x,y);
 			m_pImgBegin->SetPos(x,y+dy);
- 
-			m_pButtonLoad->GetPos(x,y);
-			m_pButtonLoad->SetPos(x,y+dy);
-			m_pImgLoad->GetPos(x,y);
-			m_pImgLoad->SetPos(x,y+dy);
  
 			// Save game
 			m_pButtonSave->SetPos(x,y+(2*dy));
@@ -113,7 +154,8 @@ public:
 			m_pButtonLeave->GetPos(x,y);
 			m_pButtonLeave->SetPos(x,y+(2*dy));
 			m_pImgLeave->GetPos(x,y);
-			m_pImgLeave->SetPos(x,y+(2*dy)); // Leave game moves under Save game, so twice as far
+			m_pImgLeave->SetPos(x,y+(2*dy)); // Leave game moves under Save game, so twice as far*/
+
  
 			InGameLayout = true;
 		}
@@ -133,7 +175,6 @@ public:
  
 		CheckRolloverBegin(x,y,fx,fy);
 		CheckRolloverResume(x,y,fx,fy);
-		CheckRolloverLoad(x,y,fx,fy);
 		CheckRolloverSave(x,y,fx,fy);
 		CheckRolloverOptions(x,y,fx,fy);
 		CheckRolloverLeave(x,y,fx,fy);
@@ -155,12 +196,12 @@ public:
 		if ((x > bx && x < bx+bw) && (y > by && y < by+bh))
 		{
 			if(!InRolloverBegin) {
-				m_pImgBegin->SetImage("menu_begin_over");
+				m_pImgBegin->SetImage("find_server_over");
 				InRolloverBegin = true;
 			}
 		} else {
 			if(InRolloverBegin) {
-				m_pImgBegin->SetImage("menu_begin");
+				m_pImgBegin->SetImage("find_server_normal");
 				InRolloverBegin = false;
 			}
 		}
@@ -181,38 +222,14 @@ public:
 			if ((x > bx && x < bx+bw) && (y > by && y < by+bh))
 			{
 				if(!InRolloverResume) {
-					m_pImgResume->SetImage("menu_Resume_over");
+					m_pImgResume->SetImage("new_game_over");
 					InRolloverResume = true;
 				}
 			} else {
 				if(InRolloverResume) {
-					m_pImgResume->SetImage("menu_Resume");
+					m_pImgResume->SetImage("new_game_normal");
 					InRolloverResume = false;
 				}
-			}
-		}
-	}
-	void CheckRolloverLoad(int x,int y, int fx, int fy)
-	{
-		int bx,by,bw,bh; // button xpos, ypos, width, height
- 
-		m_pButtonLoad->GetPos(bx,by);
-		m_pButtonLoad->GetSize(bw,bh);
- 
-		bx = bx+fx; // xpos for button (rel to screen)
-		by = by+fy; // ypos for button (rel to screen)
- 
-		// Check and see if mouse cursor is within button bounds
-		if ((x > bx && x < bx+bw) && (y > by && y < by+bh))
-		{
-			if(!InRolloverLoad) {
-				m_pImgLoad->SetImage("menu_load_over");
-				InRolloverLoad = true;
-			}
-		} else {
-			if(InRolloverLoad) {
-				m_pImgLoad->SetImage("menu_load");
-				InRolloverLoad = false;
 			}
 		}
 	}
@@ -231,12 +248,12 @@ public:
 			if ((x > bx && x < bx+bw) && (y > by && y < by+bh))
 			{
 				if(!InRolloverSave) {
-					m_pImgSave->SetImage("menu_Save_over");
+					m_pImgSave->SetImage("bg2options_over");
 					InRolloverSave = true;
 				}
 			} else {
 				if(InRolloverSave) {
-					m_pImgSave->SetImage("menu_Save");
+					m_pImgSave->SetImage("bg2options_normal");
 					InRolloverSave = false;
 				}
 			}
@@ -256,12 +273,12 @@ public:
 		if ((x > bx && x < bx+bw) && (y > by && y < by+bh))
 		{
 			if(!InRolloverOptions) {
-				m_pImgOptions->SetImage("menu_Options_over");
+				m_pImgOptions->SetImage("options_over");
 				InRolloverOptions = true;
 			}
 		} else {
 			if(InRolloverOptions) {
-				m_pImgOptions->SetImage("menu_Options");
+				m_pImgOptions->SetImage("options_normal");
 				InRolloverOptions = false;
 			}
 		}
@@ -280,12 +297,12 @@ public:
 		if ((x > bx && x < bx+bw) && (y > by && y < by+bh))
 		{
 			if(!InRolloverLeave) {
-				m_pImgLeave->SetImage("menu_Leave_over");
+				m_pImgLeave->SetImage("quit_over");
 				InRolloverLeave = true;
 			}
 		} else {
 			if(InRolloverLeave) {
-				m_pImgLeave->SetImage("menu_Leave");
+				m_pImgLeave->SetImage("quit_normal");
 				InRolloverLeave = false;
 			}
 		}
@@ -305,13 +322,11 @@ public:
 private:
 	vgui::ImagePanel *m_pImgBegin;
 	vgui::ImagePanel *m_pImgResume;
-	vgui::ImagePanel *m_pImgLoad;
 	vgui::ImagePanel *m_pImgSave;
 	vgui::ImagePanel *m_pImgOptions;
 	vgui::ImagePanel *m_pImgLeave;
 	vgui::Button *m_pButtonBegin;
 	vgui::Button *m_pButtonResume;
-	vgui::Button *m_pButtonLoad;
 	vgui::Button *m_pButtonSave;
 	vgui::Button *m_pButtonOptions;
 	vgui::Button *m_pButtonLeave;
@@ -321,12 +336,11 @@ private:
 	bool InGameLayout;
 	bool InRolloverBegin;
 	bool InRolloverResume;
-	bool InRolloverLoad;
 	bool InRolloverSave;
 	bool InRolloverOptions;
 	bool InRolloverLeave;
 };
- 
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -355,60 +369,52 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	InGameLayout = false;
  
 	// Size of the panel
-	SetSize(512,512);
+	SetSize(1920,1080);
 	SetZPos(-1); // we're behind everything
  
 	// Load invisi buttons
         // Initialize images
-	m_pImgBegin = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Begin"));
-	m_pImgResume = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Resume"));
-	m_pImgLoad = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Load"));
-	m_pImgSave = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Save"));
+	m_pImgBegin = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Find Server"));
+	m_pImgResume = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Create Game"));
 	m_pImgOptions = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Options"));
+	m_pImgSave = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "BG2 Options"));
 	m_pImgLeave = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Leave"));
  
 	// New game
  
-	m_pButtonBegin = vgui::SETUP_PANEL(new vgui::Button(this, "btnBegin", ""));	
-	m_pButtonBegin->SetSize(300, 28);
+	m_pButtonBegin = vgui::SETUP_PANEL(new vgui::Button(this, "btnFind", ""));	
+	m_pButtonBegin->SetSize(256, 64);
 	m_pButtonBegin->SetPaintBorderEnabled(false);
 	m_pButtonBegin->SetPaintEnabled(false);
-	m_pImgBegin->SetImage("menu_begin");
+	m_pImgBegin->SetImage("find_server_normal");
  
 	// Resume
-	m_pButtonResume = vgui::SETUP_PANEL(new vgui::Button(this, "btnResume", ""));	
-	m_pButtonResume->SetSize(170, 28);
+	m_pButtonResume = vgui::SETUP_PANEL(new vgui::Button(this, "btnCreate", ""));	
+	m_pButtonResume->SetSize(256, 64);
 	m_pButtonResume->SetPaintBorderEnabled(false);
 	m_pButtonResume->SetPaintEnabled(false);
-	m_pImgResume->SetImage("menu_resume");
- 
-	// Load
-	m_pButtonLoad = vgui::SETUP_PANEL(new vgui::Button(this, "btnLoad", ""));
-	m_pButtonLoad->SetSize(190, 28);
-	m_pButtonLoad->SetPaintBorderEnabled(false);
-	m_pButtonLoad->SetPaintEnabled(false);
-	m_pImgLoad->SetImage("menu_load");
+	m_pImgResume->SetImage("new_game_normal");
  
 	// Save
-	m_pButtonSave = vgui::SETUP_PANEL(new vgui::Button(this, "btnSave", ""));
-	m_pButtonSave->SetSize(190, 28);
+	m_pButtonSave = vgui::SETUP_PANEL(new vgui::Button(this, "btnBG2", ""));
+	m_pButtonSave->SetSize(256, 60);
 	m_pButtonSave->SetPaintBorderEnabled(false);
 	m_pButtonSave->SetPaintEnabled(false);
-	m_pImgSave->SetImage("menu_save");
+	m_pImgSave->SetImage("bg2options_normal");
  
 	// Options
 	m_pButtonOptions = vgui::SETUP_PANEL(new vgui::Button(this, "btnOptions", ""));
-	m_pButtonOptions->SetSize(170, 28);
+	m_pButtonOptions->SetSize(256, 64);
 	m_pButtonOptions->SetPaintBorderEnabled(false);
 	m_pButtonOptions->SetPaintEnabled(false);
-	m_pImgOptions->SetImage("menu_options");
+	m_pImgOptions->SetImage("options_normal");
  
 	// Leave
 	m_pButtonLeave = vgui::SETUP_PANEL(new vgui::Button(this, "btnLeave", ""));
-	m_pButtonLeave->SetSize(180, 28);
+	m_pButtonLeave->SetSize(256, 64);
 	m_pButtonLeave->SetPaintBorderEnabled(false);
 	m_pButtonLeave->SetPaintEnabled(false);
-	m_pImgLeave->SetImage("menu_leave");
+	m_pImgLeave->SetImage("quit_normal");
  
 	PerformDefaultLayout();
 }
