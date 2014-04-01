@@ -23,6 +23,7 @@
 #include <KeyValues.h>
 #include "filesystem.h"
 #include "matsys_controls/matsyscontrols.h"
+#include "../bg2/vgui_Panel_MainMenu.h"
 //BG2 - Tjoppen - options panel
 #include "../bg2/vgui_bg2_options.h"
 //
@@ -245,6 +246,7 @@ void VGui_CreateGlobalPanels( void )
 
 	//BG2 - Tjoppen - options panel
 	VPANEL GameUiDll = enginevgui->GetPanel( PANEL_GAMEUIDLL );
+	SMenu->Create( GameUiDll ); //new Main menu
 	bg2options = new CBG2OptionsPanel( GameUiDll );	//make into main menu panel
 	//
 }
@@ -261,7 +263,7 @@ void VGui_Shutdown()
 	iopanel->Destroy();
 #endif
 	fps->Destroy();
-
+	SMenu->Destroy(); // to VGui_Shutdown().
 	messagechars->Destroy();
 	//loadingdisc->Destroy();
 	internalCenterPrint->Destroy();

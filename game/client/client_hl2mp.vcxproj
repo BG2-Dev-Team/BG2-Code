@@ -393,6 +393,7 @@ exit 1
     <ClInclude Include="bg2\commmenu2.h" />
     <ClInclude Include="bg2\c_ctfflag.h" />
     <ClInclude Include="bg2\c_flag.h" />
+    <ClInclude Include="bg2\vgui_Panel_MainMenu.h" />
     <ClInclude Include="bg2\hintbox.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
