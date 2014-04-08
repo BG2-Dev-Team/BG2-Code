@@ -430,7 +430,7 @@ void CMainMenu::OnCommand(const char *command)
 {
 	if ( !Q_stricmp( command, "Quit" ) )
 	{
-		engine->ClientCmd("Quit");
+		engine->ClientCmd("gamemenucommand Quit");
 	}
 	else if ( !Q_stricmp( command, "OpenCreateMultiplayerGameDialog" ) )
 	{
