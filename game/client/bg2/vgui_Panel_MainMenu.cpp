@@ -357,20 +357,21 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	SetMoveable( false );
 	SetProportional( true );
 	SetVisible( true );
-	SetKeyBoardInputEnabled( false );
-	SetMouseInputEnabled( false );
+	//SetKeyBoardInputEnabled( true );
+	//SetMouseInputEnabled( true );
 	//ActivateBuildMode();
-	SetScheme("MenuScheme.res");
+	//SetScheme("MenuScheme.res");
  
         // These coords are relative to a 640x480 screen
         // Good to test in a 1024x768 resolution.
 	defaultX = 60; // x-coord for our position
 	defaultY = 240; // y-coord for our position
-	InGameLayout = false;
+	//InGameLayout = false;
  
 	// Size of the panel
-	SetSize(1920,1080);
-	SetZPos(-1); // we're behind everything
+	int wide,tall;
+	surface()->GetScreenSize( wide, tall );
+	SetSize(wide, tall);
  
 	// Load invisi buttons
         // Initialize images
@@ -382,10 +383,12 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
  
 	// New game
  
-	m_pButtonBegin = vgui::SETUP_PANEL(new vgui::Button(this, "btnFind", ""));	
+	m_pButtonBegin = new vgui::Button(this, "btnFind", "");
+	m_pButtonBegin->AddActionSignalTarget( this );
 	m_pButtonBegin->SetSize(256, 64);
 	m_pButtonBegin->SetPaintBorderEnabled(false);
 	m_pButtonBegin->SetPaintEnabled(false);
+	m_pButtonBegin->SetCommand( "OpenServerBrowser" );
 	m_pImgBegin->SetImage("find_server_normal");
  
 	// Resume
@@ -393,6 +396,7 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	m_pButtonResume->SetSize(256, 64);
 	m_pButtonResume->SetPaintBorderEnabled(false);
 	m_pButtonResume->SetPaintEnabled(false);
+	m_pButtonResume->SetCommand( "OpenCreateMultiplayerGameDialog" );
 	m_pImgResume->SetImage("new_game_normal");
  
 	// Save
@@ -400,6 +404,7 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	m_pButtonSave->SetSize(256, 60);
 	m_pButtonSave->SetPaintBorderEnabled(false);
 	m_pButtonSave->SetPaintEnabled(false);
+	m_pButtonSave->SetCommand("OpenBG2OptionsDialog");
 	m_pImgSave->SetImage("bg2options_normal");
  
 	// Options
@@ -407,24 +412,54 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	m_pButtonOptions->SetSize(256, 64);
 	m_pButtonOptions->SetPaintBorderEnabled(false);
 	m_pButtonOptions->SetPaintEnabled(false);
+	m_pButtonOptions->SetCommand( "OpenOptionsDialog" );
 	m_pImgOptions->SetImage("options_normal");
  
 	// Leave
-	m_pButtonLeave = vgui::SETUP_PANEL(new vgui::Button(this, "btnLeave", ""));
+	m_pButtonLeave = vgui::SETUP_PANEL(new vgui::Button(this, "btnLeave", "Exit"));
 	m_pButtonLeave->SetSize(256, 64);
 	m_pButtonLeave->SetPaintBorderEnabled(false);
 	m_pButtonLeave->SetPaintEnabled(false);
+	m_pButtonLeave->SetCommand( "Quit" );
 	m_pImgLeave->SetImage("quit_normal");
- 
+	
 	PerformDefaultLayout();
 }
  
 void CMainMenu::OnCommand(const char *command)
 {
- 
+	if ( !Q_stricmp( command, "Quit" ) )
+	{
+		engine->ClientCmd("Quit");
+	}
+	else if ( !Q_stricmp( command, "OpenCreateMultiplayerGameDialog" ) )
+	{
+		engine->ClientCmd("gamemenucommand OpenCreateMultiplayerGameDialog");
+	}
+	else if ( !Q_stricmp( command, "ResumeGame" ) )
+	{
+		engine->ClientCmd("gamemenucommand ResumeGame");
+	}
+	else if ( !Q_stricmp( command, "OpenServerBrowser" ) )
+	{
+		engine->ClientCmd("gamemenucommand OpenServerBrowser");
+	}
+	else if ( !Q_stricmp( command, "OpenBG2OptionsDialog" ) )
+	{
+		engine->ClientCmd("gamemenucommand engine OpenBG2OptionsDialog");
+	}
+	else if ( !Q_stricmp( command, "OpenOptionsDialog" ) )
+	{
+		engine->ClientCmd("gamemenucommand OpenOptionsDialog");
+	}
+	else if ( !Q_stricmp( command, "Disconnect" ) )
+	{
+		engine->ClientCmd("Disconnect");
+	}
+	BaseClass::OnCommand( command );
 	BaseClass::OnCommand(command);
 }
- 
+
  
 //-----------------------------------------------------------------------------
 // Purpose: Destructor
