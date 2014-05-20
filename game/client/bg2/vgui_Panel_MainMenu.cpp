@@ -13,9 +13,9 @@
  
 #include "vgui_controls/Button.h"
 #include "vgui_controls/ImagePanel.h"
- 
+#include "game_controls/vguitextwindow.h"
+
 using namespace vgui;
- 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
  
@@ -330,7 +330,8 @@ private:
 	vgui::Button *m_pButtonSave;
 	vgui::Button *m_pButtonOptions;
 	vgui::Button *m_pButtonLeave;
- 
+	CTextWindow *community; 
+
 	int defaultX;
 	int defaultY;
 	bool InGameLayout;
@@ -347,7 +348,7 @@ private:
 CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 {
 	LoadControlSettings( "resource/UI/MainMenu.res" ); // Optional, don't need this
- 
+
 	SetParent( parent );
 	SetTitleBarVisible( false );
 	SetMinimizeButtonVisible( false );
@@ -361,7 +362,7 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	//SetMouseInputEnabled( true );
 	//ActivateBuildMode();
 	//SetScheme("MenuScheme.res");
- 
+	
         // These coords are relative to a 640x480 screen
         // Good to test in a 1024x768 resolution.
 	defaultX = 60; // x-coord for our position
@@ -375,6 +376,11 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
  
 	// Load invisi buttons
         // Initialize images
+//	community = new CTextWindow(g_pClientMode->GetViewport());
+
+	community = new CTextWindow();
+	community->ShowURL("http://www.moddb.com/mods/battle-grounds-2");
+
 	m_pImgBegin = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Find Server"));
 	m_pImgResume = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Create Game"));
 	m_pImgOptions = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Options"));

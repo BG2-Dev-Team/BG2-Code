@@ -66,7 +66,7 @@ void MP3Player_Destroy();
 vgui::IInputInternal *g_InputInternal = NULL;
 
 #include <vgui_controls/Controls.h>
-
+#include "game_controls/vguitextwindow.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
