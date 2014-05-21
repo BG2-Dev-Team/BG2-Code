@@ -10,9 +10,11 @@
 #include <vgui/ISurface.h>
 #include <vgui/IVGui.h>
 #include <vgui/IInput.h>
- 
+
 #include "vgui_controls/Button.h"
 #include "vgui_controls/ImagePanel.h"
+#include "iclientmode.h"
+#include "baseviewport.h"
 #include "game_controls/vguitextwindow.h"
 
 using namespace vgui;
@@ -376,10 +378,6 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
  
 	// Load invisi buttons
         // Initialize images
-//	community = new CTextWindow(g_pClientMode->GetViewport());
-
-	community = new CTextWindow();
-	community->ShowURL("http://www.moddb.com/mods/battle-grounds-2");
 
 	m_pImgBegin = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Find Server"));
 	m_pImgResume = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Create Game"));
@@ -429,6 +427,18 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	m_pButtonLeave->SetCommand( "Quit" );
 	m_pImgLeave->SetImage("quit_normal");
 	
+	// community
+	CBaseViewport* pViewPort = dynamic_cast<CBaseViewport *>( g_pClientMode->GetViewport() );
+	community = new CTextWindow(pViewPort);
+	community->SetVisible(true);
+	community->MoveToFront();
+	community->MakeReadyForUse();
+	community->ShowText("Loading...");
+	community->ShowURL("http://www.moddb.com/mods/battle-grounds-2");
+	
+	Msg("Community Panel Created!");
+	DevMsg("Community Panel Created.");
+
 	PerformDefaultLayout();
 }
  
