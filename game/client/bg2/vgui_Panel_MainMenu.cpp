@@ -82,6 +82,8 @@ public:
 			imgarr[i]->SetPos((border + i*verx), 200);
 			buttarr[i]->SetPos((border + i*verx), 200);
 		}
+		
+		community->SetPos((width-community->GetWide())/2, 270);
 		/*m_pImgBegin->SetPos(x,200);
 		m_pButtonBegin->SetPos(x,200);
 		x = x +verx;
@@ -119,18 +121,19 @@ public:
 	{
 		// In-game, everything will be in different places than at the root menu!
 		if (InGame() && !InGameLayout) {
-			DevMsg("Performing menu layout\n");
-			int dy = 40; // delta y, shift value
-			int x,y;
+			community->SetVisible(false);
+			//DevMsg("Performing menu layout\n");
+			//int dy = 40; // delta y, shift value
+			//int x,y;
 
-			m_pImgBegin->SetPos(300,200);
-			m_pButtonBegin->SetPos(300,200);
-			m_pButtonResume->SetPos(812,200);
-			m_pImgResume->SetPos(812,200);
-			m_pImgOptions->SetPos(1324,200);
-			m_pButtonOptions->SetPos(1324,200);
-			m_pButtonSave->SetPos(1836,200);
-			m_pImgSave->SetPos(1836,200);
+			//m_pImgBegin->SetPos(300,200);
+			//m_pButtonBegin->SetPos(300,200);
+			//m_pButtonResume->SetPos(812,200);
+			//m_pImgResume->SetPos(812,200);
+			//m_pImgOptions->SetPos(1324,200);
+			//m_pButtonOptions->SetPos(1324,200);
+			//m_pButtonSave->SetPos(1836,200);
+			//m_pImgSave->SetPos(1836,200);
 			// Resume
 			/*m_pButtonResume->SetPos(300,200);
 			m_pImgResume->SetPos(300,200);
@@ -164,6 +167,7 @@ public:
 		if (!InGame() && InGameLayout)
 		{
 			PerformDefaultLayout();
+			community->SetVisible(true);
 			InGameLayout = false;
 		}
  
@@ -434,7 +438,7 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	community->MoveToFront();
 	community->MakeReadyForUse();
 	community->ShowText("Loading...");
-	community->ShowURL("http://www.moddb.com/mods/battle-grounds-2");
+	community->ShowURL("http://www.bg2mod.com/");
 	
 	Msg("Community Panel Created!");
 	DevMsg("Community Panel Created.");
