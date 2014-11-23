@@ -1254,7 +1254,11 @@ void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info
 					// If the inflictor is the killer,  then it must be their current weapon doing the damage
 					if ( pScorer->GetActiveWeapon() )
 					{
+#ifdef HL1MP_DLL
 						killer_weapon_name = pScorer->GetActiveWeapon()->GetClassname();
+#else
+						killer_weapon_name = pScorer->GetActiveWeapon()->GetDeathNoticeName();
+#endif
 					}
 				}
 				else
