@@ -56,13 +56,14 @@ public:
 	}
 	void CMainMenu::PerformDefaultLayout()
 	{
+		const int narr = 5;
 		int x,y;
-		int verx;
-		verx = 296;
+		//int verx;
+		//verx = 296;
 		x = 270;
-		vgui::ImagePanel *imgarr[5];
-		vgui::Button *buttarr[5];
-		int width = ScreenWidth();
+		vgui::ImagePanel *imgarr[narr];
+		vgui::Button *buttarr[narr];
+		int width = this->GetWide();
 		
 		imgarr[0] = m_pImgBegin;
 		imgarr[1] = m_pImgResume;
@@ -74,16 +75,24 @@ public:
 		buttarr[2] = m_pButtonSave;
 		buttarr[3] = m_pButtonOptions;
 		buttarr[4] = m_pButtonLeave;
+		
+		// BG2 - VisualMelon - fudge button/img widths for small screens
+		int biWide = (width * 2) / (narr * 2 + 1); // fit narr things in space of narr+0.5
+		if (biWide > 256)
+			biWide = 256;
 
-		int border = (width - ( 5* (256+20)))/2;
-		verx = (width -2*border)/5;
-		for(int i = 0; i < 5; i++)
+		int biTall = 64;
+		int space = width - (narr * biWide);
+		int border = space / (2*narr);
+		for(int i = 0; i < narr; i++)
 		{
-			imgarr[i]->SetPos((border + i*verx), 200);
-			buttarr[i]->SetPos((border + i*verx), 200);
+			imgarr[i]->SetPos((border + (i * space) / narr + biWide * i), 200);
+			buttarr[i]->SetPos((border + (i * space) / narr + biWide * i), 200);
+			imgarr[i]->SetSize(biWide, biTall);
+			buttarr[i]->SetSize(biWide, biTall);
 		}
 		
-		community->SetPos((width-community->GetWide())/2, 270);
+		//community->SetPos((width-community->GetWide())/2, 270); //melon
 		/*m_pImgBegin->SetPos(x,200);
 		m_pButtonBegin->SetPos(x,200);
 		x = x +verx;
@@ -104,15 +113,17 @@ public:
  
 		//m_pImgResume->SetVisible(false);
 		//m_pButtonResume->SetVisible(false);
-		
-		m_pImgBegin->SetSize(256, 64);
-		m_pImgResume->SetSize(256, 64);
-		m_pImgSave->SetSize(256, 64);
-		m_pImgOptions->SetSize(256, 64);
-		m_pImgLeave->SetSize(256, 64);
 
-		InRolloverResume=false;
+		//melon
+		//m_pImgBegin->SetSize(256, 64);
+		//m_pImgResume->SetSize(256, 64);
+		//m_pImgSave->SetSize(256, 64);
+		//m_pImgOptions->SetSize(256, 64);
+		//m_pImgLeave->SetSize(256, 64);
+
 		InRolloverBegin=false;
+		InRolloverResume=false;
+		InRolloverSave=false;
 		InRolloverOptions=false;
 		InRolloverLeave=false;
 	}
@@ -121,7 +132,7 @@ public:
 	{
 		// In-game, everything will be in different places than at the root menu!
 		if (InGame() && !InGameLayout) {
-			community->SetVisible(false);
+			m_pCommunity->SetVisible(false);
 			//DevMsg("Performing menu layout\n");
 			//int dy = 40; // delta y, shift value
 			//int x,y;
@@ -162,13 +173,13 @@ public:
 			m_pImgLeave->SetPos(x,y+(2*dy)); // Leave game moves under Save game, so twice as far*/
 
  
-			InGameLayout = true;
+			//InGameLayout = true; //melon - moved down
 		}
 		if (!InGame() && InGameLayout)
 		{
 			PerformDefaultLayout();
-			community->SetVisible(true);
-			InGameLayout = false;
+			m_pCommunity->SetVisible(true);
+			//InGameLayout = false; //melon - moved down
 		}
  
 		// Get mouse coords
@@ -184,6 +195,8 @@ public:
 		CheckRolloverSave(x,y,fx,fy);
 		CheckRolloverOptions(x,y,fx,fy);
 		CheckRolloverLeave(x,y,fx,fy);
+
+		InGameLayout = InGame();
  
 		BaseClass::OnThink();		
 	}
@@ -213,6 +226,7 @@ public:
 		}
 	}
  
+	// BG2 - VisualMelon - I've butchered this a bit so it also takes care of changing the resume image
 	void CheckRolloverResume(int x,int y, int fx, int fy)
 	{
 		if(m_pButtonResume->IsVisible()) {
@@ -227,13 +241,19 @@ public:
 			// Check and see if mouse cursor is within button bounds
 			if ((x > bx && x < bx+bw) && (y > by && y < by+bh))
 			{
-				if(!InRolloverResume) {
-					m_pImgResume->SetImage("new_game_over");
+				if (!InRolloverResume || InGame() != InGameLayout) {
+					if (InGame())
+						m_pImgResume->SetImage("resume_over");
+					else
+						m_pImgResume->SetImage("new_game_over");
 					InRolloverResume = true;
 				}
 			} else {
-				if(InRolloverResume) {
-					m_pImgResume->SetImage("new_game_normal");
+				if (InRolloverResume || InGame() != InGameLayout) {
+					if (InGame())
+						m_pImgResume->SetImage("resume_normal");
+					else
+						m_pImgResume->SetImage("new_game_normal");
 					InRolloverResume = false;
 				}
 			}
@@ -336,7 +356,9 @@ private:
 	vgui::Button *m_pButtonSave;
 	vgui::Button *m_pButtonOptions;
 	vgui::Button *m_pButtonLeave;
-	CTextWindow *community; 
+	//CTextWindow *community; 
+	vgui::HTML *m_pCommunity;
+	//CTextWindow *m_pCommunity;
 
 	int defaultX;
 	int defaultY;
@@ -432,13 +454,26 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	m_pImgLeave->SetImage("quit_normal");
 	
 	// community
-	CBaseViewport* pViewPort = dynamic_cast<CBaseViewport *>( g_pClientMode->GetViewport() );
-	community = new CTextWindow(pViewPort);
-	community->SetVisible(true);
-	community->MoveToFront();
-	community->MakeReadyForUse();
-	community->ShowText("Loading...");
-	community->ShowURL("http://www.bg2mod.com/");
+	//CBaseViewport* pViewPort = dynamic_cast<CBaseViewport *>( g_pClientMode->GetViewport() );
+	//community = new CTextWindow(pViewPort);
+	//community->SetVisible(false);
+	//community->MoveToFront();
+	//community->MakeReadyForUse();
+	//community->ShowText("Loading...");
+	//community->ShowURL("http://www.bg2mod.com/");
+	
+	int communityBorderX = 40; // left, right
+	int communityBorderY = 20; // bottom
+	int communityY = 270;
+	m_pCommunity = vgui::SETUP_PANEL(new vgui::HTML(this, "CommunityHTML"));
+	//CBaseViewport* pViewPort = dynamic_cast<CBaseViewport *>( g_pClientMode->GetViewport() );
+	//m_pCommunity = new CTextWindow(pViewPort);
+	m_pCommunity->SetSize(this->GetWide() - communityBorderX * 2, this->GetTall() - (communityY + communityBorderY));
+	m_pCommunity->SetPos(communityBorderX, communityY);
+	m_pCommunity->OpenURL("http://www.bg2mod.com/", NULL);
+	//m_pCommunity->ShowText("Loading...");
+	//m_pCommunity->ShowURL("http://www.bg2mod.com/");
+	m_pCommunity->SetVisible(true);
 	
 	Msg("Community Panel Created!");
 	DevMsg("Community Panel Created.");
