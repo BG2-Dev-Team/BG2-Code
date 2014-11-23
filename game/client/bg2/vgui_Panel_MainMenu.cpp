@@ -20,7 +20,9 @@
 using namespace vgui;
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
- 
+
+const int buttonstarty=30;
+
 //-----------------------------------------------------------------------------
 // Purpose: Displays the logo panel
 //-----------------------------------------------------------------------------
@@ -86,8 +88,8 @@ public:
 		int border = space / (2*narr);
 		for(int i = 0; i < narr; i++)
 		{
-			imgarr[i]->SetPos((border + (i * space) / narr + biWide * i), 200);
-			buttarr[i]->SetPos((border + (i * space) / narr + biWide * i), 200);
+			imgarr[i]->SetPos((border + (i * space) / narr + biWide * i), buttonstarty);
+			buttarr[i]->SetPos((border + (i * space) / narr + biWide * i), buttonstarty);
 			imgarr[i]->SetSize(biWide, biTall);
 			buttarr[i]->SetSize(biWide, biTall);
 		}
@@ -464,7 +466,7 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	
 	int communityBorderX = 40; // left, right
 	int communityBorderY = 20; // bottom
-	int communityY = 270;
+	int communityY = buttonstarty+70;
 	m_pCommunity = vgui::SETUP_PANEL(new vgui::HTML(this, "CommunityHTML"));
 	//CBaseViewport* pViewPort = dynamic_cast<CBaseViewport *>( g_pClientMode->GetViewport() );
 	//m_pCommunity = new CTextWindow(pViewPort);
