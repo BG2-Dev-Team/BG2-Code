@@ -3249,7 +3249,7 @@ void MuzzleFlash_Pistol_Shared( ClientEntityHandle_t hEntity, int attachmentInde
 	if( !isFirstPerson )
 	{
 		FX_GetAttachmentTransform( hEntity, attachmentIndex, &origin, &angles );
-        AngleVectors( angles, &forward, NULL, NULL );
+        //AngleVectors( angles, &forward, NULL, NULL ); // BG2 - VisualMelon - omiting this seems to fix atleast some of the smoke problems
 	}
 
 	// Smoke
