@@ -14,6 +14,9 @@
 #include "movehelper_server.h"
 #include "iservervehicle.h"
 #include "tier0/vprof.h"
+//BG2 - Tjoppen - #includes
+#include "ilagcompensationmanager.h"
+#include "movevars_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -172,6 +175,35 @@ void CPlayerMove::SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *p
 		move->m_flForwardMove		= ucmd->forwardmove;
 		move->m_flSideMove			= ucmd->sidemove;
 		move->m_flUpMove				= ucmd->upmove;
+		
+		//BG2 - Tjoppen - egg-shaped movement
+		if( move->m_flForwardMove != 0 || move->m_flSideMove != 0 )
+		{
+			float	angle = atan2f( move->m_flSideMove, move->m_flForwardMove ),
+					a_angle = fabsf( angle );	//for convenience due to mirrored shape..
+
+			//do the egg-shape. clamp velocities based on a_angle.
+			//0 <= angle <= pi
+
+			if( a_angle > M_PI )
+				a_angle = M_PI;	//if too high, assume pi(moving backward)
+			
+			float v = 0;
+			if( a_angle < M_PI*0.5f )
+			{
+				//forward quadrant. lerp from maxspeed to sidespeed
+				v = player->MaxSpeed() * (1.0f + a_angle*2.0f/M_PI * (sv_sidespeed.GetFloat() - 1.0f));
+			}
+			else
+			{
+				//backward quadrant. lerp from sidespeed to backspeed
+				v = player->MaxSpeed() * (sv_sidespeed.GetFloat() + (a_angle*2.0f/M_PI - 1.0f) * (sv_backspeed.GetFloat() - sv_sidespeed.GetFloat()));
+			}
+
+			//cos can be negative, thus the need for fabsf()
+			move->m_flForwardMove = clamp( move->m_flForwardMove, -v * fabsf(cosf(a_angle)), v * fabsf(cosf(a_angle)) );
+			move->m_flSideMove = clamp( move->m_flSideMove, -v * sinf(a_angle), v * sinf(a_angle) );
+		}
 	}
 
 	// Prepare remaining fields
