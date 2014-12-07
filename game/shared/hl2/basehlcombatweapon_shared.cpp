@@ -65,12 +65,13 @@ void CBaseHLCombatWeapon::ItemHolsterFrame( void )
 		return;
 
 	// If it's been longer than three seconds, reload
-	if ( ( gpGlobals->curtime - m_flHolsterTime ) > sk_auto_reload_time.GetFloat() )
+	//BG2 - Tjoppen - no autoreload crap
+	/*if ( ( gpGlobals->curtime - m_flHolsterTime ) > sk_auto_reload_time.GetFloat() )
 	{
 		// Just load the clip with no animations
 		FinishReload();
 		m_flHolsterTime = gpGlobals->curtime;
-	}
+	}*/
 }
 
 //-----------------------------------------------------------------------------
