@@ -956,7 +956,7 @@ Activity CHL2MP_Player::TranslateTeamActivity( Activity ActToTranslate )
 	return ActToTranslate;
 }
 
-extern ConVar hl2_normspeed;
+//extern ConVar hl2_normspeed; // BG2 - VisualMelon - Formerly uncommented comment
 
 // Set the activity based on an event or current state
 void CHL2MP_Player::SetAnimation( PLAYER_ANIM playerAnim )
@@ -1310,7 +1310,7 @@ void ClientPrinttTalkAll( char *str, int type )
 
 //BG2 - Tjoppen - PlayermodelTeamClass - gives models for specified team/class -- Restructured a bit. -HairyPotter
 // BG2 - VisualMelon - skinid is used for classes where we can change the sleeve colour - skin is a poor term used due to some misconceptions
-// TODO : Obsolve the term "skin" where it is used inappropriatley
+// TODO: Obsolve the term "skin" where it is used inappropriatley
 void CHL2MP_Player::PlayermodelTeamClass( int team, int classid, int skinid )
 {
 	switch( team )
@@ -1542,6 +1542,7 @@ bool CHL2MP_Player::AttemptJoin( int iTeam, int iClass, const char *pClassName )
 		char str[256];
 		Q_snprintf( str, sizeof( str ), "%s is going to fight as %s for the %s\n", GetPlayerName(), pClassName, team ? team->GetName() : "" );
 		ClientPrinttTalkAll( str, HUD_BG2CLASSCHANGE  );
+		Msg(str); // BG2 - VisualMelon - Debugging
 	}
 
 	//BG2 - Added for HlstatsX Support. -HairyPotter
@@ -1872,20 +1873,23 @@ END_SEND_TABLE()
 
 void CHL2MP_Player::CreateRagdollEntity( void )
 {
-	if ( m_hRagdoll )
+	//BG2 - Tjoppen - here's where we put code for multiple ragdolls
+	if ( m_hRagdoll ) //One already exists.. remove it.
 	{
 		UTIL_RemoveImmediate( m_hRagdoll );
 		m_hRagdoll = NULL;
 	}
-
-	// If we already have a ragdoll, don't make another one.
-	CHL2MPRagdoll *pRagdoll = dynamic_cast< CHL2MPRagdoll* >( m_hRagdoll.Get() );
 	
-	if ( !pRagdoll )
-	{
+	// If we already have a ragdoll, don't make another one.
+	//CHL2MPRagdoll *pRagdoll = dynamic_cast< CHL2MPRagdoll* >( m_hRagdoll.Get() );// This makes no sense? We just removed our ragdoll.. 
+																				   // Now we're trying to cast to it?
+	
+	//BG2 - Tjoppen - here's another place where we put code for multiple ragdolls
+	//if ( !pRagdoll )
+	//{
 		// create a new one
-		pRagdoll = dynamic_cast< CHL2MPRagdoll* >( CreateEntityByName( "hl2mp_ragdoll" ) );
-	}
+		CHL2MPRagdoll *pRagdoll = dynamic_cast< CHL2MPRagdoll* >( CreateEntityByName( "hl2mp_ragdoll" ) );
+	//}
 
 	if ( pRagdoll )
 	{
@@ -1894,6 +1898,13 @@ void CHL2MP_Player::CreateRagdollEntity( void )
 		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
 		pRagdoll->m_nModelIndex = m_nModelIndex;
 		pRagdoll->m_nForceBone = m_nForceBone;
+		//BG2 - Tjoppen - clamp bullet force
+		if( m_vecTotalBulletForce.Length() > 512.f )
+		{
+			VectorNormalize( m_vecTotalBulletForce );
+			m_vecTotalBulletForce *= 512.f;
+		}
+		//
 		pRagdoll->m_vecForce = m_vecTotalBulletForce;
 		pRagdoll->SetAbsOrigin( GetAbsOrigin() );
 	}
@@ -2375,11 +2386,15 @@ CHL2MPPlayerStateInfo *CHL2MP_Player::State_LookupInfo( HL2MPPlayerState state )
 bool CHL2MP_Player::StartObserverMode(int mode)
 {
 	//we only want to go into observer mode if the player asked to, not on a death timeout
-	if ( m_bEnterObserver == true )
+	/*if ( m_bEnterObserver == true )
 	{
 		VPhysicsDestroyObject();
 		return BaseClass::StartObserverMode( mode );
-	}
+	}*/
+	//BG2 - Tjoppen - reenable spectators
+	return BaseClass::StartObserverMode( mode );
+	//
+	//Do nothing.
 	return false;
 }
 
