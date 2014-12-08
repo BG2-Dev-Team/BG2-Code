@@ -503,7 +503,7 @@ void CMainMenu::OnCommand(const char *command)
 	}
 	else if ( !Q_stricmp( command, "OpenBG2OptionsDialog" ) )
 	{
-		engine->ClientCmd("gamemenucommand engine OpenBG2OptionsDialog");
+		engine->ClientCmd("OpenBG2OptionsDialog");
 	}
 	else if ( !Q_stricmp( command, "OpenOptionsDialog" ) )
 	{
