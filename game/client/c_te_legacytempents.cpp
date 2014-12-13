@@ -47,26 +47,32 @@ extern ConVar muzzleflash_light;
 
 #define TENT_WIND_ACCEL 50
 
+void MuzzleFlash_Pistol_Shared( /*int*/ClientEntityHandle_t hEntity, int attachmentIndex, bool isFirstPerson );
+
 //Precache the effects
 #ifndef TF_CLIENT_DLL
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectMuzzleFlash )
+	CLIENTEFFECT_MATERIAL( "sprites/ar2_muzzle1" )
+	CLIENTEFFECT_MATERIAL( "sprites/ar2_muzzle3" )
+	CLIENTEFFECT_MATERIAL( "sprites/ar2_muzzle4" )
+	CLIENTEFFECT_MATERIAL( "sprites/muzzleflash4" )
+	CLIENTEFFECT_MATERIAL( "particle/fire" )
 
-	CLIENTEFFECT_MATERIAL( "effects/muzzleflash1" )
-	CLIENTEFFECT_MATERIAL( "effects/muzzleflash2" )
-	CLIENTEFFECT_MATERIAL( "effects/muzzleflash3" )
-	CLIENTEFFECT_MATERIAL( "effects/muzzleflash4" )
+	CLIENTEFFECT_MATERIAL( "effects/combinemuzzle1_noz" )
+	CLIENTEFFECT_MATERIAL( "effects/combinemuzzle2_noz" )
+
 	CLIENTEFFECT_MATERIAL( "effects/muzzleflash1_noz" )
 	CLIENTEFFECT_MATERIAL( "effects/muzzleflash2_noz" )
 	CLIENTEFFECT_MATERIAL( "effects/muzzleflash3_noz" )
 	CLIENTEFFECT_MATERIAL( "effects/muzzleflash4_noz" )
-#ifndef CSTRIKE_DLL
-	CLIENTEFFECT_MATERIAL( "effects/combinemuzzle1" )
-	CLIENTEFFECT_MATERIAL( "effects/combinemuzzle2" )
-	CLIENTEFFECT_MATERIAL( "effects/combinemuzzle1_noz" )
-	CLIENTEFFECT_MATERIAL( "effects/combinemuzzle2_noz" )
-	CLIENTEFFECT_MATERIAL( "effects/strider_muzzle" )
-#endif
-CLIENTEFFECT_REGISTER_END()
+
+	CLIENTEFFECT_MATERIAL( "particle/particle_musketsmoke1" )
+	CLIENTEFFECT_MATERIAL( "particle/particle_musketsmoke2" )
+	CLIENTEFFECT_MATERIAL( "particle/particle_musketsmoke3" )
+	CLIENTEFFECT_MATERIAL( "particle/particle_musketsmoke4" )
+	CLIENTEFFECT_MATERIAL( "particle/particle_musketsmoke5" )
+
+	CLIENTEFFECT_REGISTER_END()
 #endif
 
 //Whether or not to eject brass from weapons
@@ -1790,7 +1796,11 @@ void CTempEnts::MuzzleFlash( int type, ClientEntityHandle_t hEntity, int attachm
 			MuzzleFlash_RPG_NPC( hEntity, attachmentIndex );
 		}
 		break;
+		//BG2 - Tjoppen - flashpan
+	case MUZZLEFLASH_FLASHPAN:
+			MuzzleFlash_Flashpan( hEntity, attachmentIndex, firstPerson );
 		break;
+		//
 	default:
 		{
 			//NOTENOTE: This means you specified an invalid muzzleflash type, check your spelling?
@@ -2851,7 +2861,12 @@ void CTempEnts::MuzzleFlash_SMG1_Player( ClientEntityHandle_t hEntity, int attac
 
 void CTempEnts::MuzzleFlash_Shotgun_Player( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
-	VPROF_BUDGET( "MuzzleFlash_Shotgun_Player", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
+	//BG2 - Tjoppen - HACKHACK: just redirect shotgun muzzleflash to pistol for now
+	//also, muskets have shotgun flashes, pistols have pistol flashes
+	MuzzleFlash_Pistol_Shared( hEntity, attachmentIndex, true );
+	return;
+
+	/*VPROF_BUDGET( "MuzzleFlash_Shotgun_Player", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
 	CSmartPtr<CSimpleEmitter> pSimple = CSimpleEmitter::Create( "MuzzleFlash_Shotgun_Player" );
 
 	pSimple->SetDrawBeforeViewModel( true );
@@ -2900,7 +2915,7 @@ void CTempEnts::MuzzleFlash_Shotgun_Player( ClientEntityHandle_t hEntity, int at
 		pParticle->m_uchEndSize		= pParticle->m_uchStartSize;
 		pParticle->m_flRoll			= random->RandomInt( 0, 360 );
 		pParticle->m_flRollDelta	= 0.0f;
-	}
+	}*/
 }
 
 //==================================================
@@ -2910,6 +2925,12 @@ void CTempEnts::MuzzleFlash_Shotgun_Player( ClientEntityHandle_t hEntity, int at
 
 void CTempEnts::MuzzleFlash_Shotgun_NPC( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
+	//BG2 - Tjoppen - HACKHACK: just redirect shotgun muzzleflash to pistol for now
+	//also, muskets have shotgun flashes, pistols have pistol flashes
+	MuzzleFlash_Pistol_Shared( hEntity, attachmentIndex, false );
+	return;
+
+	/*
 	//Draw the cloud of fire
 	FX_MuzzleEffectAttached( 0.75f, hEntity, attachmentIndex );
 
@@ -3016,7 +3037,7 @@ void CTempEnts::MuzzleFlash_Shotgun_NPC( ClientEntityHandle_t hEntity, int attac
 
 		pTrailParticle->m_flLength	= 0.05f;
 		pTrailParticle->m_flWidth	= random->RandomFloat( 0.25f, 0.5f );
-	}
+	}*/
 }
 
 //==================================================
@@ -3249,7 +3270,7 @@ void MuzzleFlash_Pistol_Shared( ClientEntityHandle_t hEntity, int attachmentInde
 	if( !isFirstPerson )
 	{
 		FX_GetAttachmentTransform( hEntity, attachmentIndex, &origin, &angles );
-        //AngleVectors( angles, &forward, NULL, NULL ); // BG2 - VisualMelon - omiting this seems to fix atleast some of the smoke problems
+        AngleVectors( angles, &forward, NULL, NULL );
 	}
 
 	// Smoke
