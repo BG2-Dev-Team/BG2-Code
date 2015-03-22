@@ -495,7 +495,7 @@ bool CBaseBG2Weapon::ImpactWater( const Vector &start, const Vector &end )
 //-----------------------------------------------------------------------------
 void CBaseBG2Weapon::ImpactEffect( trace_t &traceHit )
 {
-	return;
+	//return; // BG2 - VisualMelon - no idea why this was here, wasn't in 2007
 	// See if we hit water (we don't do the other impact effects in this case)
 	if ( ImpactWater( traceHit.startpos, traceHit.endpos ) )
 		return;

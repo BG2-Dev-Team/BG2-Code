@@ -3187,7 +3187,7 @@ void MuzzleFlash_Pistol_Shared( ClientEntityHandle_t hEntity, int attachmentInde
 	QAngle angles;
 
 	Vector forward(1,0,0);
-
+	
 	// Get our attachment's transformation matrix
 	if( isFirstPerson )
 	{
@@ -3270,7 +3270,7 @@ void MuzzleFlash_Pistol_Shared( ClientEntityHandle_t hEntity, int attachmentInde
 	if( !isFirstPerson )
 	{
 		FX_GetAttachmentTransform( hEntity, attachmentIndex, &origin, &angles );
-        AngleVectors( angles, &forward, NULL, NULL );
+		AngleVectors( angles, &forward, NULL, NULL );
 	}
 
 	// Smoke
@@ -3374,7 +3374,7 @@ void MuzzleFlash_Pistol_Shared( ClientEntityHandle_t hEntity, int attachmentInde
 
 void CTempEnts::MuzzleFlash_Pistol_Player( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
-	MuzzleFlash_Pistol_Shared( hEntity, attachmentIndex, false ); //BG2
+	MuzzleFlash_Pistol_Shared( hEntity, attachmentIndex, true ); //BG2
 	return;
 }
 
@@ -3407,7 +3407,6 @@ void CTempEnts::MuzzleFlash_Flashpan( ClientEntityHandle_t hEntity, int attachme
 	}
 	/*else
 		pSimple2 = CLocalSpaceEmitter::Create( "MuzzleFlash", entityIndex, attachmentIndex );*/
-	
 
 	Vector origin(0,0,0);
 	QAngle angles;
@@ -3446,7 +3445,6 @@ void CTempEnts::MuzzleFlash_Flashpan( ClientEntityHandle_t hEntity, int attachme
 	}
 	else if( !(pWeap && !pWeap->VPhysicsGetObject() && pWeap->GetOwner()) )
 		return;		//vphysobj = on ground, or no owner. don't do smoke.
-
 
 	//BG2 - Tjoppen - cvar configurable smoke
 #if defined ( SMOKE_TESTCVARS )
