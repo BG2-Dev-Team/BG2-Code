@@ -147,6 +147,7 @@ public:
 		// In-game, everything will be in different places than at the root menu!
 		if (InGame() && !InGameLayout) {
 			m_pCommunity->SetVisible(false);
+			m_pButtonResume->SetCommand( "Disconnect" );  // Check to see if we are in game to determine the purpose of the button - Awesome - BG2
 			//DevMsg("Performing menu layout\n");
 			//int dy = 40; // delta y, shift value
 			//int x,y;
@@ -193,6 +194,7 @@ public:
 		{
 			PerformDefaultLayout();
 			m_pCommunity->SetVisible(true);
+			m_pButtonResume->SetCommand( "OpenCreateMultiplayerGameDialog" );  // Check to see if we are in game to determine the purpose of the button - Awesome - BG2
 			//InGameLayout = false; //melon - moved down
 		}
  
@@ -257,7 +259,7 @@ public:
 			{
 				if (!InRolloverResume || InGame() != InGameLayout) {
 					if (InGame())
-						m_pImgResume->SetImage("resume_over");
+						m_pImgResume->SetImage("disconnect_over");
 					else
 						m_pImgResume->SetImage("new_game_over");
 					InRolloverResume = true;
@@ -265,7 +267,7 @@ public:
 			} else {
 				if (InRolloverResume || InGame() != InGameLayout) {
 					if (InGame())
-						m_pImgResume->SetImage("resume_normal");
+						m_pImgResume->SetImage("disconnect_normal");
 					else
 						m_pImgResume->SetImage("new_game_normal");
 					InRolloverResume = false;
@@ -512,7 +514,7 @@ void CMainMenu::OnCommand(const char *command)
 	}
 	else if ( !Q_stricmp( command, "Disconnect" ) )
 	{
-		engine->ClientCmd("Disconnect");
+		engine->ClientCmd("gamemenucommand Disconnect");
 	}
 	BaseClass::OnCommand( command );
 	BaseClass::OnCommand(command);
