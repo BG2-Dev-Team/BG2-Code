@@ -81,7 +81,7 @@ void FX_CacheMaterialHandles( void )
 #ifndef CSTRIKE_DLL
 	g_Mat_Combine_Muzzleflash[0] = ParticleMgr()->GetPMaterial( "effects/combinemuzzle1" );
 	g_Mat_Combine_Muzzleflash[1] = ParticleMgr()->GetPMaterial( "effects/combinemuzzle2" );
-	g_Mat_Combine_Muzzleflash[2] = ParticleMgr()->GetPMaterial( "effects/strider_muzzle" );
+	//g_Mat_Combine_Muzzleflash[2] = ParticleMgr()->GetPMaterial( "effects/strider_muzzle" ); //BG2 - Don't need this. -HairyPotter
 #endif
 #endif
 }
