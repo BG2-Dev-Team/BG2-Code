@@ -3577,7 +3577,9 @@
     <ClCompile Include="..\server\bg2\bullet.cpp">
       <Filter>Source Files\BG2</Filter>
     </ClCompile>
-    <ClCompile Include="bg2\vgui_Panel_MainMenu.cpp" />
+    <ClCompile Include="bg2\vgui_Panel_MainMenu.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

@@ -55,6 +55,10 @@ public:
 		//SetPos(vgui::scheme()->GetProportionalScaledValue(defaultX), vgui::scheme()->GetProportionalScaledValue(defaultY));
  
 		BaseClass::PerformLayout();
+
+		// BG2 - VisualMelon - Update on resolution change
+		PerformDefaultLayout();
+		//
 	}
 	void CMainMenu::PerformDefaultLayout()
 	{
@@ -128,6 +132,14 @@ public:
 		InRolloverSave=false;
 		InRolloverOptions=false;
 		InRolloverLeave=false;
+
+		// community feed
+		int communityBorderX = 40; // left, right
+		int communityBorderY = 20; // bottom
+		int communityY = buttonstarty+70;
+
+		m_pCommunity->SetSize(this->GetWide() - communityBorderX * 2, this->GetTall() - (communityY + communityBorderY));
+		m_pCommunity->SetPos(communityBorderX, communityY);
 	}
  
 	virtual void OnThink()
@@ -464,23 +476,12 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	//community->ShowText("Loading...");
 	//community->ShowURL("http://www.bg2mod.com/");
 	
-	int communityBorderX = 40; // left, right
-	int communityBorderY = 20; // bottom
-	int communityY = buttonstarty+70;
 	m_pCommunity = vgui::SETUP_PANEL(new vgui::HTML(this, "CommunityHTML"));
-	//CBaseViewport* pViewPort = dynamic_cast<CBaseViewport *>( g_pClientMode->GetViewport() );
-	//m_pCommunity = new CTextWindow(pViewPort);
-	m_pCommunity->SetSize(this->GetWide() - communityBorderX * 2, this->GetTall() - (communityY + communityBorderY));
-	m_pCommunity->SetPos(communityBorderX, communityY);
-	m_pCommunity->OpenURL("http://www.bg2mod.com/", NULL);
-	//m_pCommunity->ShowText("Loading...");
-	//m_pCommunity->ShowURL("http://www.bg2mod.com/");
-	m_pCommunity->SetVisible(true);
-	
-	Msg("Community Panel Created!");
-	DevMsg("Community Panel Created.");
 
 	PerformDefaultLayout();
+
+	m_pCommunity->OpenURL("http://www.bg2mod.com/", NULL);
+	m_pCommunity->SetVisible(true);
 }
  
 void CMainMenu::OnCommand(const char *command)
