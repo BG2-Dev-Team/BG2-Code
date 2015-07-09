@@ -63,7 +63,7 @@ public:
 	void CMainMenu::PerformDefaultLayout()
 	{
 		const int narr = 5;
-		int x,y;
+		int x;
 		//int verx;
 		//verx = 296;
 		x = 270;
@@ -72,12 +72,12 @@ public:
 		int width = this->GetWide();
 		
 		imgarr[0] = m_pImgBegin;
-		imgarr[1] = m_pImgResume;
+		imgarr[1] = m_pImgCreateDisconnect;
 		imgarr[2] = m_pImgSave;
 		imgarr[3] = m_pImgOptions;
 		imgarr[4] = m_pImgLeave;
 		buttarr[0] = m_pButtonBegin;
-		buttarr[1] = m_pButtonResume;
+		buttarr[1] = m_pButtonCreateDisconnect;
 		buttarr[2] = m_pButtonSave;
 		buttarr[3] = m_pButtonOptions;
 		buttarr[4] = m_pButtonLeave;
@@ -102,8 +102,8 @@ public:
 		/*m_pImgBegin->SetPos(x,200);
 		m_pButtonBegin->SetPos(x,200);
 		x = x +verx;
-		m_pButtonResume->SetPos(x,200);
-		m_pImgResume->SetPos(x,200);
+		m_pButtonCreateDisconnect->SetPos(x,200);
+		m_pImgCreateDisconnect->SetPos(x,200);
 		x = x +verx;
 		m_pImgOptions->SetPos(x,200);
 		m_pButtonOptions->SetPos(x,200);
@@ -117,18 +117,18 @@ public:
 		//m_pImgSave->SetVisible(false);
 		//m_pButtonSave->SetVisible(false);
  
-		//m_pImgResume->SetVisible(false);
-		//m_pButtonResume->SetVisible(false);
+		//m_pImgCreateDisconnect->SetVisible(false);
+		//m_pButtonCreateDisconnect->SetVisible(false);
 
 		//melon
 		//m_pImgBegin->SetSize(256, 64);
-		//m_pImgResume->SetSize(256, 64);
+		//m_pImgCreateDisconnect->SetSize(256, 64);
 		//m_pImgSave->SetSize(256, 64);
 		//m_pImgOptions->SetSize(256, 64);
 		//m_pImgLeave->SetSize(256, 64);
 
 		InRolloverBegin=false;
-		InRolloverResume=false;
+		InRolloverCreateDisconnect=false;
 		InRolloverSave=false;
 		InRolloverOptions=false;
 		InRolloverLeave=false;
@@ -146,56 +146,15 @@ public:
 	{
 		// In-game, everything will be in different places than at the root menu!
 		if (InGame() && !InGameLayout) {
+			m_pButtonCreateDisconnect->SetCommand( "Disconnect" );
+			PerformDefaultLayout();
 			m_pCommunity->SetVisible(false);
-			m_pButtonResume->SetCommand( "Disconnect" );  // Check to see if we are in game to determine the purpose of the button - Awesome - BG2
-			//DevMsg("Performing menu layout\n");
-			//int dy = 40; // delta y, shift value
-			//int x,y;
-
-			//m_pImgBegin->SetPos(300,200);
-			//m_pButtonBegin->SetPos(300,200);
-			//m_pButtonResume->SetPos(812,200);
-			//m_pImgResume->SetPos(812,200);
-			//m_pImgOptions->SetPos(1324,200);
-			//m_pButtonOptions->SetPos(1324,200);
-			//m_pButtonSave->SetPos(1836,200);
-			//m_pImgSave->SetPos(1836,200);
-			// Resume
-			/*m_pButtonResume->SetPos(300,200);
-			m_pImgResume->SetPos(300,200);
-			m_pButtonResume->SetVisible(true);
-			m_pImgResume->SetVisible(true);
- 
-			m_pButtonBegin->GetPos(x,y);
-			m_pButtonBegin->SetPos(x,y+dy);
-			m_pImgBegin->GetPos(x,y);
-			m_pImgBegin->SetPos(x,y+dy);
- 
-			// Save game
-			m_pButtonSave->SetPos(x,y+(2*dy));
-			m_pImgSave->SetPos(x,y+(2*dy));
-			m_pButtonSave->SetVisible(true);
-			m_pImgSave->SetVisible(true);
- 
-			m_pButtonOptions->GetPos(x,y);
-			m_pButtonOptions->SetPos(x,y+(2*dy));
-			m_pImgOptions->GetPos(x,y);
-			m_pImgOptions->SetPos(x,y+(2*dy)); // Options moves under Save game, so twice as far
- 
-			m_pButtonLeave->GetPos(x,y);
-			m_pButtonLeave->SetPos(x,y+(2*dy));
-			m_pImgLeave->GetPos(x,y);
-			m_pImgLeave->SetPos(x,y+(2*dy)); // Leave game moves under Save game, so twice as far*/
-
- 
-			//InGameLayout = true; //melon - moved down
 		}
 		if (!InGame() && InGameLayout)
 		{
+			m_pButtonCreateDisconnect->SetCommand( "OpenCreateMultiplayerGameDialog" );
 			PerformDefaultLayout();
 			m_pCommunity->SetVisible(true);
-			m_pButtonResume->SetCommand( "OpenCreateMultiplayerGameDialog" );  // Check to see if we are in game to determine the purpose of the button - Awesome - BG2
-			//InGameLayout = false; //melon - moved down
 		}
  
 		// Get mouse coords
@@ -207,7 +166,7 @@ public:
 		GetPos(fx,fy);
  
 		CheckRolloverBegin(x,y,fx,fy);
-		CheckRolloverResume(x,y,fx,fy);
+		CheckRolloverCreateDisconnect(x,y,fx,fy);
 		CheckRolloverSave(x,y,fx,fy);
 		CheckRolloverOptions(x,y,fx,fy);
 		CheckRolloverLeave(x,y,fx,fy);
@@ -242,14 +201,14 @@ public:
 		}
 	}
  
-	// BG2 - VisualMelon - I've butchered this a bit so it also takes care of changing the resume image
-	void CheckRolloverResume(int x,int y, int fx, int fy)
+	// BG2 - VisualMelon - I've butchered this a bit so it also takes care of changing the disconnect image
+	void CheckRolloverCreateDisconnect(int x,int y, int fx, int fy)
 	{
-		if(m_pButtonResume->IsVisible()) {
+		if(m_pButtonCreateDisconnect->IsVisible()) {
 			int bx,by,bw,bh; // button xpos, ypos, width, height
  
-			m_pButtonResume->GetPos(bx,by);
-			m_pButtonResume->GetSize(bw,bh);
+			m_pButtonCreateDisconnect->GetPos(bx,by);
+			m_pButtonCreateDisconnect->GetSize(bw,bh);
  
 			bx = bx+fx; // xpos for button (rel to screen)
 			by = by+fy; // ypos for button (rel to screen)
@@ -257,20 +216,20 @@ public:
 			// Check and see if mouse cursor is within button bounds
 			if ((x > bx && x < bx+bw) && (y > by && y < by+bh))
 			{
-				if (!InRolloverResume || InGame() != InGameLayout) {
+				if (!InRolloverCreateDisconnect || InGame() != InGameLayout) {
 					if (InGame())
-						m_pImgResume->SetImage("disconnect_over");
+						m_pImgCreateDisconnect->SetImage("disconnect_over");
 					else
-						m_pImgResume->SetImage("new_game_over");
-					InRolloverResume = true;
+						m_pImgCreateDisconnect->SetImage("new_game_over");
+					InRolloverCreateDisconnect = true;
 				}
 			} else {
-				if (InRolloverResume || InGame() != InGameLayout) {
+				if (InRolloverCreateDisconnect || InGame() != InGameLayout) {
 					if (InGame())
-						m_pImgResume->SetImage("disconnect_normal");
+						m_pImgCreateDisconnect->SetImage("disconnect_normal");
 					else
-						m_pImgResume->SetImage("new_game_normal");
-					InRolloverResume = false;
+						m_pImgCreateDisconnect->SetImage("new_game_normal");
+					InRolloverCreateDisconnect = false;
 				}
 			}
 		}
@@ -363,12 +322,12 @@ public:
  
 private:
 	vgui::ImagePanel *m_pImgBegin;
-	vgui::ImagePanel *m_pImgResume;
+	vgui::ImagePanel *m_pImgCreateDisconnect;
 	vgui::ImagePanel *m_pImgSave;
 	vgui::ImagePanel *m_pImgOptions;
 	vgui::ImagePanel *m_pImgLeave;
 	vgui::Button *m_pButtonBegin;
-	vgui::Button *m_pButtonResume;
+	vgui::Button *m_pButtonCreateDisconnect;
 	vgui::Button *m_pButtonSave;
 	vgui::Button *m_pButtonOptions;
 	vgui::Button *m_pButtonLeave;
@@ -380,7 +339,7 @@ private:
 	int defaultY;
 	bool InGameLayout;
 	bool InRolloverBegin;
-	bool InRolloverResume;
+	bool InRolloverCreateDisconnect;
 	bool InRolloverSave;
 	bool InRolloverOptions;
 	bool InRolloverLeave;
@@ -422,7 +381,7 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
         // Initialize images
 
 	m_pImgBegin = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Find Server"));
-	m_pImgResume = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Create Game"));
+	m_pImgCreateDisconnect = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Create Game"));
 	m_pImgOptions = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Options"));
 	m_pImgSave = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "BG2 Options"));
 	m_pImgLeave = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Leave"));
@@ -437,17 +396,17 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	m_pButtonBegin->SetCommand( "OpenServerBrowser" );
 	m_pImgBegin->SetImage("find_server_normal");
  
-	// Resume
-	m_pButtonResume = vgui::SETUP_PANEL(new vgui::Button(this, "btnCreate", ""));	
-	m_pButtonResume->SetSize(256, 64);
-	m_pButtonResume->SetPaintBorderEnabled(false);
-	m_pButtonResume->SetPaintEnabled(false);
-	m_pButtonResume->SetCommand( "OpenCreateMultiplayerGameDialog" );
-	m_pImgResume->SetImage("new_game_normal");
+	// Create / Disconnect
+	m_pButtonCreateDisconnect = vgui::SETUP_PANEL(new vgui::Button(this, "btnCreate", ""));	
+	m_pButtonCreateDisconnect->SetSize(256, 64);
+	m_pButtonCreateDisconnect->SetPaintBorderEnabled(false);
+	m_pButtonCreateDisconnect->SetPaintEnabled(false);
+	m_pButtonCreateDisconnect->SetCommand( "OpenCreateMultiplayerGameDialog" );
+	m_pImgCreateDisconnect->SetImage("new_game_normal");
  
 	// Save
 	m_pButtonSave = vgui::SETUP_PANEL(new vgui::Button(this, "btnBG2", ""));
-	m_pButtonSave->SetSize(256, 60);
+	m_pButtonSave->SetSize(256, 64);
 	m_pButtonSave->SetPaintBorderEnabled(false);
 	m_pButtonSave->SetPaintEnabled(false);
 	m_pButtonSave->SetCommand("OpenBG2OptionsDialog");
@@ -514,7 +473,7 @@ void CMainMenu::OnCommand(const char *command)
 	}
 	else if ( !Q_stricmp( command, "Disconnect" ) )
 	{
-		engine->ClientCmd("gamemenucommand Disconnect");
+		engine->ClientCmd("Disconnect");
 	}
 	BaseClass::OnCommand( command );
 	BaseClass::OnCommand(command);
