@@ -152,14 +152,14 @@ LINK_ENTITY_TO_CLASS( hl2mp_gamerules, CHL2MPGameRulesProxy );
 IMPLEMENT_NETWORKCLASS_ALIASED( HL2MPGameRulesProxy, DT_HL2MPGameRulesProxy )
 
 static HL2MPViewVectors g_HL2MPViewVectors(
-	Vector( 0, 0, 64 ),       //VEC_VIEW (m_vView) 
+	Vector( 0, 0, 60 ),       //VEC_VIEW (m_vView) //BG2 - Awesome[Was 64, but lowered it to match 2007 height. The 2007 height was 64 too but for some reason the 2013 one was still too high so I lowered it here]
 							  
 	Vector(-16, -16, 0 ),	  //VEC_HULL_MIN (m_vHullMin)
 	Vector( 16,  16,  72 ),	  //VEC_HULL_MAX (m_vHullMax)
 							  					
 	Vector(-16, -16, 0 ),	  //VEC_DUCK_HULL_MIN (m_vDuckHullMin)
 	Vector( 16,  16,  36 ),	  //VEC_DUCK_HULL_MAX	(m_vDuckHullMax)
-	Vector( 0, 0, 28 ),		  //VEC_DUCK_VIEW		(m_vDuckView)
+	Vector( 0, 0, 36 ),		  //VEC_DUCK_VIEW		(m_vDuckView) //BG2 - Awesome[Was 24, but increased it to match perceived 2007 height. See comment above]
 							  					
 	Vector(-10, -10, -10 ),	  //VEC_OBS_HULL_MIN	(m_vObsHullMin)
 	Vector( 10,  10,  10 ),	  //VEC_OBS_HULL_MAX	(m_vObsHullMax)
