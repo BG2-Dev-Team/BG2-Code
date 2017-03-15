@@ -26,6 +26,7 @@
 #include <algorithm>
 #include "tier0/valve_minmax_on.h"
 
+//BG2 - always allow detail shapes because pretty pretty !
 //#if defined(DOD_DLL) || defined(CSTRIKE_DLL)
 #define USE_DETAIL_SHAPES
 //#endif
@@ -48,10 +49,10 @@
 struct model_t;
 
 
-ConVar cl_detaildist( "cl_detaildist", "1200", FCVAR_ARCHIVE, "Distance at which detail props are no longer visible" );
+ConVar cl_detaildist( "cl_detaildist", "2000", FCVAR_ARCHIVE, "Distance at which detail props are no longer visible" ); //BG2 - made it 2000 because pretty pretty - Awesome
 ConVar cl_detailfade( "cl_detailfade", "400", 0, "Distance across which detail props fade in" );
 #if defined( USE_DETAIL_SHAPES ) 
-ConVar cl_detail_max_sway( "cl_detail_max_sway", "20", FCVAR_ARCHIVE, "Amplitude of the detail prop sway" );		//BG2 - changed the default value here from 0 to 20 - Awesome
+ConVar cl_detail_max_sway( "cl_detail_max_sway", "20", FCVAR_ARCHIVE, "Amplitude of the detail prop sway" ); //BG2 - default max sway is now 20 because pretty pretty - Awesome
 ConVar cl_detail_avoid_radius( "cl_detail_avoid_radius", "0", FCVAR_ARCHIVE, "radius around detail sprite to avoid players" );
 ConVar cl_detail_avoid_force( "cl_detail_avoid_force", "0", FCVAR_ARCHIVE, "force with which to avoid players ( in units, percentage of the width of the detail sprite )" );
 ConVar cl_detail_avoid_recover_speed( "cl_detail_avoid_recover_speed", "0", FCVAR_ARCHIVE, "how fast to recover position after avoiding players" );
@@ -1477,7 +1478,7 @@ void CDetailObjectSystem::LevelInitPreEntity()
 		PrecacheMaterial( DETAIL_SPRITE_MATERIAL );
 		IMaterial *pMat = m_DetailSpriteMaterial;
 		// adjust for non-square textures (cropped)
-		float flRatio = pMat->GetMappingWidth() / pMat->GetMappingHeight();
+		float flRatio = (float)( pMat->GetMappingWidth() ) / pMat->GetMappingHeight();
 		if ( flRatio > 1.0 )
 		{
 			for( int i = 0; i<m_DetailSpriteDict.Count(); i++ )

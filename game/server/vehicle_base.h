@@ -20,6 +20,8 @@
 #include "entityblocker.h"
 #include "vehicle_baseserver.h"
 #include "vehicle_viewblend_shared.h"
+
+//class CNPC_VehicleDriver;
 class CFourWheelVehiclePhysics;
 class CPropVehicleDriveable;
 class CSoundPatch;
@@ -50,6 +52,7 @@ public:
 	const vehicle_operatingparams_t	*GetVehicleOperatingParams( void );
 
 	// NPC Driving
+	//void					NPC_SetDriver( CNPC_VehicleDriver *pDriver );
 	void					NPC_DriveVehicle( void );
 
 	CPropVehicleDriveable	*GetFourWheelVehicle( void );
@@ -266,6 +269,7 @@ public:
 	CNetworkVar( bool, m_nScannerDisabledVehicle );
 
 	// NPC Driver
+	//CHandle<CNPC_VehicleDriver>	 m_hNPCDriver;
 	EHANDLE						 m_hKeepUpright;
 
 	// --------------------------------

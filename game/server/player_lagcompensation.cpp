@@ -172,6 +172,7 @@ class CLagCompensationManager : public CAutoGameSystemPerFrame, public ILagCompe
 public:
 	CLagCompensationManager( char const *name ) : CAutoGameSystemPerFrame( name ), m_flTeleportDistanceSqr( 64 *64 )
 	{
+		m_isCurrentlyDoingCompensation = false;
 	}
 
 	// IServerSystem stuff
@@ -195,8 +196,10 @@ public:
 	void			FinishLagCompensation( CBasePlayer *player );
 
 	//BG2 - Tjoppen - bullet lag compensation
-	void			StartLagCompensation( CBasePlayer *player, CUserCmd *cmd, float flTargetTime );
-	float			GetTargetTime( CBasePlayer *player, CUserCmd *cmd ) const;
+	void			StartLagCompensation(CBasePlayer *player, CUserCmd *cmd, float flTargetTime);
+	float			GetTargetTime(CBasePlayer *player, CUserCmd *cmd) const;
+
+	bool			IsCurrentlyDoingLagCompensation() const OVERRIDE { return m_isCurrentlyDoingCompensation; }
 
 private:
 	void			BacktrackPlayer( CBasePlayer *player, float flTargetTime );
@@ -220,6 +223,8 @@ private:
 	CBasePlayer				*m_pCurrentPlayer;	// The player we are doing lag compensation for
 
 	float					m_flTeleportDistanceSqr;
+
+	bool					m_isCurrentlyDoingCompensation;	// Sentinel to prevent calling StartLagCompensation a second time before a Finish.
 };
 
 static CLagCompensationManager g_LagCompensationManager( "CLagCompensationManager" );
@@ -325,55 +330,57 @@ void CLagCompensationManager::FrameUpdatePostEntityThink()
 
 //BG2 - Tjoppen - bullet lag compensation - refactored the code below so the bullet code can access the calculated target time
 // Called during player movement to set up/restore after lag compensation
-void CLagCompensationManager::StartLagCompensation( CBasePlayer *player, CUserCmd *cmd )
+void CLagCompensationManager::StartLagCompensation(CBasePlayer *player, CUserCmd *cmd)
 {
-	StartLagCompensation( player, cmd, GetTargetTime( player, cmd ) );
+	StartLagCompensation(player, cmd, GetTargetTime(player, cmd));
 }
 
-float CLagCompensationManager::GetTargetTime( CBasePlayer *player, CUserCmd *cmd ) const
+float CLagCompensationManager::GetTargetTime(CBasePlayer *player, CUserCmd *cmd) const
 {
 	// Get true latency
 
 	// correct is the amout of time we have to correct game time
 	float correct = 0.0f;
 
-	INetChannelInfo *nci = engine->GetPlayerNetInfo( player->entindex() ); 
+	INetChannelInfo *nci = engine->GetPlayerNetInfo(player->entindex());
 
-	if ( nci )
+	if (nci)
 	{
 		// add network latency
-		correct+= nci->GetLatency( FLOW_OUTGOING );
+		correct += nci->GetLatency(FLOW_OUTGOING);
 	}
 
 	// calc number of view interpolation ticks - 1
-	int lerpTicks = TIME_TO_TICKS( player->m_fLerpTime );
+	int lerpTicks = TIME_TO_TICKS(player->m_fLerpTime);
 
 	// add view interpolation latency see C_BaseEntity::GetInterpolationAmount()
-	correct += TICKS_TO_TIME( lerpTicks );
-	
+	correct += TICKS_TO_TIME(lerpTicks);
+
 	// check bouns [0,sv_maxunlag]
-	correct = clamp( correct, 0.0f, sv_maxunlag.GetFloat() );
+	correct = clamp(correct, 0.0f, sv_maxunlag.GetFloat());
 
 	// correct tick send by player 
 	int targettick = cmd->tick_count - lerpTicks;
 
 	// calc difference between tick send by player and our latency based tick
-	float deltaTime =  correct - TICKS_TO_TIME(gpGlobals->tickcount - targettick);
+	float deltaTime = correct - TICKS_TO_TIME(gpGlobals->tickcount - targettick);
 
-	if ( fabs( deltaTime ) > 0.2f )
+	if (fabs(deltaTime) > 0.2f)
 	{
 		// difference between cmd time and latency is too big > 200ms, use time correction based on latency
 		// DevMsg("StartLagCompensation: delta too big (%.3f)\n", deltaTime );
-		targettick = gpGlobals->tickcount - TIME_TO_TICKS( correct );
+		targettick = gpGlobals->tickcount - TIME_TO_TICKS(correct);
 	}
 
-	return TICKS_TO_TIME( targettick );
+	return TICKS_TO_TIME(targettick);
 }
 
 
 // Called during player movement to set up/restore after lag compensation
-void CLagCompensationManager::StartLagCompensation( CBasePlayer *player, CUserCmd *cmd, float flTargetTime )
+void CLagCompensationManager::StartLagCompensation(CBasePlayer *player, CUserCmd *cmd, float flTargetTime)
 {
+	Assert( !m_isCurrentlyDoingCompensation );
+
 	//DONT LAG COMP AGAIN THIS FRAME IF THERES ALREADY ONE IN PROGRESS
 	//IF YOU'RE HITTING THIS THEN IT MEANS THERES A CODE BUG
 	if ( m_pCurrentPlayer )
@@ -401,6 +408,8 @@ void CLagCompensationManager::StartLagCompensation( CBasePlayer *player, CUserCm
 	VPROF_BUDGET( "StartLagCompensation", VPROF_BUDGETGROUP_OTHER_NETWORKING );
 	Q_memset( m_RestoreData, 0, sizeof( m_RestoreData ) );
 	Q_memset( m_ChangeData, 0, sizeof( m_ChangeData ) );
+
+	m_isCurrentlyDoingCompensation = true;
 
 	// Get true latency
 
@@ -786,7 +795,10 @@ void CLagCompensationManager::FinishLagCompensation( CBasePlayer *player )
 	m_pCurrentPlayer = NULL;
 
 	if ( !m_bNeedToRestore )
+	{
+		m_isCurrentlyDoingCompensation = false;
 		return; // no player was changed at all
+	}
 
 	// Iterate all active players
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
@@ -880,6 +892,8 @@ void CLagCompensationManager::FinishLagCompensation( CBasePlayer *player )
 			pPlayer->SetSimulationTime( restore->m_flSimulationTime );
 		}
 	}
+
+	m_isCurrentlyDoingCompensation = false;
 }
 
 

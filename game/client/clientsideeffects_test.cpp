@@ -312,6 +312,6 @@ void FX_Tracer( Vector& start, Vector& end, int velocity, bool makeWhiz )
 	//BG2 - Tjoppen - always make whizzes! credits go to Skillet5151 on the bgmod.com forums
 	//if( makeWhiz )
 	//{
-		FX_TracerSound( start, end, TRACER_TYPE_DEFAULT );	
+	FX_TracerSound(start, end, TRACER_TYPE_DEFAULT);
 	//}
 }

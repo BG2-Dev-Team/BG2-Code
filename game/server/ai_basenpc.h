@@ -45,7 +45,7 @@ class CAI_Network;
 class CAI_Route;
 class CAI_Hint;
 class CAI_Node;
-class CAI_Navigator;
+//class CAI_Navigator;
 class CAI_Pathfinder;
 class CAI_Senses;
 class CAI_Enemies;
@@ -55,9 +55,12 @@ class CAI_BehaviorBase;
 class CAI_GoalEntity;
 class CAI_Motor;
 class CAI_MoveProbe;
+//class CAI_LocalNavigator;
+//class CAI_TacticalServices;
 class CVarBitVec;
 class CAI_ScriptedSequence;
 class CSceneEntity;
+//class CBaseGrenade;
 class CBaseDoor;
 class CBasePropDoor;
 struct AI_Waypoint_t;
@@ -536,7 +539,10 @@ public:
 	virtual CAI_Senses *	CreateSenses();
 	virtual CAI_MoveProbe *	CreateMoveProbe();
 	virtual CAI_Motor *		CreateMotor();
+	//virtual CAI_LocalNavigator *CreateLocalNavigator();
+	//virtual CAI_Navigator *	CreateNavigator();
 	virtual CAI_Pathfinder *CreatePathfinder();
+	//virtual CAI_TacticalServices *CreateTacticalServices();
 
 	//---------------------------------
 
@@ -1229,7 +1235,7 @@ public:
 	// Pathfinding, navigation & movement
 	//
 	//-----------------------------------------------------
-
+	
 	CAI_Navigator *		GetNavigator() 				{ return m_pNavigator; }
 	const CAI_Navigator *GetNavigator() const 		{ return m_pNavigator; }
 
@@ -1620,6 +1626,8 @@ public:
 
 	//---------------------------------
 
+	//CAI_TacticalServices *GetTacticalServices()			{ return m_pTacticalServices; }
+	//const CAI_TacticalServices *GetTacticalServices() const { return m_pTacticalServices; }
 
 	//---------------------------------
 	//  Cover
@@ -1645,6 +1653,7 @@ protected:
 private:
 	string_t			m_strHintGroup;
 	bool				m_bHintGroupNavLimiting;
+	//CAI_TacticalServices *m_pTacticalServices;
 
 public:
 	//-----------------------------------------------------
@@ -1661,6 +1670,7 @@ public:
 
 	void				NPCUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 
+	//CBaseGrenade*		IncomingGrenade(void);
 
 	virtual bool		ShouldFadeOnDeath( void );
 
@@ -1751,7 +1761,6 @@ public:
 
 	virtual Activity	GetFlinchActivity( bool bHeavyDamage, bool bGesture );
 	
-	virtual bool		ShouldGib( const CTakeDamageInfo &info ) { return false; }	// Always ragdoll, unless specified by the leaf class
 	virtual bool		Event_Gibbed( const CTakeDamageInfo &info );
 	virtual void		Event_Killed( const CTakeDamageInfo &info );
 

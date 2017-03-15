@@ -21,11 +21,14 @@
 
 //BG2 - Draco - no hl2 player stuff on server!
 #ifndef CLIENT_DLL
-	#include "hl2mp_player.h"
+#include "hl2mp_player.h"
+#include "../shared/bg2/ironsights.h"
 #else
-	#include "c_hl2mp_player.h"
-	#include "cdll_int.h"
+#include "c_hl2mp_player.h"
+#include "cdll_int.h"
 #endif
+#include "../shared/bg2/bg2_player_shared.h"
+
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -526,7 +529,7 @@ void CGameMovement::DiffPrint( char const *fmt, ... )
 #endif // !PREDICTION_ERROR_CHECK_LEVEL
 
 #ifndef _XBOX
-void COM_Log( char *pszFile, const char *fmt, ...)
+void COM_Log( const char *pszFile, const char *fmt, ...)
 {
 	va_list		argptr;
 	char		string[1024];
@@ -1220,96 +1223,96 @@ void CGameMovement::FinishMove( void )
 //-----------------------------------------------------------------------------
 void CGameMovement::DecayPunchAngle( void )
 {
-	float fact = expf( -9.0f * gpGlobals->frametime );
+	float fact = expf(-9.0f * gpGlobals->frametime);
 
-	if( player->m_Local.m_vecPunchAngleVel.LengthSqr() > 0.001 )
+	if (player->m_Local.m_vecPunchAngleVel.LengthSqr() > 0.001)
 	{
 		player->m_Local.m_vecPunchAngleVel *= fact;
 
 		QAngle newpunch = player->m_Local.m_vecPunchAngle +
-							player->m_Local.m_vecPunchAngleVel * gpGlobals->frametime;
+			player->m_Local.m_vecPunchAngleVel * gpGlobals->frametime;
 
-		player->SetPunchAngle( QAngle(	clamp(newpunch.x, -89, 89 ), 
-										clamp(newpunch.y, -179, 179 ),
-										clamp(newpunch.z, -89, 89 )) );
+		player->SetPunchAngle(QAngle(clamp(newpunch.x, -89, 89),
+			clamp(newpunch.y, -179, 179),
+			clamp(newpunch.z, -89, 89)));
 	}
-	else if( (player->m_Local.m_vecPunchAngle.x*player->m_Local.m_vecPunchAngle.x +
-		player->m_Local.m_vecPunchAngle.y*player->m_Local.m_vecPunchAngle.y) > 0.001 )
+	else if ((player->m_Local.m_vecPunchAngle.x*player->m_Local.m_vecPunchAngle.x +
+		player->m_Local.m_vecPunchAngle.y*player->m_Local.m_vecPunchAngle.y) > 0.001)
 	{
 #ifdef CLIENT_DLL
 		QAngle viewangles;
-		engine->GetViewAngles( viewangles );
-		engine->SetViewAngles( viewangles + player->m_Local.m_vecPunchAngle );
+		engine->GetViewAngles(viewangles);
+		engine->SetViewAngles(viewangles + player->m_Local.m_vecPunchAngle);
 #endif
-		player->SetPunchAngle( QAngle( 0, 0, player->m_Local.m_vecPunchAngle.z ) );
+		player->SetPunchAngle(QAngle(0, 0, player->m_Local.m_vecPunchAngle.z));
 		player->m_Local.m_vecPunchAngleVel.Init();//.x = player->m_Local.m_vecPunchAngleVel.y = 0;
 	}
 
-	if( player->m_Local.m_vecPunchAngle.z > 0.00001 )
+	if (player->m_Local.m_vecPunchAngle.z > 0.00001)
 	{
 		//decay roll
-		player->SetPunchAngle( QAngle( player->m_Local.m_vecPunchAngle.x, player->m_Local.m_vecPunchAngle.y, player->m_Local.m_vecPunchAngle.z*fact ) );
+		player->SetPunchAngle(QAngle(player->m_Local.m_vecPunchAngle.x, player->m_Local.m_vecPunchAngle.y, player->m_Local.m_vecPunchAngle.z*fact));
 	}
-	else if( player->m_Local.m_vecPunchAngle.z != 0 )
+	else if (player->m_Local.m_vecPunchAngle.z != 0)
 	{
-		player->SetPunchAngle( QAngle( player->m_Local.m_vecPunchAngle.x, player->m_Local.m_vecPunchAngle.y, 0 ) );
+		player->SetPunchAngle(QAngle(player->m_Local.m_vecPunchAngle.x, player->m_Local.m_vecPunchAngle.y, 0));
 	}
-	
+
 	//BG2 - Tjoppen - non-networked punchangle
 	//if ( player->m_Local.m_vecPunchAngle->LengthSqr() > 0.001 || player->m_Local.m_vecPunchAngleVel->LengthSqr() > 0.001 )
 	/*if ( player->m_Local.m_vecPunchAngle.LengthSqr() > 0.001 || player->m_Local.m_vecPunchAngleVel.LengthSqr() > 0.001 )
 	//
 	{
-		player->m_Local.m_vecPunchAngle += player->m_Local.m_vecPunchAngleVel * gpGlobals->frametime;
-		float damping = 1 - (PUNCH_DAMPING * gpGlobals->frametime);
-		
-		if ( damping < 0 )
-		{
-			damping = 0;
-		}
-		player->m_Local.m_vecPunchAngleVel *= damping;
-		 
-		// torsional spring
-		// UNDONE: Per-axis spring constant?
-		float springForceMagnitude = PUNCH_SPRING_CONSTANT * gpGlobals->frametime;
-		springForceMagnitude = clamp(springForceMagnitude, 0, 2 );
-		player->m_Local.m_vecPunchAngleVel -= player->m_Local.m_vecPunchAngle * springForceMagnitude;
+	player->m_Local.m_vecPunchAngle += player->m_Local.m_vecPunchAngleVel * gpGlobals->frametime;
+	float damping = 1 - (PUNCH_DAMPING * gpGlobals->frametime);
 
-		//BG2 - Tjoppen - once punchanglevel starts to go towards (0,0,0), stop.
-		if( (player->m_Local.m_vecPunchAngleVel.x * player->m_Local.m_vecPunchAngle.x < 0 || 
-			player->m_Local.m_vecPunchAngleVel.y * player->m_Local.m_vecPunchAngle.y < 0) &&
-			!(player->m_Local.m_vecPunchAngle.LengthSqr() < 0.001 && player->m_Local.m_vecPunchAngleVel.LengthSqr() > 0.001) )
-		{
-			//different signs and we not just started to move - stop.
-			//HOWEVER: roll must still go back so we don't end up in "drunk" mode
-#ifdef CLIENT_DLL
-			QAngle viewangles;
-			engine->GetViewAngles( viewangles );
-			engine->SetViewAngles( viewangles + player->m_Local.m_vecPunchAngle );
-			//mv->m_vecViewAngles = engine->GetViewAngles();	//try me!
-			//player->SetLocalViewAngles( player->pl.v_angle + player->m_Local.m_vecPunchAngle );
-#endif
-			//set all but z to zero
-			player->SetPunchAngle( QAngle( 0, 0, clamp(player->m_Local.m_vecPunchAngle.z, -89, 89) ) );	//clamp
-			player->m_Local.m_vecPunchAngleVel.x = player->m_Local.m_vecPunchAngleVel.y = 0;
-			return;
-		}
-		else
-		{
-			// don't wrap around
-			//BG2 - Tjoppen - non-networked punchangle
-			player->m_Local.m_vecPunchAngle.Init( 
-				clamp(player->m_Local.m_vecPunchAngle.x, -89, 89 ), 
-				clamp(player->m_Local.m_vecPunchAngle.y, -179, 179 ),
-				clamp(player->m_Local.m_vecPunchAngle.z, -89, 89 ) );
-		}
-		//
+	if ( damping < 0 )
+	{
+	damping = 0;
+	}
+	player->m_Local.m_vecPunchAngleVel *= damping;
+
+	// torsional spring
+	// UNDONE: Per-axis spring constant?
+	float springForceMagnitude = PUNCH_SPRING_CONSTANT * gpGlobals->frametime;
+	springForceMagnitude = clamp(springForceMagnitude, 0, 2 );
+	player->m_Local.m_vecPunchAngleVel -= player->m_Local.m_vecPunchAngle * springForceMagnitude;
+
+	//BG2 - Tjoppen - once punchanglevel starts to go towards (0,0,0), stop.
+	if( (player->m_Local.m_vecPunchAngleVel.x * player->m_Local.m_vecPunchAngle.x < 0 ||
+	player->m_Local.m_vecPunchAngleVel.y * player->m_Local.m_vecPunchAngle.y < 0) &&
+	!(player->m_Local.m_vecPunchAngle.LengthSqr() < 0.001 && player->m_Local.m_vecPunchAngleVel.LengthSqr() > 0.001) )
+	{
+	//different signs and we not just started to move - stop.
+	//HOWEVER: roll must still go back so we don't end up in "drunk" mode
+	#ifdef CLIENT_DLL
+	QAngle viewangles;
+	engine->GetViewAngles( viewangles );
+	engine->SetViewAngles( viewangles + player->m_Local.m_vecPunchAngle );
+	//mv->m_vecViewAngles = engine->GetViewAngles();	//try me!
+	//player->SetLocalViewAngles( player->pl.v_angle + player->m_Local.m_vecPunchAngle );
+	#endif
+	//set all but z to zero
+	player->SetPunchAngle( QAngle( 0, 0, clamp(player->m_Local.m_vecPunchAngle.z, -89, 89) ) );	//clamp
+	player->m_Local.m_vecPunchAngleVel.x = player->m_Local.m_vecPunchAngleVel.y = 0;
+	return;
+	}
+	else
+	{
+	// don't wrap around
+	//BG2 - Tjoppen - non-networked punchangle
+	player->m_Local.m_vecPunchAngle.Init(
+	clamp(player->m_Local.m_vecPunchAngle.x, -89, 89 ),
+	clamp(player->m_Local.m_vecPunchAngle.y, -179, 179 ),
+	clamp(player->m_Local.m_vecPunchAngle.z, -89, 89 ) );
+	}
+	//
 	}
 	//BG2 - Tjoppen - make sure punchangle is absolutely straight-on if we're done adjusting it
 	else
 	{
-		player->SetPunchAngle( vec3_angle );
-		player->m_Local.m_vecPunchAngleVel.Init();
+	player->SetPunchAngle( vec3_angle );
+	player->m_Local.m_vecPunchAngleVel.Init();
 	}*/
 	//
 }
@@ -1875,10 +1878,10 @@ bool CGameMovement::CanAccelerate()
 {
 	//BG2 - Tjoppen - reenable spectators
 #ifndef CLIENT_DLL
-	if( player->HasPhysicsFlag( PFLAG_OBSERVER ) )
+	if (player->HasPhysicsFlag(PFLAG_OBSERVER))
 		return true;
 #endif
-	if( player->GetTeamNumber() == TEAM_SPECTATOR )
+	if (player->GetTeamNumber() == TEAM_SPECTATOR)
 		return true;
 	//
 
@@ -2229,7 +2232,7 @@ void CGameMovement::FullObserverMove( void )
 {
 	int mode = player->GetObserverMode();
 
-	if ( mode == OBS_MODE_IN_EYE || mode == OBS_MODE_CHASE )
+	if ( mode == OBS_MODE_IN_EYE || mode == OBS_MODE_CHASE || mode == OBS_MODE_POI )
 	{
 		CBaseEntity * target = player->GetObserverTarget();
 
@@ -2435,13 +2438,13 @@ void CGameMovement::PlaySwimSound()
 //-----------------------------------------------------------------------------
 bool CGameMovement::CheckJumpButton( void )
 {
-	#ifndef CLIENT_DLL
-	CHL2MP_Player *pHL2Player = ToHL2MPPlayer( player );
-	#else
+#ifndef CLIENT_DLL
+	CHL2MP_Player *pHL2Player = ToHL2MPPlayer(player);
+#else
 	C_HL2MP_Player *pHL2Player = (C_HL2MP_Player*)C_HL2MP_Player::GetLocalPlayer();
-	#endif
+#endif
 
-	if ( !pHL2Player )
+	if (!pHL2Player)
 		return false;
 
 	if (player->pl.deadflag)
@@ -2489,21 +2492,21 @@ bool CGameMovement::CheckJumpButton( void )
 		return false;		// in air, so no effect
 	}
 
-	if( player->GetActiveWeapon() )
+	if (player->GetActiveWeapon())
 	{
 		//BG2 - Tjoppen - don't allow jumping while reloading
-	if( player->GetActiveWeapon()->m_bInReload )
-		return false;
+		if (player->GetActiveWeapon()->m_bInReload)
+			return false;
 
-	//BG2 - don't allow jumping while Iron Sighted - HairyPotter
-	if( player->GetActiveWeapon()->m_bIsIronsighted )
-		return false;
+		//BG2 - don't allow jumping while Iron Sighted - HairyPotter
+		if (player->GetActiveWeapon()->m_bIsIronsighted)
+			return false;
 	}
 
 	//stamina drain for jumping
-	int drain = 40;
+	int drain = STAMINA_DRAIN_JUMP;
 
-	if( pHL2Player->m_iStamina < drain )
+	if (pHL2Player->m_iStamina < drain)
 		return false;				//don't drain unless we can cover some height
 	//
 
@@ -2632,7 +2635,7 @@ bool CGameMovement::CheckJumpButton( void )
 
 #ifndef CLIENT_DLL
 	//BG2 - Draco - decrease stamina for jumping
-	pHL2Player->DrainStamina( drain );
+	pHL2Player->DrainStamina(drain);
 #endif
 
 	return true;
@@ -4079,9 +4082,7 @@ void CGameMovement::PlayerRoughLandingEffects( float fvol )
 	{
 		//
 		// Play landing sound right away.
-		//BG2 - Tjoppen - footstep fix
-		player->m_flStepSoundTime = gpGlobals->curtime + 0.400f;
-		//
+		player->m_flStepSoundTime = 400;
 
 		// Play step sound for current texture.
 		player->PlayStepSound( (Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, fvol, true );
@@ -4094,7 +4095,7 @@ void CGameMovement::PlayerRoughLandingEffects( float fvol )
 		player->m_Local.m_vecPunchAngle[ROLL] = player->m_Local.m_flFallVelocity * 0.013;
 		//
 
-		if ( player->m_Local.m_vecPunchAngle[PITCH] > 8 )
+		if (player->m_Local.m_vecPunchAngle[PITCH] > 8)
 		{
 			//BG2 - Tjoppen - non-networked punchangle
 			//player->m_Local.m_vecPunchAngle.Set( PITCH, 8 );
@@ -4310,10 +4311,16 @@ void CGameMovement::FinishDuck( void )
 {
 #ifndef CLIENT_DLL
 	//BG2 - Draco - decrease stamina for ducking
-	CHL2MP_Player *pHL2Player = ToHL2MPPlayer( player );
-	
-	if ( pHL2Player )
-		pHL2Player->DrainStamina( 25 );
+	CHL2MP_Player *pHL2Player = ToHL2MPPlayer(player);
+
+	if (pHL2Player)
+		pHL2Player->DrainStamina(STAMINA_DRAIN_CROUCH); //BG3 - replaced magic number with a shared define - Awesome
+
+	//BG3 - Awesome - if we're already aiming with a rifle, then check the FOV zoom again!
+	CBaseCombatWeapon * pWeapon = pHL2Player->GetActiveWeapon();
+	if (pWeapon && pWeapon->weaponType == CBaseCombatWeapon::WeaponType::RIFLE && pWeapon->m_bIsIronsighted) {
+		pHL2Player->SetFOV(pWeapon, pHL2Player->GetDefaultFOV() + pWeapon->GetIronsightFOVOffset(), IRONSIGHTS_FOV_IN_TIME);
+	}
 #endif
 
 	if ( player->GetFlags() & FL_DUCKING )
@@ -4652,21 +4659,20 @@ void CGameMovement::Duck( void )
 	//
 	// If the player is still alive and not an observer, check to make sure that
 	// his view height is at the standing height.
-
 	//BG2 - This keeps the menu from shaking around when you create a game. I believe this is because the
 	//views have been brought down to match up with the player model height. -HairyPotter
 	/*else if ( !IsDead() && !player->IsObserver() && !player->IsInAVehicle() )
 	{
-		if ( ( player->m_Local.m_flDuckJumpTime == 0.0f ) && ( fabs(player->GetViewOffset().z - GetPlayerViewOffset( false ).z) > 0.1 ) )
-		{
-			// we should rarely ever get here, so assert so a coder knows when it happens
-			Assert(0);
-			DevMsg( 1, "Restoring player view height\n" );
+	if ( ( player->m_Local.m_flDuckJumpTime == 0.0f ) && ( fabs(player->GetViewOffset().z - GetPlayerViewOffset( false ).z) > 0.1 ) )
+	{
+	// we should rarely ever get here, so assert so a coder knows when it happens
+	Assert(0);
+	DevMsg( 1, "Restoring player view height\n" );
 
-			// set the eye height to the non-ducked height
-			SetDuckedEyeOffset(0.0f);
-		}
-	}*/ 
+	// set the eye height to the non-ducked height
+	SetDuckedEyeOffset(0.0f);
+	}
+	}*/
 }
 
 static ConVar sv_optimizedmovement( "sv_optimizedmovement", "1", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );

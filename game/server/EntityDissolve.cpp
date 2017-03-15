@@ -209,6 +209,7 @@ CEntityDissolve *CEntityDissolve::Create( CBaseEntity *pTarget, const char *pMat
 	{
 		// Simply immediately kill the player.
 		CBasePlayer *pPlayer = assert_cast< CBasePlayer* >( pTarget );
+		//pPlayer->SetArmorValue( 0 );
 		CTakeDamageInfo info( pPlayer, pPlayer, pPlayer->GetHealth(), DMG_GENERIC | DMG_REMOVENORAGDOLL | DMG_PREVENT_PHYSICS_FORCE );
 		pPlayer->TakeDamage( info );
 		return NULL;

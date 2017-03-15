@@ -43,6 +43,16 @@ private:
 	virtual void AddSection(int teamType, int teamNumber); // add a new section header for a team
 
 	int GetSectionFromTeamNumber( int teamNumber );
+	/*enum //BG2 - depreciated - found this while porting to 2016 engine - Awesome
+	{ 
+		CSTRIKE_NAME_WIDTH = 320,
+		CSTRIKE_CLASS_WIDTH = 56,
+		CSTRIKE_SCORE_WIDTH = 40,
+		CSTRIKE_DEATH_WIDTH = 46,
+		CSTRIKE_PING_WIDTH = 46,
+//		CSTRIKE_VOICE_WIDTH = 40, 
+//		CSTRIKE_FRIENDS_WIDTH = 24,
+	};*/
 
 	// rounded corners
 	Color					 m_bgColor;

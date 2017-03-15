@@ -512,7 +512,7 @@ void CHud::Shutdown( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: LevelInit's called whenever a new level's starting
+// Purpose: LevelInit's called whenever a new level is starting
 //-----------------------------------------------------------------------------
 void CHud::LevelInit( void )
 {
@@ -533,11 +533,11 @@ void CHud::LevelInit( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: LevelShutdown's called whenever a level's finishing
+// Purpose: LevelShutdown's called whenever a level is finishing
 //-----------------------------------------------------------------------------
 void CHud::LevelShutdown( void )
 {
-	// Tell all the registered hud elements to LevelInit
+	// Tell all the registered hud elements to LevelShutdown
 	for ( int i = 0; i < m_HudList.Size(); i++ )
 	{
 		m_HudList[i]->LevelShutdown();
@@ -971,6 +971,21 @@ bool CHud::IsHidden( int iHudFlags )
 	if ( ( iHudFlags & HIDEHUD_PLAYERDEAD ) && ( pPlayer->GetHealth() <= 0 && !pPlayer->IsAlive() ) )
 		return true;
 
+	//BG2 - found this stuff removed while porting to 2016 - Awesome
+	/*
+	// Need the HEV suit ( HL2 )
+	if ( ( iHudFlags & HIDEHUD_NEEDSUIT ) && ( !pPlayer->IsSuitEquipped() ) )
+		return true;
+
+	// Hide all HUD elements during screenshot if the user's set hud_freezecamhide ( TF2 )
+#if defined( TF_CLIENT_DLL )
+	extern bool IsTakingAFreezecamScreenshot();
+	extern ConVar hud_freezecamhide;
+
+	if ( IsTakingAFreezecamScreenshot() && hud_freezecamhide.GetBool() )
+		return true;
+#endif
+		*/
 	return ( ( iHudFlags & iHideHud ) != 0);
 }
 

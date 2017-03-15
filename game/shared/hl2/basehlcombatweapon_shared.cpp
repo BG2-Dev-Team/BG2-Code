@@ -68,9 +68,9 @@ void CBaseHLCombatWeapon::ItemHolsterFrame( void )
 	//BG2 - Tjoppen - no autoreload crap
 	/*if ( ( gpGlobals->curtime - m_flHolsterTime ) > sk_auto_reload_time.GetFloat() )
 	{
-		// Just load the clip with no animations
-		FinishReload();
-		m_flHolsterTime = gpGlobals->curtime;
+	// Just load the clip with no animations
+	FinishReload();
+	m_flHolsterTime = gpGlobals->curtime;
 	}*/
 }
 

@@ -117,6 +117,7 @@ public:
 												// it is built left or right handed.
 
 // CLIENT DLL
+	// Sprite data, read from the data file
 	//BG2 - Tjoppen - removing all HL2DM HUD stuff
 	// Sprite data, read from the data file
 	/*int						iSpriteCount;
@@ -129,6 +130,7 @@ public:
 	CHudTexture 					*iconZoomedCrosshair;
 	CHudTexture 					*iconZoomedAutoaim;
 	CHudTexture						*iconSmall;*/
+
 
 // TF2 specific
 	bool					bShowUsageHint;							// if true, then when you receive the weapon, show a hint about it

@@ -20,6 +20,7 @@
 
 //BG2 - Not used, don't need it. -HairyPotter
 /*
+
 //-----------------------------------------------------------------------------
 // Purpose: Displays current ammunition level
 //-----------------------------------------------------------------------------
@@ -187,5 +188,4 @@ void CTeamPlayHud::OnThink()
 	}
 
 	InvalidateLayout();
-}
-*/
+}*/

@@ -21,7 +21,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 /* //BG2 - No autoaim in HUD - HairyPotter
-
 ConVar hud_draw_active_reticle("hud_draw_active_reticle", "0" );
 ConVar hud_draw_fixed_reticle("hud_draw_fixed_reticle", "0", FCVAR_ARCHIVE );
 ConVar hud_autoaim_scale_icon( "hud_autoaim_scale_icon", "0" );

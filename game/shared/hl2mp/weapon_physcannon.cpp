@@ -760,6 +760,11 @@ void CPlayerPickupController::Init( CBasePlayer *pPlayer, CBaseEntity *pObject )
 	}
 
 
+	/*CHL2MP_Player *pOwner = (CHL2MP_Player *)ToBasePlayer( pPlayer );
+	if ( pOwner )
+	{
+		pOwner->EnableSprint( false );
+	}*/
 
 	// If the target is debris, convert it to non-debris
 	if ( pObject->GetCollisionGroup() == COLLISION_GROUP_DEBRIS )
@@ -808,6 +813,11 @@ void CPlayerPickupController::Shutdown( bool bThrown )
 
 	if ( m_pPlayer )
 	{
+		/*CHL2MP_Player *pOwner = (CHL2MP_Player *)ToBasePlayer( m_pPlayer );
+		if ( pOwner )
+		{
+			pOwner->EnableSprint( true );
+		}*/
 
 		m_pPlayer->SetUseEntity( NULL );
 		if ( m_pPlayer->GetActiveWeapon() )
@@ -2028,6 +2038,16 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 		m_bResetOwnerEntity = true;
 	}
 
+/*	if( pOwner )
+	{
+		pOwner->EnableSprint( false );
+
+		float	loadWeight = ( 1.0f - GetLoadPercentage() );
+		float	maxSpeed = hl2_walkspeed.GetFloat() + ( ( hl2_normspeed.GetFloat() - hl2_walkspeed.GetFloat() ) * loadWeight );
+
+		//Msg( "Load perc: %f -- Movement speed: %f/%f\n", loadWeight, maxSpeed, hl2_normspeed.GetFloat() );
+		pOwner->SetMaxSpeed( maxSpeed );
+	}*/
 
 	// Don't drop again for a slight delay, in case they were pulling objects near them
 	m_flNextSecondaryAttack = gpGlobals->curtime + 0.4f;
@@ -2745,6 +2765,7 @@ void CWeaponPhysCannon::LaunchObject( const Vector &vecDir, float flForce )
 	m_flCheckSuppressTime = gpGlobals->curtime + 0.25f;
 }
 
+//bool UTIL_IsCombineBall( CBaseEntity *pEntity );
 
 //-----------------------------------------------------------------------------
 // Purpose: 

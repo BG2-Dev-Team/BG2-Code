@@ -63,6 +63,7 @@ ConVar breakable_multiplayer( "breakable_multiplayer", "1" );
 
 // AI Interaction for being hit by a physics object
 int g_interactionHitByPlayerThrownPhysObj = 0;
+//int	g_interactionPlayerPuntedHeavyObject = 0; //BG2 - found this missing while porting to 2016 - Awesome
 
 int g_ActiveGibCount = 0;
 ConVar prop_active_gib_limit( "prop_active_gib_limit", "999999" );
@@ -501,7 +502,7 @@ void CBreakableProp::HandleFirstCollisionInteractions( int index, gamevcollision
 #ifdef HL2_DLL
 			// Don't paintsplat friendlies
 			int iClassify = tr.m_pEnt->Classify();
-			if ( iClassify != CLASS_PLAYER_ALLY   ) 
+			if (iClassify != CLASS_PLAYER_ALLY)
 #endif
 			{
 				switch( entindex() % 3 )
@@ -1461,7 +1462,50 @@ void CBreakableProp::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t
 	m_bOriginalBlockLOS = BlocksLOS();
 	SetBlocksLOS( false );
 
+/*#ifdef HL2_EPISODIC
+	if ( HasInteraction( PROPINTER_PHYSGUN_CREATE_FLARE ) )
+	{
+		CreateFlare( PROP_FLARE_LIFETIME );
+	}
+#endif*/
 }
+
+
+/*#ifdef HL2_EPISODIC
+//-----------------------------------------------------------------------------
+// Purpose: Create a flare at the attachment point
+//-----------------------------------------------------------------------------
+void CBreakableProp::CreateFlare( float flLifetime )
+{
+	// Create the flare
+	CBaseEntity *pFlare = ::CreateFlare( GetAbsOrigin(), GetAbsAngles(), this, flLifetime );
+	if ( pFlare )
+	{
+		int iAttachment = LookupAttachment( "fuse" );
+
+		Vector vOrigin;
+		GetAttachment( iAttachment, vOrigin );
+
+		pFlare->SetMoveType( MOVETYPE_NONE );
+		pFlare->SetSolid( SOLID_NONE );
+		pFlare->SetRenderMode( kRenderTransAlpha );
+		pFlare->SetRenderColorA( 1 );
+		pFlare->SetLocalOrigin( vOrigin );
+		pFlare->SetParent( this, iAttachment );
+		RemoveInteraction( PROPINTER_PHYSGUN_CREATE_FLARE );
+		m_hFlareEnt = pFlare;
+
+		SetThink( &CBreakable::SUB_FadeOut );
+		SetNextThink( gpGlobals->curtime + flLifetime + 5.0f );
+
+		m_nSkin = 1;
+
+		AddEntityToDarknessCheck( pFlare );
+
+		AddEffects( EF_NOSHADOW );
+	}
+}
+#endif // HL2_EPISODIC */
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1472,7 +1516,7 @@ void CBreakableProp::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t Rea
 
 	SetPhysicsAttacker( pPhysGunUser, gpGlobals->curtime );
 
-	if( Reason == PUNTED_BY_CANNON )
+	if( (int)Reason == (int)PUNTED_BY_CANNON )
 	{
 		PlayPuntSound(); 
 	}
@@ -1569,12 +1613,12 @@ void CBreakableProp::Break( CBaseEntity *pBreaker, const CTakeDamageInfo &info )
 		//BG2 disabled vehicles
 		/*else if ( pBreaker && dynamic_cast< CPropVehicleDriveable * >( pBreaker ) )
 		{
-			CPropVehicleDriveable *veh = static_cast< CPropVehicleDriveable * >( pBreaker );
-			CBaseEntity *driver = veh->GetDriver();
-			if ( driver && driver->IsPlayer() )
-			{
-				bSmashed = true;
-			}
+		CPropVehicleDriveable *veh = static_cast< CPropVehicleDriveable * >( pBreaker );
+		CBaseEntity *driver = veh->GetDriver();
+		if ( driver && driver->IsPlayer() )
+		{
+		bSmashed = true;
+		}
 		}*/
 		if ( bSmashed )
 		{
@@ -1766,6 +1810,8 @@ void CBreakableProp::Break( CBaseEntity *pBreaker, const CTakeDamageInfo &info )
 LINK_ENTITY_TO_CLASS( dynamic_prop, CDynamicProp );
 LINK_ENTITY_TO_CLASS( prop_dynamic, CDynamicProp );	
 LINK_ENTITY_TO_CLASS( prop_dynamic_override, CDynamicProp );	
+
+IMPLEMENT_AUTO_LIST( IPhysicsPropAutoList );
 
 BEGIN_DATADESC( CDynamicProp )
 
@@ -2828,6 +2874,11 @@ int CPhysicsProp::ObjectCaps()
 	else if ( CBasePlayer::CanPickupObject( this, 35, 128 ) )
 	{
 		caps |= FCAP_IMPULSE_USE;
+
+		//if( hl2_episodic.GetBool() && HasInteraction( PROPINTER_PHYSGUN_CREATE_FLARE )  )
+		//{
+		//	caps |= FCAP_USE_IN_RADIUS;
+		//}
 	}
 
 	if( HasSpawnFlags( SF_PHYSPROP_RADIUS_PICKUP ) )
@@ -3054,6 +3105,23 @@ int CPhysicsProp::OnTakeDamage( const CTakeDamageInfo &info )
 				VPhysicsGetObject()->GetVelocity( &vel, NULL );
 
 				int dangerRadius = 256; // generous radius to begin with
+
+				/*if( hl2_episodic.GetBool() )
+				{
+					// In Episodic, burning items (such as destroyed APCs) are making very large
+					// danger sounds which frighten NPCs. This danger sound was designed to frighten
+					// NPCs away from burning objects that are about to explode (barrels, etc). 
+					// So if this item has no more health (ie, has died but hasn't exploded), 
+					// make a smaller danger sound, just to keep NPCs away from the flames. 
+					// I suspect this problem didn't appear in HL2 simply because we didn't have 
+					// NPCs in such close proximity to destroyed NPCs. (sjb)
+					if( GetHealth() < 1 )
+					{
+						// This item has no health, but still exists. That means that it may keep
+						// burning, but isn't likely to explode, so don't frighten over such a large radius.
+						dangerRadius = 120;
+					}
+				}*/
 
 				trace_t tr;
 				UTIL_TraceLine( WorldSpaceCenter(), WorldSpaceCenter() + vel, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );

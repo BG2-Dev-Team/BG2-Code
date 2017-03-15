@@ -140,9 +140,7 @@ void ConnectHaptics(CreateInterfaceFn appFactory)
 
 void DisconnectHaptics()
 {
-	if ( haptics ) //BG2 - caused a crash when closing the game. - HairyPotter
-		haptics->ShutdownHaptics();
-
+	haptics->ShutdownHaptics();
 	if(pFalconModule)
 	{
 		Sys_UnloadModule(pFalconModule);
@@ -387,6 +385,43 @@ void HapticsEnteredVehicle(C_BaseEntity* vehicle, C_BaseCombatCharacter *pPassen
 
 	// NVNT notify haptics system of navigation change.
 
+	C_PropVehicleDriveable* drivable = dynamic_cast<C_PropVehicleDriveable*>(vehicle);
+	bool hasgun = false;
+	if(drivable)
+		hasgun = drivable->HasGun();
+
+
+
+
+
+	if(Q_stristr(vehicle->GetClassname(),"airboat"))
+	{
+		haptics->ProcessHapticEvent(2,"Movement","airboat");
+		if(hasgun)
+			haptics->SetNavigationClass("vehicle_gun");
+		else
+			haptics->SetNavigationClass("vehicle_airboat");
+	}
+	else if(Q_stristr(vehicle->GetClassname(),"jeepepisodic"))
+	{
+		haptics->ProcessHapticEvent(2,"Movement","BaseVehicle");
+		haptics->SetNavigationClass("vehicle_nogun");
+	}
+	else if(Q_stristr(vehicle->GetClassname(),"jeep"))
+	{
+		haptics->ProcessHapticEvent(2,"Movement","BaseVehicle");
+		haptics->SetNavigationClass("vehicle_gun");
+	}
+	else if(Q_stristr(vehicle->GetClassname(),"choreo"))
+	{
+		haptics->ProcessHapticEvent(2,"Movement","ChoreoVehicle");
+		haptics->SetNavigationClass("vehicle_gun_nofix");//Give this a bit of aiming
+	}
+	else
+	{
+		haptics->ProcessHapticEvent(2,"Movement","BaseVehicle");
+		haptics->SetNavigationClass("vehicle_nogun");
+	}
 
 	Msg("VehicleType:%s:\n",vehicle->GetClassname());
 }

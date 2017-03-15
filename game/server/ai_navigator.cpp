@@ -220,6 +220,7 @@ void CAI_Navigator::Init( CAI_Network *pNetwork )
 {
 	m_pMotor = GetOuter()->GetMotor();
 	m_pMoveProbe = GetOuter()->GetMoveProbe();
+	//m_pLocalNavigator = GetOuter()->GetLocalNavigator();
 	m_pAINetwork = pNetwork;
 
 }
@@ -1475,6 +1476,29 @@ AIMoveResult_t CAI_Navigator::MoveClimb()
 
 			if ( !pOther->IsMoving() )
 				bAbort = true;
+			/*else if ( pOther->GetNavType() == NAV_CLIMB && climbDir.z <= 0.01 )
+			{
+				const Vector &otherClimbDest = pOther->GetNavigator()->GetPath()->CurWaypointPos();
+				Vector otherClimbDir = otherClimbDest - pOther->GetLocalOrigin();
+				VectorNormalize( otherClimbDir );
+
+				if ( otherClimbDir.Dot( climbDir ) < 0 )
+				{
+					bAbort = true;
+					if ( pOther->GetNavigator()->GetStoppingPath( m_pClippedWaypoints ) )
+					{
+						m_flTimeClipped = gpGlobals->curtime;
+						SetNavType(NAV_GROUND); // end of clipped will be on ground
+						SetGravity( 1.0 );
+						if ( RefindPathToGoal( false ) )
+						{
+							bAbort = false;
+						}
+						SetGravity( 0.0 );
+						SetNavType(NAV_CLIMB);
+					}
+				}
+			}*/
 
 			if ( bAbort )
 			{
@@ -2185,6 +2209,15 @@ AIMoveResult_t CAI_Navigator::MoveEnact( const AILocalMoveGoal_t &baseMove )
 	AIMoveResult_t result = AIMR_ILLEGAL;
 	AILocalMoveGoal_t move = baseMove;
 
+	/*result = GetLocalNavigator()->MoveCalc( &move, ( m_flLastSuccessfulSimplifyTime == gpGlobals->curtime ) );
+
+	if ( result != AIMR_OK )
+		m_hLastBlockingEnt = move.directTrace.pObstruction;
+	else
+	{
+		m_hLastBlockingEnt = NULL;
+		GetMoveProbe()->ClearBlockingEntity();
+	}*/
 	
 	if ( result == AIMR_OK && !m_fNavComplete )
 	{

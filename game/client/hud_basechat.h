@@ -233,7 +233,7 @@ public:
 	void			MsgFunc_TextMsg(const char *pszName, int iSize, void *pbuf);
 	
 	virtual void	Printf( int iFilter, PRINTF_FORMAT_STRING const char *fmt, ... );
-	virtual void	ChatPrintf( int iPlayerIndex, int iFilter, PRINTF_FORMAT_STRING const char *fmt, ... );
+	virtual void	ChatPrintf( int iPlayerIndex, int iFilter, PRINTF_FORMAT_STRING const char *fmt, ... ) FMTFUNCTION( 4, 5 );
 	
 	virtual void	StartMessageMode( int iMessageModeType );
 	virtual void	StopMessageMode( void );
@@ -282,9 +282,9 @@ public:
 	virtual Color	GetClientColor( int clientIndex );
 
 	//BG2 - Tjoppen - VoiceComm usermessage
-	void			MsgFunc_VoiceComm( bf_read &msg );
+	void			MsgFunc_VoiceComm(bf_read &msg);
 	//BG2 - HairyPotter
-	void			MsgFunc_BG2Events( bf_read &msg ); 
+	void			MsgFunc_BG2Events(bf_read &msg);
 
 	virtual int		GetFilterForString( const char *pString );
 

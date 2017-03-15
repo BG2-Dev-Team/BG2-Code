@@ -14,6 +14,7 @@ class CHL2MP_Player;
 #include "basemultiplayerplayer.h"
 #include "hl2_playerlocaldata.h"
 #include "hl2_player.h"
+#include "../shared/bg2/bg2_player_shared.h"
 #include "simtimer.h"
 #include "soundenvelope.h"
 #include "hl2mp_player_shared.h"
@@ -38,7 +39,7 @@ public:
 class CHL2MP_Player : public CHL2_Player
 {
 	//BG2 - returns an abitrary free spawn point from the given list
-	CBaseEntity* HandleSpawnList( const CUtlVector<CBaseEntity *>& spawns );
+	CBaseEntity* HandleSpawnList(const CUtlVector<CBaseEntity *>& spawns);
 
 public:
 	DECLARE_CLASS( CHL2MP_Player, CHL2_Player );
@@ -69,11 +70,13 @@ public:
 	virtual int OnTakeDamage( const CTakeDamageInfo &inputInfo );
 	virtual bool WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const;
 	virtual void FireBullets ( const FireBulletsInfo_t &info );
+	virtual void TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator);
 	virtual bool Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0);
 	virtual bool BumpWeapon( CBaseCombatWeapon *pWeapon );
-	virtual void ChangeTeam( int iTeam );
+	virtual void ChangeTeam(int iTeam);
 	//BG2 - Like ChangeTeam() except with the ability to manually set whether the player should be killed or not.
-	void ChangeTeam( int iTeam, bool bKill );
+	void ChangeTeam(int iTeam, bool bKill);
+	void CheckForForcedClassChange(); //for class enforce in linebattle
 	//
 	virtual void PickupObject ( CBaseEntity *pObject, bool bLimitMassAndSize );
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
@@ -82,8 +85,8 @@ public:
 	virtual void DeathSound( const CTakeDamageInfo &info );
 	virtual CBaseEntity* EntSelectSpawnPoint( void );
 	//BG2 - Tjoppen - virtuals in CHL2MP_Player
-	virtual bool			MayRespawn( void );
-	void  HandleSpeedChanges( void );
+	virtual bool			MayRespawn(void);
+	void  HandleSpeedChanges(void);
 	//
 		
 	int FlashlightIsOn( void );
@@ -148,9 +151,9 @@ public:
 	virtual bool	CanHearAndReadChatFrom( CBasePlayer *pPlayer );
 
 	//BG2 - Tjoppen - GetClass()
-	int	GetClass( void ) { return m_iClass; }
-	int	GetNextClass( void ) { return m_iNextClass; }
-	void SetNextClass( int iNextClass ) { m_iNextClass = iNextClass; }
+	int	GetClass(void) const { return m_iClass; }
+	int	GetNextClass(void) const { return m_iNextClass; }
+	void SetNextClass(int iNextClass) { m_iNextClass = iNextClass; }
 
 		
 private:
@@ -168,41 +171,74 @@ private:
 
 	//BG2 - Tjoppen - vars in hl2mp_player
 public:
-	void		PlayermodelTeamClass( int team, int classid, int skinid );
-	void		RemoveSelfFromFlags( void );	//BG2 - Tjoppen - do this whenever we die, change team or disconnect or anything similar
-	int			GetLimitTeamClass( int iTeam, int iClass );
-	bool		AttemptJoin( int iTeam, int iClass, const char *pClassName );
-	const char* GetHitgroupPainSound( int hitgroup, int team );
-	void		HandleVoicecomm( int comm );
+	void		PlayermodelTeamClass();
+	int			GetAppropriateSkin() const; //Looks at ourself to see what player model skin we should have
+	void		RemoveSelfFromFlags(void);	//BG2 - Tjoppen - do this whenever we die, change team or disconnect or anything similar
+	int			GetLimitTeamClass(int iTeam, int iClass);
+	bool		AttemptJoin(int iTeam, int iClass, const char *pClassName);
+	const char* GetHitgroupPainSound(int hitgroup, int team);
+	void		HandleVoicecomm(int comm);
 
-	int GetCurrentAmmoKit( void) { return m_iCurrentAmmoKit; }
+	int GetCurrentAmmoKit(void) const { return m_iCurrentAmmoKit; }
 
 	int m_iGunKit,
 		m_iAmmoKit,
 		m_iClassSkin;
 
-private:
-	CNetworkVar( int, m_iClass );
-	CNetworkVar( int, m_iCurrentAmmoKit );	//BG2 - Tjoppen - we need to copy m_iAmmoKit when spawned so players can't change current load by typing "kit ..."
-	CNetworkVar( int, m_iSpeedModifier );
+	void DrainStamina(int iAmount);
+	//BG2 - Tjoppen - made m_iStamina a network cvar
+	CNetworkVar(int, m_iStamina);
 
+private:
+	CNetworkVar(int, m_iClass);
+	CNetworkVar(int, m_iCurrentAmmoKit);	//BG2 - Tjoppen - we need to copy m_iAmmoKit when spawned so players can't change current load by typing "kit ..."
+	CNetworkVar(int, m_iSpeedModifier);
+	CNetworkVar(int, m_iCurrentRallies); //BG3 - Awesome - bitfield of rallies which are currently affecting this player - controlled by the server
+	CNetworkVar(float, m_flEndRallyTime);
+	CNetworkVar(float, m_flNextRallyTime); //this member doesn't actually determine anything, it's just to let the clients know
+public:
+	static float s_flNextRallyTimeAmerican; //This is what's used to actually determine if anyone on the player's team can rally
+	static float s_flNextRallyTimeBritish;
+private:
 	//int		m_iClass;					//BG2 - Tjoppen - class system
 	int		m_iNextClass;					//BG2 - Tjoppen - which class will we become on our next respawn?
 	float	m_flNextVoicecomm,				//BG2 - Tjoppen - voice comms
-			m_flNextGlobalVoicecomm;		//BG2 - Tjoppen - only battlecries for now
+		m_flNextGlobalVoicecomm;		//BG2 - Tjoppen - only battlecries for now
 	float	m_fNextStamRegen;				//BG2 - Draco - stamina regen timer
 
 	//BG2 - Tjoppen - tickets. sometimes we don't want to remove tickets on spawn, such as when first joining a team
-	bool	m_bDontRemoveTicket;
+	bool	m_bDontRemoveTicket;	
+
+	//BG3 - for autoswitching bad officers off of the class
+	bool	m_bBadOfficer = false;
 
 	//return the player's speed based on whether which class we are, which weapon kit we're using etc.
-	int		GetCurrentSpeed( void ) const;
+	int		GetCurrentSpeed(void) const;
 
 public:
+	
+	//Officer rallying functions
+	bool	RallyRequest(int vcommCommand); //Checks if rally is available, then iterates through nearby players to rally them
+	void	RallyMe(int rallyFlags); //Applies the rallyFlags to m_iCurrentRallies, also sets rally time
+	int		RallyGetCurrentRallies(void) const { return m_iCurrentRallies; }
+	float	RallyGetEndRallyTime(void) const { return m_flEndRallyTime; }
+	float	RallyGetNextRallyTime(void) const { return m_flNextRallyTime; }
+	void	RallySetNextRallyTime(float nextTime) { m_flNextRallyTime = nextTime; }
+	static float	RallyGetRallyDuration(int rallyFlags);
+	void	RallyEffectEnable();
+	void	RallyEffectDisable();
+private:
+	bool	CanRally(void) const; //Checks that we're officer and that curtime < m_flEndRallyTime
+	static int		ParseRallyCommand(int vcommCommand); //Given a vcomm command, parses it into rally flags. Returns -1 if its an unusable vcomm
+public:
 	//used for temporary speed modifiers (carrying flags and such)
-	void	SetSpeedModifier( int iSpeedModifier );
+	void	SetSpeedModifier(int iSpeedModifier);
+
+	//used for a lot of things, mostly linebattle rule checking and the like
+	CHL2MP_Player * GetNearestPlayerOfTeam(int iTeam, float& loadedDistance);
 
 	CBaseEntity	*m_pIntermission;	//follow that info_intermission!
+
 
 	HL2MPPlayerState m_iPlayerState;
 	CHL2MPPlayerStateInfo *m_pCurStateInfo;
@@ -219,14 +255,6 @@ public:
 	bool m_bNoJoinMessage;
 };
 
-//BG2 - Tjoppen - class system
-#define	CLASS_INFANTRY			0
-#define	CLASS_OFFICER			1
-#define	CLASS_SNIPER			2
-#define	CLASS_SKIRMISHER		3
-#define	CLASS_LIGHT_INFANTRY	4
-//
-
 //BG2 - Tjoppen - ammo kit definitions
 #define AMMO_KIT_BALL		0
 #define AMMO_KIT_BUCKSHOT	1
@@ -234,7 +262,6 @@ public:
 #define AMMO_KIT_RESERVED1	2
 #define AMMO_KIT_RESERVED2	3
 //
-
 inline CHL2MP_Player *ToHL2MPPlayer( CBaseEntity *pEntity )
 {
 	if ( !pEntity || !pEntity->IsPlayer() )

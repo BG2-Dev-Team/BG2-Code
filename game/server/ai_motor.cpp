@@ -237,6 +237,7 @@ void CAI_Motor::MoveClimbStart(  const Vector &climbDest, const Vector &climbDir
 
 	if ( fabsf( climbDir.z ) < .1 )
 	{
+		//SetActivity( GetNavigator()->GetMovementActivity() );
 	}
 	else
 	{
@@ -334,6 +335,9 @@ AIMoveResult_t CAI_Motor::MoveClimbExecute( const Vector &climbDest, const Vecto
 
 void CAI_Motor::MoveClimbStop()
 {
+	//if ( GetNavigator()->GetMovementActivity() > ACT_RESET )
+		//SetActivity( GetNavigator()->GetMovementActivity() );
+	//else
 		SetActivity( ACT_IDLE );
 
 	GetOuter()->RemoveFlag( FL_FLY );
@@ -465,6 +469,8 @@ void CAI_Motor::MoveStart()
 
 void CAI_Motor::MoveStop()
 { 
+	//memset( &m_vecVelocity, 0, sizeof(m_vecVelocity) ); 
+	//GetOuter()->GetLocalNavigator()->ResetMoveCalculations();
 }
 
 //-----------------------------------------------------------------------------
@@ -927,6 +933,13 @@ float CAI_Motor::MinCheckDist( void )
 		flMinDist = GetHullWidth();
 	return flMinDist;
 }
+
+//-----------------------------------------------------------------------------
+
+//CAI_Navigator *CAI_Motor::GetNavigator( void )
+//{
+//	return GetOuter()->GetNavigator();
+//}
 							
 int CAI_Motor::SelectWeightedSequence ( Activity activity )
 {

@@ -136,7 +136,6 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 		}
 		if ( pPlayer == pAttacker && pPlayer )  
 		{  
-
 			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" committed suicide with \"%s\"\n",  
 							pPlayer->GetPlayerName(),
 							userid,
@@ -144,15 +143,15 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 							team ? team->GetName() : "",
 							weapon
 							);
+
 		}
 		else if ( pAttacker )
 		{
 			CTeam *attackerTeam = pAttacker->GetTeam();
-
 			//BG2 - Display killer and victim positions in log files for HLStatsX support. -HairyPotter
 			Vector APos = pAttacker->GetAbsOrigin(), VPos = pPlayer->GetAbsOrigin();
 
-			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed \"%s<%i><%s><%s>\" with \"%s\" (attacker_position \"%i %i %i\" ) (victim_position \"%i %i %i\" )\n",  
+			UTIL_LogPrintf("\"%s<%i><%s><%s>\" killed \"%s<%i><%s><%s>\" with \"%s\" (attacker_position \"%i %i %i\" ) (victim_position \"%i %i %i\" )\n",
 							pAttacker->GetPlayerName(),
 							attackerid,
 							pAttacker->GetNetworkIDString(),
@@ -162,7 +161,7 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 							pPlayer->GetNetworkIDString(),
 							team ? team->GetName() : "",
 							weapon,
-							RoundFloatToInt( APos.x ),
+							RoundFloatToInt(APos.x),
 							RoundFloatToInt( APos.y ),
 							RoundFloatToInt( APos.z ),
 							RoundFloatToInt( VPos.x ),
@@ -233,7 +232,7 @@ bool CEventLog::Init()
 	ListenForGameEvent( "player_team" );
 	ListenForGameEvent( "player_disconnect" );
 	ListenForGameEvent( "player_connect" );
-	ListenForGameEvent( "player_hurt" ); //BG2 - Added - HairyPotter
+	ListenForGameEvent("player_hurt"); //BG2 - Added - HairyPotter
 
 	return true;
 }

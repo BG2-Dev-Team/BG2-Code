@@ -26,6 +26,7 @@ extern CMoveData *g_pMoveData;	// This is a global because it is subclassed by e
 extern ConVar sv_noclipduringpause;
 
 ConVar sv_maxusrcmdprocessticks_warning( "sv_maxusrcmdprocessticks_warning", "-1", FCVAR_NONE, "Print a warning when user commands get dropped due to insufficient usrcmd ticks allocated, number of seconds to throttle, negative disabled" );
+static ConVar sv_maxusrcmdprocessticks_holdaim( "sv_maxusrcmdprocessticks_holdaim", "1", FCVAR_CHEAT, "Hold client aim for multiple server sim ticks when client-issued usrcmd contains multiple actions (0: off; 1: hold this server tick; 2+: hold multiple ticks)" );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -175,34 +176,34 @@ void CPlayerMove::SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *p
 		move->m_flForwardMove		= ucmd->forwardmove;
 		move->m_flSideMove			= ucmd->sidemove;
 		move->m_flUpMove				= ucmd->upmove;
-		
+
 		//BG2 - Tjoppen - egg-shaped movement
-		if( move->m_flForwardMove != 0 || move->m_flSideMove != 0 )
+		if (move->m_flForwardMove != 0 || move->m_flSideMove != 0)
 		{
-			float	angle = atan2f( move->m_flSideMove, move->m_flForwardMove ),
-					a_angle = fabsf( angle );	//for convenience due to mirrored shape..
+			float	angle = atan2f(move->m_flSideMove, move->m_flForwardMove),
+				a_angle = fabsf(angle);	//for convenience due to mirrored shape..
 
 			//do the egg-shape. clamp velocities based on a_angle.
 			//0 <= angle <= pi
 
-			if( a_angle > M_PI )
+			if (a_angle > M_PI)
 				a_angle = M_PI;	//if too high, assume pi(moving backward)
-			
+
 			float v = 0;
-			if( a_angle < M_PI*0.5f )
+			if (a_angle < M_PI*0.5f)
 			{
 				//forward quadrant. lerp from maxspeed to sidespeed
-				v = player->MaxSpeed() * (1.0f + a_angle*2.0f/M_PI * (sv_sidespeed.GetFloat() - 1.0f));
+				v = player->MaxSpeed() * (1.0f + a_angle*2.0f / M_PI * (sv_sidespeed.GetFloat() - 1.0f));
 			}
 			else
 			{
 				//backward quadrant. lerp from sidespeed to backspeed
-				v = player->MaxSpeed() * (sv_sidespeed.GetFloat() + (a_angle*2.0f/M_PI - 1.0f) * (sv_backspeed.GetFloat() - sv_sidespeed.GetFloat()));
+				v = player->MaxSpeed() * (sv_sidespeed.GetFloat() + (a_angle*2.0f / M_PI - 1.0f) * (sv_backspeed.GetFloat() - sv_sidespeed.GetFloat()));
 			}
 
 			//cos can be negative, thus the need for fabsf()
-			move->m_flForwardMove = clamp( move->m_flForwardMove, -v * fabsf(cosf(a_angle)), v * fabsf(cosf(a_angle)) );
-			move->m_flSideMove = clamp( move->m_flSideMove, -v * sinf(a_angle), v * sinf(a_angle) );
+			move->m_flForwardMove = clamp(move->m_flForwardMove, -v * fabsf(cosf(a_angle)), v * fabsf(cosf(a_angle)));
+			move->m_flSideMove = clamp(move->m_flSideMove, -v * sinf(a_angle), v * sinf(a_angle));
 		}
 	}
 
@@ -473,6 +474,12 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 			
 	// Copy output
 	FinishMove( player, ucmd, g_pMoveData );
+
+	// If we have to restore the view angle then do so right now
+	if ( !player->IsBot() && ( gpGlobals->tickcount - player->GetLockViewanglesTickNumber() < sv_maxusrcmdprocessticks_holdaim.GetInt() ) )
+	{
+		player->pl.v_angle = player->GetLockViewanglesData();
+	}
 
 	// Let server invoke any needed impact functions
 	VPROF_SCOPE_BEGIN( "moveHelper->ProcessImpacts" );

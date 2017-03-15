@@ -70,7 +70,7 @@ itemFlags_t g_ItemFlags[8] =
 	{ "ITEM_FLAG_NOITEMPICKUP",		ITEM_FLAG_NOITEMPICKUP }
 };
 #else
-extern itemFlags_t g_ItemFlags[7];
+extern itemFlags_t g_ItemFlags[8];
 #endif
 
 
@@ -78,7 +78,7 @@ static CUtlDict< FileWeaponInfo_t*, unsigned short > m_WeaponInfoDatabase;
 
 #ifdef _DEBUG
 // used to track whether or not two weapons have been mistakenly assigned the wrong slot
-bool g_bUsedWeaponSlots[MAX_WEAPON_SLOTS][MAX_WEAPON_POSITIONS] = { 0 };
+bool g_bUsedWeaponSlots[MAX_WEAPON_SLOTS][MAX_WEAPON_POSITIONS] = { { false } };
 
 #endif
 
@@ -332,8 +332,8 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	szAmmo1[0] = 0;
 	szAmmo2[0] = 0;
 	//BG2 - Commented - HairyPotter
-	vecIronsightPosOffset = Vector(0,0,0);
-	angIronsightAngOffset = QAngle(0,0,0);
+	vecIronsightPosOffset = Vector(0, 0, 0);
+	angIronsightAngOffset = QAngle(0, 0, 0);
 	//
 	memset( aShootSounds, 0, sizeof( aShootSounds ) );
 	iAmmoType = 0;
@@ -410,12 +410,12 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 	}
 
 	//BG2 - Ironsights - HairyPotter
-	vecIronsightPosOffset.x   = pKeyValuesData->GetFloat("ironsights_x");
-	vecIronsightPosOffset.y   = pKeyValuesData->GetFloat("ironsights_y");
-	vecIronsightPosOffset.z   = pKeyValuesData->GetFloat("ironsights_z");
+	vecIronsightPosOffset.x = pKeyValuesData->GetFloat("ironsights_x");
+	vecIronsightPosOffset.y = pKeyValuesData->GetFloat("ironsights_y");
+	vecIronsightPosOffset.z = pKeyValuesData->GetFloat("ironsights_z");
 	angIronsightAngOffset[PITCH] = pKeyValuesData->GetFloat("ironsights_pitch");
-	angIronsightAngOffset[YAW]   = pKeyValuesData->GetFloat("ironsights_yaw");
-	angIronsightAngOffset[ROLL]  = pKeyValuesData->GetFloat("ironsights_roll");
+	angIronsightAngOffset[YAW] = pKeyValuesData->GetFloat("ironsights_yaw");
+	angIronsightAngOffset[ROLL] = pKeyValuesData->GetFloat("ironsights_roll");
 	//
 
 	bShowUsageHint = ( pKeyValuesData->GetInt( "showusagehint", 0 ) != 0 ) ? true : false;

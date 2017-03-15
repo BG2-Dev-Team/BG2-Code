@@ -297,7 +297,7 @@ void CFlag::Think( void )
 	*/
 
 	extern ConVar mp_respawnstyle;
-	if ( !m_bActive || mp_respawnstyle.GetInt() == 2 || mp_respawnstyle.GetInt() == 4 )
+	if ( !m_bActive || IsLMS() )
 	{
 		ChangeTeam( TEAM_UNASSIGNED );
 		m_iLastTeam = TEAM_UNASSIGNED;
@@ -560,7 +560,7 @@ void CFlag::Capture( int iTeam )
 {
 	//iTeam is either americans or british
 	//this function handles a lot of the capture related stuff
-	CBasePlayer *pPlayer = NULL;
+	//CBasePlayer *pPlayer = NULL;
 	CHL2MP_Player *pHL2Player = NULL;
 
 	CRecipientFilter recpfilter;
@@ -638,8 +638,8 @@ void CFlag::Capture( int iTeam )
 		HandleLoseOutputs();	//And therefore can only be "Lost" when it's fully captured.
 		
 
-#ifndef _DEBUG //For whatever reason, debug compiles crash on this code. We'll just omit this if we're debugging.
-
+//#ifndef _DEBUG //For whatever reason, debug compiles crash on this code. We'll just omit this if we're debugging.
+#if 0 //BG3 - TODO sort out the declaration of pPlayer - Awesome
 	//BG2 - Added for HlstatsX Support. -HairyPotter
 	const char *team = iTeam == TEAM_AMERICANS ? "Americans" : "British";
 	char playerinfo[3072] = "";

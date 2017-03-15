@@ -102,6 +102,10 @@ LINK_ENTITY_TO_CLASS( funCBaseFlex, CBaseFlex ); // meaningless independant clas
 CBaseFlex::CBaseFlex( void ) : 
 	m_LocalToGlobal( 0, 0, FlexSettingLessFunc )
 {
+//#ifdef _DEBUG
+	// default constructor sets the viewtarget to NAN
+	//m_viewtarget.Init();
+//#endif
 	m_bUpdateLayerPriorities = true;
 	m_flLastFlexAnimationTime = 0.0;
 }
@@ -109,7 +113,7 @@ CBaseFlex::CBaseFlex( void ) :
 CBaseFlex::~CBaseFlex( void )
 {
 	m_LocalToGlobal.RemoveAll();
-	Assert( m_SceneEvents.Count() == 0 );
+	AssertMsg( m_SceneEvents.Count() == 0, "m_ScenesEvent.Count != 0: %d", m_SceneEvents.Count() );
 }
 
 void CBaseFlex::SetModel( const char *szModelName )
@@ -339,6 +343,17 @@ bool CBaseFlex::ClearSceneEvent( CSceneEventInfo *info, bool fastKill, bool canc
 				return true;
 
 			// cancel moveto if it's distance based, of if the event was part of a canceled vcd
+			/*if (IsMoving() && (canceled || info->m_pEvent->GetDistanceToTarget() > 0.0))
+			{
+				if (!info->m_bHasArrived)
+				{
+					if (info->m_pScene)
+					{
+						Scene_Printf( "%s : %8.2f: MOVETO canceled but actor %s not at goal\n", info->m_pScene->GetFilename(), info->m_pScene->GetTime(), info->m_pEvent->GetActor()->GetName() );
+					}
+				}
+				myNpc->GetNavigator()->StopMoving( false );		// Stop moving
+			}*/
 		}
 		return true;
 	case CChoreoEvent::FACE: 
@@ -356,6 +371,15 @@ bool CBaseFlex::ClearSceneEvent( CSceneEventInfo *info, bool fastKill, bool canc
 			if ( canceled )
 			{
 				StopSound( info->m_pEvent->GetParameters() );
+
+/*#ifdef HL2_EPISODIC
+				// If we were holding the semaphore because of this speech, release it
+				CAI_BaseActor *pBaseActor = dynamic_cast<CAI_BaseActor*>(this);
+				if ( pBaseActor )
+				{
+					pBaseActor->GetExpresser()->ForceNotSpeaking();
+				}
+#endif*/
 			}
 		}
 		return true;
@@ -484,7 +508,7 @@ bool CBaseFlex::HandleStartSequenceSceneEvent( CSceneEventInfo *info, CChoreoSce
 		float seq_duration = SequenceDuration( info->m_nSequence );
 		float flCycle = dt / seq_duration;
 		flCycle = flCycle - (int)flCycle; // loop
-		SetLayerCycle( info->m_iLayer, flCycle, flCycle );
+		SetLayerCycle( info->m_iLayer, flCycle, flCycle, 0.f );
 
 		SetLayerPlaybackRate( info->m_iLayer, 0.0 );
 	}
@@ -696,6 +720,10 @@ bool CBaseFlex::StartMoveToSceneEvent( CSceneEventInfo *info, CChoreoScene *scen
 		// Don't stop them during restore because that will set a stopping path very
 		// nearby, causing us to signal arrival prematurely in CheckSceneEventCompletion.
 		// BEWARE: the behavior of this bug depended on the order in which the entities were restored!!
+		//if ( myNpc->IsMoving() && !scene->IsRestoring() )
+		//{
+		//	myNpc->GetNavigator()->StopMoving( false );
+		//}
 
 		return true;
 	}
@@ -815,6 +843,43 @@ bool CBaseFlex::CheckSceneEventCompletion( CSceneEventInfo *info, float currentt
 
 			if (npc)
 			{
+				// check movement, check arrival
+				/*if (npc->GetNavigator()->IsGoalActive())
+				{
+					const Task_t *pCurTask = npc->GetTask();
+					if ( pCurTask && (pCurTask->iTask == TASK_PLAY_SCENE || pCurTask->iTask == TASK_WAIT_FOR_MOVEMENT ) )
+					{
+						float preload = event->GetEndTime() - currenttime;
+						if (preload < 0)
+						{
+							//Msg("%.1f: no preload\n", currenttime );
+							return false;
+						}
+						float t = npc->GetTimeToNavGoal();
+
+						// Msg("%.1f: preload (%s:%.1f) %.1f %.1f\n", currenttime, event->GetName(), event->GetEndTime(), preload, t );
+
+						// FIXME: t is zero if no path can be built!
+
+						if (t > 0.0f && t <= preload)
+						{
+							return true;
+						}
+						return false;
+					}
+				}
+				else if (info->m_bHasArrived)
+				{
+					return true;
+				}
+				else if (info->m_bStarted && !npc->IsCurSchedule( SCHED_SCENE_GENERIC ))
+				{
+					// FIXME: There's still a hole in the logic is the save happens immediately after the SS steals the npc but before their AI has run again
+					Warning( "%s : %8.2f: waiting for actor %s to complete MOVETO but actor not in SCHED_SCENE_GENERIC\n", scene->GetFilename(), scene->GetTime(), event->GetActor()->GetName() );
+					// no longer in a scene :P
+					return true;		
+				}*/
+				// still trying
 				return false;
 			}
 		}
@@ -1253,9 +1318,9 @@ static Activity DetermineExpressionMoveActivity( CChoreoEvent *event, CAI_BaseNP
 
 	// Custom distance styles are appended to param2 with a space as a separator
 	const char *pszAct = Q_strstr( sParam2, " " );
+	char szActName[256];
 	if ( pszAct )
 	{
-		char szActName[256];
 		Q_strncpy( szActName, sParam2, sizeof(szActName) );
 		szActName[ (pszAct-sParam2) ] = '\0';
 		pszAct = szActName;
@@ -1330,7 +1395,7 @@ bool CBaseFlex::ProcessMoveToSceneEvent( CSceneEventInfo *info, CChoreoScene *sc
 	{
 		if ( pCurTask && (pCurTask->iTask == TASK_PLAY_SCENE || pCurTask->iTask == TASK_WAIT_FOR_MOVEMENT || pCurTask->iTask == TASK_STOP_MOVING ) )
 		{
-			Activity moveActivity = DetermineExpressionMoveActivity( event, myNpc );
+			/*Activity moveActivity =*/ DetermineExpressionMoveActivity( event, myNpc ); //BG2 - Awesome - unused variable but the functions aren't const
 			// AI_NavGoal_t goal( info->m_hTarget->EyePosition(), moveActivity, AIN_HULL_TOLERANCE );
 			myNpc->SetTarget( info->m_hTarget );
 
@@ -1343,6 +1408,8 @@ bool CBaseFlex::ProcessMoveToSceneEvent( CSceneEventInfo *info, CChoreoScene *sc
 				flDistTolerance = 0.1f;
 			}
 
+			//AI_NavGoal_t goal( GOALTYPE_TARGETENT, moveActivity, flDistTolerance, AIN_UPDATE_TARGET_POS );
+
 			float flDist = (info->m_hTarget->EyePosition() - GetAbsOrigin()).Length2D();
 
 			if (flDist > MAX( MAX( flDistTolerance, 0.1 ), event->GetDistanceToTarget()))
@@ -1350,9 +1417,19 @@ bool CBaseFlex::ProcessMoveToSceneEvent( CSceneEventInfo *info, CChoreoScene *sc
 				// Msg("flDist %.1f\n", flDist );
 				int result = false;
 				
+				/*if ( !myNpc->IsUnreachable( info->m_hTarget ) )
+				{
+					result = myNpc->GetNavigator()->SetGoal( goal, AIN_CLEAR_TARGET );
+					if ( !result )
+					{
+						myNpc->RememberUnreachable( info->m_hTarget, 1.5 );
+					}
+				}*/
 
 				if (result)
 				{
+					//myNpc->GetNavigator()->SetMovementActivity( moveActivity );
+					//myNpc->GetNavigator()->SetArrivalDistance( event->GetDistanceToTarget() );
 					info->m_bIsMoving = true;
 				}
 				else
@@ -1383,6 +1460,7 @@ bool CBaseFlex::ProcessMoveToSceneEvent( CSceneEventInfo *info, CChoreoScene *sc
 
 		if (flDist <= event->GetDistanceToTarget())
 		{
+			//myNpc->GetNavigator()->StopMoving( false );		// Stop moving
 			info->m_bHasArrived = true;
 		}
 	}
@@ -1395,11 +1473,34 @@ bool CBaseFlex::ProcessMoveToSceneEvent( CSceneEventInfo *info, CChoreoScene *sc
 	if (developer.GetInt() > 0 && scene_showmoveto.GetBool() && IsMoving())
 	{
 		Vector vecStart, vTestPoint;
+		vecStart = myNpc->GetNavigator()->GetGoalPos();
 
 		myNpc->GetMoveProbe()->FloorPoint( vecStart, MASK_NPCSOLID, 0, -64, &vTestPoint );
 
 		int r, g, b;
 		r = b = g = 0;
+		/*if ( myNpc->GetNavigator()->CanFitAtPosition( vTestPoint, MASK_NPCSOLID ) )
+		{
+			if ( myNpc->GetMoveProbe()->CheckStandPosition( vTestPoint, MASK_NPCSOLID ) )
+			{
+				if (event->IsResumeCondition())
+				{
+					g = 255;
+				}
+				else
+				{
+					r = 255; g = 255;
+				}
+			}
+			else
+			{
+				b = 255; g = 255;
+			}
+		}
+		else
+		{
+			r = 255;
+		}*/
 
 		NDebugOverlay::HorzArrow( GetAbsOrigin() + Vector( 0, 0, 1 ), vTestPoint + Vector( 0, 0, 1 ), 4, r, g, b, 0, false, 0.12 );
 		NDebugOverlay::Box( vTestPoint, myNpc->GetHullMins(), myNpc->GetHullMaxs(), r, g, b, 0, 0.12 );
@@ -1558,18 +1659,29 @@ void CBaseFlex::AddFlexAnimation( CSceneEventInfo *info )
 
 				track->SetFlexControllerIndex( FindFlexController( name ), 0, 0 );
 
+				/*if ( CAI_BaseActor::IsServerSideFlexController( name ) )
+				{
+					Assert( !"Should stereo controllers ever be server side only?" );
+					track->SetServerSide( true );
+				}*/
 
 				Q_strncpy( name, "left_" ,sizeof(name));
 				Q_strncat( name, track->GetFlexControllerName(),sizeof(name), COPY_ALL_CHARACTERS );
 
 				track->SetFlexControllerIndex( FindFlexController( name ), 0, 1 );
 
+				/*if ( CAI_BaseActor::IsServerSideFlexController( name ) )
+				{
+					Assert( !"Should stereo controllers ever be server side only?" );
+					track->SetServerSide( true );
+				}*/
 			}
 			else
 			{
 				track->SetFlexControllerIndex( FindFlexController( (char *)track->GetFlexControllerName() ), 0 );
 
 				// Only non-combo tracks can be server side
+				track->SetServerSide( CAI_BaseActor::IsServerSideFlexController( track->GetFlexControllerName() ) );
 			}
 		}
 
@@ -2443,7 +2555,7 @@ void CFlexCycler::Think( void )
 						{
 							m_flexnum = LookupFlex( szTemp );
 
-							if (m_flexnum != -1 && m_flextarget[m_flexnum] != 1)
+							if (m_flexnum != LocalFlexController_t(-1) && m_flextarget[m_flexnum] != 1)
 							{
 								m_flextarget[m_flexnum] = 1.0;
 								// SetFlexTarget( m_flexnum );

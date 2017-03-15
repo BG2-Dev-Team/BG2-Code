@@ -8,6 +8,7 @@
 #include "cbase.h"
 
 #include "ai_networkmanager.h"
+//#include "npc_strider.h" //BG2 - removed reference to strider - Awesome
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -18,6 +19,7 @@ class CHL2NetworkBuildHelper : public CAI_NetworkBuildHelper
 
 	void PostInitNodePosition( CAI_Network *pNetwork, CAI_Node *pNode )
 	{
+		//BG2 - removed reference to strider
 		//AdjustStriderNodePosition( pNetwork, pNode );
 	}
 };

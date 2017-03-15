@@ -204,6 +204,18 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 	// if it's not a player, ignore
 	if ( !pActivator || !pActivator->IsPlayer() )
 		return;
+	//BG2 - removing references to armor - Awesome
+	/*
+	// Only usable if you have the HEV suit on
+	if ( !((CBasePlayer *)pActivator)->IsSuitEquipped() )
+	{
+		if (m_flSoundTime <= gpGlobals->curtime)
+		{
+			m_flSoundTime = gpGlobals->curtime + 0.62;
+			EmitSound( "SuitRecharge.Deny" );
+		}
+		return;
+	}*/
 
 	// if there is no juice left, turn it off
 	if (m_iJuice <= 0)
@@ -211,6 +223,19 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 		m_nState = 1;			
 		Off();
 	}
+
+	//BG2 - removing references to armor - Awesome
+	/*
+	// if the player doesn't have the suit, or there is no juice left, make the deny noise
+	if ( m_iJuice <= 0 )
+	{
+		if (m_flSoundTime <= gpGlobals->curtime)
+		{
+			m_flSoundTime = gpGlobals->curtime + 0.62;
+			EmitSound( "SuitRecharge.Deny" );
+		}
+		return;
+	}*/
 
 	SetNextThink( gpGlobals->curtime + 0.25 );
 	SetThink(&CRecharge::Off);
@@ -229,6 +254,28 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 
 	if (!m_hActivator->IsPlayer() )
 		return;
+	
+	//BG2 - removing references to armor - Awesome
+	/*
+	// Play the on sound or the looping charging sound
+	if (!m_iOn)
+	{
+		m_iOn++;
+		EmitSound( "SuitRecharge.Start" );
+		m_flSoundTime = 0.56 + gpGlobals->curtime;
+
+		m_OnPlayerUse.FireOutput( pActivator, this );
+	}
+
+	if ((m_iOn == 1) && (m_flSoundTime <= gpGlobals->curtime))
+	{
+		m_iOn++;
+		CPASAttenuationFilter filter( this, "SuitRecharge.ChargingLoop" );
+		filter.MakeReliable();
+		EmitSound( filter, entindex(), "SuitRecharge.ChargingLoop" );
+	}*/
+
+	//CBasePlayer *pl = (CBasePlayer *) m_hActivator.Get(); //BG2 - unused variable
 
 	// charge the player
 	int nMaxArmor = 100;
@@ -244,6 +291,14 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 			pActivator->TakeHealth( 5, DMG_GENERIC );
 		}
 	}
+
+	//BG2 - removed references to armor
+	/*
+	if (pl->ArmorValue() < nMaxArmor)
+	{
+		UpdateJuice( m_iJuice - nIncrementArmor );
+		pl->IncrementArmorValue( nIncrementArmor, nMaxArmor );
+	}*/
 
 	// Send the output.
 	float flRemaining = m_iJuice / MaxJuice();
@@ -619,6 +674,23 @@ void CNewRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE 
 		}
 	}
 
+	//BG2 - removed references to armor/hev suit - Awesome
+	/*
+	// If we're over our limit, debounce our keys
+	if ( pPlayer->ArmorValue() >= nMaxArmor)
+	{
+		// Citadel charger must also be at max health
+		if ( !HasSpawnFlags(SF_CITADEL_RECHARGER) || ( HasSpawnFlags( SF_CITADEL_RECHARGER ) && pActivator->GetHealth() >= pActivator->GetMaxHealth() ) )
+		{
+			// Make the user re-use me to get started drawing health.
+			pPlayer->m_afButtonPressed &= ~IN_USE;
+			m_iCaps = FCAP_IMPULSE_USE;
+			
+			EmitSound( "SuitRecharge.Deny" );
+			return;
+		}
+	}*/
+
 	// This is bumped out if used within the time period
 	SetNextThink( gpGlobals->curtime + CHARGE_RATE );
 	SetThink( &CNewRecharge::Off );
@@ -626,6 +698,32 @@ void CNewRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE 
 	// Time to recharge yet?
 	if ( m_flNextCharge >= gpGlobals->curtime )
 		return;
+	//BG2 - removed references to armor/hev - Awesome
+	/*
+	// Play the on sound or the looping charging sound
+	if ( !m_iOn )
+	{
+		m_iOn++;
+		EmitSound( "SuitRecharge.Start" );
+		m_flSoundTime = 0.56 + gpGlobals->curtime;
+
+		m_OnPlayerUse.FireOutput( pActivator, this );
+	}
+
+	if ((m_iOn == 1) && (m_flSoundTime <= gpGlobals->curtime))
+	{
+		m_iOn++;
+		CPASAttenuationFilter filter( this, "SuitRecharge.ChargingLoop" );
+		filter.MakeReliable();
+		EmitSound( filter, entindex(), "SuitRecharge.ChargingLoop" );
+	}
+
+	// Give armor if we need it
+	if ( pPlayer->ArmorValue() < nMaxArmor )
+	{
+		UpdateJuice( m_iJuice - nIncrementArmor );
+		pPlayer->IncrementArmorValue( nIncrementArmor, nMaxArmor );
+	}*/
 
 	// Send the output.
 	float flRemaining = m_iJuice / MaxJuice();

@@ -18,7 +18,7 @@
 
 void CServerGameClients::GetPlayerLimits( int& minplayers, int& maxplayers, int &defaultMaxPlayers ) const
 {
-	minplayers = defaultMaxPlayers = 2; 
+	minplayers = defaultMaxPlayers = 2;
 	//BG2 - Tjoppen - more players!
 	//maxplayers = 16;
 	//maxplayers = 32;

@@ -24,6 +24,7 @@
 #include "vgui/IInput.h"
 #include "vgui/ILocalize.h"
 #include "multiplay_gamerules.h"
+#include "voice_status.h"
 //BG2 - Tjoppen - #includes
 #include "hl2mp_gamerules.h"
 #include "../game/server/bg2/vcomm.h"
@@ -38,7 +39,11 @@
 #ifndef _XBOX
 ConVar hud_saytext_time( "hud_saytext_time", "12", 0 );
 ConVar cl_showtextmsg( "cl_showtextmsg", "1", 0, "Enable/disable text messages printing on the screen." );
-ConVar cl_chatfilters( "cl_chatfilters", "127", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Stores the chat filter settings " );
+ConVar cl_chatfilters( "cl_chatfilters", "63", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Stores the chat filter settings " );
+ConVar cl_chatfilter_version( "cl_chatfilter_version", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE | FCVAR_HIDDEN, "Stores the chat filter version" );
+ConVar cl_mute_all_comms("cl_mute_all_comms", "1", FCVAR_ARCHIVE, "If 1, then all communications from a player will be blocked when that player is muted, including chat messages.");
+
+const int kChatFilterVersion = 1;
 
 Color g_ColorBlue( 153, 204, 255, 255 );
 Color g_ColorRed( 255, 63, 63, 255 );
@@ -487,9 +492,21 @@ CHudChatFilterPanel::CHudChatFilterPanel( vgui::Panel *pParent, const char *pNam
 	new CHudChatFilterCheckButton( this, "publicchat_button", "Sky is blue?", CHAT_FILTER_PUBLICCHAT );
 	new CHudChatFilterCheckButton( this, "servermsg_button", "Sky is blue?", CHAT_FILTER_SERVERMSG );
 	new CHudChatFilterCheckButton( this, "teamchange_button", "Sky is blue?", CHAT_FILTER_TEAMCHANGE );
-	new CHudChatFilterCheckButton( this, "voicecomm_button", "Sky is blue?", CHAT_FILTER_VOICECOMMS ); //BG2 - Voice Comm Text Filter? -HairyPotter
-	new CHudChatFilterCheckButton( this, "classchange_button", "Sky is blue?", CHAT_FILTER_CLASSCHANGES ); //BG2 - Class Change Text Filter? -HairyPotter
-    
+
+	//BG2 - found this stuff remomved while porting to 2016 - no achievements - Awesome
+	/*
+    //=============================================================================
+    // HPE_BEGIN:
+    // [tj]Added a new filter checkbox for achievement announces.
+    //     Also. Yes. Sky is blue.
+    //=============================================================================
+     
+    new CHudChatFilterCheckButton( this, "achivement_button", "Sky is blue?", CHAT_FILTER_ACHIEVEMENT);
+     
+    //=============================================================================
+    // HPE_END
+    //=============================================================================
+    */
 }
 
 void CHudChatFilterPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
@@ -854,7 +871,7 @@ void CBaseHudChat::MsgFunc_SayText2( bf_read &msg )
 //-----------------------------------------------------------------------------
 void CBaseHudChat::MsgFunc_TextMsg( bf_read &msg )
 {
-	m_iFilterFlags = cl_chatfilters.GetInt(); //LAWL
+	m_iFilterFlags = cl_chatfilters.GetInt(); //BG2 - found this lined added while porting to 2016 - Awesome
 
 	char szString[2048];
 	int msg_dest = msg.ReadByte();
@@ -918,19 +935,19 @@ void CBaseHudChat::MsgFunc_TextMsg( bf_read &msg )
 		Msg( "%s", ConvertCRtoNL( szString ) );
 		break;
 
-	//BG2 - So we can filter class changes. -HairyPotter
+		//BG2 - So we can filter class changes. -HairyPotter
 	case HUD_BG2CLASSCHANGE:
-		g_pVGuiLocalize->ConstructString( outputBuf, sizeof(outputBuf), szBuf[0], 4, szBuf[1], szBuf[2], szBuf[3], szBuf[4] );
-		g_pVGuiLocalize->ConvertUnicodeToANSI( outputBuf, szString, sizeof(szString) );
-		len = strlen( szString );
-		if ( len && szString[len-1] != '\n' && szString[len-1] != '\r' )
+		g_pVGuiLocalize->ConstructString(outputBuf, sizeof(outputBuf), szBuf[0], 4, szBuf[1], szBuf[2], szBuf[3], szBuf[4]);
+		g_pVGuiLocalize->ConvertUnicodeToANSI(outputBuf, szString, sizeof(szString));
+		len = strlen(szString);
+		if (len && szString[len - 1] != '\n' && szString[len - 1] != '\r')
 		{
-			Q_strncat( szString, "\n", sizeof(szString), 1 );
+			Q_strncat(szString, "\n", sizeof(szString), 1);
 		}
-		Printf( CHAT_FILTER_CLASSCHANGES, "%s", ConvertCRtoNL( szString ) );
-		Msg( "%s", ConvertCRtoNL( szString ) );
+		Printf(CHAT_FILTER_CLASSCHANGES, "%s", ConvertCRtoNL(szString));
+		Msg("%s", ConvertCRtoNL(szString));
 		break;
-	//
+		//
 
 	case HUD_PRINTCONSOLE:
 		g_pVGuiLocalize->ConstructString( outputBuf, sizeof(outputBuf), szBuf[0], 4, szBuf[1], szBuf[2], szBuf[3], szBuf[4] );
@@ -945,9 +962,9 @@ void CBaseHudChat::MsgFunc_TextMsg( bf_read &msg )
 	}
 }
 
-void CBaseHudChat::MsgFunc_BG2Events( bf_read &msg )
+void CBaseHudChat::MsgFunc_BG2Events(bf_read &msg)
 {
-	if ( !cl_showtextmsg.GetInt() )
+	if (!cl_showtextmsg.GetInt())
 		return;
 
 	char szString[2048];
@@ -955,103 +972,103 @@ void CBaseHudChat::MsgFunc_BG2Events( bf_read &msg )
 		msg_dest = msg.ReadByte(); //BG2 - Used for BG2 localization. -HairyPotter
 
 	wchar_t szBuf[2][256],
-			outputBuf[256];
+		outputBuf[256];
 
-	for ( int i = 0; i < 2; ++i )
+	for (int i = 0; i < 2; ++i)
 	{
-		msg.ReadString( szString, sizeof(szString) );
-		char *tmpStr = hudtextmessage->LookupString( szString, &msg_dest );
-		const wchar_t *pBuf = g_pVGuiLocalize->Find( tmpStr );
-		if ( pBuf )
+		msg.ReadString(szString, sizeof(szString));
+		char *tmpStr = hudtextmessage->LookupString(szString, &msg_dest);
+		const wchar_t *pBuf = g_pVGuiLocalize->Find(tmpStr);
+		if (pBuf)
 		{
 			// Copy pBuf into szBuf[i].
-			int nMaxChars = sizeof( szBuf[i] ) / sizeof( wchar_t );
-			wcsncpy( szBuf[i], pBuf, nMaxChars );
-			szBuf[i][nMaxChars-1] = 0;
+			int nMaxChars = sizeof(szBuf[i]) / sizeof(wchar_t);
+			wcsncpy(szBuf[i], pBuf, nMaxChars);
+			szBuf[i][nMaxChars - 1] = 0;
 		}
 		else
 		{
-			if ( i )
+			if (i)
 			{
-				StripEndNewlineFromString( tmpStr );  // these strings are meant for subsitution into the main strings, so cull the automatic end newlines
+				StripEndNewlineFromString(tmpStr);  // these strings are meant for subsitution into the main strings, so cull the automatic end newlines
 			}
-			g_pVGuiLocalize->ConvertANSIToUnicode( tmpStr, szBuf[i], sizeof(szBuf[i]) );
+			g_pVGuiLocalize->ConvertANSIToUnicode(tmpStr, szBuf[i], sizeof(szBuf[i]));
 		}
 	}
 
-	switch ( msg_type )
+	switch (msg_type)
 	{
-		case ROUND_DRAW:
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_Round_Draw" ) );
+	case ROUND_DRAW:
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_Round_Draw"));
+		break;
+	case MAP_DRAW:
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_Map_Draw"));
+		break;
+	case DEFAULT_DRAW:
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_Default_Draw"));
+		break;
+	case BRITISH_ROUND_WIN:
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_British_Round_Win"));
+		break;
+	case AMERICAN_ROUND_WIN:
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_American_Round_Win"));
+		break;
+	case BRITISH_MAP_WIN:
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_British_Map_Win"));
+		break;
+	case AMERICAN_MAP_WIN:
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_American_Map_Win"));
+		break;
+	case BRITISH_DEFAULT_WIN:
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_British_Default_Win"));
+		break;
+	case AMERICAN_DEFAULT_WIN:
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_American_Default_Win"));
+		break;
+	case CTF_DENY_CAPTURE:
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_CTF_Deny_Capture"));
+		break;
+	case CTF_DENY_PICKUP:
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_CTF_Deny_Pickup"));
+		break;
+	case CTF_CAPTURE:
+		if (!szBuf[0] || !szBuf[1]) //Just to be safe
 			break;
-		case MAP_DRAW:
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_Map_Draw" ) );
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_CTF_Capture"), szBuf[0], szBuf[1]);
+		break;
+	case CTF_PICKUP:
+		if (!szBuf[0] || !szBuf[1]) //Just to be safe
 			break;
-		case DEFAULT_DRAW:
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_Default_Draw" ) );
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_CTF_Pickup"), szBuf[0], szBuf[1]);
+		break;
+	case CTF_DROP:
+		if (!szBuf[0] || !szBuf[1]) //Just to be safe
 			break;
-		case BRITISH_ROUND_WIN:
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_British_Round_Win" ) );
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_CTF_Drop"), szBuf[0], szBuf[1]);
+		break;
+	case CTF_RETURNED:
+		if (!szBuf[0]) //Just to be safe
 			break;
-		case AMERICAN_ROUND_WIN:
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_American_Round_Win" ) );
-			break;
-		case BRITISH_MAP_WIN:
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_British_Map_Win" ) );
-			break;
-		case AMERICAN_MAP_WIN:
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_American_Map_Win" ) );
-			break;
-		case BRITISH_DEFAULT_WIN:
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_British_Default_Win" ) );
-			break;
-		case AMERICAN_DEFAULT_WIN:
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_American_Default_Win" ) );
-			break;
-		case CTF_DENY_CAPTURE:
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_CTF_Deny_Capture" ) );
-			break;
-		case CTF_DENY_PICKUP:
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_CTF_Deny_Pickup" ) );
-			break;
-		case CTF_CAPTURE:
-			if ( !szBuf[0] || !szBuf[1] ) //Just to be safe
-				break;
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_CTF_Capture" ), szBuf[0], szBuf[1] );
-			break;
-		case CTF_PICKUP:
-			if ( !szBuf[0] || !szBuf[1] ) //Just to be safe
-				break;
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_CTF_Pickup" ), szBuf[0], szBuf[1] );
-			break;
-		case CTF_DROP:
-			if ( !szBuf[0] || !szBuf[1] ) //Just to be safe
-				break;
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_CTF_Drop" ), szBuf[0], szBuf[1] );
-			break;
-		case CTF_RETURNED:
-			if ( !szBuf[0] ) //Just to be safe
-				break;
-			_snwprintf(outputBuf, sizeof( outputBuf ), g_pVGuiLocalize->Find( "#BG2_CTF_Returned" ), szBuf[0] );
-			break;
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_CTF_Returned"), szBuf[0]);
+		break;
 	}
 
 	int len;
-	switch ( msg_dest )
+	switch (msg_dest)
 	{
 	case HUD_PRINTCENTER:
-		internalCenterPrint->Print( ConvertCRtoNL( outputBuf ) );
+		internalCenterPrint->Print(ConvertCRtoNL(outputBuf));
 		break;
 
 	case HUD_PRINTTALK:
-		g_pVGuiLocalize->ConvertUnicodeToANSI( outputBuf, szString, sizeof(szString) );
-		len = strlen( szString );
-		if ( len && szString[len-1] != '\n' && szString[len-1] != '\r' )
+		g_pVGuiLocalize->ConvertUnicodeToANSI(outputBuf, szString, sizeof(szString));
+		len = strlen(szString);
+		if (len && szString[len - 1] != '\n' && szString[len - 1] != '\r')
 		{
-			Q_strncat( szString, "\n", sizeof(szString), 1 );
+			Q_strncat(szString, "\n", sizeof(szString), 1);
 		}
-		Printf( CHAT_FILTER_NONE, "%s", ConvertCRtoNL( szString ) );
-		Msg( "%s", ConvertCRtoNL( szString ) );
+		Printf(CHAT_FILTER_NONE, "%s", ConvertCRtoNL(szString));
+		Msg("%s", ConvertCRtoNL(szString));
 		break;
 	}
 }
@@ -1479,18 +1496,18 @@ Color CBaseHudChat::GetDefaultTextColor( void )
 //-----------------------------------------------------------------------------
 Color CBaseHudChat::GetClientColor( int clientIndex )
 {
-	//BG2 --
-	if ( clientIndex == 0 ) // console msg
+	//BG2 - found this while porting to 2016 - change logic for getting client's color - Awesome
+	if (clientIndex == 0) // console msg
 	{
 		return g_ColorYellow;
 	}
-	else if( g_PR )
+	else if (g_PR)
 	{
-		switch ( g_PR->GetTeam( clientIndex ) )
+		switch (g_PR->GetTeam(clientIndex))
 		{
-		case TEAM_AMERICANS	: return g_ColorBlue;
-		case TEAM_BRITISH	: return g_ColorRed;
-		default	: return g_ColorYellow;
+		case TEAM_AMERICANS: return g_ColorBlue;
+		case TEAM_BRITISH: return g_ColorRed;
+		default: return g_ColorYellow;
 		}
 	}
 
@@ -1602,7 +1619,7 @@ void CBaseHudChatLine::InsertAndColorizeText( wchar_t *buf, int clientIndex )
 		}
 	}*/
 
-	if ( !m_textRanges.Count() && m_iNameLength > 0 /*&& m_text[0] == COLOR_USEOLDCOLORS*/)
+	if ( !m_textRanges.Count() && m_iNameLength > 0 && m_text[0] == COLOR_USEOLDCOLORS )
 	{
 		TextRange range;
 		range.start = 0;
@@ -1783,6 +1800,40 @@ void CBaseHudChat::Clear( void )
 void CBaseHudChat::LevelInit( const char *newmap )
 {
 	Clear();
+
+	//BG2 - found all this stuff removed while porting to 2016 - Awesome
+	/*
+	//=============================================================================
+	// HPE_BEGIN:
+	// [pfreese] initialize new chat filters to defaults. We do this because
+	// unused filter bits are zero, and we might want them on for new filters that
+	// are added.
+	//
+	// Also, we have to do this here instead of somewhere more sensible like the 
+	// c'tor or Init() method, because cvars are currently loaded twice: once
+	// during initialization from the local file, and later (after HUD elements
+	// have been construction and initialized) from Steam Cloud remote storage.
+	//=============================================================================
+
+	switch ( cl_chatfilter_version.GetInt() )
+	{
+	case 0:
+		m_iFilterFlags |= CHAT_FILTER_ACHIEVEMENT;
+		// fall through
+	case kChatFilterVersion:
+		break;
+	}
+
+	if ( cl_chatfilter_version.GetInt() != kChatFilterVersion )
+	{
+		cl_chatfilters.SetValue( m_iFilterFlags );
+		cl_chatfilter_version.SetValue( kChatFilterVersion );
+	}
+
+	//=============================================================================
+	// HPE_END
+	//=============================================================================
+	*/
 }
 
 void CBaseHudChat::LevelShutdown( void )
@@ -1797,7 +1848,7 @@ void CBaseHudChat::LevelShutdown( void )
 //-----------------------------------------------------------------------------
 void CBaseHudChat::ChatPrintf( int iPlayerIndex, int iFilter, const char *fmt, ... )
 {
-	m_iFilterFlags = cl_chatfilters.GetInt(); //LAWL
+	m_iFilterFlags = cl_chatfilters.GetInt(); //BG2 - found this line while porting to 2016 - Awesome
 
 	va_list marker;
 	char msg[4096];
@@ -1846,6 +1897,13 @@ void CBaseHudChat::ChatPrintf( int iPlayerIndex, int iFilter, const char *fmt, .
 	if ( iFilter != CHAT_FILTER_NONE )
 	{
 		if ( !(iFilter & GetFilterFlags() ) )
+			return;
+	}
+
+	// If a player is muted for voice, also mute them for text because jerks gonna jerk.
+	if ( cl_mute_all_comms.GetBool() && iPlayerIndex != 0 )
+	{
+		if ( GetClientVoiceMgr() && GetClientVoiceMgr()->IsPlayerBlocked( iPlayerIndex ) )	
 			return;
 	}
 
@@ -1931,70 +1989,70 @@ void CBaseHudChat::FireGameEvent( IGameEvent *event )
 }
 
 //BG2 - Tjoppen - VoiceComm usermessage
-void CBaseHudChat::MsgFunc_VoiceComm( bf_read &msg )
+void CBaseHudChat::MsgFunc_VoiceComm(bf_read &msg)
 {
 	m_iFilterFlags = cl_chatfilters.GetInt(); //LAWL
 
-	int client		= msg.ReadByte();
-	int commdata	= msg.ReadByte(),
-		comm		= commdata & 31,
-		isamerican	= commdata >> 5;
-	int m_iClass	= msg.ReadByte();
+	int client = msg.ReadByte();
+	int commdata = msg.ReadByte(),
+		comm = commdata & 31,
+		isamerican = commdata >> 5;
+	int m_iClass = msg.ReadByte();
 
 	wchar_t string1[64];
 	string1[0] = 0;
 
 	player_info_t sPlayerInfo;
-	engine->GetPlayerInfo( client, &sPlayerInfo );
+	engine->GetPlayerInfo(client, &sPlayerInfo);
 
-	if ( !(CHAT_FILTER_VOICECOMMS & m_iFilterFlags ) ) //BG2 - Check to see if we should actually display this test for the client. -HairyPotter
-			return;
+	if (!(CHAT_FILTER_VOICECOMMS & m_iFilterFlags)) //BG2 - Check to see if we should actually display this test for the client. -HairyPotter
+		return;
 
-	if( comm >= 0 && comm < NUM_VOICECOMMS )
+	if (comm >= 0 && comm < NUM_VOICECOMMS)
 	{
 		//need to resolve unicode stuff which makes this a bit.. tricky
 		char searchstring[32];
 
 		//first build our search string
 		//BG2 - quick hack for now. Fix this up later. - HairyPotter
-		if ( !isamerican && m_iClass == CLASS_SKIRMISHER && ( comm + 1 == 19 ) ) //Native battlecry
-			Q_snprintf( searchstring, sizeof searchstring, "#BG2_VoiceComm_N19" );
+		if (!isamerican && m_iClass == CLASS_SKIRMISHER && (comm + 1 == 19)) //Native battlecry
+			Q_snprintf(searchstring, sizeof searchstring, "#BG2_VoiceComm_N19");
 		else
-			Q_snprintf( searchstring, sizeof searchstring, "#BG2_VoiceComm_%c%i", isamerican ? 'A' : 'B', comm + 1 );
+			Q_snprintf(searchstring, sizeof searchstring, "#BG2_VoiceComm_%c%i", isamerican ? 'A' : 'B', comm + 1);
 
 		//look up our strings
-		wchar_t *resolved = g_pVGuiLocalize->Find( searchstring ),				// "Yes"
-				*prefix = g_pVGuiLocalize->Find( "#BG2_VoiceComm_Prefix" );	// "(Command)"
-		
-		if( !resolved || !prefix  )
+		wchar_t *resolved = g_pVGuiLocalize->Find(searchstring),				// "Yes"
+			*prefix = g_pVGuiLocalize->Find("#BG2_VoiceComm_Prefix");	// "(Command)"
+
+		if (!resolved || !prefix)
 			return;
 
 		//This whole thing really is a hack but I got tired of playing Valve's mind games. -HairyPotter
 		wchar_t voicecomm[512];
 		char msg[512], name[512], chprefix[512], chresolved[512];
 
-		g_pVGuiLocalize->ConvertUnicodeToANSI( resolved, chresolved, sizeof(chresolved) );
-		g_pVGuiLocalize->ConvertUnicodeToANSI( prefix, chprefix, sizeof(chprefix) );
+		g_pVGuiLocalize->ConvertUnicodeToANSI(resolved, chresolved, sizeof(chresolved));
+		g_pVGuiLocalize->ConvertUnicodeToANSI(prefix, chprefix, sizeof(chprefix));
 
-		Q_snprintf( name, 512, "%s %s", chprefix, sPlayerInfo.name); //(command): Playername
-		Q_snprintf( msg, 512, "%s: %s", name, chresolved );//(command): Playername: "Retreat!"
+		Q_snprintf(name, 512, "%s %s", chprefix, sPlayerInfo.name); //(command): Playername
+		Q_snprintf(msg, 512, "%s: %s", name, chresolved);//(command): Playername: "Retreat!"
 
-		g_pVGuiLocalize->ConvertANSIToUnicode( msg, voicecomm, sizeof( voicecomm ) );
+		g_pVGuiLocalize->ConvertANSIToUnicode(msg, voicecomm, sizeof(voicecomm));
 		//
 
 		//now just use some code copied from ChatPrintf to print this in the chat
 		//this because ChatPrintf doesn't take wchar_t*
 		CBaseHudChatLine *line = (CBaseHudChatLine *)FindUnusedChatLine();
-		if ( !line )
+		if (!line)
 		{
 			//ExpireOldest();
 			line = (CBaseHudChatLine *)FindUnusedChatLine();
 		}
 
-		if ( !line )
+		if (!line)
 			return;
 
-		line->SetText( "" );
+		line->SetText("");
 
 		line->SetExpireTime();
 
@@ -2003,27 +2061,27 @@ void CBaseHudChat::MsgFunc_VoiceComm( bf_read &msg )
 		int iNameStart = 0;
 		int iNameLength = 0;
 
-		if ( pName )
+		if (pName)
 		{
 			wchar_t wideName[48]; //Used to be MAX_PLAYER_NAME_LENGTH (32), but forgot to compensate for the "(Command)" Characters -HairyPotter
-			g_pVGuiLocalize->ConvertANSIToUnicode( pName, wideName, sizeof( wideName ) );
+			g_pVGuiLocalize->ConvertANSIToUnicode(pName, wideName, sizeof(wideName));
 
-			const wchar_t *nameInString = wcsstr( voicecomm, wideName );
+			const wchar_t *nameInString = wcsstr(voicecomm, wideName);
 
-			if ( nameInString )
+			if (nameInString)
 			{
 				iNameStart = (nameInString - voicecomm);
-				iNameLength = wcslen( wideName );
+				iNameLength = wcslen(wideName);
 			}
 		}
 
-		line->SetNameStart( iNameStart );
-		line->SetNameLength( iNameLength );
+		line->SetNameStart(iNameStart);
+		line->SetNameLength(iNameLength);
 
-		line->InsertAndColorizeText( voicecomm, client );
+		line->InsertAndColorizeText(voicecomm, client);
 
 		//play a sound..
 		CLocalPlayerFilter filter;
-		C_BaseEntity::EmitSound( filter, -1 /*SOUND_FROM_LOCAL_PLAYER*/, "HudChat.Message" );
+		C_BaseEntity::EmitSound(filter, -1 /*SOUND_FROM_LOCAL_PLAYER*/, "HudChat.Message");
 	}
 }

@@ -34,16 +34,18 @@ public:
 	float				GetZoom( void );
 	bool				IsZoomed( void )	{ return m_HL2Local.m_bZooming; }
 
-	bool				IsSprinting( void ) { return false; }
-	bool				IsFlashlightActive( void ) { return false; }
-	bool				IsBreatherActive( void ) { return false; }
+	//BG2 - players will never be doing these things, so always return false - found these while porting to 2016 engine - Awesome
+	bool				IsSprinting(void) { return false; }//{ return m_HL2Local.m_bitsActiveDevices & bits_SUIT_DEVICE_SPRINT; }
+	bool				IsFlashlightActive(void){ return false; }// { return m_HL2Local.m_bitsActiveDevices & bits_SUIT_DEVICE_FLASHLIGHT; }
+	bool				IsBreatherActive(void) { return false; }//{ m_HL2Local.m_bitsActiveDevices & bits_SUIT_DEVICE_BREATHER; }
+	//
 
 	virtual int			DrawModel( int flags );
 	virtual	void		BuildTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed );
 
 	LadderMove_t		*GetLadderMove() { return &m_HL2Local.m_LadderMove; }
 	virtual void		ExitLadder();
-	//bool				IsSprinting() const { return m_fIsSprinting; }
+	//bool				IsSprinting() const { return m_fIsSprinting; }//BG2 - depreciated - found this while porting to 2016 engine - Awesome
 	
 	// Input handling
 	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *pCmd );

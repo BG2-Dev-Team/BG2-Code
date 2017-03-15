@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Protobuf Files">
-      <UniqueIdentifier>{14744026-5703-4552-1949-4929EDF94F84}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Public Header Files">
       <UniqueIdentifier>{680EF60A-F852-B6F6-8E56-5693F8167FE5}</UniqueIdentifier>
     </Filter>
@@ -17,9 +14,6 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="generated_proto\htmlmessages.pb.h">
-      <Filter>Protobuf Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\public\vgui_controls\AnalogBar.h">
       <Filter>Public Header Files</Filter>
     </ClInclude>
@@ -292,9 +286,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="generated_proto\htmlmessages.pb.cc">
-      <Filter>Protobuf Files</Filter>
-    </ClCompile>
     <ClCompile Include="AnalogBar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -374,9 +365,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HTML.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\public\html\htmlprotobuf.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Image.cpp">
@@ -533,9 +521,6 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\..\vgui2\chromehtml\htmlmessages.proto">
-      <Filter>Protobuf Files</Filter>
-    </CustomBuild>
     <CustomBuild Include="vgui_controls.vpc">
       <Filter>VPC Scripts</Filter>
     </CustomBuild>

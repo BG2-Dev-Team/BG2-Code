@@ -64,10 +64,10 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	SetScheme("ClientScheme");
 
 	m_pPlayerList = new SectionedListPanel(this, "PlayerList");
-	m_pBritishPlayerList = new SectionedListPanel(this, "BritishPlayerList");
+	m_pBritishPlayerList = new SectionedListPanel(this, "BritishPlayerList"); //BG2 - found this while porting to 2016 engine - Awesome
 
-	m_pPlayerList->SetVerticalScrollbar(false);
-	m_pBritishPlayerList->SetVerticalScrollbar(false);
+	m_pPlayerList->SetVerticalScrollbar(false); 
+	m_pBritishPlayerList->SetVerticalScrollbar(false);//BG2 - found this while porting to 2016 engine - Awesome
 
 	LoadControlSettings("Resource/UI/ScoreBoard.res");
 	m_iDesiredHeight = GetTall();
@@ -198,8 +198,8 @@ void CClientScoreBoardDialog::PostApplySchemeSettings( vgui::IScheme *pScheme )
 	m_pPlayerList->SetVisible( true );
 
 	//BG2 - Commented
-	m_pBritishPlayerList->SetImageList( m_pImageList, false );
-	m_pBritishPlayerList->SetVisible( true );
+	m_pBritishPlayerList->SetImageList(m_pImageList, false);
+	m_pBritishPlayerList->SetVisible(true);
 	//
 
 	// light up scoreboard a bit

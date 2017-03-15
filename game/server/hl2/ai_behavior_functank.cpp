@@ -240,6 +240,20 @@ void CAI_FuncTankBehavior::StartTask( const Task_t *pTask )
 
 			Vector vecManPos;
 			m_hFuncTank->NPC_FindManPoint( vecManPos );
+			AI_NavGoal_t goal( vecManPos );
+			goal.pTarget = m_hFuncTank;
+			/*if ( GetNavigator()->SetGoal( goal ) )
+			{
+				GetNavigator()->SetArrivalDirection( m_hFuncTank->GetAbsAngles() );
+				TaskComplete();
+			}
+			else*/
+			{
+				TaskFail("NO PATH");
+
+				// Don't try and use me again for a while
+				SetBusy( gpGlobals->curtime + AI_FUNCTANK_BEHAVIOR_BUSYTIME );
+			}
 			break;
 		}		
 	case TASK_FACE_FUNCTANK:

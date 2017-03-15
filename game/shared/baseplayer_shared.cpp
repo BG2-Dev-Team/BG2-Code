@@ -342,7 +342,7 @@ Vector CBasePlayer::EyePosition( )
 #ifdef CLIENT_DLL
 		if ( IsObserver() )
 		{
-			if ( GetObserverMode() == OBS_MODE_CHASE )
+			if ( GetObserverMode() == OBS_MODE_CHASE || GetObserverMode() == OBS_MODE_POI )
 			{
 				if ( IsLocalPlayer() )
 				{
@@ -515,19 +515,8 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 	float velwalk;
 	int	fLadder;
 
-	//BG2 - Tjoppen - footstep sound fix
-	/*if ( m_flStepSoundTime > 0 )
-	{
-		m_flStepSoundTime -= 1000.0f * gpGlobals->frametime;
-		if ( m_flStepSoundTime < 0 )
-		{
-			m_flStepSoundTime = 0;
-		}
-	}
-
-	if ( m_flStepSoundTime > 0 )
-		return;*/
-	if( m_flStepSoundTime > gpGlobals->curtime )
+	//BG3 - to prevent the non-stop footstep sounds
+	if (gpGlobals->curtime < m_flStepSoundTime)
 		return;
 
 	if ( GetFlags() & (FL_FROZEN|FL_ATCONTROLS))
@@ -664,20 +653,11 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 		}
 	}
 	
-	// play the sound
-	// 65% volume if ducking
-	//BG2 - Tjoppen - 30% when walking, 150% when running
-	/*if ( GetFlags() & FL_DUCKING )
-	{
-		fvol *= 0.65;
-	}*/
-	if( this->m_nButtons & IN_WALK )
-		fvol *= 0.3f;
-	else
-		fvol *= 1.5f;
-	//
-
-	PlayStepSound( feet, psurface, fvol, false );
+	//BG2 - play the sound only if we're not walking - Awesome
+	if (!(this->m_nButtons & IN_WALK)) {
+		fvol *= 1.5f; //This is leftover from 2007 BG2
+		PlayStepSound(feet, psurface, fvol, false);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -690,13 +670,14 @@ void CBasePlayer::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, flo
 {
 	if ( gpGlobals->maxClients > 1 && !sv_footsteps.GetFloat() )
 		return;
-/* // BG2 - This doesn't belong. -HairyPotter
-#if defined( CLIENT_DLL )
+
+	/* // BG2 - This doesn't belong. -HairyPotter
+	#if defined( CLIENT_DLL )
 	// during prediction play footstep sounds only once
 	if ( prediction->InPrediction() && !prediction->IsFirstTimePredicted() )
-		return;
-#endif
-*/
+	return;
+	#endif
+	*/
 
 	if ( !psurface )
 		return;
@@ -736,7 +717,7 @@ void CBasePlayer::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, flo
 	}
 
 	//BG2 - Tjoppen - footstep fix
-	if( m_flTimeStepSound + 0.1f > gpGlobals->curtime )
+	if (m_flTimeStepSound + 0.1f > gpGlobals->curtime)
 		return;
 
 	m_flTimeStepSound = gpGlobals->curtime;
@@ -803,7 +784,7 @@ void CBasePlayer::GetStepSoundVelocities( float *velwalk, float *velrun )
 	if ( ( GetFlags() & FL_DUCKING) || ( GetMoveType() == MOVETYPE_LADDER ) )
 	{
 		*velwalk = 60;		// These constants should be based on cl_movespeedkey * cl_forwardspeed somehow
-		*velrun = 80;
+		*velrun = 80;		
 	}
 	else
 	{
@@ -1067,7 +1048,7 @@ void CBasePlayer::SelectItem( const char *pstr, int iSubType )
 	// Make sure the current weapon can be holstered
 	if ( GetActiveWeapon() )
 	{
-		if ( !GetActiveWeapon()->CanHolster() )
+		if ( !GetActiveWeapon()->CanHolster() && !pItem->ForceWeaponSwitch() )
 			return;
 
 		ResetAutoaim( );
@@ -1738,6 +1719,7 @@ void CBasePlayer::CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float&
 		case OBS_MODE_IN_EYE	:	CalcInEyeCamView( eyeOrigin, eyeAngles, fov );
 									break;
 
+		case OBS_MODE_POI		: // PASSTIME
 		case OBS_MODE_CHASE		:	CalcChaseCamView( eyeOrigin, eyeAngles, fov  );
 									break;
 
@@ -2066,18 +2048,18 @@ void CBasePlayer::SetPlayerUnderwater( bool state )
 {
 	if ( m_bPlayerUnderwater != state )
 	{
-/*
-#if defined( WIN32 ) && !defined( _X360 ) 
+		/*
+		#if defined( WIN32 ) && !defined( _X360 )
 		// NVNT turn on haptic drag when underwater
 		if(state)
-			HapticSetDrag(this,1);
+		HapticSetDrag(this,1);
 		else
-			HapticSetDrag(this,0);
-#endif*/
+		HapticSetDrag(this,0);
+		#endif*/
 		m_bPlayerUnderwater = state;
 
 		//BG2 - Tjoppen - getting under water means screwing up your shot, forcing you to reload later
-		if( GetActiveWeapon() )
+		if (GetActiveWeapon())
 			GetActiveWeapon()->m_iClip1 = 0;	//simply empty the "clip"
 		//
 

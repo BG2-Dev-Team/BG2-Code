@@ -32,14 +32,18 @@
 	#include "voice_gamemgr.h"
 	#include "hl2mp_gameinterface.h"
 	#include "hl2mp_cvars.h"
-		//BG2 - Draco
+//BG2 - Draco
 	#include "triggers.h"
 	#include "../../server/bg2/bg2_maptriggers.h"
 	#include "../../server/bg2/flag.h"
 	#include "../../server/bg2/ctfflag.h"
 	#include "../../server/bg2/mapfilter.h" 
-	//BG2 - Tjoppen - #includes
-	#include "sdk/sdk_bot_temp.h"
+//BG2 - Tjoppen - #includes
+#include "sdk/sdk_bot_temp.h"
+
+#ifdef DEBUG	
+	#include "hl2mp_bot_temp.h"
+#endif
 
 extern void respawn(CBaseEntity *pEdict, bool fCopyCorpse);
 
@@ -52,18 +56,18 @@ ConVar sv_report_client_settings("sv_report_client_settings", "0", FCVAR_GAMEDLL
 extern ConVar mp_chattime;
 
 //BG2 - Draco - Start
-ConVar sv_restartround( "sv_restartround", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY );
-ConVar sv_restartmap( "sv_restartmap", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY );
-ConVar mp_americanscore( "mp_americanscore", "0", FCVAR_GAMEDLL /*| FCVAR_NOTIFY*/ | FCVAR_CHEAT );
-ConVar mp_britishscore( "mp_britishscore", "0", FCVAR_GAMEDLL /*| FCVAR_NOTIFY*/ | FCVAR_CHEAT  );
-ConVar mp_autobalanceteams( "mp_autobalanceteams", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY );
-ConVar mp_autobalancetolerance( "mp_autobalancetolerance", "3", FCVAR_GAMEDLL | FCVAR_NOTIFY );
-ConVar mp_timeleft( "mp_timeleft", "0", FCVAR_GAMEDLL, "");
+ConVar sv_restartround("sv_restartround", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY);
+ConVar sv_restartmap("sv_restartmap", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY);
+ConVar mp_americanscore("mp_americanscore", "0", FCVAR_GAMEDLL /*| FCVAR_NOTIFY*/ | FCVAR_CHEAT);
+ConVar mp_britishscore("mp_britishscore", "0", FCVAR_GAMEDLL /*| FCVAR_NOTIFY*/ | FCVAR_CHEAT);
+ConVar mp_autobalanceteams("mp_autobalanceteams", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY);
+ConVar mp_autobalancetolerance("mp_autobalancetolerance", "3", FCVAR_GAMEDLL | FCVAR_NOTIFY);
+ConVar mp_timeleft("mp_timeleft", "0", FCVAR_GAMEDLL, "");
 
 //BG2 - Draco - End
 //BG2 - Tjoppen - mp_winbonus
-ConVar mp_winbonus( "mp_winbonus", "200", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Amount of points awarded to team winning the round" );
-ConVar mp_swapteams( "mp_swapteams", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Whether to swap teams at end of round (-1 force no, 0 default, 1 force yes)" );
+ConVar mp_winbonus("mp_winbonus", "200", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Amount of points awarded to team winning the round");
+ConVar mp_swapteams("mp_swapteams", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Whether to swap teams at end of round (-1 force no, 0 default, 1 force yes)");
 //
 
 //BG2 - Tjoppen - away with these
@@ -78,8 +82,10 @@ extern CBaseEntity	 *g_pLastRebelSpawn;*/
 //BG2 - Tjoppen - beautiful defines. you will see another one further down
 #ifdef CLIENT_DLL
 #define CVAR_FLAGS	(FCVAR_REPLICATED | FCVAR_NOTIFY)
+#define CVAR_FLAGS_HIDDEN (FCVAR_REPLICATED)
 #else
 #define CVAR_FLAGS	(FCVAR_GAMEDLL | FCVAR_REPLICATED | FCVAR_NOTIFY)
+#define CVAR_FLAGS_HIDDEN (FCVAR_GAMEDLL | FCVAR_REPLICATED)
 #endif
 #define LIMIT_DEFINES( size, sizename )\
 	ConVar mp_limit_inf_a_##size( "mp_limit_inf_a_"#size, "-1", CVAR_FLAGS,\
@@ -89,7 +95,11 @@ extern CBaseEntity	 *g_pLastRebelSpawn;*/
 	ConVar mp_limit_rif_a_##size( "mp_limit_rif_a_"#size, "-1", CVAR_FLAGS,\
 									"Max number of Frontiersmen on " sizename " maps" );\
 	ConVar mp_limit_ski_a_##size( "mp_limit_ski_a_"#size, "-1", CVAR_FLAGS,\
-									"Max number of Militia on " sizename " maps" );\
+									"Max number of Minuteman on " sizename " maps" );\
+	ConVar mp_limit_linf_a_##size("mp_limit_linf_a_"#size, "-1", CVAR_FLAGS,\
+									"Max number of State Militia on " sizename " maps" );\
+	ConVar mp_limit_gre_a_##size("mp_limit_gre_a_"#size, "-1", CVAR_FLAGS,\
+									"Max number of French Grenadiers on " sizename " maps" );\
 	ConVar mp_limit_inf_b_##size( "mp_limit_inf_b_"#size, "-1", CVAR_FLAGS,\
 									"Max number of Royal Infantry on " sizename " maps" );\
 	ConVar mp_limit_off_b_##size( "mp_limit_off_b_"#size, "-1", CVAR_FLAGS,\
@@ -99,27 +109,49 @@ extern CBaseEntity	 *g_pLastRebelSpawn;*/
 	ConVar mp_limit_ski_b_##size( "mp_limit_ski_b_"#size, "-1", CVAR_FLAGS,\
 									"Max number of Natives on " sizename " maps" );\
 	ConVar mp_limit_linf_b_##size("mp_limit_linf_b_"#size, "-1", CVAR_FLAGS,\
-									"Max number of Light infantry on " sizename " maps" );
+									"Max number of Light infantry on " sizename " maps" );\
+	ConVar mp_limit_gre_b_##size("mp_limit_gre_b_"#size, "-1", CVAR_FLAGS,\
+									"Max number of Royal Grenadiers on " sizename " maps" );
 
 //as you can see, the macro is a shorthand and should also help avoid misspellings and such that are
 //usually common with repetitive stuff like this
-LIMIT_DEFINES( sml, "small" )
-LIMIT_DEFINES( med, "medium" )
-LIMIT_DEFINES( lrg, "large" )
+LIMIT_DEFINES(sml, "small")
+LIMIT_DEFINES(med, "medium")
+LIMIT_DEFINES(lrg, "large")
 
-ConVar mp_limit_mapsize_low( "mp_limit_mapsize_low", "16", CVAR_FLAGS, "Servers with player counts <= this number are small, above it are medium or large" );
-ConVar mp_limit_mapsize_high( "mp_limit_mapsize_high", "32", CVAR_FLAGS, "Servers with player counts <= this number are small or medium, above it are large" );
+ConVar mp_limit_mapsize_low("mp_limit_mapsize_low", "16", CVAR_FLAGS, "Servers with player counts <= this number are small, above it are medium or large");
+ConVar mp_limit_mapsize_high("mp_limit_mapsize_high", "32", CVAR_FLAGS, "Servers with player counts <= this number are small or medium, above it are large");
 
-ConVar mp_respawnstyle( "mp_respawnstyle", "1", CVAR_FLAGS, "0 = regular dm, 1 = waves, 2 = rounds (LMS), 3 = rounds with tickets" );
-ConVar mp_respawntime( "mp_respawntime", "14", CVAR_FLAGS, "Time between waves, or the maximum length of the round with mp_respawnstyle 2" );
+ConVar mp_respawnstyle("mp_respawnstyle", "1", CVAR_FLAGS, "0 = regular dm, 1 = waves, 2 = rounds (LMS), 3 = rounds with tickets, 4 = LMS with linebattle extensions");
+ConVar mp_respawntime("mp_respawntime", "14", CVAR_FLAGS, "Time between waves, or the maximum length of the round with mp_respawnstyle 2");
+
+//For punishing officers who waste the buff during skirmish
+ConVar mp_punish_bad_officer("mp_punish_bad_officer", "1", CVAR_FLAGS, "Whether or not to auto-switch officers who use the buff ability with none of their teammates around off of the officer class. They can switch back after spending one life as a non-officer.");
+ConVar mp_punish_bad_officer_nextclass("mp_bad_officer_nextclass", "1", CVAR_FLAGS, "What class to auto-switch bad officers to. 1-6 is inf, off, sniper, skirm, linf, grenadier.");
 
 //ticket system
-ConVar mp_tickets_rounds( "mp_tickets_rounds", "5", CVAR_FLAGS, "Maximum number of rounds - rounds are restarted until this or mp_timelimit" );
-ConVar mp_tickets_roundtime( "mp_tickets_roundtime", "300", CVAR_FLAGS, "Maximum length of round" );
-ConVar mp_tickets_a( "mp_tickets_a", "100", CVAR_FLAGS, "Tickets given to americans on round start" );
-ConVar mp_tickets_b( "mp_tickets_b", "100", CVAR_FLAGS, "Tickets given to british on round start" );
-ConVar mp_tickets_drain_a( "mp_tickets_drain_a", "12.5", CVAR_FLAGS, "Number of tickets drained every ten seconds when the americans have more than half of their cappable flags. Can have decimals" );
-ConVar mp_tickets_drain_b( "mp_tickets_drain_b", "12.5", CVAR_FLAGS, "Number of tickets drained every ten seconds when the british have more than half of their cappable flags. Can have decimals" );
+ConVar mp_tickets_rounds("mp_tickets_rounds", "5", CVAR_FLAGS, "Maximum number of rounds - rounds are restarted until this or mp_timelimit");
+ConVar mp_tickets_roundtime("mp_tickets_roundtime", "300", CVAR_FLAGS, "Maximum length of round");
+ConVar mp_tickets_a("mp_tickets_a", "100", CVAR_FLAGS, "Tickets given to americans on round start");
+ConVar mp_tickets_b("mp_tickets_b", "100", CVAR_FLAGS, "Tickets given to british on round start");
+ConVar mp_tickets_drain_a("mp_tickets_drain_a", "12.5", CVAR_FLAGS, "Number of tickets drained every ten seconds when the americans have more than half of their cappable flags. Can have decimals");
+ConVar mp_tickets_drain_b("mp_tickets_drain_b", "12.5", CVAR_FLAGS, "Number of tickets drained every ten seconds when the british have more than half of their cappable flags. Can have decimals");
+
+//BG3 - Awesome - linebattle cvars
+ConVar lb_enforce_weapon_amer("lb_enforce_weapon_amer", "0", CVAR_FLAGS_HIDDEN, "How to enforce continental soldier's weapon in linebattle mode. 0 is disabled, 1 is enforce first weapon, 2 is enforce second weapon");
+ConVar lb_enforce_weapon_brit("lb_enforce_weapon_brit", "0", CVAR_FLAGS_HIDDEN, "How to enforce royal infantry's weapon in linebattle mode. 0 is disabled, 1 is enforce first weapon, 2 is enforce second weapon");
+ConVar lb_enforce_class_amer("lb_enforce_class_amer", "0", CVAR_FLAGS_HIDDEN, "How to force class change on a new linebattle round. Excludes officers. 0 is disabled, 1-6 is inf, off, sniper, skirm, linf, grenadier");
+ConVar lb_enforce_class_brit("lb_enforce_class_brit", "0", CVAR_FLAGS_HIDDEN, "How to force class change on a new linebattle round. Excludes officers. 0 is disabled, 1-6 is inf, off, sniper, skirm, linf, grenadier");
+ConVar lb_enforce_no_buckshot("lb_enforce_no_buckshot", "0", CVAR_FLAGS, "Whether or not to allow buckshot during linebattle mode");
+
+ConVar lb_officer_protect("lb_officer_protect", "2", CVAR_FLAGS, "Whether or not to protect officers during early-round long-range linebattle shooting. 0 is off, 1 is first officer only, 2 is both officers.");
+ConVar lb_officer_autodetect("lb_officer_autodetect", "1", CVAR_FLAGS, "Whether or not to auto-detect officers who are the same class as their teammates, based on their position in the line. 0 is off, 1 is on.");
+ConVar lb_officer_classoverride_a("lb_officer_classoverride_a", "0", CVAR_FLAGS_HIDDEN, "Override for which American class is used as officer during linebattle mode. Includes officer's rallying abilities. 0 is disabled, 1-6 is inf, off, sniper, skirm, linf, grenadier");
+ConVar lb_officer_classoverride_b("lb_officer_classoverride_b", "0", CVAR_FLAGS_HIDDEN, "Override for which British class is used as officer during linebattle mode. Includes officer's rallying abilities. 0 is disabled, 1-6 is inf, off, sniper, skirm, linf, grenadier");
+
+ConVar lb_enforce_volley_fire("lb_enforce_volley_fire", "1", CVAR_FLAGS, "Whether or not to enforce volley fire on non-officers. 0 is off, 1 is on. When on, players can only fire if their officer has ironsighted or for a short time after the officer fires");
+ConVar lb_enforce_volley_fire_tolerance("lb_enforce_volley_fire_tolerance", "2", CVAR_FLAGS, "If volley fire is enforced, players are given this amount of time to fire after their officer shoots.");
+ConVar lb_enforce_no_troll("lb_enforce_no_troll", "1", CVAR_FLAGS, "If on, prevents rambos from shooting or stabbing, and prevents trolls from stabbing teammates in non-melee situations. 0 is off, 1 is on.");
 
 // BG2 - VisualMelon - Can't find a better place to put this
 int hitVerificationHairs = 0;
@@ -136,13 +168,13 @@ BEGIN_NETWORK_TABLE_NOBASE( CHL2MPRules, DT_HL2MPRules )
 	#ifdef CLIENT_DLL
 		RecvPropBool( RECVINFO( m_bTeamPlayEnabled ) ),
 		RecvPropFloat( RECVINFO( m_fLastRespawnWave ) ), //BG2 This needs to be here for the timer to work. -HairyPotter
-		RecvPropFloat( RECVINFO( m_fLastRoundRestart ) ),
-		RecvPropInt( RECVINFO( m_iCurrentRound ) ),
+		RecvPropFloat(RECVINFO(m_fLastRoundRestart)),
+		RecvPropInt(RECVINFO(m_iCurrentRound)),
 	#else
 		SendPropBool( SENDINFO( m_bTeamPlayEnabled ) ),
-		SendPropFloat( SENDINFO( m_fLastRespawnWave ) ), //BG2 This needs to be here for the timer to work. -HairyPotter
-		SendPropFloat( SENDINFO( m_fLastRoundRestart ) ),
-		SendPropInt( SENDINFO( m_iCurrentRound ), 8, SPROP_UNSIGNED ),
+		SendPropFloat(SENDINFO(m_fLastRespawnWave)), //BG2 This needs to be here for the timer to work. -HairyPotter
+		SendPropFloat(SENDINFO(m_fLastRoundRestart)),
+		SendPropInt(SENDINFO(m_iCurrentRound), 8, SPROP_UNSIGNED),
 	#endif
 
 END_NETWORK_TABLE()
@@ -152,14 +184,14 @@ LINK_ENTITY_TO_CLASS( hl2mp_gamerules, CHL2MPGameRulesProxy );
 IMPLEMENT_NETWORKCLASS_ALIASED( HL2MPGameRulesProxy, DT_HL2MPGameRulesProxy )
 
 static HL2MPViewVectors g_HL2MPViewVectors(
-	Vector( 0, 0, 60 ),       //VEC_VIEW (m_vView) //BG2 - Awesome[Was 64, but lowered it to match 2007 height. The 2007 height was 64 too but for some reason the 2013 one was still too high so I lowered it here]
+Vector(0, 0, 60),       //VEC_VIEW (m_vView) //BG2 - Awesome[Was 64, but lowered it to match 2007 height. The 2007 height was 64 too but for some reason the 2013 one was still too high so I lowered it here]
 							  
 	Vector(-16, -16, 0 ),	  //VEC_HULL_MIN (m_vHullMin)
 	Vector( 16,  16,  72 ),	  //VEC_HULL_MAX (m_vHullMax)
 							  					
 	Vector(-16, -16, 0 ),	  //VEC_DUCK_HULL_MIN (m_vDuckHullMin)
 	Vector( 16,  16,  36 ),	  //VEC_DUCK_HULL_MAX	(m_vDuckHullMax)
-	Vector( 0, 0, 36 ),		  //VEC_DUCK_VIEW		(m_vDuckView) //BG2 - Awesome[Was 24, but increased it to match perceived 2007 height. See comment above]
+	Vector(0, 0, 36),		  //VEC_DUCK_VIEW		(m_vDuckView) //BG2 - Awesome[Was 24, but increased it to match perceived 2007 height. See comment above]
 							  					
 	Vector(-10, -10, -10 ),	  //VEC_OBS_HULL_MIN	(m_vObsHullMin)
 	Vector( 10,  10,  10 ),	  //VEC_OBS_HULL_MAX	(m_vObsHullMax)
@@ -323,9 +355,10 @@ CHL2MPRules::CHL2MPRules()
 	m_fNextWinSong = gpGlobals->curtime;
 	m_bServerReady = false; //Do this too, this will make it so map changes with bots work.
 	m_iCurrentRound = 1;
-//BG2 - Skillet
+	//BG2 - Skillet
 #else
 	m_hRagdollList.RemoveAll();
+
 #endif
 }
 
@@ -394,29 +427,29 @@ void CHL2MPRules::ResetMap()
 {
 #ifndef CLIENT_DLL
 	CMapEntityFilter filter;
-	
+
 	CBaseEntity *pEnt;
 	// find the first entity in the entity list
 	pEnt = gEntList.FirstEnt();
 	// as long as we've got a valid pointer, keep looping through the list
-	while ( pEnt ) 
+	while (pEnt)
 	{
-		if( filter.ShouldCreateEntity( pEnt->GetClassname() ) )
-		{ 
+		if (filter.ShouldCreateEntity(pEnt->GetClassname()))
+		{
 			//It's not in the "keep" list, so remove the ent.
-			UTIL_Remove (pEnt);
+			UTIL_Remove(pEnt);
 			//Msg("Removed %s \n", pEnt->GetClassname());
 		}
 		//else
 		//	Msg("Did not remove : %s \n", pEnt->GetClassname());
 
-		pEnt = gEntList.NextEnt (pEnt);
+		pEnt = gEntList.NextEnt(pEnt);
 	}
-    // force the entities we've set to be removed to actually be removed
-    gEntList.CleanupDeleteList();
+	// force the entities we've set to be removed to actually be removed
+	gEntList.CleanupDeleteList();
 	// with any unrequired entities removed, we use MapEntity_ParseAllEntities to reparse the map entities
 	// this in effect causes them to spawn back to their normal position.
-	MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true);
+	MapEntity_ParseAllEntities(engine->GetMapEntitiesString(), &filter, true);
 #endif
 }
 
@@ -440,22 +473,22 @@ void CHL2MPRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 
 #ifndef CLIENT_DLL
 //BG2 - This should handle all the score settings after each round, and also fire any triggers and play win music. -HairyPotter
-void CHL2MPRules::HandleScores( int iTeam, int iScore, int msg_type, bool bRestart )
+void CHL2MPRules::HandleScores(int iTeam, int iScore, int msg_type, bool bRestart)
 {
 	CMapTrigger *BG2Trigger = NULL;
 
-	while ( (BG2Trigger = static_cast<CMapTrigger*>(gEntList.FindEntityByClassname( BG2Trigger, "bg2_maptrigger" ))) != NULL )
+	while ((BG2Trigger = static_cast<CMapTrigger*>(gEntList.FindEntityByClassname(BG2Trigger, "bg2_maptrigger"))) != NULL)
 	{
-		switch ( iTeam )
+		switch (iTeam)
 		{
 		case TEAM_AMERICANS:
-			if ( bRestart )
+			if (bRestart)
 				BG2Trigger->AmericanRoundWin();
 			else
 				BG2Trigger->AmericanMapWin();
 			break;
 		case TEAM_BRITISH:
-			if ( bRestart )
+			if (bRestart)
 				BG2Trigger->BritishRoundWin();
 			else
 				BG2Trigger->BritishMapWin();
@@ -466,15 +499,15 @@ void CHL2MPRules::HandleScores( int iTeam, int iScore, int msg_type, bool bResta
 		}
 	}
 
-	if ( iScore > 0 && iTeam != TEAM_NONE )
-		g_Teams[iTeam]->AddScore( iScore );
+	if (iScore > 0 && iTeam != TEAM_NONE)
+		g_Teams[iTeam]->AddScore(iScore);
 
-	if ( bRestart )
+	if (bRestart)
 	{
-		if ( UsingTickets() )
+		if (UsingTickets())
 		{
 			//if last round, then go to intermission (next map)
-			if ( m_iCurrentRound >= mp_tickets_rounds.GetInt() )
+			if (m_iCurrentRound >= mp_tickets_rounds.GetInt())
 			{
 				GoToIntermission();
 				return;
@@ -490,40 +523,40 @@ void CHL2MPRules::HandleScores( int iTeam, int iScore, int msg_type, bool bResta
 		if (iSwapTeam == 1 || (iSwapTeam == 0 && UsingTickets()))
 			bSwapTeam = true;
 		//
-		RestartRound( bSwapTeam );
+		RestartRound(bSwapTeam);
 
 		//do not cause two simultaneous round restarts..
 		m_bIsRestartingRound = false;
 		m_flNextRoundRestart = gpGlobals->curtime + 1;
 	}
 
-	WinSong( iTeam, true );
+	WinSong(iTeam, true);
 
-	if ( msg_type )
-		ClientPrintAll( msg_type );
+	if (msg_type)
+		ClientPrintAll(msg_type);
 }
 
-int CHL2MPRules::CountAlivePlayersAndTickets( int iTeamNumber )
+int CHL2MPRules::CountAlivePlayersAndTickets(int iTeamNumber)
 {
 	CTeam *pTeam = g_Teams[iTeamNumber];
 	int alive = UsingTickets() ? pTeam->GetTicketsLeft() : 0;
 	int x = 0;
 
-	for( ; x < pTeam->GetNumPlayers(); x++ )
+	for (; x < pTeam->GetNumPlayers(); x++)
 	{
-		CBasePlayer *pPlayer = pTeam->GetPlayer( x );
-		if( pPlayer && pPlayer->IsAlive() )
+		CBasePlayer *pPlayer = pTeam->GetPlayer(x);
+		if (pPlayer && pPlayer->IsAlive())
 			alive++;
 	}
 
 	return alive;
 }
-void CHL2MPRules::SwapPlayerTeam( CHL2MP_Player *pPlayer, bool skipAlive )
+void CHL2MPRules::SwapPlayerTeam(CHL2MP_Player *pPlayer, bool skipAlive)
 {
-	if ( !pPlayer || (pPlayer->IsAlive() && skipAlive) )
+	if (!pPlayer || (pPlayer->IsAlive() && skipAlive))
 		return;
 
-	int edict = engine->IndexOfEdict( pPlayer->edict() );
+	int edict = engine->IndexOfEdict(pPlayer->edict());
 	int iTeam = pPlayer->GetTeamNumber();
 	int iOtherTeam;
 	int playerClass;
@@ -533,14 +566,14 @@ void CHL2MPRules::SwapPlayerTeam( CHL2MP_Player *pPlayer, bool skipAlive )
 	//default to using normal kit
 	bool useDefaultKit = true;
 
-	if ( iTeam == TEAM_BRITISH )
+	if (iTeam == TEAM_BRITISH)
 	{
 		iOtherTeam = TEAM_AMERICANS;
 
 		prevclassvar = "cl_a_prevclass";
-		const char *value = engine->GetClientConVarValue( edict, prevclassvar );
-		
-		if ( value && sscanf( value , "%i", &playerClass ) == 1 )
+		const char *value = engine->GetClientConVarValue(edict, prevclassvar);
+
+		if (value && sscanf(value, "%i", &playerClass) == 1)
 		{
 			pPlayer->SetNextClass(playerClass);
 		}
@@ -549,21 +582,21 @@ void CHL2MPRules::SwapPlayerTeam( CHL2MP_Player *pPlayer, bool skipAlive )
 			playerClass = pPlayer->GetClass();
 		}
 
-		switch( playerClass )
+		switch (playerClass)
 		{
 		case CLASS_INFANTRY: kitvar = "cl_kit_a_inf"; break;
 		case CLASS_SKIRMISHER: kitvar = "cl_kit_a_ski"; break;
 		case CLASS_OFFICER: kitvar = "cl_kit_a_off"; break;
 		}
 	}
-	else if ( iTeam == TEAM_AMERICANS )
+	else if (iTeam == TEAM_AMERICANS)
 	{
 		iOtherTeam = TEAM_BRITISH;
 
 		prevclassvar = "cl_b_prevclass";
-		const char *value = engine->GetClientConVarValue( edict, prevclassvar );
+		const char *value = engine->GetClientConVarValue(edict, prevclassvar);
 
-		if ( value && sscanf( value , "%i", &playerClass ) == 1 )
+		if (value && sscanf(value, "%i", &playerClass) == 1)
 		{
 			pPlayer->SetNextClass(playerClass);
 		}
@@ -572,7 +605,7 @@ void CHL2MPRules::SwapPlayerTeam( CHL2MP_Player *pPlayer, bool skipAlive )
 			playerClass = pPlayer->GetClass();
 		}
 
-		switch( playerClass )
+		switch (playerClass)
 		{
 		case CLASS_INFANTRY: kitvar = "cl_kit_b_inf"; break;
 		case CLASS_SKIRMISHER: kitvar = "cl_kit_b_ski"; break;
@@ -586,18 +619,18 @@ void CHL2MPRules::SwapPlayerTeam( CHL2MP_Player *pPlayer, bool skipAlive )
 		return;
 	}
 
-	if ( kitvar )
+	if (kitvar)
 	{
-		const char *value = engine->GetClientConVarValue( edict, kitvar );
+		const char *value = engine->GetClientConVarValue(edict, kitvar);
 
-		if ( value && sscanf( value , "%i %i %i", &pPlayer->m_iGunKit, &pPlayer->m_iAmmoKit, &pPlayer->m_iClassSkin ) == 3 )
+		if (value && sscanf(value, "%i %i %i", &pPlayer->m_iGunKit, &pPlayer->m_iAmmoKit, &pPlayer->m_iClassSkin) == 3)
 		{
 			//kit successfully parsed
 			useDefaultKit = false;
 		}
 	}
 
-	if ( useDefaultKit )
+	if (useDefaultKit)
 	{
 		pPlayer->m_iGunKit = 1;
 		pPlayer->m_iAmmoKit = AMMO_KIT_BALL;
@@ -605,10 +638,10 @@ void CHL2MPRules::SwapPlayerTeam( CHL2MP_Player *pPlayer, bool skipAlive )
 
 	//don't kill the player
 	pPlayer->m_bNoJoinMessage = true;
-	pPlayer->ChangeTeam( iOtherTeam, false );
+	pPlayer->ChangeTeam(iOtherTeam, false);
 }
 
-void CHL2MPRules::SwapTeams( void )
+void CHL2MPRules::SwapTeams(void)
 {
 	//Merge the british and american player lists.
 	//We can't iterate over the teams separately since
@@ -620,10 +653,10 @@ void CHL2MPRules::SwapTeams( void )
 	CUtlVector<CBasePlayer*> players;
 	players = g_Teams[TEAM_AMERICANS]->m_aPlayers;
 
-	players.AddVectorToTail( g_Teams[TEAM_BRITISH]->m_aPlayers );
+	players.AddVectorToTail(g_Teams[TEAM_BRITISH]->m_aPlayers);
 
-	for( int x = 0; x < players.Count(); x++ )
-		SwapPlayerTeam( ToHL2MPPlayer(players[x]), false );
+	for (int x = 0; x < players.Count(); x++)
+		SwapPlayerTeam(ToHL2MPPlayer(players[x]), false);
 
 	//swap scores
 	int a = g_Teams[TEAM_AMERICANS]->GetScore();
@@ -632,6 +665,7 @@ void CHL2MPRules::SwapTeams( void )
 	g_Teams[TEAM_BRITISH]->SetScore(a);
 }
 #endif
+
 
 
 void CHL2MPRules::Think( void )
@@ -644,7 +678,6 @@ void CHL2MPRules::Think( void )
 	CTeam *pAmericans = g_Teams[TEAM_AMERICANS];
 	CTeam *pBritish = g_Teams[TEAM_BRITISH];
 
-	//void ClientPrintAll( bool printfordeadplayers, bool forcenextclientprintall );
 	if ( g_fGameOver )   // someone else quit the game already
 	{
 		if (!m_bHasDoneWinSong)
@@ -653,46 +686,45 @@ void CHL2MPRules::Think( void )
 			if (pAmericans->GetScore() < pBritish->GetScore())
 			{
 				//British Win
-				HandleScores( TEAM_BRITISH, 0, BRITISH_MAP_WIN, false );
+				HandleScores(TEAM_BRITISH, 0, BRITISH_MAP_WIN, false);
 			}
 
 			if (pAmericans->GetScore() > pBritish->GetScore())
 			{
 				//Americans Win
-				HandleScores( TEAM_AMERICANS, 0, AMERICAN_MAP_WIN, false );
+				HandleScores(TEAM_AMERICANS, 0, AMERICAN_MAP_WIN, false);
 			}
 
 			if (pAmericans->GetScore() == pBritish->GetScore())
 			{
 				//Draw!
-				HandleScores( TEAM_NONE, 0, MAP_DRAW, false );
+				HandleScores(TEAM_NONE, 0, MAP_DRAW, false);
 			}
 		}
 
-		if ( !m_bHasLoggedScores )
+		if (!m_bHasLoggedScores)
 		{
 			//BG2 - Log Damages and Scores. -HairyPotter
-			for( int x = 0; x < pAmericans->GetNumPlayers(); x++ )
+			for (int x = 0; x < pAmericans->GetNumPlayers(); x++)
 			{
-				CBasePlayer *pPlayer = pAmericans->GetPlayer( x );
-				if ( !pPlayer )
+				CBasePlayer *pPlayer = pAmericans->GetPlayer(x);
+				if (!pPlayer)
 					continue;
 				m_iAmericanDmg += pPlayer->DeathCount();
 			}
-			for( int x = 0; x < pBritish->GetNumPlayers(); x++ )
+			for (int x = 0; x < pBritish->GetNumPlayers(); x++)
 			{
-				CBasePlayer *pPlayer = pBritish->GetPlayer( x );
-				if ( !pPlayer )
+				CBasePlayer *pPlayer = pBritish->GetPlayer(x);
+				if (!pPlayer)
 					continue;
 				m_iBritishDmg += pPlayer->DeathCount();
 			}
 
-			UTIL_LogPrintf("American Scores: DAMAGE: %i   SCORE: %i   \n", m_iAmericanDmg, mp_americanscore.GetInt() );
-			UTIL_LogPrintf("British Scores: DAMAGE: %i   SCORE: %i   \n", m_iBritishDmg, mp_britishscore.GetInt() );
+			UTIL_LogPrintf("American Scores: DAMAGE: %i   SCORE: %i   \n", m_iAmericanDmg, mp_americanscore.GetInt());
+			UTIL_LogPrintf("British Scores: DAMAGE: %i   SCORE: %i   \n", m_iBritishDmg, mp_britishscore.GetInt());
 
 			m_bHasLoggedScores = true; //Don't do it again.
 		}
-
 		// check to see if we should change levels now
 		if ( m_flIntermissionEndTime < gpGlobals->curtime )
 		{
@@ -706,7 +738,7 @@ void CHL2MPRules::Think( void )
 	float flTimeLimit = GetMapRemainingTime();
 	float flFragLimit = fraglimit.GetFloat();
 
-	if ( flTimeLimit != 0 && gpGlobals->curtime >= flTimeLimit )
+	if (flTimeLimit != 0 && gpGlobals->curtime >= flTimeLimit)
 	{
 		GoToIntermission();
 		return;
@@ -715,7 +747,7 @@ void CHL2MPRules::Think( void )
 	//BG2 - Draco - Start
 	if (m_fNextFlagUpdate <= gpGlobals->curtime)
 	{
-		if ( UsingTickets() )
+		if (UsingTickets())
 		{
 			CheckTicketDrain();
 			m_fNextFlagUpdate = gpGlobals->curtime + 10;
@@ -769,13 +801,13 @@ void CHL2MPRules::Think( void )
 		{
 			//here comes the tricky part, who to swap, how to swap?
 			//meh, go random for now, maybe lowest scorer later...
-			CTeam *pBiggerTeam     = g_Teams[iAutoTeamBalanceBiggerTeam];
-			int index              = random->RandomInt( 0, pBiggerTeam->GetNumPlayers() - 1 );
+			CTeam *pBiggerTeam = g_Teams[iAutoTeamBalanceBiggerTeam];
+			int index = random->RandomInt(0, pBiggerTeam->GetNumPlayers() - 1);
 			CHL2MP_Player *pPlayer = ToHL2MPPlayer(pBiggerTeam->GetPlayer(index));
 
 			//swap player unless they're alive
 			//if they are alive, we'll pick another player next think
-			SwapPlayerTeam( pPlayer, true );
+			SwapPlayerTeam(pPlayer, true);
 		}
 		//well, if we aren't even now, there's always next think...
 	}
@@ -788,7 +820,7 @@ void CHL2MPRules::Think( void )
 		sv_restartmap.SetValue(0);
 	}
 	//now if the time was set we can check for it, above zero means we are restarting
-	if ((m_fNextGameReset > 0) &&( m_fNextGameReset <= gpGlobals->curtime))
+	if ((m_fNextGameReset > 0) && (m_fNextGameReset <= gpGlobals->curtime))
 	{
 		m_fNextGameReset = 0;//dont reset again
 
@@ -796,26 +828,26 @@ void CHL2MPRules::Think( void )
 		pAmericans->SetScore(0);//...for teams...
 		pBritish->SetScore(0);
 		int x;
-		for( x = 0; x < g_Teams[TEAM_AMERICANS]->GetNumPlayers(); x++ )
+		for (x = 0; x < g_Teams[TEAM_AMERICANS]->GetNumPlayers(); x++)
 		{
-			CBasePlayer *pPlayer = g_Teams[TEAM_AMERICANS]->GetPlayer( x );
-			if ( !pPlayer )
+			CBasePlayer *pPlayer = g_Teams[TEAM_AMERICANS]->GetPlayer(x);
+			if (!pPlayer)
 				continue;
 
 			pPlayer->ResetFragCount();//...for cap points...
 			pPlayer->ResetDeathCount();//...and damage
 		}
-		for( x = 0; x < g_Teams[TEAM_BRITISH]->GetNumPlayers(); x++ )
+		for (x = 0; x < g_Teams[TEAM_BRITISH]->GetNumPlayers(); x++)
 		{
-			CBasePlayer *pPlayer = g_Teams[TEAM_BRITISH]->GetPlayer( x );
-			if ( !pPlayer )
+			CBasePlayer *pPlayer = g_Teams[TEAM_BRITISH]->GetPlayer(x);
+			if (!pPlayer)
 				continue;
 
 			pPlayer->ResetFragCount();//...for cap points...
 			pPlayer->ResetDeathCount();//...and damage
 		}
 		m_iCurrentRound = 1;
-		RestartRound( false );	//BG2 - Tjoppen - restart round
+		RestartRound(false);	//BG2 - Tjoppen - restart round
 
 		//Reset the map time
 		m_flGameStartTime = gpGlobals->curtime;
@@ -826,16 +858,16 @@ void CHL2MPRules::Think( void )
 		m_fNextRoundReset = gpGlobals->curtime + sv_restartround.GetInt();
 		sv_restartround.SetValue(0);
 	}
-	if ((m_fNextRoundReset > 0) && ( m_fNextRoundReset <= gpGlobals->curtime))
+	if ((m_fNextRoundReset > 0) && (m_fNextRoundReset <= gpGlobals->curtime))
 	{
 		m_fNextRoundReset = 0;//dont reset again
-		RestartRound( false );	//BG2 - restart round
+		RestartRound(false);	//BG2 - restart round
 	}
-	
+
 	//=========================
 	//Round systems
 	//=========================
-	if( mp_respawnstyle.GetInt() == 1 || UsingTickets() )//wave spawning
+	if (mp_respawnstyle.GetInt() == 1 || UsingTickets())//wave spawning
 	{
 		if ((m_fLastRespawnWave + mp_respawntime.GetFloat()) <= gpGlobals->curtime)
 		{
@@ -843,28 +875,28 @@ void CHL2MPRules::Think( void )
 			m_fLastRespawnWave = gpGlobals->curtime;
 		}
 	}
-	if( mp_respawnstyle.GetInt() == 2 || UsingTickets() )//if line battle all at once spawn style - Draco
+	if (IsLMS() || UsingTickets())//if line battle all at once spawn style - Draco
 	{
 		//Tjoppen - start
 		//count alive players in each team
-		int aliveamericans = CountAlivePlayersAndTickets( TEAM_AMERICANS );
-		int alivebritish   = CountAlivePlayersAndTickets( TEAM_BRITISH );
+		int aliveamericans = CountAlivePlayersAndTickets(TEAM_AMERICANS);
+		int alivebritish = CountAlivePlayersAndTickets(TEAM_BRITISH);
 
-		if( pAmericans->GetNumPlayers() == 0 && pBritish->GetNumPlayers() == 0 )
+		if (pAmericans->GetNumPlayers() == 0 && pBritish->GetNumPlayers() == 0)
 			return;
 
 		//allow ticket round to restart even if there aren't any players on the other team
-		if( !UsingTickets() && (pAmericans->GetNumPlayers() == 0 || pBritish->GetNumPlayers() == 0) )
+		if (!UsingTickets() && (pAmericans->GetNumPlayers() == 0 || pBritish->GetNumPlayers() == 0))
 			return;
 
 		//Tjoppen - End
 		//BG2 - Tjoppen - restart rounds a few seconds after the last person is killed
 		//wins
 		float roundLength = UsingTickets() ? mp_tickets_roundtime.GetFloat() : mp_respawntime.GetFloat();
-		
+
 		if (aliveamericans == 0 || alivebritish == 0 || m_fLastRoundRestart + roundLength <= gpGlobals->curtime || m_bIsRestartingRound)
 		{
-			if( !m_bIsRestartingRound )
+			if (!m_bIsRestartingRound)
 			{
 				m_flNextRoundRestart = gpGlobals->curtime + 5;
 				m_bIsRestartingRound = true;
@@ -886,22 +918,22 @@ void CHL2MPRules::Think( void )
 					m_iTDMTeamThatWon = TEAM_NONE;
 				}
 			}
-			else if( m_flNextRoundRestart < gpGlobals->curtime )
+			else if (m_flNextRoundRestart < gpGlobals->curtime)
 			{
 				int score = 0;
 
-				if ( m_iTDMTeamThatWon != TEAM_NONE )
+				if (m_iTDMTeamThatWon != TEAM_NONE)
 					score = 1;
 
-				HandleScores( m_iTDMTeamThatWon, score, 0, true );
+				HandleScores(m_iTDMTeamThatWon, score, 0, true);
 			}
 		}
 	}
 	//BG2 - Draco - End
 
-	if ( flFragLimit )
+	if (flFragLimit)
 	{
-		if ( pAmericans->GetScore() >= flFragLimit || pBritish->GetScore() >= flFragLimit )
+		if (pAmericans->GetScore() >= flFragLimit || pBritish->GetScore() >= flFragLimit)
 		{
 			GoToIntermission();
 			return;
@@ -913,6 +945,11 @@ void CHL2MPRules::Think( void )
 		CheckAllPlayersReady();
 		CheckRestartGame();
 		m_tmNextPeriodicThink = gpGlobals->curtime + 1.0;
+	}
+
+	if ( m_flRestartGameTime > 0.0f && m_flRestartGameTime <= gpGlobals->curtime )
+	{
+		RestartGame();
 	}
 
 	if( m_bAwaitingReadyRestart && m_bHeardAllPlayersReady )
@@ -1205,8 +1242,8 @@ void CHL2MPRules::ClientDisconnected( edict_t *pClient )
 	}
 
 	//BG2 - Tjoppen - disconnecting. remove from flags
-	CHL2MP_Player *pPlayer2 = dynamic_cast<CHL2MP_Player*>( pPlayer );
-	if( pPlayer2 )
+	CHL2MP_Player *pPlayer2 = dynamic_cast<CHL2MP_Player*>(pPlayer);
+	if (pPlayer2)
 		pPlayer2->RemoveSelfFromFlags();
 	//
 
@@ -1290,6 +1327,20 @@ void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info
 			killer_weapon_name = "physics";
 		}
 
+		/*if ( strcmp( killer_weapon_name, "prop_combine_ball" ) == 0 )
+		{
+			killer_weapon_name = "combine_ball";
+		}
+		else if ( strcmp( killer_weapon_name, "grenade_ar2" ) == 0 )
+		{
+			killer_weapon_name = "smg1_grenade";
+		}
+		else if ( strcmp( killer_weapon_name, "satchel" ) == 0 || strcmp( killer_weapon_name, "tripmine" ) == 0)
+		{
+			killer_weapon_name = "slam";
+		}*/
+
+
 	}
 
 	IGameEvent *event = gameeventmanager->CreateEvent( "player_death" );
@@ -1372,13 +1423,25 @@ void CHL2MPRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 int CHL2MPRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
 {
+/*#ifndef CLIENT_DLL
+	// half life multiplay has a simple concept of Player Relationships.
+	// you are either on another player's team, or you are not.
+	if ( !pPlayer || !pTarget || !pTarget->IsPlayer() || IsTeamplay() == false )
+		return GR_NOTTEAMMATE;
+
+	if ( (*GetTeamID(pPlayer) != '\0') && (*GetTeamID(pTarget) != '\0') && !stricmp( GetTeamID(pPlayer), GetTeamID(pTarget) ) )
+	{
+		return GR_TEAMMATE;
+	}
+#endif*/
+
 	return GR_NOTTEAMMATE;
 }
 
 const char *CHL2MPRules::GetGameDescription( void )
 { 
 	//BG2 - Tjoppen - our game descriptions - putting the current version number in these might be a good idea
-	return "Battle Grounds 2 2.3";
+	return "Battle Grounds 2 3.0";
 	// 
 } 
 
@@ -1405,6 +1468,7 @@ float CHL2MPRules::GetMapRemainingTime()
 //-----------------------------------------------------------------------------
 void CHL2MPRules::Precache( void )
 {
+	//CBaseEntity::PrecacheScriptSound( "AlyxEmp.Charge" );
 }
 
 bool CHL2MPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
@@ -1453,6 +1517,7 @@ bool CHL2MPRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 // convert a velocity in ft/sec and a mass in grains to an impulse in kg in/s
 #define BULLET_IMPULSE(grains, ftpersec)	((ftpersec)*12*BULLET_MASS_GRAINS_TO_KG(grains)*BULLET_IMPULSE_EXAGGERATION)
 
+
 CAmmoDef *GetAmmoDef()
 {
 	static CAmmoDef def;
@@ -1463,7 +1528,8 @@ CAmmoDef *GetAmmoDef()
 		bInitted = true;
 
 		//BG2 - Tjoppen - more ammo..
-		def.AddAmmoType("357",				DMG_BULLET,					TRACER_LINE_AND_WHIZ,	0,			0,			36,			BULLET_IMPULSE(800, 5000),	0 );
+		def.AddAmmoType("357", DMG_BULLET, TRACER_LINE_AND_WHIZ, 0, 0, 36, BULLET_IMPULSE(800, 5000), 0);
+		def.AddAmmoType("Grenade", DMG_BURN, TRACER_NONE, "sk_plr_dmg_grenade", "sk_npc_dmg_grenade", "sk_max_grenade", 0, 0); //BG3 - Awesome - grenades!
 	}
 
 	return &def;
@@ -1473,7 +1539,7 @@ CAmmoDef *GetAmmoDef()
 
 	/*ConVar cl_autowepswitch(
 		"cl_autowepswitch",
-		"0", //"1"
+		"1",
 		FCVAR_ARCHIVE | FCVAR_USERINFO,
 		"Automatically switch to picked up weapons (if more powerful)" );*/
 
@@ -1490,8 +1556,7 @@ CAmmoDef *GetAmmoDef()
 			{
 				return false;
 			}
-		}
-		*/
+		}*/
 
 		return BaseClass::FShouldSwitchWeapon( pPlayer, pWeapon );
 	}
@@ -1513,6 +1578,8 @@ void CHL2MPRules::RestartGame()
 		Warning( "Trying to set a NaN game start time\n" );
 		m_flGameStartTime.GetForModify() = 0.0f;
 	}
+
+	//CleanUpMap();
 	
 	// now respawn all players
 	for (int i = 1; i <= gpGlobals->maxClients; i++ )
@@ -1533,14 +1600,14 @@ void CHL2MPRules::RestartGame()
 
 	// Respawn entities (glass, doors, etc..)
 
-	CTeam *pBritish = GetGlobalTeam( TEAM_BRITISH );
-	CTeam *pAmericans = GetGlobalTeam( TEAM_AMERICANS );
+	CTeam *pBritish = GetGlobalTeam(TEAM_BRITISH);
+	CTeam *pAmericans = GetGlobalTeam(TEAM_AMERICANS);
 
-	if ( pAmericans )
-		pAmericans->SetScore( 0 );
+	if (pAmericans)
+		pAmericans->SetScore(0);
 
-	if ( pBritish )
-		pBritish->SetScore( 0 );
+	if (pBritish)
+		pBritish->SetScore(0);
 
 	m_flIntermissionEndTime = 0;
 	m_flRestartGameTime = 0.0;		
@@ -1652,8 +1719,8 @@ void CHL2MPRules::CleanUpMap()
 	filter.m_iIterator = g_MapEntityRefs.Head();
 
 	// DO NOT CALL SPAWN ON info_node ENTITIES!
-
-	MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true ); */
+	
+	MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true );*/
 }
 
 void CHL2MPRules::CheckChatForReadySignal( CHL2MP_Player *pPlayer, const char *chatmsg )
@@ -1783,22 +1850,25 @@ const char *CHL2MPRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 
 #endif
 
-
 #ifndef CLIENT_DLL
 
-void CHL2MPRules::RestartRound( bool swapTeams )
+void CHL2MPRules::RestartRound(bool swapTeams)
 {
 	//restart current round. immediately.
 	ResetMap();
 	ResetFlags();
 
-	if ( swapTeams )
+	if (swapTeams)
 		SwapTeams();
 
 	RespawnAll();
 
+	//reset next officer rallying times
+	CHL2MP_Player::s_flNextRallyTimeAmerican = gpGlobals->curtime;
+	CHL2MP_Player::s_flNextRallyTimeBritish = gpGlobals->curtime;
+
 	//BG2 - Tjoppen - tickets
-	if( UsingTickets() )
+	if (UsingTickets())
 	{
 		g_Teams[TEAM_AMERICANS]->ResetTickets();
 		g_Teams[TEAM_BRITISH]->ResetTickets();
@@ -1807,149 +1877,149 @@ void CHL2MPRules::RestartRound( bool swapTeams )
 		m_fNextFlagUpdate = gpGlobals->curtime + 10;
 	}
 
-	if( mp_respawntime.GetInt() > 0 )
+	if (mp_respawntime.GetInt() > 0)
 		m_fLastRoundRestart = m_fLastRespawnWave = gpGlobals->curtime;
 }
 
 void CHL2MPRules::RespawnAll()
 {
-	if( g_Teams.Size() < NUM_TEAMS )	//in case teams haven't been inited or something
+	if (g_Teams.Size() < NUM_TEAMS)	//in case teams haven't been inited or something
 		return;
 
 	int x;
-	for( x = 0; x < g_Teams[TEAM_AMERICANS]->GetNumPlayers(); x++ )
+	for (x = 0; x < g_Teams[TEAM_AMERICANS]->GetNumPlayers(); x++)
 	{
-		CHL2MP_Player *pPlayer = ToHL2MPPlayer( g_Teams[TEAM_AMERICANS]->GetPlayer( x ) );
+		CHL2MP_Player *pPlayer = ToHL2MPPlayer(g_Teams[TEAM_AMERICANS]->GetPlayer(x));
 
-		if( !pPlayer )
+		if (!pPlayer)
 			continue;
 
 		pPlayer->Spawn();
 
 		//BG2 - Tjoppen - remove ragdoll - remember to change this to remove multiple ones if we decide to enable more corpses
-		if( pPlayer->m_hRagdoll )
+		if (pPlayer->m_hRagdoll)
 		{
-			UTIL_RemoveImmediate( pPlayer->m_hRagdoll );
+			UTIL_RemoveImmediate(pPlayer->m_hRagdoll);
 			pPlayer->m_hRagdoll = NULL;
 		}
 	}
 
-	for( x = 0; x < g_Teams[TEAM_BRITISH]->GetNumPlayers(); x++ )
+	for (x = 0; x < g_Teams[TEAM_BRITISH]->GetNumPlayers(); x++)
 	{
-		CHL2MP_Player *pPlayer = ToHL2MPPlayer( g_Teams[TEAM_BRITISH]->GetPlayer( x ) );
+		CHL2MP_Player *pPlayer = ToHL2MPPlayer(g_Teams[TEAM_BRITISH]->GetPlayer(x));
 
-		if( !pPlayer )
+		if (!pPlayer)
 			continue;
 
 		pPlayer->Spawn();
 
 		//BG2 - Tjoppen - remove ragdoll - remember to change this to remove multiple ones if we decide to enable more corpses
-		if( pPlayer->m_hRagdoll )
+		if (pPlayer->m_hRagdoll)
 		{
-			UTIL_RemoveImmediate( pPlayer->m_hRagdoll );
+			UTIL_RemoveImmediate(pPlayer->m_hRagdoll);
 			pPlayer->m_hRagdoll = NULL;
 		}
 	}
 }
 
-void CHL2MPRules::WinSong( int team, bool m_bWonMap )
+void CHL2MPRules::WinSong(int team, bool m_bWonMap)
 {
-	if( g_Teams.Size() < NUM_TEAMS )	//in case teams haven't been inited or something
+	if (g_Teams.Size() < NUM_TEAMS)	//in case teams haven't been inited or something
 		return;
 
 	const char *w_sTeam = team == TEAM_AMERICANS ? "Americans" : "British";
 
 	//This is a good place to do the round_win log stuff, since this function is pretty much called every time a team wins a map/round. -HairyPotter
-	if ( !m_bWonMap ) //So this is just an ordinary round.
-	{	
-		UTIL_LogPrintf( "Team \"%s\" triggered \"round_win\"\n", w_sTeam );
+	if (!m_bWonMap) //So this is just an ordinary round.
+	{
+		UTIL_LogPrintf("Team \"%s\" triggered \"round_win\"\n", w_sTeam);
 	}
 	else //Or it's the end of a map.
 	{
-		UTIL_LogPrintf( "Team \"%s\" triggered \"map_win\"\n", w_sTeam );
+		UTIL_LogPrintf("Team \"%s\" triggered \"map_win\"\n", w_sTeam);
 	}
 	//
 
-	if( m_fNextWinSong > gpGlobals->curtime )
+	if (m_fNextWinSong > gpGlobals->curtime)
 		return;
-	
+
 	m_fNextWinSong = gpGlobals->curtime + 20;
 
 	CRecipientFilter recpfilter;
 	recpfilter.AddAllPlayers();
 	recpfilter.MakeReliable();
-	
-	UserMessageBegin( recpfilter, "WinMusic" );
-		WRITE_BYTE( team );
+
+	UserMessageBegin(recpfilter, "WinMusic");
+	WRITE_BYTE(team);
 	MessageEnd();
-	
+
 	/*int x;
-	
+
 	for( x = 0; x < g_Teams[TEAM_AMERICANS]->GetNumPlayers(); x++ )
 	{
-		CHL2MP_Player *pPlayer = ToHL2MPPlayer( g_Teams[TEAM_AMERICANS]->GetPlayer( x ) );
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer( g_Teams[TEAM_AMERICANS]->GetPlayer( x ) );
 
-		if( !pPlayer )
-			continue;
+	if( !pPlayer )
+	continue;
 
-		if( pSound )
-		{
-			CPASAttenuationFilter filter( pPlayer, 10.0f );	//high attenuation so only this player hears it
-			filter.UsePredictionRules();
-			pPlayer->EmitSound( filter, pPlayer->entindex(), pSound );
-		}
+	if( pSound )
+	{
+	CPASAttenuationFilter filter( pPlayer, 10.0f );	//high attenuation so only this player hears it
+	filter.UsePredictionRules();
+	pPlayer->EmitSound( filter, pPlayer->entindex(), pSound );
+	}
 	}
 
 	for( x = 0; x < g_Teams[TEAM_BRITISH]->GetNumPlayers(); x++ )
 	{
-		CHL2MP_Player *pPlayer = ToHL2MPPlayer( g_Teams[TEAM_BRITISH]->GetPlayer( x ) );
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer( g_Teams[TEAM_BRITISH]->GetPlayer( x ) );
 
-		if( !pPlayer )
-			continue;
+	if( !pPlayer )
+	continue;
 
-		if( pSound )
-		{
-			CPASAttenuationFilter filter( pPlayer, 10.0f );	//high attenuation so only this player hears it
-			filter.UsePredictionRules();
-			pPlayer->EmitSound( filter, pPlayer->entindex(), pSound );
-		}
+	if( pSound )
+	{
+	CPASAttenuationFilter filter( pPlayer, 10.0f );	//high attenuation so only this player hears it
+	filter.UsePredictionRules();
+	pPlayer->EmitSound( filter, pPlayer->entindex(), pSound );
+	}
 	}*/
 }
 
 void CHL2MPRules::RespawnWave()
 {
-	if( g_Teams.Size() < NUM_TEAMS )	//in case teams haven't been inited or something
+	if (g_Teams.Size() < NUM_TEAMS)	//in case teams haven't been inited or something
 		return;
 
-	for( int x = 0; x < g_Teams[TEAM_AMERICANS]->GetNumPlayers(); x++ )
+	for (int x = 0; x < g_Teams[TEAM_AMERICANS]->GetNumPlayers(); x++)
 	{
-		CHL2MP_Player *pPlayer = ToHL2MPPlayer( g_Teams[TEAM_AMERICANS]->GetPlayer( x ) );
+		CHL2MP_Player *pPlayer = ToHL2MPPlayer(g_Teams[TEAM_AMERICANS]->GetPlayer(x));
 
 		//BG2 - Tjoppen - tickets
-		if( UsingTickets() && g_Teams[TEAM_AMERICANS]->GetTicketsLeft() <= 0)
+		if (UsingTickets() && g_Teams[TEAM_AMERICANS]->GetTicketsLeft() <= 0)
 			break;
 
-		if( !pPlayer )
+		if (!pPlayer)
 			continue;
 
-		if( pPlayer->IsAlive() )
+		if (pPlayer->IsAlive())
 			continue;
 
 		pPlayer->Spawn();
 	}
 
-	for( int x = 0; x < g_Teams[TEAM_BRITISH]->GetNumPlayers(); x++ )
+	for (int x = 0; x < g_Teams[TEAM_BRITISH]->GetNumPlayers(); x++)
 	{
-		CHL2MP_Player *pPlayer = ToHL2MPPlayer( g_Teams[TEAM_BRITISH]->GetPlayer( x ) );
-		
+		CHL2MP_Player *pPlayer = ToHL2MPPlayer(g_Teams[TEAM_BRITISH]->GetPlayer(x));
+
 		//BG2 - Tjoppen - tickets
-		if( UsingTickets() && g_Teams[TEAM_BRITISH]->GetTicketsLeft() <= 0)
+		if (UsingTickets() && g_Teams[TEAM_BRITISH]->GetTicketsLeft() <= 0)
 			break;
 
-		if( !pPlayer )
+		if (!pPlayer)
 			continue;
 
-		if( pPlayer->IsAlive() )
+		if (pPlayer->IsAlive())
 			continue;
 
 		pPlayer->Spawn();
@@ -1958,29 +2028,29 @@ void CHL2MPRules::RespawnWave()
 
 /*void CFlagHandler::PlayCaptureSound( void )
 {
-	/*CBasePlayer *pPlayer = NULL;
-	while( (pPlayer = (CBasePlayer*)gEntList.FindEntityByClassname( pPlayer, "player" )) != NULL )
-		pPlayer->EmitSound( "Flag.capture" );*//*
+/*CBasePlayer *pPlayer = NULL;
+while( (pPlayer = (CBasePlayer*)gEntList.FindEntityByClassname( pPlayer, "player" )) != NULL )
+pPlayer->EmitSound( "Flag.capture" );*//*
 }*/
 
-void CHL2MPRules::ResetFlags( void )
+void CHL2MPRules::ResetFlags(void)
 {
 	CBaseEntity *pEntity = NULL;
 
-	while( (pEntity = gEntList.FindEntityByClassname( pEntity, "flag" )) != NULL )
+	while ((pEntity = gEntList.FindEntityByClassname(pEntity, "flag")) != NULL)
 	{
 		CFlag *pFlag = static_cast<CFlag*>(pEntity);
-		if( !pFlag )
+		if (!pFlag)
 			continue;
 
 		pFlag->ResetFlag(); //It's just that easy.
 	}
 
 	//BG2 - Reset CTF Flags as well. -HairyPotter
-	while( (pEntity = gEntList.FindEntityByClassname( pEntity, "ctf_flag" )) != NULL )
+	while ((pEntity = gEntList.FindEntityByClassname(pEntity, "ctf_flag")) != NULL)
 	{
 		CtfFlag *pFlag = static_cast<CtfFlag*>(pEntity);
-		if( !pFlag )
+		if (!pFlag)
 			continue;
 
 		pFlag->ResetFlag(); //It's just that easy.
@@ -1988,7 +2058,7 @@ void CHL2MPRules::ResetFlags( void )
 	//
 }
 
-void CHL2MPRules::CountHeldFlags( int &american_flags, int &british_flags, int &neutral_flags, int &foramericans, int &forbritish )
+void CHL2MPRules::CountHeldFlags(int &american_flags, int &british_flags, int &neutral_flags, int &foramericans, int &forbritish)
 {
 	CBaseEntity *pEntity = NULL;
 
@@ -1998,11 +2068,11 @@ void CHL2MPRules::CountHeldFlags( int &american_flags, int &british_flags, int &
 	foramericans = 0;
 	forbritish = 0;
 
-	while( (pEntity = gEntList.FindEntityByClassname( pEntity, "flag" )) != NULL )
+	while ((pEntity = gEntList.FindEntityByClassname(pEntity, "flag")) != NULL)
 	{
 		CFlag *pFlag = dynamic_cast<CFlag*>(pEntity);
 
-		if( !pFlag || !pFlag->IsActive() )
+		if (!pFlag || !pFlag->IsActive())
 			continue;
 
 		int FullCap = pFlag->m_iFullCap;
@@ -2011,30 +2081,30 @@ void CHL2MPRules::CountHeldFlags( int &american_flags, int &british_flags, int &
 		//	FullCap = 0;
 		//Msg("Full cap for %s = %i \n", pFlag->m_sFlagName, FullCap );
 
-		if ( FullCap == 3 && !UsingTickets() )
+		if (FullCap == 3 && !UsingTickets())
 		{
 			//we're not doing full caps on this flag.
 			//0 = normal, 1 = Americans Fullcap, 2 = Brits Fullcap, 3 = No Fullcap.
 			continue;
 		}
 
-		switch( pFlag->GetTeamNumber() )
+		switch (pFlag->GetTeamNumber())
 		{
-			case TEAM_AMERICANS:
-				american_flags++;
-				break;
-			case TEAM_BRITISH:
-				british_flags++;
-				break;
-			default:
-				neutral_flags++;
-				break;
+		case TEAM_AMERICANS:
+			american_flags++;
+			break;
+		case TEAM_BRITISH:
+			british_flags++;
+			break;
+		default:
+			neutral_flags++;
+			break;
 		}
-		
-		if( UsingTickets() )
+
+		if (UsingTickets())
 		{
 			//ignore FullCap in tickets mode
-			switch(pFlag->m_iForTeam)
+			switch (pFlag->m_iForTeam)
 			{
 			case 0:
 			default:
@@ -2050,32 +2120,32 @@ void CHL2MPRules::CountHeldFlags( int &american_flags, int &british_flags, int &
 			}
 		}
 		else
-		//So the flag is set to be capped by this team.
-		switch(pFlag->m_iForTeam)
+			//So the flag is set to be capped by this team.
+			switch (pFlag->m_iForTeam)
 		{
 			case 0:
 			default://assume both
-				switch( FullCap )
+				switch (FullCap)
 				{
-					case 0:
-						foramericans++;
-						forbritish++;
-						break;
-					case 1:
-						foramericans++;
-						break;
-					case 2:
-						forbritish++;
-						break;
+				case 0:
+					foramericans++;
+					forbritish++;
+					break;
+				case 1:
+					foramericans++;
+					break;
+				case 2:
+					forbritish++;
+					break;
 
 				}
 				break;
 			case 1:
-				if ( FullCap == 1 || FullCap == 0 )
+				if (FullCap == 1 || FullCap == 0)
 					foramericans++;
 				break;
 			case 2:
-				if ( FullCap == 2 || FullCap == 0 )
+				if (FullCap == 2 || FullCap == 0)
 					forbritish++;
 				break;
 		}
@@ -2086,79 +2156,79 @@ void CHL2MPRules::CountHeldFlags( int &american_flags, int &british_flags, int &
 	Msg( "neutral_flags = %i\n", neutral_flags );*/
 }
 
-void CHL2MPRules::CheckFullcap( void )
+void CHL2MPRules::CheckFullcap(void)
 {
 	int american_flags, british_flags, neutral_flags, foramericans, forbritish;
-	CountHeldFlags( american_flags, british_flags, neutral_flags, foramericans, forbritish );
+	CountHeldFlags(american_flags, british_flags, neutral_flags, foramericans, forbritish);
 
-	if( !american_flags && !british_flags && !neutral_flags )
+	if (!american_flags && !british_flags && !neutral_flags)
 		return;
 
-	if( neutral_flags > 0 )
+	if (neutral_flags > 0)
 	{
-		if( (foramericans - american_flags) == 0 && foramericans != 0 )
+		if ((foramericans - american_flags) == 0 && foramericans != 0)
 		{
-			HandleScores( TEAM_AMERICANS, mp_winbonus.GetInt(), AMERICAN_ROUND_WIN, true );
+			HandleScores(TEAM_AMERICANS, mp_winbonus.GetInt(), AMERICAN_ROUND_WIN, true);
 			return;
 		}
-		if( (forbritish - british_flags) == 0 && forbritish != 0 )
+		if ((forbritish - british_flags) == 0 && forbritish != 0)
 		{
-			HandleScores( TEAM_BRITISH, mp_winbonus.GetInt(), BRITISH_ROUND_WIN, true );
+			HandleScores(TEAM_BRITISH, mp_winbonus.GetInt(), BRITISH_ROUND_WIN, true);
 			return;
 		}
 	}
 	else
 	{
-		if( american_flags <= 0 && british_flags <= 0 )
+		if (american_flags <= 0 && british_flags <= 0)
 		{
 			//draw
-			HandleScores( TEAM_NONE, 0, ROUND_DRAW, true );
+			HandleScores(TEAM_NONE, 0, ROUND_DRAW, true);
 			//Msg( "draw\n" );
 			return;
 		}
 
-		if ( american_flags <= 0 && (forbritish - british_flags) == 0)
+		if (american_flags <= 0 && (forbritish - british_flags) == 0)
 		{
 			//british win
 			//Msg( "british win\n" );
-			HandleScores( TEAM_BRITISH, mp_winbonus.GetInt(), BRITISH_ROUND_WIN, true );
+			HandleScores(TEAM_BRITISH, mp_winbonus.GetInt(), BRITISH_ROUND_WIN, true);
 			return;
 		}
 
-		if ( british_flags <= 0 && (foramericans - american_flags) == 0)
+		if (british_flags <= 0 && (foramericans - american_flags) == 0)
 		{
 			//americans win
 			//Msg( "americans win\n" );
-			HandleScores( TEAM_AMERICANS, mp_winbonus.GetInt(), AMERICAN_ROUND_WIN, true );
+			HandleScores(TEAM_AMERICANS, mp_winbonus.GetInt(), AMERICAN_ROUND_WIN, true);
 			return;
 		}
 	}
 }
 
-void CHL2MPRules::CheckTicketDrain( void )
+void CHL2MPRules::CheckTicketDrain(void)
 {
 	int american_flags, british_flags, neutral_flags, foramericans, forbritish;
-	CountHeldFlags( american_flags, british_flags, neutral_flags, foramericans, forbritish );
+	CountHeldFlags(american_flags, british_flags, neutral_flags, foramericans, forbritish);
 
 	CTeam *pAmericans = g_Teams[TEAM_AMERICANS];
 	CTeam *pBritish = g_Teams[TEAM_BRITISH];
 
-	if ( american_flags > foramericans/2 )
-		pBritish->RemoveTickets( mp_tickets_drain_b.GetFloat() );
+	if (american_flags > foramericans / 2)
+		pBritish->RemoveTickets(mp_tickets_drain_b.GetFloat());
 
-	if ( british_flags > forbritish/2 )
-		pAmericans->RemoveTickets( mp_tickets_drain_a.GetFloat() );
+	if (british_flags > forbritish / 2)
+		pAmericans->RemoveTickets(mp_tickets_drain_a.GetFloat());
 }
 #endif
 
-int CHL2MPRules::GetLimitTeamClass( int iTeam, int iClass )
+int CHL2MPRules::GetLimitTeamClass(int iTeam, int iClass)
 {
 	//mp_limit_<inf/off/rif>_<a/b>_<sml/med/lrg> - mp_limit_inf_a_sml
 
 	//count players - is there a better way? this looks stupid
 	int num = 0;
-	for( int x = 1; x <= gpGlobals->maxClients; x++ )
-		if( UTIL_PlayerByIndex( x ) )
+	for (int x = 1; x <= gpGlobals->maxClients; x++)
+		if (UTIL_PlayerByIndex(x))
 			num++;
 
 	//BG2 - Tjoppen - more macro goodness
@@ -2170,6 +2240,8 @@ int CHL2MPRules::GetLimitTeamClass( int iTeam, int iClass )
 		case CLASS_OFFICER: return mp_limit_off_a_##size.GetInt();\
 		case CLASS_SNIPER: return mp_limit_rif_a_##size.GetInt();\
 		case CLASS_SKIRMISHER: return mp_limit_ski_a_##size.GetInt();\
+		case CLASS_LIGHT_INFANTRY: return mp_limit_linf_a_##size.GetInt();\
+		case CLASS_GRENADIER: return mp_limit_gre_a_##size.GetInt();\
 		default: return -1;}\
 	case TEAM_BRITISH:\
 		switch( iClass ){\
@@ -2178,27 +2250,28 @@ int CHL2MPRules::GetLimitTeamClass( int iTeam, int iClass )
 		case CLASS_SNIPER: return mp_limit_rif_b_##size.GetInt();\
 		case CLASS_SKIRMISHER: return mp_limit_ski_b_##size.GetInt();\
 		case CLASS_LIGHT_INFANTRY: return mp_limit_linf_b_##size.GetInt();\
+		case CLASS_GRENADIER: return mp_limit_gre_b_##size.GetInt();\
 		default: return -1;}\
 	default: return -1;}
 
-	if( num <= mp_limit_mapsize_low.GetInt() )
+	if (num <= mp_limit_mapsize_low.GetInt())
 	{
 		//small
-		LIMIT_SWITCH( sml )
+		LIMIT_SWITCH(sml)
 	}
-	else if( num <= mp_limit_mapsize_high.GetInt() )
+	else if (num <= mp_limit_mapsize_high.GetInt())
 	{
 		//medium
-		LIMIT_SWITCH( med )
+		LIMIT_SWITCH(med)
 	}
 	else
 	{
 		//large
-		LIMIT_SWITCH( lrg )
+		LIMIT_SWITCH(lrg)
 	}
 }
 
 bool CHL2MPRules::UsingTickets()
 {
-	return mp_respawnstyle.GetInt() == 3 || mp_respawnstyle.GetInt() == 4;
+	return mp_respawnstyle.GetInt() == 3 /*|| mp_respawnstyle.GetInt() == 4*/;
 }

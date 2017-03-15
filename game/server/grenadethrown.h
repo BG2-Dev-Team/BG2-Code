@@ -16,7 +16,24 @@
 #pragma once
 
 #include "basegrenade_shared.h"
+//BG2 - no grenades - yet! - Awesome
+/*
+class CSprite;
 
+#define GRENADE_TIMER		5		// Try 5 seconds instead of 3?
 
+//-----------------------------------------------------------------------------
+// Purpose: Base Thrown-Grenade class
+//-----------------------------------------------------------------------------
+class CThrownGrenade : public CBaseGrenade
+{
+public:
+	DECLARE_CLASS( CThrownGrenade, CBaseGrenade );
+
+	void	Spawn( void );
+	void	Thrown( Vector vecOrigin, Vector vecVelocity, float flExplodeTime );
+};
+
+*/
 
 #endif // GRENADE_BASE_H

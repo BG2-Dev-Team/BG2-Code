@@ -15,7 +15,7 @@
 #include "hudelement.h"
 
 using namespace vgui;
-
+//BG2 - no achievements in our game
 /*
 class CAchievementNotificationPanel : public CHudElement, public EditablePanel
 {

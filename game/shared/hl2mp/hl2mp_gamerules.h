@@ -18,10 +18,11 @@
 #include "gamerules.h"
 #include "teamplay_gamerules.h"
 #include "gamevars_shared.h"
+#include "../shared/bg2/bg2_player_shared.h"
 
 //BG2 - Skillet - For ragdoll removal stuff
 #ifdef CLIENT_DLL
-	#include "c_hl2mp_player.h"
+#include "c_hl2mp_player.h"
 #endif
 
 #ifndef CLIENT_DLL
@@ -32,6 +33,18 @@
 #define VEC_CROUCH_TRACE_MAX	HL2MPRules()->GetHL2MPViewVectors()->m_vCrouchTraceMax
 
 extern ConVar mp_respawnstyle, mp_respawntime, mp_tickets_roundtime, mp_tickets_a, mp_tickets_b;
+extern ConVar mp_punish_bad_officer, mp_punish_bad_officer_nextclass;
+
+extern ConVar lb_enforce_weapon_amer, lb_enforce_weapon_brit, lb_enforce_class_amer, lb_enforce_class_brit;
+extern ConVar lb_enforce_no_buckshot;
+extern ConVar lb_officer_protect, lb_officer_autodetect, lb_officer_classoverride_a, lb_officer_classoverride_b;
+extern ConVar lb_officer_a; //for delegating the american officer for next round
+extern ConVar lb_officer_b;	//for delegating the british officer for next round
+extern ConVar lb_enforce_volley_fire, lb_enforce_volley_fire_tolerance, lb_enforce_no_troll;
+
+inline bool IsLinebattle()	{ return mp_respawnstyle.GetInt() == 4; }
+inline bool IsLMS()			{ return mp_respawnstyle.GetInt() == 2 || IsLinebattle(); }
+inline bool IsLMSstrict()	{ return mp_respawnstyle.GetInt() == 2; }
 
 enum
 {
@@ -165,7 +178,7 @@ public:
 	void    CheckChatForReadySignal( CHL2MP_Player *pPlayer, const char *chatmsg );
 	const char *GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer );
 	//BG2 - This should handle all the score settings after each round, and also fire any triggers and play win music. -HairyPotter
-	void HandleScores( int iTeam, int iScore, int msg_type, bool bRestart );
+	void HandleScores(int iTeam, int iScore, int msg_type, bool bRestart);
 #else
 	//BG2 - Skillet - List of player ragdolls
 	CUtlVector<C_HL2MPRagdoll*> m_hRagdollList;
@@ -179,18 +192,18 @@ public:
 	void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
 
 	
-	//bool	IsTeamplay( void ) { return m_bTeamPlayEnabled;	} //BG2 - Don't need it anymore. Always assume teamplay, because BG2 requires it anyway. -HairyPotter
+	//bool	IsTeamplay( void ) { return m_bTeamPlayEnabled;	}
 	void	CheckAllPlayersReady( void );
 
 	/**
-	 * Current round, when UsingTickets().
-	 * 1-based, so runs from 1 up to mp_tickets_rounds.
-	 */
-	CNetworkVar( int, m_iCurrentRound );
+	* Current round, when UsingTickets().
+	* 1-based, so runs from 1 up to mp_tickets_rounds.
+	*/
+	CNetworkVar(int, m_iCurrentRound);
 
 	//BG2 - Draco - Start
-	CNetworkVar( float, m_fLastRespawnWave );
-	CNetworkVar( float, m_fLastRoundRestart );
+	CNetworkVar(float, m_fLastRespawnWave);
+	CNetworkVar(float, m_fLastRoundRestart);
 	float m_fNextGameReset;
 	float m_fNextRoundReset;
 	//float m_fEndRoundTime;	//use m_fLastRespawnWave + mp_respawntime.GetFloat() instead
@@ -219,47 +232,59 @@ private:
 	bool m_bHeardAllPlayersReady;
 
 	/** BG2 Stuff -----
-	 * Counts the number of alive players in the specified team.
-	 * If UsingTickets(), then the number of remaining tickets is
-	 * added to the number.
-	 */
-	int CountAlivePlayersAndTickets( int iTeamNumber );
+	* Counts the number of alive players in the specified team.
+	* If UsingTickets(), then the number of remaining tickets is
+	* added to the number.
+	*/
+public:
+	int CountAlivePlayersAndTickets(int iTeamNumber);
+private:
+	/**
+	* Swaps the specified player's team, making sure they
+	* get the correct kit and so on.
+	* If skipAlive is set, then the player won't be swapped if they're alive.
+	*/
+	void SwapPlayerTeam(CHL2MP_Player *pPlayer, bool skipAlive);
 
 	/**
-	 * Swaps the specified player's team, making sure they
-	 * get the correct kit and so on.
-	 * If skipAlive is set, then the player won't be swapped if they're alive.
-	 */
-	void SwapPlayerTeam( CHL2MP_Player *pPlayer, bool skipAlive );
-
-	/**
-	 * Swap team for all players on both teams
-	 * Note that no players are killed.
-	 */
-	void SwapTeams( void );
+	* Swap team for all players on both teams
+	* Note that no players are killed.
+	*/
+	void SwapTeams(void);
 
 	//BG2 - Tjoppen - stuff in CHL2MPRules
 public:
-	void RestartRound( bool swapTeams );
+	void RestartRound(bool swapTeams);
 	void RespawnAll();
-	void WinSong( int team, bool m_bWonMap = false );
+	void WinSong(int team, bool m_bWonMap = false);
 	void RespawnWave();
 	void ResetFlags();
-	void CountHeldFlags( int &american_flags, int &british_flags, int &neutral_flags, int &foramericans, int &forbritish );
+	void CountHeldFlags(int &american_flags, int &british_flags, int &neutral_flags, int &foramericans, int &forbritish);
 	void CheckFullcap();
 	void CheckTicketDrain();
 
-	int GetLimitTeamClass( int iTeam, int iClass );
+	int GetLimitTeamClass(int iTeam, int iClass);
 	//
+
+	/*
+	LINEBATTLE STUFF
+	*/
+	/*bool			LbTeamCanSkirmish(int iTeam);
+	void			LbGetOfficersOfTeam(int iTeam, CHL2MP_Player ** loadedFirst, CHL2MP_Player ** loadedSecond); //Can return nullptr. Dynamicly detects who the officers of the team are
+	bool			LbTeamsWithinChargeDistance();
+	#define			LB_MAX_ITERATED_TEAMMATES	5 //Used to save performance when comparing teams. Lower numbers improve performance but decrease reliability of result 
+	bool			LbPlayerIsInLine(CHL2MP_Player * pPlayer);*/
+
 
 	//BG2 - Tjoppen - tickets
 	bool UsingTickets();	//returns whether we're currently using ticket based respawn
 
-	int getDefaultInfantryAmmo() { return 36; }
-	int getDefaultLightInfantryAmmo() { return 24; }
-	int getDefaultSkirmisherAmmo() { return 24; }
-	int getDefaultSniperAmmo() { return 24; }
-	int getDefaultOfficerAmmo() { return 12; }
+	static int getDefaultInfantryAmmo() { return AMMO_INFANTRY; }
+	static int getDefaultLightInfantryAmmo() { return AMMO_LIGHT_INFANTRY; }
+	static int getDefaultSkirmisherAmmo() { return AMMO_SKIRMISHER; }
+	static int getDefaultSniperAmmo() { return AMMO_SNIPER; }
+	static int getDefaultOfficerAmmo() { return AMMO_OFFICER; }
+	static int getDefaultGrenadierAmmo() { return AMMO_GRENADIER; }
 
 #ifndef CLIENT_DLL
 	bool m_bChangelevelDone;

@@ -25,7 +25,6 @@ int ScreenTransform( const Vector& point, Vector& screen );
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
 //Bg2 - Don't Need this. - HairyPotter
 /*
 #define	HEALTH_WARNING_THRESHOLD	25
@@ -40,8 +39,12 @@ extern ConVar crosshair;
 #define	QUICKINFO_FADE_IN_TIME		0.5f
 #define QUICKINFO_FADE_OUT_TIME		2.0f
 
-
-
+/*
+==================================================
+CHUDQuickInfo 
+==================================================
+*/
+/*
 using namespace vgui;
 
 class CHUDQuickInfo : public CHudElement, public vgui::Panel
@@ -403,5 +406,4 @@ bool CHUDQuickInfo::EventTimeElapsed( void )
 
 	return false;
 }
-
 */

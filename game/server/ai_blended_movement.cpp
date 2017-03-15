@@ -4,7 +4,7 @@
 //
 //=============================================================================//
 
-#include "cbase.h" 
+#include "cbase.h"
 
 #include "movevars_shared.h"
 
@@ -115,6 +115,7 @@ void CAI_BlendedMotor::MoveStart()
 void CAI_BlendedMotor::ResetGoalSequence( void )
 {
 
+	//m_nSavedGoalActivity = GetNavigator()->GetArrivalActivity( );
 	if (m_nSavedGoalActivity == ACT_INVALID)
 	{
 		m_nSavedGoalActivity = GetOuter()->GetStoppedActivity();
@@ -122,6 +123,7 @@ void CAI_BlendedMotor::ResetGoalSequence( void )
 
 	m_nSavedTranslatedGoalActivity = GetOuter()->NPC_TranslateActivity( m_nSavedGoalActivity );
 
+	//m_nGoalSequence = GetNavigator()->GetArrivalSequence( m_nPrimarySequence );
 	// Msg("Start %s end %s\n", GetOuter()->GetSequenceName( m_nPrimarySequence ), GetOuter()->GetSequenceName( m_nGoalSequence ) );
 
 	m_nGoalSequence = GetInteriorSequence( m_nPrimarySequence );
@@ -283,6 +285,8 @@ void CAI_BlendedMotor::SetMoveScriptAnim( float flNewSpeed )
 	// insert ideal layers
 	// FIXME: needs full transitions, as well as starting vs stopping sequences, leaning, etc.
 
+	//CAI_Navigator *pNavigator = GetNavigator();
+
 	SetPlaybackRate( m_flCurrRate );
 	// calc weight of idle animation layer that suppresses the run animation
 	float flWeight = 0.0f;
@@ -311,8 +315,8 @@ void CAI_BlendedMotor::SetMoveScriptAnim( float flNewSpeed )
 	{
 		m_nSavedTranslatedGoalActivity = activity;
 		m_nInteriorSequence = ACT_INVALID;
+		//m_nGoalSequence = pNavigator->GetArrivalSequence( m_nPrimarySequence );
 	}
-
 
 	if (m_flSecondaryWeight == 1.0 || (m_iSecondaryLayer != -1 && m_nPrimarySequence == m_nSecondarySequence))
 	{
@@ -447,7 +451,6 @@ int CAI_BlendedMotor::GetInteriorSequence( int fromSequence )
 			}
 		}
 	}
-
 
 	return m_nInteriorSequence;
 }
@@ -1210,7 +1213,6 @@ void CAI_BlendedMotor::BuildVelocityScript( const AILocalMoveGoal_t &move )
 		InsertSlowdown( distToObstruction, idealAccel, false );
 	}
 
-
 	// calc initial velocity based on immediate direction changes
 	if ( ai_path_adjust_speed_on_immediate_turns.GetBool() && m_scriptMove.Count() > 1)
 	{
@@ -1717,8 +1719,6 @@ bool CAI_BlendedMotor::AddTurnGesture( float flYD )
 
 //-------------------------------------
 
-
-
 //-------------------------------------
 // Purpose:	return a velocity that should be hit at the end of the interval to match goal
 // Input  : flInterval - time interval to consider
@@ -1768,7 +1768,7 @@ float ChangeDistance( float flInterval, float flGoalDistance, float flGoalVeloci
 		// I need to speed up
 		flNewVelocity = flCurVelocity + flGoalAccel * flInterval;
 		if (flNewVelocity > flGoalVelocity)
-			flGoalVelocity = flGoalVelocity;
+			flNewVelocity = flGoalVelocity;
 	}
 	else if (flNewVelocity < flIdealVelocity)
 	{

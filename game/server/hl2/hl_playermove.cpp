@@ -67,9 +67,19 @@ void CHLPlayerMove::SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	// Call the default SetupMove code.
 	BaseClass::SetupMove( player, ucmd, pHelper, move );
 
+	//BG2 - found these things missing while porting to 2016 - Awesome
+	/*
+	// Convert to HL2 data.
+	CHL2_Player *pHLPlayer = static_cast<CHL2_Player*>( player );
+	Assert( pHLPlayer );
+
+	CHLMoveData *pHLMove = static_cast<CHLMoveData*>( move );
+	Assert( pHLMove );*/
+
 	player->m_flForwardMove = ucmd->forwardmove;
 	player->m_flSideMove = ucmd->sidemove;
 
+	//pHLMove->m_bIsSprinting = pHLPlayer->IsSprinting();
 
 	if ( gpGlobals->frametime != 0 )
 	{
@@ -101,10 +111,10 @@ void CHLPlayerMove::FinishMove( CBasePlayer *player, CUserCmd *ucmd, CMoveData *
 {
 	// Call the default FinishMove code.
 	BaseClass::FinishMove( player, ucmd, move );
-	if ( gpGlobals->frametime != 0 )
+	/*if ( gpGlobals->frametime != 0 ) //BG2 - no vehicles
 	{		
-		//float distance = 0.0f;
-		/*IServerVehicle *pVehicle = player->GetVehicle();
+		float distance = 0.0f;
+		IServerVehicle *pVehicle = player->GetVehicle();
 		if ( pVehicle )
 		{
 			pVehicle->FinishMove( player, ucmd, move );
@@ -146,8 +156,8 @@ void CHLPlayerMove::FinishMove( CBasePlayer *player, CUserCmd *ucmd, CMoveData *
 		if ( distance > 0 )
 		{
 			gamestats->Event_PlayerTraveled( player, distance, pVehicle ? true : false, !pVehicle && static_cast< CHL2_Player * >( player )->IsSprinting() );
-		}*/
-	}
+		}
+	}*/
 
 	bool bGodMode = ( player->GetFlags() & FL_GODMODE ) ? true : false;
 	if ( m_bInGodMode != bGodMode )

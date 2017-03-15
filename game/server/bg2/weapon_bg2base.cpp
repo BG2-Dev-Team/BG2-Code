@@ -109,6 +109,7 @@ ConVar sv_show_enemy_names("sv_show_enemy_names", "0", FCVAR_REPLICATED | FCVAR_
 
 ConVar sv_muzzle_velocity_override("sv_muzzle_velocity_override", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "If non-zero, overide muzzle velocities with this value (inch per seconds)");
 ConVar sv_flintlock_delay("sv_flintlock_delay", "0.135", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "Delay in seconds of the flintlock mechanism (delay bullet firing by this amount)");
+ConVar sv_flintlock_delay_rifle("sv_flintlock_delay_rifle", "0.0675", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "Delay in seconds of a rifle's flintlock mechanism");
 
 //-----------------------------------------------------------------------------
 // CBaseBG2Weapon
@@ -294,13 +295,21 @@ void CBaseBG2Weapon::Fire( int iAttack )
 	if( sv_infiniteammo.GetInt() == 0 )
 		m_iClip1--;
 
-	m_fNextHolster = gpGlobals->curtime + 0.3f; //Keep people from switching weapons right after shooting.
+	m_fNextHolster = gpGlobals->curtime + 0.2f; //Keep people from switching weapons right after shooting.
+
+	//flintlock delay is based on our weapon type
+	float flintlockDelay;
+	if (weaponType == RIFLE)
+		flintlockDelay = sv_flintlock_delay_rifle.GetFloat();
+	else 
+		flintlockDelay = sv_flintlock_delay.GetFloat();
+		
 
 	//sample eye vector after a short delay, then fire the bullet(s) a short time after that
 	m_bShouldSampleForward = true;
-	m_flNextSampleForward = gpGlobals->curtime + sv_flintlock_delay.GetFloat();
+	m_flNextSampleForward = gpGlobals->curtime + flintlockDelay;
 	m_bShouldFireDelayed = true;
-	m_flNextDelayedFire = gpGlobals->curtime + sv_flintlock_delay.GetFloat();
+	m_flNextDelayedFire = gpGlobals->curtime + flintlockDelay;
 }
 
 void CBaseBG2Weapon::FireBullets( int iAttack )
@@ -403,7 +412,7 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 
 void CBaseBG2Weapon::Hit( trace_t &traceHit, int iAttack )
 {
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
+	CHL2MP_Player *pPlayer = dynamic_cast<CHL2MP_Player*>(GetOwner());
 
 	CBaseEntity	*pHitEntity = traceHit.m_pEnt;
 
@@ -414,7 +423,7 @@ void CBaseBG2Weapon::Hit( trace_t &traceHit, int iAttack )
 		pPlayer->EyeVectors( &hitDirection, NULL, NULL );
 		VectorNormalize( hitDirection );
 
-		int damage		= GetDamage( iAttack );	
+		int damage		= GetDamage( iAttack );
 
 		//BG2 - Tjoppen - apply no force
 		CTakeDamageInfo info( GetOwner(), GetOwner(), damage, DMG_CLUB | DMG_PREVENT_PHYSICS_FORCE | DMG_NEVERGIB );

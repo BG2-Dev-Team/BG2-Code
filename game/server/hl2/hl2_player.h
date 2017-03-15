@@ -64,7 +64,7 @@ public:
 	int		GetDeviceID( void ) const { return m_bitsDeviceID; }
 	float	GetDeviceDrainRate( void ) const
 	{	
-			return m_flDrainRate; 
+		return m_flDrainRate; 
 	}
 };
 
@@ -120,7 +120,6 @@ public:
 
 	// from CBasePlayer
 	virtual void		SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize );
-
 	
 	void SetFlashlightEnabled( bool bState );
 
@@ -178,6 +177,10 @@ public:
 	virtual bool		PassesDamageFilter( const CTakeDamageInfo &info );
 	void				InputIgnoreFallDamage( inputdata_t &inputdata );
 	void				InputIgnoreFallDamageWithoutReset( inputdata_t &inputdata );
+	void				InputEnableFlashlight( inputdata_t &inputdata );
+	void				InputDisableFlashlight( inputdata_t &inputdata );
+
+	virtual void			TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator);
 
 	const impactdamagetable_t &GetPhysicsImpactDamageTable();
 	virtual int			OnTakeDamage( const CTakeDamageInfo &info );
@@ -208,10 +211,9 @@ public:
 
 	CLogicPlayerProxy	*GetPlayerProxy( void );
 
-
 	// Underwater breather device
 	virtual void		SetPlayerUnderwater( bool state );
-	virtual bool		CanBreatheUnderwater() const { return false; }
+	virtual bool		CanBreatheUnderwater() const { return false; } //BG2 - our players aren't olympians - Awesome
 
 	// physics interactions
 	virtual void		PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize );
@@ -243,7 +245,7 @@ public:
 	void StopWaterDeathSounds( void );
 
 	bool IsWeaponLowered( void ) { return m_HL2Local.m_bWeaponLowered; }
-	//BG2 - Don't need armor. -HairyPotter
+	//BG2 - Don't Need these. -HairyPotter
 	/*void HandleArmorReduction( void );
 	void StartArmorReduction( void ) { m_flArmorReductionTime = gpGlobals->curtime + ARMOR_DECAY_TIME; 
 									   m_iArmorReductionFrom = ArmorValue(); 
@@ -261,11 +263,10 @@ public:
 	CSoundPatch *m_sndWaterSplashes;
 
 	//BG2 - Tjoppen - made m_iStamina a network cvar
-	CNetworkVar( int, m_iStamina );
-	void DrainStamina( int iAmount );
+	CNetworkVar(int, m_iStamina);
+	void DrainStamina(int iAmount);
 	//int	m_iStamina; //BG2 - Draco - Stamina of player
 	//
-
 
 protected:
 	virtual void		PreThink( void );

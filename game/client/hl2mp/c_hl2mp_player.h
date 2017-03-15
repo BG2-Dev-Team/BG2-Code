@@ -12,6 +12,7 @@
 class C_HL2MP_Player;
 #include "c_basehlplayer.h"
 #include "hl2mp_player_shared.h"
+#include "../shared/bg2/bg2_player_shared.h"
 #include "beamdraw.h"
 
 //=============================================================================
@@ -67,6 +68,9 @@ public:
 
 	
 	bool	CanSprint( void );
+	/* //BG2 - removed these
+	void	StartSprinting( void );
+	void	StopSprinting( void );*/
 	void	HandleSpeedChanges( void );
 	void	UpdateLookAt( void );
 	void	Initialize( void );
@@ -76,27 +80,33 @@ public:
 	const char	*GetPlayerModelSoundPrefix( void );
 
 	//BG2 - Tjoppen - vars in C_HL2MP_Player
-	//CNetworkVar( int, m_iStamina );	//doesn't have to be a CNetworkVar appearently
 	int		m_iStamina;		//yeah it's a public integer, big woop, wanna fight about it?
 	float m_DeathTime; //BG2 - Used for "death cam". -HairyPotter
 
-	int		GetClass( void )			{ return m_iClass; }
-	int		GetCurrentAmmoKit( void )	{ return m_iCurrentAmmoKit; }
+	int		GetClass(void)	const		{ return m_iClass; }
+	int		GetCurrentAmmoKit(void)const{ return m_iCurrentAmmoKit; }
 
 	//return the player's speed based on whether which class we are, which weapon kit we're using etc.
-	int		GetCurrentSpeed( void ) const;
+	int		GetCurrentSpeed(void) const;
 private:
 	int		m_iClass;
 	int		m_iClassSkin;
 	int		m_iCurrentAmmoKit;
 	int		m_iSpeedModifier;
-	//
-	//BG@ - Draco - Rewards
-	//BG2 - Tjoppen - rewards put on hold
-	/*int m_iInfantryReward;
-	int m_iOfficerReward;
-	int m_iSniperReward;*/
+	
+	//BG2 - rallying stuff
+	int		m_iCurrentRallies = 0;	//BG3 - Awesome - bitfield of rallies which are currently affecting this player - controlled by the server
+	float	m_flEndRallyTime = 0; //controlled by the server
+	float	m_flNextRallyTime = 0;
 
+public:
+	int				RallyGetCurrentRallies(void) const { return m_iCurrentRallies; }
+	float			RallyGetEndRallyTime(void) const { return m_flEndRallyTime; }
+	float			RallyGetNextRallyTime(void) const { return m_flNextRallyTime; }
+	void			RallyEffectEnable(); //FOV change, any sounds, etc.
+	void			RallyEffectDisable();
+
+public: //BG2 had these private, Valve had them public? - Awesome
 	HL2MPPlayerState State_Get() const;
 
 	// Walking
@@ -149,14 +159,6 @@ private:
 	bool m_fIsWalking;
 };
 
-//BG2 - Tjoppen - class system
-#define	CLASS_INFANTRY			0
-#define	CLASS_OFFICER			1
-#define	CLASS_SNIPER			2
-#define	CLASS_SKIRMISHER		3
-#define	CLASS_LIGHT_INFANTRY	4
-//
-
 //BG2 - Tjoppen - ammo kit definitions
 #define AMMO_KIT_BALL		0
 #define AMMO_KIT_BUCKSHOT	1
@@ -164,7 +166,6 @@ private:
 #define AMMO_KIT_RESERVED1	2
 #define AMMO_KIT_RESERVED2	3
 //
-
 
 inline C_HL2MP_Player *ToHL2MPPlayer( CBaseEntity *pEntity )
 {
@@ -193,7 +194,7 @@ public:
 	void UpdateOnRemove( void );
 	virtual void SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights );
 
-	void ClientThink( void ); //BG2 - Skillet
+	void ClientThink(void); //BG2 - Skillet
 	
 private:
 	

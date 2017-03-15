@@ -113,7 +113,7 @@ public:
 	CSpectatorMenu( IViewPort *pViewPort );
 	~CSpectatorMenu() {}
 
-	//virtual const char *GetName( void ) { return PANEL_SPECMENU; }
+	//virtual const char *GetName( void ) { return PANEL_SPECMENU; } //BG2 - deprecated - found this while porting to 2016 engine - Awesome
 	virtual void SetData(KeyValues *data) {};
 	virtual void Reset( void ) { m_pPlayerList->DeleteAllItems(); }
 	virtual void Update( void );

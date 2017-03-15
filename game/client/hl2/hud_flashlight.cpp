@@ -159,5 +159,4 @@ void CHudFlashlight::Paint()
 		xpos += (m_flBarChunkWidth + m_flBarChunkGap);
 	}
 #endif // HL2_EPISODIC
-}
-*/
+}*/

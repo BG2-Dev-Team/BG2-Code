@@ -9,7 +9,8 @@
 #include "hl2_player.h"
 #include "saverestore_utlvector.h"
 #include "triggers.h"
-//For the triggers. -HairyPotter
+
+//BG2 - For the triggers. -HairyPotter
 #include "hl2mp_gamerules.h"
 #include "ammodef.h"
 #include "team.h"
@@ -254,6 +255,7 @@ void CTriggerWeaponDissolve::DissolveThink( void )
 				CreateBeam( m_pConduitPoints[i]->GetAbsOrigin(), pWeapon, 4.0f );
 			}
 
+			//PhysCannonBeginUpgrade( pWeapon ); //BG2 - no phys gun
 			m_OnChargingPhyscannon.FireOutput( this, this );
 
 			EmitSound( "WeaponDissolve.Beam" );
@@ -873,17 +875,16 @@ void CTriggerRPGFire::OnRestore()
 	g_hWeaponFireTriggers.AddToTail( this );
 }
 
-
 //-----------------------------------------------------------------------------
 // BG2 - Remote Flag Capture Trigger. -HairyPotter
 //-----------------------------------------------------------------------------
 class CFlagTriggerBG2 : public CTriggerMultiple
 {
-	DECLARE_CLASS( CFlagTriggerBG2, CTriggerMultiple );
+	DECLARE_CLASS(CFlagTriggerBG2, CTriggerMultiple);
 	DECLARE_DATADESC();
 
 public:
-	void Spawn( void );
+	void Spawn(void);
 	void StartTouch(CBaseEntity *pOther);
 	void EndTouch(CBaseEntity *pOther);
 
@@ -896,29 +897,29 @@ private:
 //-----------------------------------------------------------------------------
 // Save/load
 //-----------------------------------------------------------------------------
-LINK_ENTITY_TO_CLASS( flag_trigger, CFlagTriggerBG2 );
+LINK_ENTITY_TO_CLASS(flag_trigger, CFlagTriggerBG2);
 
-BEGIN_DATADESC( CFlagTriggerBG2 )
-	DEFINE_KEYFIELD( m_strParentName,	FIELD_STRING, "FlagParentName" ),
+BEGIN_DATADESC(CFlagTriggerBG2)
+DEFINE_KEYFIELD(m_strParentName, FIELD_STRING, "FlagParentName"),
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
 // Purpose: Set up the trigger.
 //-----------------------------------------------------------------------------
-void CFlagTriggerBG2::Spawn( void )
+void CFlagTriggerBG2::Spawn(void)
 {
 	BaseClass::Spawn();
 	//We want to get the parent setting out of the way, let's connect it and be done with it. Also have the flag notice this.
-	if ( !GetParent() )
+	if (!GetParent())
 	{
-		FlagEnt = static_cast< CFlag* >( gEntList.FindEntityByName( NULL, m_strParentName ) );
-		if ( !FlagEnt )	//Check to see if this is even a flag. Return and remove if false, don't take the whole server down from one error.
+		FlagEnt = static_cast< CFlag* >(gEntList.FindEntityByName(NULL, m_strParentName));
+		if (!FlagEnt)	//Check to see if this is even a flag. Return and remove if false, don't take the whole server down from one error.
 		{
-			Warning("This trigger has determined that the parent named '%s' is not a BG2 flag or does not exist. Trigger disabled. \n", m_strParentName );
+			Warning("This trigger has determined that the parent named '%s' is not a BG2 flag or does not exist. Trigger disabled. \n", m_strParentName);
 			UTIL_Remove(this);
 			return;
 		}
-		SetParent( m_strParentName, this ); //Assuming we passed the test, go ahead and set the parent.
+		SetParent(m_strParentName, this); //Assuming we passed the test, go ahead and set the parent.
 		FlagEnt->m_bIsParent = true; //Go ahead and let the flag know it's a parent to this trigger. 
 	}
 	//
@@ -929,34 +930,34 @@ void CFlagTriggerBG2::Spawn( void )
 //-----------------------------------------------------------------------------
 void CFlagTriggerBG2::StartTouch(CBaseEntity *pOther)
 {
-	if ( !pOther->IsPlayer() ) //Ask yourself, would anything else be able to capture a flag?
+	if (!pOther->IsPlayer()) //Ask yourself, would anything else be able to capture a flag?
 		return;
 
 	//Defines.
-	CBasePlayer *pPlayer = static_cast< CBasePlayer* >( pOther->MyCombatCharacterPointer() );
+	CBasePlayer *pPlayer = static_cast< CBasePlayer* >(pOther->MyCombatCharacterPointer());
 
-	if ( !pPlayer || !FlagEnt || !FlagEnt->m_bActive ) //Flag is inactive?
+	if (!pPlayer || !FlagEnt || !FlagEnt->m_bActive) //Flag is inactive?
 		return;				   //Die here.
 
 	//BaseClass::StartTouch( pOther );
 
-	if( !pPlayer->IsAlive() )	//dead players don't cap
+	if (!pPlayer->IsAlive())	//dead players don't cap
 		return;
 
-	switch( pPlayer->GetTeamNumber() ) //Let's do most of the sorting work here rather than bunching the teams together.
+	switch (pPlayer->GetTeamNumber()) //Let's do most of the sorting work here rather than bunching the teams together.
 	{
-		case TEAM_AMERICANS:
-			if ((FlagEnt->m_iForTeam == 1) || (FlagEnt->m_iForTeam == 0))
-			{
-				FlagEnt->m_vTriggerAmericanPlayers.AddToTail( pPlayer ); //Add this player to the american player list.
-			}
-			break;
-		case TEAM_BRITISH:
-			if ((FlagEnt->m_iForTeam == 2) || (FlagEnt->m_iForTeam == 0))
-			{
-				FlagEnt->m_vTriggerBritishPlayers.AddToTail( pPlayer ); //Add this player to the british player list.
-			}
-			break;
+	case TEAM_AMERICANS:
+		if ((FlagEnt->m_iForTeam == 1) || (FlagEnt->m_iForTeam == 0))
+		{
+			FlagEnt->m_vTriggerAmericanPlayers.AddToTail(pPlayer); //Add this player to the american player list.
+		}
+		break;
+	case TEAM_BRITISH:
+		if ((FlagEnt->m_iForTeam == 2) || (FlagEnt->m_iForTeam == 0))
+		{
+			FlagEnt->m_vTriggerBritishPlayers.AddToTail(pPlayer); //Add this player to the british player list.
+		}
+		break;
 	}
 }
 
@@ -966,31 +967,31 @@ void CFlagTriggerBG2::StartTouch(CBaseEntity *pOther)
 //----------------------------------------1-------------------------------------
 void CFlagTriggerBG2::EndTouch(CBaseEntity *pOther)
 {
-	if ( !pOther->IsPlayer() ) //Ask yourself, would anything else be able to capture a flag? Should bullets be able to capture?
+	if (!pOther->IsPlayer()) //Ask yourself, would anything else be able to capture a flag? Should bullets be able to capture?
 		return;
 
 	//Defines
-	CBasePlayer *pPlayer = static_cast< CBasePlayer* >( pOther->MyCombatCharacterPointer() );
+	CBasePlayer *pPlayer = static_cast< CBasePlayer* >(pOther->MyCombatCharacterPointer());
 
-	if ( !pPlayer || !FlagEnt || !FlagEnt->m_bActive ) //Flag is inactive?
+	if (!pPlayer || !FlagEnt || !FlagEnt->m_bActive) //Flag is inactive?
 		return;				   //Die here.
 
 	//BaseClass::EndTouch( pOther );
 
-	switch( pPlayer->GetTeamNumber() ) //Let's do most of the sorting work here rather than bunching the teams together.
+	switch (pPlayer->GetTeamNumber()) //Let's do most of the sorting work here rather than bunching the teams together.
 	{
-		case TEAM_AMERICANS:
-			if ((FlagEnt->m_iForTeam == 1) || (FlagEnt->m_iForTeam == 0))
-			{
-				FlagEnt->m_vTriggerAmericanPlayers.FindAndRemove( pPlayer ); //Remove this player from the american player list.
-			}
-			break;
-		case TEAM_BRITISH:
-			if ((FlagEnt->m_iForTeam == 2) || (FlagEnt->m_iForTeam == 0))
-			{
-				FlagEnt->m_vTriggerBritishPlayers.FindAndRemove( pPlayer ); //Remove this player from the british player list.
-			}
-			break;
+	case TEAM_AMERICANS:
+		if ((FlagEnt->m_iForTeam == 1) || (FlagEnt->m_iForTeam == 0))
+		{
+			FlagEnt->m_vTriggerAmericanPlayers.FindAndRemove(pPlayer); //Remove this player from the american player list.
+		}
+		break;
+	case TEAM_BRITISH:
+		if ((FlagEnt->m_iForTeam == 2) || (FlagEnt->m_iForTeam == 0))
+		{
+			FlagEnt->m_vTriggerBritishPlayers.FindAndRemove(pPlayer); //Remove this player from the british player list.
+		}
+		break;
 	}
 }
 //-----------------------------------------------------------------------------
@@ -998,7 +999,7 @@ void CFlagTriggerBG2::EndTouch(CBaseEntity *pOther)
 //-----------------------------------------------------------------------------
 class CTriggerCTFCapture : public CTriggerMultiple
 {
-	DECLARE_CLASS( CTriggerCTFCapture, CTriggerMultiple );
+	DECLARE_CLASS(CTriggerCTFCapture, CTriggerMultiple);
 	DECLARE_DATADESC();
 
 public:
@@ -1015,15 +1016,15 @@ private:
 //-----------------------------------------------------------------------------
 // Keyfields
 //-----------------------------------------------------------------------------
-LINK_ENTITY_TO_CLASS( trigger_ctf_capturepoint, CTriggerCTFCapture );
+LINK_ENTITY_TO_CLASS(trigger_ctf_capturepoint, CTriggerCTFCapture);
 
-BEGIN_DATADESC( CTriggerCTFCapture )
-	DEFINE_KEYFIELD( m_iAffectedTeam,  FIELD_INTEGER, "TeamCapture" ),
-	DEFINE_KEYFIELD( m_iTeamBonus, FIELD_INTEGER, "TeamBonus" ),
-	DEFINE_KEYFIELD( m_iPlayerBonus, FIELD_INTEGER, "PlayerBonus" ),
-	DEFINE_KEYFIELD( m_iSound, FIELD_SOUNDNAME, "CaptureSound" ),
+BEGIN_DATADESC(CTriggerCTFCapture)
+DEFINE_KEYFIELD(m_iAffectedTeam, FIELD_INTEGER, "TeamCapture"),
+DEFINE_KEYFIELD(m_iTeamBonus, FIELD_INTEGER, "TeamBonus"),
+DEFINE_KEYFIELD(m_iPlayerBonus, FIELD_INTEGER, "PlayerBonus"),
+DEFINE_KEYFIELD(m_iSound, FIELD_SOUNDNAME, "CaptureSound"),
 
-	DEFINE_OUTPUT( m_OnFlagCaptured, "OnFlagCaptured" ),
+DEFINE_OUTPUT(m_OnFlagCaptured, "OnFlagCaptured"),
 END_DATADESC()
 
 
@@ -1032,84 +1033,84 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 void CTriggerCTFCapture::StartTouch(CBaseEntity *pOther)
 {
-	if ( !pOther->IsPlayer() ) //Nothing else should trigger this.
+	if (!pOther->IsPlayer()) //Nothing else should trigger this.
 		return;
 
 	//Defines
-	CHL2MP_Player *pPlayer = ToHL2MPPlayer( pOther );
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer(pOther);
 	CtfFlag *pFlag = NULL;
 	bool m_bHomeFlagTaken = false;
 
-	if ( !pPlayer || !pPlayer->IsAlive() ) //Still alive?
+	if (!pPlayer || !pPlayer->IsAlive()) //Still alive?
 		return;
 
-	if ( sv_ctf_capturestyle.GetInt() > 1 ) 
+	if (sv_ctf_capturestyle.GetInt() > 1)
 	{
-		while( (pFlag = static_cast<CtfFlag*>( gEntList.FindEntityByClassname( pFlag, "ctf_flag" ) )) != NULL )
+		while ((pFlag = static_cast<CtfFlag*>(gEntList.FindEntityByClassname(pFlag, "ctf_flag"))) != NULL)
 		{
-			if ( pFlag->iTeam == pPlayer->GetTeamNumber() ) //This flag is an enemy flag, we want the player's team's flag.
+			if (pFlag->iTeam == pPlayer->GetTeamNumber()) //This flag is an enemy flag, we want the player's team's flag.
 				continue;
 
-			if ( pFlag->GetAbsOrigin() != pFlag->FlagOrigin ) //This flag belongs to the player's team. Is it at home?
+			if (pFlag->GetAbsOrigin() != pFlag->FlagOrigin) //This flag belongs to the player's team. Is it at home?
 				m_bHomeFlagTaken = true;
 		}
 	}
 
 
-	while( (pFlag = static_cast<CtfFlag*>( gEntList.FindEntityByClassname( pFlag, "ctf_flag" ) )) != NULL )
+	while ((pFlag = static_cast<CtfFlag*>(gEntList.FindEntityByClassname(pFlag, "ctf_flag"))) != NULL)
 	{
-		if ( pFlag->GetParent() && pFlag->GetParent() == pPlayer) //So the flag has a parent.. and it's the player who touched the trigger.
+		if (pFlag->GetParent() && pFlag->GetParent() == pPlayer) //So the flag has a parent.. and it's the player who touched the trigger.
 		{
 			int TeamNumber = pPlayer->GetTeamNumber();
 
 			//For team affected by the trigger.
-			switch( m_iAffectedTeam )
+			switch (m_iAffectedTeam)
 			{
-				case 0:
-					iTeam = TeamNumber;
-					break;
-				case 1:
-					iTeam = TEAM_BRITISH;
-					break;
-				case 2:
-					iTeam = TEAM_AMERICANS;
-					break;
+			case 0:
+				iTeam = TeamNumber;
+				break;
+			case 1:
+				iTeam = TEAM_BRITISH;
+				break;
+			case 2:
+				iTeam = TEAM_AMERICANS;
+				break;
 			}
 
-			if ( TeamNumber != iTeam ) //Trigger isn't for this player's team. Die.
+			if (TeamNumber != iTeam) //Trigger isn't for this player's team. Die.
 				return;
 			//
 
-			if ( m_bHomeFlagTaken ) //The player's team's flag is taken. So we cannot cap an enemy flag.
+			if (m_bHomeFlagTaken) //The player's team's flag is taken. So we cannot cap an enemy flag.
 			{
-				ClientPrint( pPlayer, CTF_DENY_CAPTURE ); //Let the player know.
+				ClientPrint(pPlayer, CTF_DENY_CAPTURE); //Let the player know.
 				return; //Die here.
 			}
 
 			//Assuming we've made it thus far, you're probably carrying a flag that belongs to the enemy. Go ahead and cap it.
-			pFlag->PlaySound( GetAbsOrigin(), m_iSound ); //Play the capture sound.
+			pFlag->PlaySound(GetAbsOrigin(), m_iSound); //Play the capture sound.
 
 			pFlag->ResetFlag();
 
-			g_Teams[TeamNumber]->AddScore( m_iTeamBonus ); //Adds the team score bonus.
-			pPlayer->IncrementFragCount( m_iPlayerBonus ); //Give the player the points.
+			g_Teams[TeamNumber]->AddScore(m_iTeamBonus); //Adds the team score bonus.
+			pPlayer->IncrementFragCount(m_iPlayerBonus); //Give the player the points.
 
 			//reset the capturer's speed
-			pPlayer->SetSpeedModifier( 0 );
+			pPlayer->SetSpeedModifier(0);
 
-			pFlag->PrintAlert( CTF_CAPTURE, pPlayer->GetPlayerName(), pFlag->cFlagName );
+			pFlag->PrintAlert(CTF_CAPTURE, pPlayer->GetPlayerName(), pFlag->cFlagName);
 
 			//Do the log stuff.
 			CTeam *team = pPlayer->GetTeam();
-			
-			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"ctf_flag_capture\"\n", 
-						pPlayer->GetPlayerName(), 
-						pPlayer->GetUserID(), 
-						pPlayer->GetNetworkIDString(), 
-						team ? team->GetName() : ""); 
+
+			UTIL_LogPrintf("\"%s<%i><%s><%s>\" triggered \"ctf_flag_capture\"\n",
+				pPlayer->GetPlayerName(),
+				pPlayer->GetUserID(),
+				pPlayer->GetNetworkIDString(),
+				team ? team->GetName() : "");
 			//
 
-			m_OnFlagCaptured.FireOutput( this, this ); //Fire the OnFlagCaptured output, set it last just in case.
+			m_OnFlagCaptured.FireOutput(this, this); //Fire the OnFlagCaptured output, set it last just in case.
 		}
 	}
 }

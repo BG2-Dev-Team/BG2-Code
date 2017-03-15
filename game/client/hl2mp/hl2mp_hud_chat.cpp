@@ -24,9 +24,10 @@ DECLARE_HUD_MESSAGE( CHudChat, SayText );
 DECLARE_HUD_MESSAGE( CHudChat, SayText2 );
 DECLARE_HUD_MESSAGE( CHudChat, TextMsg );
 //BG2 - Tjoppen - VoiceComm usermessage
-DECLARE_HUD_MESSAGE( CHudChat, VoiceComm );
+DECLARE_HUD_MESSAGE(CHudChat, VoiceComm);
 //BG2 - BG2Events usermessage - HairyPotter
-DECLARE_HUD_MESSAGE( CHudChat, BG2Events );
+DECLARE_HUD_MESSAGE(CHudChat, BG2Events);
+
 
 
 //=====================
@@ -82,9 +83,9 @@ void CHudChat::Init( void )
 	HOOK_HUD_MESSAGE( CHudChat, SayText2 );
 	HOOK_HUD_MESSAGE( CHudChat, TextMsg );
 	//BG2 - Tjoppen - VoiceComm usermessage
-	HOOK_HUD_MESSAGE( CHudChat, VoiceComm );
+	HOOK_HUD_MESSAGE(CHudChat, VoiceComm);
 	//BG2 - BG2Events usermessage - HairyPotter
-	HOOK_HUD_MESSAGE( CHudChat, BG2Events );
+	HOOK_HUD_MESSAGE(CHudChat, BG2Events);
 }
 
 //-----------------------------------------------------------------------------
@@ -106,7 +107,6 @@ int CHudChat::GetChatInputOffset( void )
 
 Color CHudChat::GetClientColor( int clientIndex )
 {
-	//BG2 --
 	if ( clientIndex == 0 ) // console msg
 	{
 		return g_ColorYellow;
@@ -115,12 +115,11 @@ Color CHudChat::GetClientColor( int clientIndex )
 	{
 		switch ( g_PR->GetTeam( clientIndex ) )
 		{
-		case TEAM_AMERICANS	: return g_ColorBlue;
+		case TEAM_AMERICANS	: return g_ColorBlue; //BG2 - found these while porting to 2016 - change team labels - Awesome
 		case TEAM_BRITISH	: return g_ColorRed;
 		default	: return g_ColorYellow;
 		}
 	}
 
 	return g_ColorYellow;
-	//
 }

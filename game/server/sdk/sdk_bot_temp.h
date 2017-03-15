@@ -14,7 +14,7 @@
 //BG2 - Tjoppen - HACKHACK
 #define CSDKPlayer CBasePlayer
 
-static void RunPlayerMove( CSDKPlayer *fakeclient, CUserCmd &cmd, float frametime );
+static void RunPlayerMove(CSDKPlayer *fakeclient, CUserCmd &cmd, float frametime);
 
 // This is our bot class.
 class CSDKBot // : public CSDKPlayer
@@ -23,10 +23,10 @@ public:
 	bool			m_bBackwards, m_bInuse, m_bLastTurnToRight;
 
 	float			m_flSideMove,
-					m_flForwardMove,
-					m_flNextStrafeTime,
-					m_flNextTurnTime,
-					m_flNextVoice;
+		m_flForwardMove,
+		m_flNextStrafeTime,
+		m_flNextTurnTime,
+		m_flNextVoice;
 
 	QAngle			m_ForwardAngle;
 	QAngle			m_LastAngles;
@@ -35,9 +35,9 @@ public:
 
 	//BG2 - Tjoppen
 	int				reload,
-					attack,
-					attack2,
-					respawn; 
+		attack,
+		attack2,
+		respawn;
 
 	CUserCmd		m_LastCmd;
 

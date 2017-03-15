@@ -10,5 +10,11 @@
 #pragma once
 #endif
 
+//BG2 - no bots - Awesome
+/*
+// If iTeam or iClass is -1, then a team or class is randomly chosen.
+CBasePlayer *BotPutInServer( bool bFrozen, int iTeam );
+*/
+
 #endif // BOT_BASE_H
 

@@ -14,6 +14,7 @@
 #else
 #include "hl2mp_player.h"
 #endif
+#include "../shared/bg2/bg2_player_shared.h"
 
 #include "engine/IEngineSound.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
@@ -40,7 +41,6 @@ const char *CHL2MP_Player::GetPlayerModelSoundPrefix( void )
 	//
 }
 
-
 void CHL2MP_Player::PrecacheFootStepSounds( void )
 {
 	//BG2 - Tjoppen - don't need this
@@ -49,13 +49,13 @@ void CHL2MP_Player::PrecacheFootStepSounds( void )
 
 	for ( i = 0; i < iFootstepSounds; ++i )
 	{
-		char szFootStepName[128];
+	char szFootStepName[128];
 
-		Q_snprintf( szFootStepName, sizeof( szFootStepName ), "%s.RunFootstepLeft", g_ppszPlayerSoundPrefixNames[i] );
-		PrecacheScriptSound( szFootStepName );
+	Q_snprintf( szFootStepName, sizeof( szFootStepName ), "%s.RunFootstepLeft", g_ppszPlayerSoundPrefixNames[i] );
+	PrecacheScriptSound( szFootStepName );
 
-		Q_snprintf( szFootStepName, sizeof( szFootStepName ), "%s.RunFootstepRight", g_ppszPlayerSoundPrefixNames[i] );
-		PrecacheScriptSound( szFootStepName );
+	Q_snprintf( szFootStepName, sizeof( szFootStepName ), "%s.RunFootstepRight", g_ppszPlayerSoundPrefixNames[i] );
+	PrecacheScriptSound( szFootStepName );
 	}*/
 	//PrecacheScriptSound( BG2_PLAYER_SOUND_PREFIX ".RunFootstepLeft" );
 	//PrecacheScriptSound( BG2_PLAYER_SOUND_PREFIX ".RunFootstepRight" );
@@ -83,20 +83,20 @@ Vector CHL2MP_Player::GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *
 void CHL2MP_Player::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force )
 {
 	//BG2 - Tjoppen - play correct stepsound
-	BaseClass::PlayStepSound( vecOrigin, psurface, fvol, force );
+	BaseClass::PlayStepSound(vecOrigin, psurface, fvol, force);
 	return;
 	//
-	
+
 	if ( gpGlobals->maxClients > 1 && !sv_footsteps.GetFloat() )
 		return;
 
-/* // BG2 - This doesn't belong. -HairyPotter
-#if defined( CLIENT_DLL )
+	/* // BG2 - This doesn't belong. -HairyPotter
+	#if defined( CLIENT_DLL )
 	// during prediction play footstep sounds only once
 	if ( !prediction->IsFirstTimePredicted() )
-		return;
-#endif
-*/
+	return;
+	#endif
+	*/
 
 	if ( GetFlags() & FL_DUCKING )
 		return;
@@ -108,14 +108,14 @@ void CHL2MP_Player::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, f
 
 	if ( m_Local.m_nStepside )
 	{
-		Q_snprintf( szStepSound, sizeof( szStepSound ), "%s.RunFootstepLeft", g_ppszPlayerSoundPrefixNames[m_iPlayerSoundType] );
+	Q_snprintf( szStepSound, sizeof( szStepSound ), "%s.RunFootstepLeft", g_ppszPlayerSoundPrefixNames[m_iPlayerSoundType] );
 	}
 	else
 	{
-		Q_snprintf( szStepSound, sizeof( szStepSound ), "%s.RunFootstepRight", g_ppszPlayerSoundPrefixNames[m_iPlayerSoundType] );
+	Q_snprintf( szStepSound, sizeof( szStepSound ), "%s.RunFootstepRight", g_ppszPlayerSoundPrefixNames[m_iPlayerSoundType] );
 	}*/
 	const char *szStepSound = m_Local.m_nStepside ? BG2_PLAYER_SOUND_PREFIX ".RunFootstepLeft" :
-													BG2_PLAYER_SOUND_PREFIX ".RunFootstepRight";
+		BG2_PLAYER_SOUND_PREFIX ".RunFootstepRight";
 	//
 
 	CSoundParameters params;
@@ -144,58 +144,75 @@ void CHL2MP_Player::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, f
 	EmitSound( filter, entindex(), ep );
 }
 
-
-int CHL2MP_Player::GetCurrentSpeed( void ) const
+int CHL2MP_Player::GetCurrentSpeed(void) const
 {
 	//linear ramp from 50% to 100%
 	float scale = 0.5 + m_iStamina * 0.005f;
 
-	if( GetActiveWeapon() )
+	CBaseCombatWeapon * pWeapon = GetActiveWeapon();
+	if (pWeapon)
 	{
-		if (GetActiveWeapon()->m_bIsIronsighted )
-			scale *= 0.3f;
-
-		if( GetActiveWeapon()->m_bInReload )
-			scale *= 0.5f;
+		if (GetActiveWeapon()->m_bIsIronsighted){
+			scale *= SPEED_MOD_IRONSIGHT;
+			if (m_iCurrentRallies & RALLY_SPEED_AIM)
+				scale *= RALLY_SPEED_AIM_MOD;
+		}
+		if (GetActiveWeapon()->m_bInReload) {
+			float baseMod = SPEED_MOD_RELOAD;
+			//Check if we have the reload-movement-speed rally
+			if (m_iCurrentRallies & RALLY_SPEED_RELOAD)
+				baseMod = FLerp(baseMod, 1, 0, 1, RALLY_SPEED_RELOAD_LERP);
+			scale *= baseMod;
+		}
 	}
 
 	int base = 120;
 
-	if( GetTeamNumber() != TEAM_BRITISH && GetTeamNumber() != TEAM_AMERICANS )
+	if (GetTeamNumber() != TEAM_BRITISH && GetTeamNumber() != TEAM_AMERICANS)
 	{
 		//spectating
 		base = 240;
 	}
-	else if( m_nButtons & IN_WALK )
+	else if (m_nButtons & IN_WALK && (GetActiveWeapon() && !GetActiveWeapon()->m_bInReload)) //don't let players needlessly walk while reloading
 	{
 		base = 120;
 		//use same walking speed for all classes
 	}
 	else
 	{
-		switch( m_iClass )
+		switch (m_iClass)
 		{
 		case CLASS_INFANTRY:
-			base = 195;
+			base = SPEED_INFANTRY;
 			break;
 		case CLASS_OFFICER:
-			base = 210;
+#ifndef CLIENT_DLL
+			if (m_iGunKit == 2 /*pWeapon && pWeapon->weaponType == CBaseCombatWeapon::WeaponType::CARBINE*/)
+				base = SPEED_OFFICER_HEAVY;
+			else
+#endif
+				base = SPEED_OFFICER;
 			break;
 		case CLASS_SNIPER:
-			base = 205;
+			base = SPEED_SNIPER;
 			break;
 		case CLASS_SKIRMISHER:
-			base = 200;
+			base = SPEED_SKIRMISHER;
 			break;
 		case CLASS_LIGHT_INFANTRY:
-			base = 198;
+			base = SPEED_LIGHT_INF;
+			break;
+		case CLASS_GRENADIER:
+			base = SPEED_GRENADIER;
 			break;
 		}
 	}
+	//Check for speed buff, but don't stack the effects
+	if ((m_iCurrentRallies & RALLY_SPEED) && !(GetActiveWeapon() && GetActiveWeapon()->m_bInReload))
+		scale *= RALLY_SPEED_MOD;
 
 	return (base + m_iSpeedModifier) * scale;
 }
-
 
 //==========================
 // ANIMATION CODE

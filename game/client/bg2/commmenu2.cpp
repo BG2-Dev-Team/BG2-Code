@@ -71,14 +71,14 @@ void CCommMenu2::OnKeyCodePressed(KeyCode code)
 	// we can't compare the keycode to a known code, because translation from bound keys
 	// to vgui key codes is not 1:1. Get the engine version of the key for the binding
 	// and the actual pressed key, and compare those..
-	int iLastTrappedKey = code;	// the enginekey version of the code param
+	int iLastTappedKey = code;	// the enginekey version of the code param
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
 	if ( !pPlayer )
 		return;
 
-#define ifkey( index, index2 ) if( iLastTrappedKey == slot##index ) { engine->ServerCmd( "voicecomm " #index2 ); ShowPanel( false ); }
+#define ifkey( index, index2 ) if( iLastTappedKey == slot##index ) { engine->ServerCmd( "voicecomm " #index2 ); ShowPanel( false ); }
 			ifkey( 1, 9 )
 	else	ifkey( 2, 10 )
 	else	ifkey( 3, 11 )

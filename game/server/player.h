@@ -419,7 +419,7 @@ public:
 	virtual bool			Weapon_ShouldSetLast( CBaseCombatWeapon *pOldWeapon, CBaseCombatWeapon *pNewWeapon ) { return true; }
 	virtual bool			Weapon_ShouldSelectItem( CBaseCombatWeapon *pWeapon );
 	void					Weapon_DropSlot( int weaponSlot );
-	CBaseCombatWeapon		*Weapon_GetLast( void ) { return m_hLastWeapon.Get(); }
+	CBaseCombatWeapon		*GetLastWeapon( void ) { return m_hLastWeapon.Get(); }
 
 	virtual void			OnMyWeaponFired( CBaseCombatWeapon *weapon );	// call this when this player fires a weapon to allow other systems to react
 	virtual float			GetTimeSinceWeaponFired( void ) const;			// returns the time, in seconds, since this player fired a weapon
@@ -437,6 +437,12 @@ public:
 	bool					IsOnLadder( void );
 	virtual void			ExitLadder() {}
 	virtual surfacedata_t	*GetLadderSurface( const Vector &origin );
+
+	/*virtual void			SetFlashlightEnabled( bool bState ) { };
+	virtual int				FlashlightIsOn( void ) { return false; }
+	virtual void			FlashlightTurnOn( void ) { };
+	virtual void			FlashlightTurnOff( void ) { };
+	virtual bool			IsIlluminatedByFlashlight( CBaseEntity *pEntity, float *flReturnDot ) {return false; }*/
 	
 	void					UpdatePlayerSound ( void );
 	virtual void			UpdateStepSound( surfacedata_t *psurface, const Vector &vecOrigin, const Vector &vecVelocity );
@@ -515,7 +521,7 @@ public:
 	virtual void 			SelectItem( const char *pstr, int iSubType = 0 );
 	void					ItemPreFrame( void );
 	virtual void			ItemPostFrame( void );
-	virtual CBaseEntity		*GiveNamedItem( const char *szName, int Skin = 0, int iSubType = 0 );
+	virtual CBaseEntity		*GiveNamedItem( const char *szName, int skin = 0, int iSubType = 0 );
 	void					EnableControl(bool fControl);
 	virtual void			CheckTrainUpdate( void );
 	void					AbortReload( void );
@@ -610,7 +616,7 @@ public:
 
 	virtual void			HandleAnimEvent( animevent_t *pEvent );
 
-	virtual bool			ShouldAnnounceAchievement( void ){ return true; }
+	virtual bool			ShouldAnnounceAchievement( void );
 
 #if defined USES_ECON_ITEMS
 	// Wearables
@@ -688,7 +694,12 @@ public:
 	void	ResetDeathCount();
 	void	IncrementDeathCount( int nCount );
 
+	//void	SetArmorValue( int value );
+	//void	IncrementArmorValue( int nCount, int nMaxValue = -1 );
+
 	void	SetConnected( PlayerConnectedState iConnected ) { m_iConnected = iConnected; }
+	//virtual void EquipSuit( bool bPlayEffects = true );
+	//virtual void RemoveSuit( void );
 	void	SetMaxSpeed( float flMaxSpeed ) { m_flMaxspeed = flMaxSpeed; }
 
 	void	NotifyNearbyRadiationSource( float flRange );
@@ -728,6 +739,8 @@ public:
 	bool	IsPredictingWeapons( void ) const; 
 	int		CurrentCommandNumber() const;
 	const CUserCmd *GetCurrentUserCommand() const;
+	int		GetLockViewanglesTickNumber() const { return m_iLockViewanglesTickNumber; }
+	QAngle	GetLockViewanglesData() const { return m_qangLockViewangles; }
 
 	int		GetFOV( void );														// Get the current FOV value
 	int		GetDefaultFOV( void ) const;										// Default FOV if not specified otherwise
@@ -813,7 +826,9 @@ private:
 
 public:
 	
-
+	// How long since this player last interacted with something the game considers an objective/target/goal
+	float				GetTimeSinceLastObjective( void ) const { return ( m_flLastObjectiveTime == -1.f ) ? 999.f : gpGlobals->curtime - m_flLastObjectiveTime; }
+	void				SetLastObjectiveTime( float flTime ) { m_flLastObjectiveTime = flTime; }
 
 	// Used by gamemovement to check if the entity is stuck.
 	int m_StuckLast;
@@ -882,12 +897,14 @@ public:
 
 #if defined USES_ECON_ITEMS
 	CEconWearable			*GetWearable( int i ) { return m_hMyWearables[i]; }
-	int						GetNumWearables( void ) { return m_hMyWearables.Count(); }
+	const CEconWearable		*GetWearable( int i ) const { return m_hMyWearables[i]; }
+	int						GetNumWearables( void ) const { return m_hMyWearables.Count(); }
 #endif
 
 private:
 
 	Activity				m_Activity;
+	float					m_flLastObjectiveTime;				// Last curtime player touched/killed something the gamemode considers an objective
 
 protected:
 
@@ -965,7 +982,7 @@ protected:
 	float					m_fNextSuicideTime; // the time after which the player can next use the suicide command
 	//BG2 - Tjoppen - public method for setting m_fNextSuicideTime
 public:
-	void SetSuicideTime( float time ) { m_fNextSuicideTime = time; }
+	void SetSuicideTime(float time) { m_fNextSuicideTime = time; }
 
 	//BG2 - Tjoppen - name change spam prevention
 	float					m_fNextNameChange;	// the next time the player can change their name
@@ -1058,6 +1075,8 @@ protected:
 	// Last received usercmd (in case we drop a lot of packets )
 	CUserCmd				m_LastCmd;
 	CUserCmd				*m_pCurrentCommand;
+	int						m_iLockViewanglesTickNumber;
+	QAngle					m_qangLockViewangles;
 
 	float					m_flStepSoundTime;	// time to check for next footstep sound
 
@@ -1212,6 +1231,9 @@ private:
 
 	// Store the last time we successfully processed a usercommand
 	float			m_flLastUserCommandTime;
+
+	// used to prevent achievement announcement spam
+	CUtlVector< float >		m_flAchievementTimes;
 
 public:
 	virtual unsigned int PlayerSolidMask( bool brushOnly = false ) const;	// returns the solid mask for the given player, so bots can have a more-restrictive set

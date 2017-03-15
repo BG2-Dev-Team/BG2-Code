@@ -51,14 +51,14 @@ void RegisterUserMessages( void )
 	//usermessages->Register( "teamreward", -1 );
 	//usermessages->Register( "flagstatus", -1 );
 	//BG2 - Tjoppen - usermessages
-	usermessages->Register( "VoiceComm", 3 );
-	usermessages->Register( "HitVerif", 5 );	//XXX hit YYY in ZZZ for WWW damage
-	usermessages->Register( "ServerBlood", -1 );	//pos(varies), normal(varies), amount(2)
-	usermessages->Register( "WinMusic", 1 );		//byte = team ID. let client decide how to interpret
-	usermessages->Register( "CaptureSounds", -1 );	//Position of flag (varies). -HairyPotter
-	usermessages->Register( "VCommSounds", -1 ); //Position Of Player (varies). -HairyPotter
+	usermessages->Register("VoiceComm", 3);
+	usermessages->Register("HitVerif", 5);	//XXX hit YYY in ZZZ for WWW damage
+	usermessages->Register("ServerBlood", -1);	//pos(varies), normal(varies), amount(2)
+	usermessages->Register("WinMusic", 1);		//byte = team ID. let client decide how to interpret
+	usermessages->Register("CaptureSounds", -1);	//Position of flag (varies). -HairyPotter
+	usermessages->Register("VCommSounds", -1); //Position Of Player (varies). -HairyPotter
 	//usermessages->Register( "MapName", -1 ); //Name of map that we're changng to (varies). -HairyPotter //Not used yet.
-	usermessages->Register( "BG2Events", -1 ); //BG2 - Used for localization. -HairyPotter
+	usermessages->Register("BG2Events", -1); //BG2 - Used for localization. -HairyPotter
 	//
 
 #ifndef _X360

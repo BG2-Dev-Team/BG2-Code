@@ -57,6 +57,10 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+//#ifdef HL2_DLL
+//extern int	g_interactionBarnacleVictimReleased;
+//#endif //HL2_DLL
+
 extern ConVar weapon_showproficiency;
 
 ConVar ai_show_hull_attacks( "ai_show_hull_attacks", "0" );
@@ -224,16 +228,64 @@ int	CBaseCombatCharacter::GetInteractionID(void)
 // ============================================================================
 bool CBaseCombatCharacter::HasHumanGibs( void )
 {
+//#if defined( HL2_DLL )
 	Class_T myClass = Classify();
-	if ( myClass == CLASS_PLAYER )	
+	if ( /*myClass == CLASS_CITIZEN_PASSIVE   ||
+		 myClass == CLASS_CITIZEN_REBEL		||
+		 myClass == CLASS_COMBINE			||
+		 myClass == CLASS_CONSCRIPT			||
+		 myClass == CLASS_METROPOLICE		||*/
+		 myClass == CLASS_PLAYER )	
 		 return true;
+	/*
+#elif defined( HL1_DLL )
+	Class_T myClass = Classify();
+	if (	myClass == CLASS_HUMAN_MILITARY		||
+			myClass == CLASS_PLAYER_ALLY		||
+			myClass == CLASS_HUMAN_PASSIVE		||
+			myClass == CLASS_PLAYER )
+	{
+		return true;
+	}
 
+#elif defined( CSPORT_DLL )
+	Class_T myClass = Classify();
+	if (	 myClass == CLASS_PLAYER )	
+	{
+		return true;
+	}
+
+#endif
+	*/
 	return false;
 }
 
 
 bool CBaseCombatCharacter::HasAlienGibs( void )
 {
+/*#if defined( HL2_DLL )
+	Class_T myClass = Classify();
+	if ( myClass == CLASS_BARNACLE		 || 
+		 myClass == CLASS_STALKER		 ||
+		 myClass == CLASS_ZOMBIE		 ||
+		 myClass == CLASS_VORTIGAUNT	 ||
+		 myClass == CLASS_HEADCRAB )
+	{
+		 return true;
+	}
+
+#elif defined( HL1_DLL )
+	Class_T myClass = Classify();
+	if ( myClass == CLASS_ALIEN_MILITARY ||
+		 myClass == CLASS_ALIEN_MONSTER	||
+		 myClass == CLASS_INSECT  ||
+		 myClass == CLASS_ALIEN_PREDATOR  ||
+		 myClass == CLASS_ALIEN_PREY )
+	{
+		return true;
+	}
+#endif*/
+
 	return false;
 }
 
@@ -279,7 +331,11 @@ bool CBaseCombatCharacter::FVisible( CBaseEntity *pEntity, int traceMask, CBaseE
 {
 	VPROF( "CBaseCombatCharacter::FVisible" );
 
-	if ( traceMask != MASK_BLOCKLOS || !ShouldUseVisibilityCache() || pEntity == this )
+	if ( traceMask != MASK_BLOCKLOS || !ShouldUseVisibilityCache() || pEntity == this
+/*#if defined(HL2_DLL)
+		 || Classify() == CLASS_BULLSEYE || pEntity->Classify() == CLASS_BULLSEYE 
+#endif*/
+		 )
 	{
 		return BaseClass::FVisible( pEntity, traceMask, ppBlocker );
 	}
@@ -635,6 +691,14 @@ bool CBaseCombatCharacter::FInAimCone( const Vector &vecSpot )
 //-----------------------------------------------------------------------------
 bool CBaseCombatCharacter::HandleInteraction( int interactionType, void *data, CBaseCombatCharacter* sourceEnt )
 {
+/*#ifdef HL2_DLL
+	if ( interactionType == g_interactionBarnacleVictimReleased )
+	{
+		// For now, throw away the NPC and leave the ragdoll.
+		UTIL_Remove( this );
+		return true;
+	}
+#endif // HL2_DLL */
 	return false;
 }
 
@@ -1465,9 +1529,26 @@ bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vec
 	CTakeDamageInfo newinfo = info;
 	newinfo.SetDamageForce( forceVector );
 
+/*#ifdef HL2_EPISODIC
+	// Burning corpses are server-side in episodic, if we're in darkness mode
+	if ( IsOnFire() && HL2GameRules()->IsAlyxInDarknessMode() )
+	{
+		CBaseEntity *pRagdoll = CreateServerRagdoll( this, m_nForceBone, newinfo, COLLISION_GROUP_DEBRIS );
+		FixupBurningServerRagdoll( pRagdoll );
+		RemoveDeferred();
+		return true;
+	}
+#endif*/
 
 #ifdef HL2_DLL	
-	if ( m_bForceServerRagdoll == true  )
+	if (m_bForceServerRagdoll == true)
+	/*bool bMegaPhyscannonActive = false;
+#if !defined( HL2MP )
+	bMegaPhyscannonActive = HL2GameRules()->MegaPhyscannonActive();
+#endif // !HL2MP
+
+	// Mega physgun requires everything to be a server-side ragdoll
+	if ( m_bForceServerRagdoll == true || ( ( bMegaPhyscannonActive == true ) && !IsPlayer() && Classify() != CLASS_PLAYER_ALLY_VITAL && Classify() != CLASS_PLAYER_ALLY ) )*/
 	{
 		if ( CanBecomeServerRagdoll() == false )
 			return false;
@@ -1481,6 +1562,12 @@ bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vec
 		return true;
 	}
 
+	/*if( hl2_episodic.GetBool() && Classify() == CLASS_PLAYER_ALLY_VITAL )
+	{
+		CreateServerRagdoll( this, m_nForceBone, newinfo, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
+		RemoveDeferred();
+		return true;
+	}*/
 #endif //HL2_DLL
 
 	return BecomeRagdollOnClient( forceVector );
@@ -1558,6 +1645,15 @@ void CBaseCombatCharacter::Event_Killed( const CTakeDamageInfo &info )
 				pDroppedWeapon->Dissolve( NULL, gpGlobals->curtime, false, nDissolveType );
 			}
 		}
+/*#ifdef HL2_DLL
+		else if ( PlayerHasMegaPhysCannon() )
+		{
+			if ( pDroppedWeapon )
+			{
+				pDroppedWeapon->Dissolve( NULL, gpGlobals->curtime, false, ENTITY_DISSOLVE_NORMAL );
+			}
+		}
+#endif*/
 
 		if ( !bRagdollCreated && ( info.GetDamageType() & DMG_REMOVENORAGDOLL ) == 0 )
 		{
@@ -1631,13 +1727,14 @@ void CBaseCombatCharacter::ThrowDirForWeaponStrip( CBaseCombatWeapon *pWeapon, c
 {
 	// Nowhere in particular; just drop it.
 	VMatrix zRot;
-	MatrixBuildRotateZ( zRot, random->RandomFloat( -60.0f, 60.0f ) );
+	MatrixBuildRotateZ(zRot, random->RandomFloat(-60.0f, 60.0f));
 
 	Vector vecThrow;
-	Vector3DMultiply( zRot, vecForward, *pVecThrowDir );
+	Vector3DMultiply(zRot, vecForward, *pVecThrowDir);
 
-	pVecThrowDir->z = random->RandomFloat( -0.5f, 0.5f );
-	VectorNormalize( *pVecThrowDir );
+	pVecThrowDir->z = random->RandomFloat(-0.5f, 0.5f);
+	VectorNormalize(*pVecThrowDir);
+
 }
 
 
@@ -1954,6 +2051,16 @@ void CBaseCombatCharacter::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 	// If gun doesn't use clips, just give ammo
 	if (pWeapon->GetMaxClip1() == -1)
 	{
+/*#ifdef HL2_DLL
+		if( FStrEq(STRING(gpGlobals->mapname), "d3_c17_09") && FClassnameIs(pWeapon, "weapon_rpg") && pWeapon->NameMatches("player_spawn_items") )
+		{
+			// !!!HACK - Don't give any ammo with the spawn equipment RPG in d3_c17_09. This is a chapter
+			// start and the map is way to easy if you start with 3 RPG rounds. It's fine if a player conserves
+			// them and uses them here, but it's not OK to start with enough ammo to bypass the snipers completely.
+			GiveAmmo( 0, pWeapon->m_iPrimaryAmmoType); 
+		}
+		else
+#endif // HL2_DLL*/
 		GiveAmmo(pWeapon->GetDefaultClip1(), pWeapon->m_iPrimaryAmmoType); 
 	}
 	// If default ammo given is greater than clip
@@ -2135,8 +2242,8 @@ CBaseCombatWeapon *CBaseCombatCharacter::Weapon_GetWpnForAmmo( int iAmmoIndex )
 //-----------------------------------------------------------------------------
 bool CBaseCombatCharacter::Weapon_CanUse( CBaseCombatWeapon *pWeapon )
 {
-	acttable_t *pTable		= pWeapon->ActivityList();
-	int			actCount	= pWeapon->ActivityListCount();
+	int	actCount = 0;
+	acttable_t *pTable = pWeapon->ActivityList( actCount );
 
 	if( actCount < 1 )
 	{
@@ -2692,6 +2799,16 @@ CBaseEntity *CBaseCombatCharacter::Weapon_FindUsable( const Vector &range )
 {
 	bool bConservative = false;
 
+/*#ifdef HL2_DLL
+	if( hl2_episodic.GetBool() && !GetActiveWeapon() )
+	{
+		// Unarmed citizens are conservative in their weapon finding
+		if ( Classify() != CLASS_PLAYER_ALLY_VITAL )
+		{
+			bConservative = true;
+		}
+	}
+#endif*/
 
 	CBaseCombatWeapon *weaponList[64];
 	CBaseCombatWeapon *pBestWeapon = NULL;
@@ -2750,6 +2867,11 @@ CBaseEntity *CBaseCombatCharacter::Weapon_FindUsable( const Vector &range )
 			//			Need to pick by power of weapons
 			//			Don't want to pick a weapon right next to a NPC!
 
+			// Give the AR2 a bonus to be selected by making it seem closer.
+			//if( FClassnameIs( pWeapon, "weapon_ar2" ) )
+			//{
+			//	fCurDist *= 0.5;
+			//}
 
 			// choose the last range attack weapon you find or the first available other weapon
 			if ( ! (pWeapon->CapabilitiesGet() & bits_CAP_RANGE_ATTACK_GROUP) )
@@ -2878,6 +3000,15 @@ float CBaseCombatCharacter::CalculatePhysicsStressDamage( vphysics_objectstress_
 
 void CBaseCombatCharacter::ApplyStressDamage( IPhysicsObject *pPhysics, bool bRequireLargeObject )
 {
+/*#ifdef HL2_DLL
+	if( Classify() == CLASS_PLAYER_ALLY || Classify() == CLASS_PLAYER_ALLY_VITAL )
+	{
+		// Bypass stress completely for allies and vitals.
+		if( hl2_episodic.GetBool() )
+			return;
+	}
+#endif//HL2_DLL*/
+
 	vphysics_objectstress_t stressOut;
 	float damage = CalculatePhysicsStressDamage( &stressOut, pPhysics );
 	if ( damage > 0 )

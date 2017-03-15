@@ -1441,8 +1441,22 @@ void CAI_NetworkEditTools::RecalcUsableNodesForHull(void)
 	//  Use test hull to check hull sizes
 	// -----------------------------------------------------
 	CAI_TestHull *m_pTestHull = CAI_TestHull::GetTestHull();
+	//m_pTestHull->GetNavigator()->SetNetwork( g_pBigAINet );
 	m_pTestHull->SetHullType((Hull_t)m_iHullDrawNum);
 	m_pTestHull->SetHullSizeNormal();
+
+	/*for (int node=0;node<m_pNetwork->NumNodes();node++) 
+	{
+		if ( ( m_pNetwork->GetNode(node)->m_eNodeInfo & ( HullToBit( (Hull_t)m_iHullDrawNum ) << NODE_ENT_FLAGS_SHIFT ) )  ||
+			 m_pTestHull->GetNavigator()->CanFitAtNode(node))
+		{
+			m_pNetwork->GetNode(node)->m_eNodeInfo &= ~bits_NODE_WONT_FIT_HULL;
+		}
+		else
+		{
+			m_pNetwork->GetNode(node)->m_eNodeInfo |= bits_NODE_WONT_FIT_HULL;
+		}
+	}*/
 	CAI_TestHull::ReturnTestHull();
 }
 
@@ -2968,7 +2982,19 @@ int CAI_NetworkBuilder::ComputeConnection( CAI_Node *pSrcNode, CAI_Node *pDestNo
 	// FIRST CHECK IF HULL CAN EVEN FIT AT THESE NODES
 	// ==============================================================
 	// @Note (toml 02-10-03): this should be optimized, caching the results of CanFitAtNode() 
+	/*if ( !( pSrcNode->m_eNodeInfo & ( HullToBit( hull ) << NODE_ENT_FLAGS_SHIFT ) ) &&
+		 !m_pTestHull->GetNavigator()->CanFitAtNode(srcId,MASK_NPCWORLDSTATIC) )
+	{
+		DebugConnectMsg( srcId, destId, "      Cannot fit at node %d\n", srcId );
+		return 0;
+	}
 	
+	if (  !( pDestNode->m_eNodeInfo & ( HullToBit( hull ) << NODE_ENT_FLAGS_SHIFT ) ) &&
+		 !m_pTestHull->GetNavigator()->CanFitAtNode(destId,MASK_NPCWORLDSTATIC) )
+	{
+		DebugConnectMsg( srcId, destId, "      Cannot fit at node %d\n", destId );
+		return 0;
+	}*/
 	
 	// ==============================================================
 	// AIR NODES (FLYING)
@@ -3133,6 +3159,11 @@ int CAI_NetworkBuilder::ComputeConnection( CAI_Node *pSrcNode, CAI_Node *pDestNo
 void CAI_NetworkBuilder::InitLinks(CAI_Network *pNetwork, CAI_Node *pNode)
 {
 	AI_PROFILE_SCOPE( CAI_Node_InitLinks );
+
+	// -----------------------------------------------------
+	// Get test hull
+	// -----------------------------------------------------
+	//m_pTestHull->GetNavigator()->SetNetwork( pNetwork );
 
 	// -----------------------------------------------------
 	// Initialize links to every node 

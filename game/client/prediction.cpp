@@ -48,6 +48,12 @@ static ConVar	cl_predictionentitydump( "cl_pdump", "-1", FCVAR_CHEAT, "Dump info
 static ConVar	cl_predictionentitydumpbyclass( "cl_pclass", "", FCVAR_CHEAT, "Dump entity by prediction classname." );
 static ConVar	cl_pred_optimize( "cl_pred_optimize", "2", 0, "Optimize for not copying data if didn't receive a network update (1), and also for not repredicting if there were no errors (2)." );
 
+#ifdef STAGING_ONLY
+// Do not ship this - testing a fix
+static ConVar	cl_pred_optimize_prefer_server_data( "cl_pred_optimize_prefer_server_data", "0", 0, "In the case where we have both server data and predicted data up to the same tick, choose server data over predicted data." );
+//
+#endif // STAGING_ONLY
+
 #endif
 
 extern IGameMovement *g_pGameMovement;
@@ -650,32 +656,32 @@ void CPrediction::SetupMove( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper *
 		move->m_flSideMove			= ucmd->sidemove;
 		move->m_flUpMove			= ucmd->upmove;
 		//BG2 - Tjoppen - egg-shaped movement
-		if( move->m_flForwardMove != 0 || move->m_flSideMove != 0 )
+		if (move->m_flForwardMove != 0 || move->m_flSideMove != 0)
 		{
-			float	angle = atan2f( move->m_flSideMove, move->m_flForwardMove ),
-					a_angle = fabsf( angle );	//for convenience due to mirrored shape..
+			float	angle = atan2f(move->m_flSideMove, move->m_flForwardMove),
+				a_angle = fabsf(angle);	//for convenience due to mirrored shape..
 
 			//do the egg-shape. clamp velocities based on a_angle.
 			//0 <= angle <= pi
 
-			if( a_angle > M_PI )
+			if (a_angle > M_PI)
 				a_angle = M_PI;	//if too high, assume pi(moving backward)
-			
+
 			float v = 0;
-			if( a_angle < M_PI*0.5f )
+			if (a_angle < M_PI*0.5f)
 			{
 				//forward quadrant. lerp from maxspeed to sidespeed
-				v = player->MaxSpeed() * (1.0f + a_angle*2.0f/M_PI * (sv_sidespeed.GetFloat() - 1.0f));
+				v = player->MaxSpeed() * (1.0f + a_angle*2.0f / M_PI * (sv_sidespeed.GetFloat() - 1.0f));
 			}
 			else
 			{
 				//backward quadrant. lerp from sidespeed to backspeed
-				v = player->MaxSpeed() * (sv_sidespeed.GetFloat() + (a_angle*2.0f/M_PI - 1.0f) * (sv_backspeed.GetFloat() - sv_sidespeed.GetFloat()));
+				v = player->MaxSpeed() * (sv_sidespeed.GetFloat() + (a_angle*2.0f / M_PI - 1.0f) * (sv_backspeed.GetFloat() - sv_sidespeed.GetFloat()));
 			}
 
 			//cos can be negative, thus the need for fabsf()
-			move->m_flForwardMove = clamp( move->m_flForwardMove, -v * fabsf(cosf(a_angle)), v * fabsf(cosf(a_angle)) );
-			move->m_flSideMove = clamp( move->m_flSideMove, -v * sinf(a_angle), v * sinf(a_angle) );
+			move->m_flForwardMove = clamp(move->m_flForwardMove, -v * fabsf(cosf(a_angle)), v * fabsf(cosf(a_angle)));
+			move->m_flSideMove = clamp(move->m_flSideMove, -v * sinf(a_angle), v * sinf(a_angle));
 		}
 		//
 	}
@@ -965,7 +971,8 @@ void CPrediction::SetIdealPitch ( C_BasePlayer *player, const Vector& origin, co
 	Vector	top, bottom;
 	float	floor_height[MAX_FORWARD];
 	int		i, j;
-	int		step, dir, steps;
+	float	step, dir;
+	int		steps;
 	trace_t tr;
 
 	if ( player->GetGroundEntity() == NULL )
@@ -1434,6 +1441,11 @@ int CPrediction::ComputeFirstCommandToExecute( bool received_new_world_update, i
 	}
 	else
 	{
+#ifdef STAGING_ONLY	
+		int nPredictedLimit = cl_pred_optimize_prefer_server_data.GetBool() ? m_nCommandsPredicted - 1 : m_nCommandsPredicted;
+#else
+		int nPredictedLimit = m_nCommandsPredicted;		
+#endif // STAGING_ONLY
 		// Otherwise, there is a second optimization, wherein if we did receive an update, but no
 		//  values differed (or were outside their epsilon) and the server actually acknowledged running
 		//  one or more commands, then we can revert the entity to the predicted state from last frame, 
@@ -1442,7 +1454,7 @@ int CPrediction::ComputeFirstCommandToExecute( bool received_new_world_update, i
 		if ( cl_pred_optimize.GetInt() >= 2 && 
 			!m_bPreviousAckHadErrors && 
 			m_nCommandsPredicted > 0 && 
-			m_nServerCommandsAcknowledged <= m_nCommandsPredicted )
+			m_nServerCommandsAcknowledged <= nPredictedLimit )
 		{
 			// Copy all of the previously predicted data back into entity so we can skip repredicting it
 			// This is the final slot that we previously predicted

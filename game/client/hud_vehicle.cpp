@@ -22,6 +22,7 @@ using namespace vgui;
 
 //BG2 - Not needed anymore.. -HairyPotter
 /*
+
 DECLARE_HUDELEMENT( CHudVehicle );
 
 CHudVehicle::CHudVehicle( const char *pElementName ) :
@@ -88,5 +89,5 @@ void CHudVehicle::Paint( void )
 
 	// Vehicle-based hud...
 	v->DrawHudElements();
-}
-*/
+}*/
+

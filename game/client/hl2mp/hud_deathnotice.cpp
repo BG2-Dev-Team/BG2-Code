@@ -191,7 +191,8 @@ void CHudDeathNotice::Paint()
 		else
 		{
 			//float scale = ( (float)ScreenHeight() / 480.0f );	//scale based on 640x480
-			float scale = ( (float)ScreenHeight() / 864.0f );	//BG2 - Fixed large scale death icons. Scale based on 1154x864. -HairyPotter
+			float scale = ((float)ScreenHeight() / 864.0f);	//BG2 - Fixed large scale death icons. Scale based on 1154x864. -HairyPotter
+
 			iconWide = (int)( scale * (float)icon->Width() );
 			iconTall = (int)( scale * (float)icon->Height() );
 		}
@@ -272,7 +273,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	// the event should be "player_death"
 	int killer = engine->GetPlayerForUserID( event->GetInt("attacker") );
 	int victim = engine->GetPlayerForUserID( event->GetInt("userid") );
-	const char *purekilledwith = event->GetString( "weapon" );
+	const char *purekilledwith = event->GetString("weapon");
 
 	char killedwith[122];
 	strcpy(killedwith, purekilledwith);

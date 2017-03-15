@@ -350,7 +350,7 @@ void CHudVoiceStatus::Paint()
 	FOR_EACH_LL(m_SpeakingList, i)
 	{
 		int playerId = m_SpeakingList[i].playerId;
-		bool bIsAlive = g_PR->IsAlive( playerId );
+		//bool bIsAlive = g_PR->IsAlive( playerId );
 
 		float oldAlphaMultiplier = surface()->DrawGetAlphaMultiplier();
 		surface()->DrawSetAlphaMultiplier(oldAlphaMultiplier * m_SpeakingList[i].fAlpha);
@@ -399,26 +399,26 @@ void CHudVoiceStatus::Paint()
 		// Draw the item background
 		surface()->DrawSetColor( c );
 		surface()->DrawFilledRect( 0, ypos, item_wide, ypos + item_tall );
-		 
+
 		/*if ( show_dead_icon && bIsAlive == false && m_iDeadImageID != -1 ) //BG2 - Just causes problems in BG2, not needed. -HairyPotter
 		{
-			// draw background for dead icon
-			// surface()->DrawFilledRect(dead_icon_xpos, ypos, 0, ypos + dead_icon_tall);
+		// draw background for dead icon
+		// surface()->DrawFilledRect(dead_icon_xpos, ypos, 0, ypos + dead_icon_tall);
 
-			Vertex_t vert[4];
-			float uv1 = 0.0f;
-			float uv2 = 1.0f;
+		Vertex_t vert[4];
+		float uv1 = 0.0f;
+		float uv2 = 1.0f;
 
-			// Draw the dead material
-			surface()->DrawSetTexture( m_iDeadImageID );
+		// Draw the dead material
+		surface()->DrawSetTexture( m_iDeadImageID );
 
-			vert[0].Init( Vector2D( dead_icon_xpos, ypos + dead_icon_ypos ), Vector2D( uv1, uv1 ) );
-			vert[1].Init( Vector2D( dead_icon_xpos + dead_icon_wide, ypos + dead_icon_ypos ), Vector2D( uv2, uv1 ) );
-			vert[2].Init( Vector2D( dead_icon_xpos + dead_icon_wide, ypos + dead_icon_ypos + dead_icon_tall ), Vector2D( uv2, uv2 ) );
-			vert[3].Init( Vector2D( dead_icon_xpos, ypos + dead_icon_ypos + dead_icon_tall ), Vector2D( uv1, uv2 ) );
+		vert[0].Init( Vector2D( dead_icon_xpos, ypos + dead_icon_ypos ), Vector2D( uv1, uv1 ) );
+		vert[1].Init( Vector2D( dead_icon_xpos + dead_icon_wide, ypos + dead_icon_ypos ), Vector2D( uv2, uv1 ) );
+		vert[2].Init( Vector2D( dead_icon_xpos + dead_icon_wide, ypos + dead_icon_ypos + dead_icon_tall ), Vector2D( uv2, uv2 ) );
+		vert[3].Init( Vector2D( dead_icon_xpos, ypos + dead_icon_ypos + dead_icon_tall ), Vector2D( uv1, uv2 ) );
 
-			surface()->DrawSetColor(COLOR_WHITE);
-			surface()->DrawTexturedPolygon( 4, vert );
+		surface()->DrawSetColor(COLOR_WHITE);
+		surface()->DrawTexturedPolygon( 4, vert );
 		}*/
 
 		//=============================================================================

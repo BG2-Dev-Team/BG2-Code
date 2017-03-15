@@ -123,6 +123,42 @@ bool CAI_MoveAndShootOverlay::CanAimAtEnemy()
 
 void CAI_MoveAndShootOverlay::UpdateMoveShootActivity( bool bMoveAimAtEnemy )
 {
+	// FIXME: should be able to query that transition/state is happening
+	// FIXME: needs to not try to shoot if the movement type isn't understood
+	/*Activity curActivity = GetOuter()->GetNavigator()->GetMovementActivity();
+	Activity newActivity = curActivity;
+
+	if (bMoveAimAtEnemy)
+	{
+		switch( curActivity )
+		{
+		case ACT_WALK:
+			newActivity = ACT_WALK_AIM;
+			break;
+		case ACT_RUN:
+			newActivity = ACT_RUN_AIM;
+			break;
+		}
+	}
+	else
+	{
+		switch( curActivity )
+		{
+		case ACT_WALK_AIM:
+			newActivity = ACT_WALK;
+			break;
+		case ACT_RUN_AIM:
+			newActivity = ACT_RUN;
+			break;
+		}
+	}
+
+	if ( curActivity != newActivity )
+	{
+		// Transitioning, wait a bit
+		GetOuter()->GetShotRegulator()->FireNoEarlierThan( gpGlobals->curtime + 0.3f );
+		GetOuter()->GetNavigator()->SetMovementActivity( newActivity );
+	}*/
 }
 
 //-------------------------------------
@@ -157,6 +193,8 @@ void CAI_MoveAndShootOverlay::RunShootWhileMove()
 		// SetEnemy( NULL );
 	}
 
+	/*if( !pOuter->GetNavigator()->IsGoalActive() )
+		return;*/
 
 	if ( GetEnemy() == NULL )
 	{

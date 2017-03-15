@@ -1,14 +1,14 @@
 [vpc crc file version 2]
-6abbd049 C:\Users\Andrew\Desktop\bg2-Source\devtools\bin\vpc.exe
-_Nc_/vpcgame:hl2mp_
-e5d209f4 tier1.vpc
-d1483a91 ..\vpc_scripts\source_lib_base.vpc
+b9c20ec3 F:\Users\Awesome\source-sdk-2013\mp\src\devtools\bin\vpc.exe
+_Nc_VS2013/vpcgame:hl2mp_
+6af8d8a1 tier1.vpc
+30577f77 ..\vpc_scripts\source_lib_base.vpc
 d752cf80 ..\vpc_scripts\platform_dirs.vpc
 6c4a5ff1 ..\vpc_scripts\source_base.vpc
-c8ba2141 ..\vpc_scripts\source_lib_win32_base.vpc
+5dd0225a ..\vpc_scripts\source_lib_win32_base.vpc
 486b766d ..\vpc_scripts\version.vpc
-85793352 ..\vpc_scripts\source_lib_win32_debug.vpc
-3d9cd7fe ..\vpc_scripts\source_lib_win32_release.vpc
-e3c14b57 ..\vpc_scripts\source_win32_base.vpc
+fe1ec01f ..\vpc_scripts\source_lib_win32_debug.vpc
+e9f55286 ..\vpc_scripts\source_lib_win32_release.vpc
+587f9e0b ..\vpc_scripts\source_win32_base.vpc
 346bda4a ..\vpc_scripts\source_video_base.vpc
 30bf2216 ..\vpc_scripts\definitions\win32_2010.def

@@ -215,8 +215,8 @@ void CHudCredits::ReadNames( KeyValues *pKeyValue )
 	while ( pKVNames )
 	{
 		creditname_t Credits;
-		Q_strcpy( Credits.szCreditName, pKVNames->GetName());
-		Q_strcpy( Credits.szFontName, pKeyValue->GetString( Credits.szCreditName, "Default" ) );
+		V_strcpy_safe( Credits.szCreditName, pKVNames->GetName() );
+		V_strcpy_safe( Credits.szFontName, pKeyValue->GetString( Credits.szCreditName, "Default" ) );
 
 		m_CreditsList.AddToTail( Credits );
 		pKVNames = pKVNames->GetNextKey();
@@ -422,6 +422,11 @@ void CHudCredits::DrawLogo( void )
 	{
 		Q_snprintf( szLogoFont, sizeof( szLogoFont ), "WeaponIcons_Small" );
 	}
+	//BG2 - found this change while porting to 2016 engine - Awesome
+	/*else if ( hl2_episodic.GetBool() )
+	{
+		Q_snprintf( szLogoFont, sizeof( szLogoFont ), "ClientTitleFont" );
+	}*/
 	else
 	{
 		Q_snprintf( szLogoFont, sizeof( szLogoFont ), "WeaponIcons" );

@@ -58,6 +58,13 @@ void FinishClientPutInServer( CHL2MP_Player *pPlayer )
 	// notify other clients of player joining the game
 	UTIL_ClientPrintAll( HUD_PRINTNOTIFY, "#Game_connected", sName[0] != 0 ? sName : "<unconnected>" );
 
+	//BG2 - found this missing while porting to 2016 - Awesome
+	/*
+	if ( HL2MPRules()->IsTeamplay() == true )
+	{
+		ClientPrint( pPlayer, HUD_PRINTTALK, "You are on team %s1\n", pPlayer->GetTeam()->GetName() );
+	}*/
+
 	const ConVar *hostname = cvar->FindVar( "hostname" );
 	const char *title = (hostname) ? hostname->GetString() : "MESSAGE OF THE DAY";
 
@@ -109,7 +116,7 @@ const char *GetGameDescription()
 	if ( g_pGameRules ) // this function may be called before the world has spawned, and the game rules initialized
 		return g_pGameRules->GetGameDescription();
 	else
-		return "Battlegrounds 2";
+		return "Battlegrounds 2"; //BG2 - changed this from Half Life 2 Deathmatch
 }
 
 //-----------------------------------------------------------------------------
@@ -135,23 +142,23 @@ CBaseEntity* FindEntity( edict_t *pEdict, char *classname)
 void ClientGamePrecache( void )
 {
 	CBaseEntity::PrecacheModel("models/player.mdl");
-	CBaseEntity::PrecacheModel( "models/gibs/agibs.mdl" );
-	CBaseEntity::PrecacheModel ("models/weapons/v_hands.mdl");
+	CBaseEntity::PrecacheModel("models/gibs/agibs.mdl");
+	CBaseEntity::PrecacheModel("models/weapons/v_hands.mdl");
 	//BG2 - Tjoppen - this seems like a good place to precache the musket ball model
-	CBaseEntity::PrecacheModel( "models/game/musket_ball.mdl");
+	CBaseEntity::PrecacheModel("models/game/musket_ball.mdl");
 	//
 
 	//BG2 - Tjoppen - no "doot doot"-sound
 	/*CBaseEntity::PrecacheScriptSound( "HUDQuickInfo.LowAmmo" );
 	CBaseEntity::PrecacheScriptSound( "HUDQuickInfo.LowHealth" );*/
 
-	CBaseEntity::PrecacheScriptSound( "FX_AntlionImpact.ShellImpact" );
-	CBaseEntity::PrecacheScriptSound( "Missile.ShotDown" );
-	CBaseEntity::PrecacheScriptSound( "Bullets.DefaultNearmiss" );
+	CBaseEntity::PrecacheScriptSound("FX_AntlionImpact.ShellImpact");
+	CBaseEntity::PrecacheScriptSound("Missile.ShotDown");
+	CBaseEntity::PrecacheScriptSound("Bullets.DefaultNearmiss");
 	/* //BG2 - Useless anyway. -HairyPotter
 	CBaseEntity::PrecacheScriptSound( "Bullets.GunshipNearmiss" );
 	CBaseEntity::PrecacheScriptSound( "Bullets.StriderNearmiss" );
-	
+
 	CBaseEntity::PrecacheScriptSound( "Geiger.BeepHigh" );
 	CBaseEntity::PrecacheScriptSound( "Geiger.BeepLow" );
 	*/
@@ -165,19 +172,19 @@ void respawn( CBaseEntity *pEdict, bool fCopyCorpse )
 
 	if ( pPlayer )
 	{
-		if ( gpGlobals->curtime > pPlayer->GetDeathTime() + DEATH_ANIMATION_TIME )
-		{		
-			// respawn player
-			pPlayer->Spawn();			
-		}
-		else
-		{
-			pPlayer->SetNextThink( gpGlobals->curtime + 0.1f );
-		}
+	if ( gpGlobals->curtime > pPlayer->GetDeathTime() + DEATH_ANIMATION_TIME )
+	{
+	// respawn player
+	pPlayer->Spawn();
+	}
+	else
+	{
+	pPlayer->SetNextThink( gpGlobals->curtime + 0.1f );
+	}
 	}*/
-	CHL2MP_Player *pPlayer = ToHL2MPPlayer( pEdict );
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer(pEdict);
 
-	if ( pPlayer )
+	if (pPlayer)
 	{
 		//BG2 - Draco - Start(this is the part that supresses respawns when mp_respawnstyle != 0)
 		//if ( gpGlobals->curtime > pPlayer->GetDeathTime() + DEATH_ANIMATION_TIME )
@@ -195,7 +202,6 @@ void GameStartFrame( void )
 		return;
 
 	gpGlobals->teamplay = (teamplay.GetInt() != 0);
-
 }
 
 //=========================================================

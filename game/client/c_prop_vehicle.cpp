@@ -201,7 +201,7 @@ void C_PropVehicleDriveable::DampenEyePosition( Vector &vecVehicleEyePos, QAngle
 //-----------------------------------------------------------------------------
 // Purpose: Modify the player view/camera while in a vehicle
 //-----------------------------------------------------------------------------
-void C_PropVehicleDriveable::GetVehicleViewPosition( int nRole, Vector *pAbsOrigin, QAngle *pAbsAngles, float *pFOV  )
+void C_PropVehicleDriveable::GetVehicleViewPosition( int nRole, Vector *pAbsOrigin, QAngle *pAbsAngles, float *pFOV /*=NULL*/ )
 {
 	SharedVehicleViewSmoothing( m_hPlayer,
 								pAbsOrigin, pAbsAngles,
@@ -418,5 +418,5 @@ void C_PropVehicleDriveable::OnExitedVehicle( C_BaseCombatCharacter *pPassenger 
 	// NVNT notify haptics system of navigation exit
 	HapticsExitedVehicle(this,pPassenger);
 #endif
-} 
+}
 

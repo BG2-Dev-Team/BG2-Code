@@ -92,7 +92,6 @@ protected:
 
 	vgui::SectionedListPanel *m_pPlayerList;
 	vgui::SectionedListPanel *m_pBritishPlayerList; //BG2 - HairyPotter
-
 	int				m_iSectionId; // the current section we are entering into
 
 	int s_VoiceImage[5];

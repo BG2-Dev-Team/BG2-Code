@@ -21,7 +21,6 @@
 #endif
 // NVNT end extra includes
 
-
 #if !defined( CLIENT_DLL )
 
 // Game DLL Headers
@@ -35,7 +34,14 @@
 	#include "hl2mp_player.h" //BG2 - HairyPotter
 #endif
 
+#else
+#ifdef HL2MP
+	#include "c_hl2mp_player.h"
 #endif
+
+#endif
+
+#include "vprof.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -57,39 +63,50 @@ ConVar viewmodel_adjust_up( "viewmodel_adjust_up", "0", FCVAR_REPLICATED | FCVAR
 ConVar viewmodel_adjust_pitch( "viewmodel_adjust_pitch", "0", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar viewmodel_adjust_yaw( "viewmodel_adjust_yaw", "0", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar viewmodel_adjust_roll( "viewmodel_adjust_roll", "0", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar viewmodel_adjust_fov( "viewmodel_adjust_fov", "0", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar viewmodel_adjust_fov("viewmodel_adjust_fov", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
 #endif
 
-Vector CBaseCombatWeapon::GetIronsightPositionOffset( void ) const
+Vector CBaseCombatWeapon::GetIronsightPositionOffset(void) const
 {
 #if defined( TWEAK_IRONSIGHTS )
-	if( viewmodel_adjust_enabled.GetBool() ) //Out of the way, you!
-		return Vector( viewmodel_adjust_forward.GetFloat(), viewmodel_adjust_right.GetFloat(), viewmodel_adjust_up.GetFloat() );
+	if (viewmodel_adjust_enabled.GetBool()) //Out of the way, you!
+		return Vector(viewmodel_adjust_forward.GetFloat(), viewmodel_adjust_right.GetFloat(), viewmodel_adjust_up.GetFloat());
 #endif
 	return GetWpnData().vecIronsightPosOffset;
 }
- 
-QAngle CBaseCombatWeapon::GetIronsightAngleOffset( void ) const
+
+QAngle CBaseCombatWeapon::GetIronsightAngleOffset(void) const
 {
 #if defined( TWEAK_IRONSIGHTS )
-	if( viewmodel_adjust_enabled.GetBool() ) //Out of the way, you!
-		return QAngle( viewmodel_adjust_pitch.GetFloat(), viewmodel_adjust_yaw.GetFloat(), viewmodel_adjust_roll.GetFloat() );
+	if (viewmodel_adjust_enabled.GetBool()) //Out of the way, you!
+		return QAngle(viewmodel_adjust_pitch.GetFloat(), viewmodel_adjust_yaw.GetFloat(), viewmodel_adjust_roll.GetFloat());
 #endif
 	return GetWpnData().angIronsightAngOffset;
 }
- 
-float CBaseCombatWeapon::GetIronsightFOVOffset( void ) const
+
+float CBaseCombatWeapon::GetIronsightFOVOffset(void) const
 {
 #if defined( TWEAK_IRONSIGHTS )
-	if( viewmodel_adjust_enabled.GetBool() ) //Out of the way, you!
+	if (viewmodel_adjust_enabled.GetBool()) //Out of the way, you!
 		return viewmodel_adjust_fov.GetFloat();
 #endif
-	return flIronsightFOVOffset; //Just do what the script says!
+	float offset = flIronsightFOVOffset;
+
+	//BG3 - Awesome - make rifle's FOV zoom dependent on crouching!
+#ifdef CLIENT_DLL
+	C_HL2MP_Player * pOwner = ToHL2MPPlayer(GetOwner());
+#else
+	CHL2MP_Player * pOwner = ToHL2MPPlayer(GetOwner());
+#endif
+	if (weaponType == RIFLE && pOwner && (pOwner->m_nButtons & IN_DUCK)) {
+		offset *= 1.5;
+	}
+		
+	return offset; //Just do what the script says!
 }
 //
 
 extern bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPlayer );
-
 
 CBaseCombatWeapon::CBaseCombatWeapon()
 {
@@ -101,16 +118,17 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 	m_fMinRange2		= 65;
 	m_fMaxRange1		= 1024;
 	m_fMaxRange2		= 1024;
-
-	m_bReloadsSingly	= false;
 	//BG2 - Tjoppen - default to no automatic reload
-	m_bDontAutoreload	= false;
+	m_bDontAutoreload = false;
 
 	//BG2 -Added for Iron Sights Testing. Credits to z33ky for the code. -HairyPotter
 	m_bIsIronsighted = false;
 	m_flIronsightedTime = 0.0f;
 	m_flNextDisableIronsights = 0;
+	weaponType = GENERIC; //BG3 - default value - Awesome
 	//
+
+	m_bReloadsSingly	= false;
 
 	// Defaults to zero
 	m_nViewModelIndex	= 0;
@@ -203,7 +221,19 @@ void CBaseCombatWeapon::GiveDefaultAmmo( void )
 //-----------------------------------------------------------------------------
 void CBaseCombatWeapon::Spawn( void )
 {
+	bool bPrecacheAllowed = CBaseEntity::IsPrecacheAllowed();
+	if (!bPrecacheAllowed)
+	{
+		tmEnter( TELEMETRY_LEVEL1, TMZF_NONE, "LateWeaponPrecache" );
+	}
+
 	Precache();
+
+	if (!bPrecacheAllowed)
+	{
+		tmLeave( TELEMETRY_LEVEL1 );
+	}
+
 
 	BaseClass::Spawn();
 
@@ -552,8 +582,8 @@ CHudTexture const *CBaseCombatWeapon::GetSpriteZoomedCrosshair( void ) const
 CHudTexture const *CBaseCombatWeapon::GetSpriteZoomedAutoaim( void ) const
 {
 	return GetWpnData().iconZoomedAutoaim;
-}
-*/
+}*/
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -683,52 +713,52 @@ float CBaseCombatWeapon::GetWeaponIdleTime( void )
 }
 
 //BG2 -Added for Iron Sights Testing. Credits to z33ky for the code. -HairyPotter
-bool CBaseCombatWeapon::IsIronsighted( void )
+bool CBaseCombatWeapon::IsIronsighted(void)
 {
-	return ( m_bIsIronsighted  );
+	return (m_bIsIronsighted);
 }
 
-void CBaseCombatWeapon::EnableIronsights( void )
+void CBaseCombatWeapon::EnableIronsights(void)
 {
-	if( m_bIsIronsighted )
-		return;
- 
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
- 
-	if( !pOwner )
-		return;
- 
-#ifndef CLIENT_DLL
-	if( !pOwner->SetFOV( this, pOwner->GetDefaultFOV()+GetIronsightFOVOffset(), IRONSIGHTS_FOV_IN_TIME ) ) //modify these values to adjust how fast the fov is applied
+	if (m_bIsIronsighted)
 		return;
 
-	if ( !m_iClip1 )
-		SendWeaponAnim( ACT_FORCE_STABLE_EMPTY ); //Dummy animation that will cancel out the idle anim.
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+
+	if (!pOwner)
+		return;
+
+#ifndef CLIENT_DLL
+	if (!pOwner->SetFOV(this, pOwner->GetDefaultFOV() + GetIronsightFOVOffset(), IRONSIGHTS_FOV_IN_TIME)) //modify these values to adjust how fast the fov is applied
+		return;
+
+	if (!m_iClip1)
+		SendWeaponAnim(ACT_FORCE_STABLE_EMPTY); //Dummy animation that will cancel out the idle anim.
 	else
-		SendWeaponAnim( ACT_FORCE_STABLE ); //Dummy animation that will cancel out the idle anim.
+		SendWeaponAnim(ACT_FORCE_STABLE); //Dummy animation that will cancel out the idle anim.
 
 	m_bIsIronsighted = true;
 	m_flIronsightedTime = gpGlobals->curtime;
 #endif
 
 	//delay both attacks, but make sure we don't roll back the attack times
-	m_flNextPrimaryAttack   = max(m_flNextPrimaryAttack,   gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_IN);
+	m_flNextPrimaryAttack = max(m_flNextPrimaryAttack, gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_IN);
 	m_flNextSecondaryAttack = max(m_flNextSecondaryAttack, gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_IN);
 	m_flNextDisableIronsights = gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_IN;
 }
- 
-void CBaseCombatWeapon::DisableIronsights( void )
+
+void CBaseCombatWeapon::DisableIronsights(void)
 {
-	if( !m_bIsIronsighted )
+	if (!m_bIsIronsighted)
 		return;
- 
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
- 
-	if( !pOwner )
+
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+
+	if (!pOwner)
 		return;
- 
+
 #ifndef CLIENT_DLL
-	if( !pOwner->SetFOV( this, 0, IRONSIGHTS_FOV_OUT_TIME ) ) //modify these values to adjust how fast the fov is applied
+	if (!pOwner->SetFOV(this, 0, IRONSIGHTS_FOV_OUT_TIME)) //modify these values to adjust how fast the fov is applied
 		return;
 
 	m_bIsIronsighted = false;
@@ -736,7 +766,7 @@ void CBaseCombatWeapon::DisableIronsights( void )
 #endif
 
 	//delay both attacks, but make sure we don't roll back the attack times
-	m_flNextPrimaryAttack   = max(m_flNextPrimaryAttack,   gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_OUT);
+	m_flNextPrimaryAttack = max(m_flNextPrimaryAttack, gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_OUT);
 	m_flNextSecondaryAttack = max(m_flNextSecondaryAttack, gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_OUT);
 }
 //
@@ -899,8 +929,8 @@ void CBaseCombatWeapon::GiveTo( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 void CBaseCombatWeapon::DefaultTouch( CBaseEntity *pOther )
 {
-//BG2 - Tjoppen - no weapon pickup
-/*#if !defined( CLIENT_DLL )
+	//BG2 - Tjoppen - no weapon pickup
+	/*#if !defined( CLIENT_DLL )
 	// Can't pick up dissolving weapons
 	if ( IsDissolving() )
 		return;
@@ -927,7 +957,7 @@ void CBaseCombatWeapon::DefaultTouch( CBaseEntity *pOther )
 	{
 		OnPickedUp( pPlayer );
 	}
-#endif*/
+#endif */
 }
 
 //---------------------------------------------------------
@@ -1221,7 +1251,7 @@ float CBaseCombatWeapon::GetViewModelSequenceDuration()
 	return vm->SequenceDuration();
 }
 
-bool CBaseCombatWeapon::IsViewModelSequenceFinished( void )
+bool CBaseCombatWeapon::IsViewModelSequenceFinished( void ) const
 {
 	// These are not valid activities and always complete immediately
 	if ( GetActivity() == ACT_RESET || GetActivity() == ACT_INVALID )
@@ -1255,10 +1285,10 @@ void CBaseCombatWeapon::SetViewModel()
 	CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex, false );
 	int WeaponSkin = pOwner->GetActiveWeapon()->m_nSkin; //BG2 - HACKHACK Sets the weapon skin for viewmodel -HairyPotter
 
-	if ( vm == NULL )
+	if (vm == NULL)
 		return;
-	Assert( vm->ViewModelIndex() == m_nViewModelIndex );
-	vm->SetWeaponModel( GetViewModel( m_nViewModelIndex ), this );
+	Assert(vm->ViewModelIndex() == m_nViewModelIndex);
+	vm->SetWeaponModel(GetViewModel(m_nViewModelIndex), this);
 	vm->m_nSkin = WeaponSkin; //BG2 - HACKHACK Sets the weapon skin for viewmodel - HairyPotter
 }
 
@@ -1267,7 +1297,7 @@ void CBaseCombatWeapon::SetViewModel()
 // Input  : iActivity - activity to play
 //-----------------------------------------------------------------------------
 bool CBaseCombatWeapon::SendWeaponAnim( int iActivity )
-{
+{	
 	// NVNT notify the haptics system of this weapons new activity
 #ifdef WIN32
 #ifdef CLIENT_DLL
@@ -1447,20 +1477,20 @@ bool CBaseCombatWeapon::ReloadOrSwitchWeapons( void )
 	{
 		// Weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
 		//BG2 - Tjoppen - don't automatically reload
-		/*if ( UsesClipsForAmmo1() && 
-			 (m_iClip1 == 0) && 
-			 (GetWeaponFlags() & ITEM_FLAG_NOAUTORELOAD) == false && 
-			 m_flNextPrimaryAttack < gpGlobals->curtime && 
-			 m_flNextSecondaryAttack < gpGlobals->curtime )*/
-		if ( UsesClipsForAmmo1() && 
-			 (m_iClip1 == 0) && 
-			 (GetWeaponFlags() & ITEM_FLAG_NOAUTORELOAD) == false && 
-			 m_flNextPrimaryAttack < gpGlobals->curtime && 
-			 m_flNextSecondaryAttack < gpGlobals->curtime &&
-			 !m_bDontAutoreload )
+		/*if ( UsesClipsForAmmo1() &&
+		(m_iClip1 == 0) &&
+		(GetWeaponFlags() & ITEM_FLAG_NOAUTORELOAD) == false &&
+		m_flNextPrimaryAttack < gpGlobals->curtime &&
+		m_flNextSecondaryAttack < gpGlobals->curtime )*/
+		if (UsesClipsForAmmo1() &&
+			(m_iClip1 == 0) &&
+			(GetWeaponFlags() & ITEM_FLAG_NOAUTORELOAD) == false &&
+			m_flNextPrimaryAttack < gpGlobals->curtime &&
+			m_flNextSecondaryAttack < gpGlobals->curtime &&
+			!m_bDontAutoreload)
 		{
 			// if we're successfully reloading, we're done
-			if ( Reload() )
+			if (Reload())
 				return true;
 		}
 	}
@@ -1540,18 +1570,23 @@ bool CBaseCombatWeapon::Deploy( )
 	QAngle angIronsightAngOffset = GetIronsightAngleOffset();
 
 	//BG2 - This is here to help test the viewmodel settings for Ironsights. -HairyPotter
-	viewmodel_adjust_forward.SetValue( vecIronsightPosOffset.x ); //Forward
-	viewmodel_adjust_right.SetValue( vecIronsightPosOffset.y ); //Right
-	viewmodel_adjust_up.SetValue( vecIronsightPosOffset.z ); //Up
-	viewmodel_adjust_pitch.SetValue( angIronsightAngOffset[PITCH] );
-	viewmodel_adjust_yaw.SetValue( angIronsightAngOffset[YAW] );
-	viewmodel_adjust_roll.SetValue( angIronsightAngOffset[ROLL] );
-	viewmodel_adjust_fov.SetValue( flIronsightFOVOffset );
+	viewmodel_adjust_forward.SetValue(vecIronsightPosOffset.x); //Forward
+	viewmodel_adjust_right.SetValue(vecIronsightPosOffset.y); //Right
+	viewmodel_adjust_up.SetValue(vecIronsightPosOffset.z); //Up
+	viewmodel_adjust_pitch.SetValue(angIronsightAngOffset[PITCH]);
+	viewmodel_adjust_yaw.SetValue(angIronsightAngOffset[YAW]);
+	viewmodel_adjust_roll.SetValue(angIronsightAngOffset[ROLL]);
+	viewmodel_adjust_fov.SetValue(flIronsightFOVOffset);
 	//
 #endif
 
 	MDLCACHE_CRITICAL_SECTION();
-	return DefaultDeploy( (char*)GetViewModel(), (char*)GetWorldModel(), GetDrawActivity(), (char*)GetAnimPrefix() );
+	bool bResult = DefaultDeploy( (char*)GetViewModel(), (char*)GetWorldModel(), GetDrawActivity(), (char*)GetAnimPrefix() );
+
+	// override pose parameters
+	PoseParameterOverride( false );
+
+	return bResult;
 }
 
 Activity CBaseCombatWeapon::GetDrawActivity( void )
@@ -1573,10 +1608,10 @@ bool CBaseCombatWeapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 	CBaseCombatCharacter *pOwner = GetOwner();
 
 	//BG2 - Tjoppen - m_bCantAbortReload
-	if( m_bCantAbortReload && m_bInReload )
+	if (m_bCantAbortReload && m_bInReload)
 		return false;
-	else if ( pOwner && m_bInReload )
-		pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType ); //Let's just remove that shot from our ammo box. -HairyPotter
+	else if (pOwner && m_bInReload)
+		pOwner->RemoveAmmo(1, m_iPrimaryAmmoType); //Let's just remove that shot from our ammo box. -HairyPotter
 	//
 
 	// cancel any reload in progress.
@@ -1598,9 +1633,9 @@ bool CBaseCombatWeapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 
 #ifndef CLIENT_DLL
 	//BG2 - Play the player's holster animation - HairyPotter
-	if ( pOwner )
+	if (pOwner)
 	{
-		( ( CBasePlayer * )pOwner)->SetAnimation( PLAYER_HOLSTER );
+		((CBasePlayer *)pOwner)->SetAnimation(PLAYER_HOLSTER);
 	}
 #endif
 
@@ -1629,6 +1664,9 @@ bool CBaseCombatWeapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 		if( m_bReloadHudHintDisplayed )
 			RescindReloadHudHint();
 	}
+
+	// reset pose parameters
+	PoseParameterOverride( true );
 
 	return true;
 }
@@ -1726,6 +1764,11 @@ void CBaseCombatWeapon::ItemPreFrame( void )
 #endif
 }
 
+bool CBaseCombatWeapon::CanPerformSecondaryAttack() const
+{
+	return m_flNextSecondaryAttack <= gpGlobals->curtime;
+}
+
 //====================================================================================
 // WEAPON BEHAVIOUR
 //====================================================================================
@@ -1751,7 +1794,7 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	bool bFired = false;
 
 	// Secondary attack has priority
-	if ((pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime))
+	if ((pOwner->m_nButtons & IN_ATTACK2) && CanPerformSecondaryAttack() )
 	{
 		if (UsesSecondaryAmmo() && pOwner->GetAmmoCount(m_iSecondaryAmmoType)<=0 )
 		{
@@ -1799,7 +1842,7 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	if ( !bFired && (pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
 		// Clip empty? Or out of ammo on a no-clip weapon?
-		if ( !IsMeleeWeapon() &&
+		if (!IsMeleeWeapon() &&
 			//BG2 - Tjoppen - IsMeleeWeapon doesn't work for some reason, so assume melee doesn't use ammo
 			m_iPrimaryAmmoType > -1 &&
 			// if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
@@ -1835,7 +1878,7 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 			/*
 			if ( AutoFiresFullClip() )
 			{
-				m_bFiringWholeClip = true;
+			m_bFiringWholeClip = true;
 			}
 			*/
 
@@ -1847,8 +1890,8 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 
 	// -----------------------
 	//  Reload pressed / Clip Empty
-	// -----------------------
-	if ( ( pOwner->m_nButtons & IN_RELOAD ) && UsesClipsForAmmo1() && !m_bInReload ) 
+	//  Can only start the Reload Cycle after the firing cycle
+	if ( ( pOwner->m_nButtons & IN_RELOAD ) && m_flNextPrimaryAttack <= gpGlobals->curtime && UsesClipsForAmmo1() && !m_bInReload ) 
 	{
 		// reload when reload is pressed, or if no buttons are down and weapon is empty.
 		Reload();
@@ -1856,13 +1899,13 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	}
 
 	//BG2 - only toggling ironsights only if we have them, we're not in a reload and we're not too soon after the last attack
-	if ( m_bWeaponHasSights && !m_bInReload )
+	if (m_bWeaponHasSights && !m_bInReload)
 	{
-		if ( (pOwner->m_nButtons & IN_ZOOM) && gpGlobals->curtime > m_flNextPrimaryAttack && gpGlobals->curtime > m_flNextSecondaryAttack )
+		if ((pOwner->m_nButtons & IN_ZOOM) && gpGlobals->curtime > m_flNextPrimaryAttack && gpGlobals->curtime > m_flNextSecondaryAttack)
 		{
 			EnableIronsights();
 		}
-		else if ( !(pOwner->m_nButtons & IN_ZOOM) && gpGlobals->curtime > m_flNextDisableIronsights )
+		else if (!(pOwner->m_nButtons & IN_ZOOM) && gpGlobals->curtime > m_flNextDisableIronsights)
 		{
 			DisableIronsights();
 		}
@@ -2071,7 +2114,7 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 		return false;
 
 	//BG2 - Tjoppen - don't reload under water
-	if( pOwner->GetWaterLevel() > 2 )
+	if (pOwner->GetWaterLevel() > 2)
 		return false;
 	//
 
@@ -2102,10 +2145,10 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 		return false;
 
 	//BG2 - Tjoppen - server side reload sound
-//#ifdef CLIENT_DLL
+	//#ifdef CLIENT_DLL
 	// Play reload
-	WeaponSound( RELOAD );
-//#endif
+	WeaponSound(RELOAD);
+	//#endif
 	SendWeaponAnim( iActivity );
 
 	// Play the player's reload animation
@@ -2122,7 +2165,7 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 	m_bInReload = true;
 
 	//BG2 - Disable Iron sights on reload. -HairyPotter
-	if( m_bIsIronsighted )
+	if (m_bIsIronsighted)
 		DisableIronsights();
 	//
 
@@ -2453,7 +2496,7 @@ bool CBaseCombatWeapon::SetIdealActivity( Activity ideal )
 	// Don't use transitions when we're deploying
 	//BG2 - Tjoppen - fixed for empty draw anim
 	//if ( ideal != ACT_VM_DRAW && IsWeaponVisible() && nextSequence != m_nIdealSequence )
-	if ( ideal != GetDrawActivity() && IsWeaponVisible() && nextSequence != m_nIdealSequence )
+	if (ideal != GetDrawActivity() && IsWeaponVisible() && nextSequence != m_nIdealSequence)
 	{
 		//Set our activity to the next transitional animation
 		SetActivity( ACT_TRANSITION );
@@ -2471,7 +2514,7 @@ bool CBaseCombatWeapon::SetIdealActivity( Activity ideal )
 	//Set the next time the weapon will idle
 	//BG2 - Tjoppen - don't idle immediately a.k.a. behave like HL1
 	//SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
-	SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() + random->RandomFloat( 5.f, 15.f ) );
+	SetWeaponIdleTime(gpGlobals->curtime + SequenceDuration() + random->RandomFloat(5.f, 15.f));
 	return true;
 }
 
@@ -2518,22 +2561,52 @@ bool CBaseCombatWeapon::IsLocked( CBaseEntity *pAsker )
 //-----------------------------------------------------------------------------
 Activity CBaseCombatWeapon::ActivityOverride( Activity baseAct, bool *pRequired )
 {
-	acttable_t *pTable = ActivityList();
-	int actCount = ActivityListCount();
+	int actCount = 0;
+	acttable_t *pTable = ActivityList( actCount );
 
-	for ( int i = 0; i < actCount; i++, pTable++ )
+	for ( int i = 0; i < actCount; i++ )
 	{
-		if ( baseAct == pTable->baseAct )
+		const acttable_t& act = pTable[i];
+		if ( baseAct == act.baseAct )
 		{
 			if (pRequired)
 			{
-				*pRequired = pTable->required;
+				*pRequired = act.required;
 			}
-			return (Activity)pTable->weaponAct;
+			return (Activity)act.weaponAct;
 		}
 	}
 	return baseAct;
 }
+
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CBaseCombatWeapon::PoseParameterOverride( bool bReset )
+{
+	CBaseCombatCharacter *pOwner = GetOwner();
+	if ( !pOwner )
+		return;
+
+	CStudioHdr *pStudioHdr = pOwner->GetModelPtr();
+	if ( !pStudioHdr )
+		return;
+	
+	int iCount = 0;
+	poseparamtable_t *pPoseParamList = PoseParamList( iCount );
+	if ( pPoseParamList )
+	{
+		for ( int i=0; i<iCount; ++i )
+		{
+			int iPoseParam = pOwner->LookupPoseParameter( pStudioHdr, pPoseParamList[i].pszName );
+		
+			if ( iPoseParam != -1 )
+				pOwner->SetPoseParameter( iPoseParam, bReset ? 0 : pPoseParamList[i].flValue );
+		}
+	}
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -2823,6 +2896,13 @@ void* SendProxy_SendNonLocalWeaponDataTable( const SendProp *pProp, const void *
 }
 REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_SendNonLocalWeaponDataTable );
 
+#else
+void CBaseCombatWeapon::RecvProxy_WeaponState( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	CBaseCombatWeapon *pWeapon = (CBaseCombatWeapon*)pStruct;
+	pWeapon->m_iState = pData->m_Value.m_Int;
+	pWeapon->UpdateVisibility();
+}
 #endif
 
 #if PREDICTION_ERROR_CHECK_LEVEL > 1
@@ -2839,10 +2919,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_LocalActiveWeaponData )
 	SendPropTime( SENDINFO( m_flNextSecondaryAttack ) ),
 	SendPropInt( SENDINFO( m_nNextThinkTick ) ),
 	SendPropTime( SENDINFO( m_flTimeWeaponIdle ) ),
-
-#if defined( TF_DLL )
-	SendPropExclude( "DT_AnimTimeMustBeFirst" , "m_flAnimTime" ),
-#endif
 
 #else
 	RecvPropTime( RECVINFO( m_flNextPrimaryAttack ) ),
@@ -2900,11 +2976,11 @@ BEGIN_NETWORK_TABLE(CBaseCombatWeapon, DT_BaseCombatWeapon)
 	RecvPropDataTable("LocalActiveWeaponData", 0, 0, &REFERENCE_RECV_TABLE(DT_LocalActiveWeaponData)),
 	RecvPropInt( RECVINFO(m_iViewModelIndex)),
 	RecvPropInt( RECVINFO(m_iWorldModelIndex)),
-	RecvPropInt( RECVINFO(m_iState )),
+	RecvPropInt( RECVINFO(m_iState), 0, &CBaseCombatWeapon::RecvProxy_WeaponState ),
 	RecvPropEHandle( RECVINFO(m_hOwner ) ),
 	//BG2 -Added for Iron Sights Testing. Credits to z33ky for the code. -HairyPotter
-	RecvPropBool( RECVINFO( m_bIsIronsighted ) ),
-	RecvPropFloat( RECVINFO( m_flIronsightedTime ) ),
+	RecvPropBool(RECVINFO(m_bIsIronsighted)),
+	RecvPropFloat(RECVINFO(m_flIronsightedTime)),
 	//
 #endif
 END_NETWORK_TABLE()

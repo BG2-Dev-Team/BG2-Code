@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -19,11 +19,13 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <TargetName>client</TargetName>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <TargetName>client</TargetName>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -41,22 +43,22 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\Debug_mod_hl2mp\</IntDir>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.dll</TargetExt>
     <ExecutablePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\devtools\vstools;$(ExecutablePath);$(Path)</ExecutablePath>
-    <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</PreBuildEventUseInBuild>
+    <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</PreBuildEventUseInBuild>
     <PreLinkEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</PreLinkEventUseInBuild>
     <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</IgnoreImportLibrary>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</GenerateManifest>
-    <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</PostBuildEventUseInBuild>
+    <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</PostBuildEventUseInBuild>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\Release_mod_hl2mp\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\Release_mod_hl2mp\</IntDir>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.dll</TargetExt>
     <ExecutablePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\devtools\vstools;$(ExecutablePath);$(Path)</ExecutablePath>
-    <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreBuildEventUseInBuild>
+    <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</PreBuildEventUseInBuild>
     <PreLinkEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</PreLinkEventUseInBuild>
     <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</IgnoreImportLibrary>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</GenerateManifest>
-    <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PostBuildEventUseInBuild>
+    <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -68,10 +70,10 @@ if ERRORLEVEL 1 exit /b 1
 </Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalOptions>/Zm200</AdditionalOptions>
+      <AdditionalOptions>/Zm200 /Gw /Zc:inline</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>.\;..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\client\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;..\..\vgui2\include;..\..\vgui2\controls;..\..\game\shared;.\game_controls;..\..\thirdparty\sixensesdk\include;hl2mp\ui;.\hl2mp;..\..\game\shared\hl2mp;.\hl2;.\hl2\elements;..\..\game\shared\hl2</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>VPC;RAD_TELEMETRY_DISABLED;_HAS_ITERATOR_DEBUGGING=0;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_ALLOW_RUNTIME_LIBRARY_MISMATCH;_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH;_ALLOW_MSC_VER_MISMATCH;%(PreprocessorDefinitions);COMPILER_MSVC32;COMPILER_MSVC32;COMPILER_MSVC;_DLL_EXT=.dll;DLLNAME=client;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;DEV_BUILD;FRAME_POINTER_OMISSION_DISABLED;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;ENABLE_CHROMEHTMLWINDOW;fopen=dont_use_fopen;HL2MP;HL2_CLIENT_DLL;_EXTERNAL_DLL_EXT=.dll;VPCGAMECAPS=HL2MP;PROJECTDIR=C:\Users\Andrew\Desktop\source-sdk-2013\mp\src\game\client;_DLL_EXT=.dll;SOURCE1=1;VPCGAME=hl2mp</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VPC;RAD_TELEMETRY_DISABLED;_HAS_ITERATOR_DEBUGGING=0;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_ALLOW_RUNTIME_LIBRARY_MISMATCH;_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH;_ALLOW_MSC_VER_MISMATCH;%(PreprocessorDefinitions);COMPILER_MSVC32;COMPILER_MSVC32;COMPILER_MSVC;_DLL_EXT=.dll;DLLNAME=client;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;DEV_BUILD;FRAME_POINTER_OMISSION_DISABLED;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;fopen=dont_use_fopen;HL2MP;HL2_CLIENT_DLL;_EXTERNAL_DLL_EXT=.dll;VPCGAMECAPS=HL2MP;PROJECTDIR=F:\Users\Awesome\source-sdk-2013\mp\src\game\client;_DLL_EXT=.dll;SOURCE1=1;VPCGAME=hl2mp</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -90,9 +92,11 @@ if ERRORLEVEL 1 exit /b 1
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
       <BrowseInformation>false</BrowseInformation>
       <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
       <UseFullPaths>true</UseFullPaths>
+      <DisableSpecificWarnings>;4316</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <BrowseInformationFile>$(IntDir)/</BrowseInformationFile>
       <ErrorReporting>Prompt</ErrorReporting>
@@ -110,7 +114,7 @@ if ERRORLEVEL 1 exit /b 1
       <OutputFile>$(OutDir)\client.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\..\lib\common\.;..\..\lib\public\.</AdditionalLibraryDirectories>
-      <IgnoreSpecificDefaultLibraries>libc;libcd;libcmt</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>libc;libcd;libcmt;libcpmt;libcpmt1</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)/$(TargetName).pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -160,13 +164,13 @@ if ERRORLEVEL 1 exit /b 1
 </Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalOptions>/Zm200 /d2Zi+</AdditionalOptions>
+      <AdditionalOptions>/Zm200 /Zo /Gw /Zc:inline</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <AdditionalIncludeDirectories>.\;..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\client\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;..\..\vgui2\include;..\..\vgui2\controls;..\..\game\shared;.\game_controls;..\..\thirdparty\sixensesdk\include;hl2mp\ui;.\hl2mp;..\..\game\shared\hl2mp;.\hl2;.\hl2\elements;..\..\game\shared\hl2</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>VPC;RAD_TELEMETRY_DISABLED;WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_ALLOW_RUNTIME_LIBRARY_MISMATCH;_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH;_ALLOW_MSC_VER_MISMATCH;%(PreprocessorDefinitions);COMPILER_MSVC32;COMPILER_MSVC32;COMPILER_MSVC;_DLL_EXT=.dll;DLLNAME=client;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;DEV_BUILD;FRAME_POINTER_OMISSION_DISABLED;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;ENABLE_CHROMEHTMLWINDOW;fopen=dont_use_fopen;HL2MP;HL2_CLIENT_DLL;_EXTERNAL_DLL_EXT=.dll;VPCGAMECAPS=HL2MP;PROJECTDIR=C:\Users\Andrew\Desktop\source-sdk-2013\mp\src\game\client;_DLL_EXT=.dll;SOURCE1=1;VPCGAME=hl2mp</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VPC;RAD_TELEMETRY_DISABLED;WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_ALLOW_RUNTIME_LIBRARY_MISMATCH;_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH;_ALLOW_MSC_VER_MISMATCH;%(PreprocessorDefinitions);COMPILER_MSVC32;COMPILER_MSVC32;COMPILER_MSVC;_DLL_EXT=.dll;DLLNAME=client;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;DEV_BUILD;FRAME_POINTER_OMISSION_DISABLED;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;fopen=dont_use_fopen;HL2MP;HL2_CLIENT_DLL;_EXTERNAL_DLL_EXT=.dll;VPCGAMECAPS=HL2MP;PROJECTDIR=F:\Users\Awesome\source-sdk-2013\mp\src\game\client;_DLL_EXT=.dll;SOURCE1=1;VPCGAME=hl2mp</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -185,9 +189,11 @@ if ERRORLEVEL 1 exit /b 1
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
       <BrowseInformation>false</BrowseInformation>
       <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
       <UseFullPaths>true</UseFullPaths>
+      <DisableSpecificWarnings>;4316</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <BrowseInformationFile>$(IntDir)/</BrowseInformationFile>
       <ErrorReporting>Prompt</ErrorReporting>
@@ -205,8 +211,8 @@ if ERRORLEVEL 1 exit /b 1
       <OutputFile>$(OutDir)\client.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\..\lib\common\.;..\..\lib\public\.</AdditionalLibraryDirectories>
-      <IgnoreSpecificDefaultLibraries>libc;libcd;libcmtd</IgnoreSpecificDefaultLibraries>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>libc;libcd;libcmtd;libcpmtd;libcpmtd0;libcpmtd1</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)/$(TargetName).pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -217,7 +223,6 @@ if ERRORLEVEL 1 exit /b 1
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <Manifest>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -249,11 +254,11 @@ exit 1
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Library Include="..\..\lib\public\libprotobuf.lib" />
     <Library Include="..\..\lib\public\bitmap.lib" />
     <Library Include="..\..\lib\public\choreoobjects.lib" />
     <Library Include="..\..\lib\public\dmxloader.lib" />
     <Library Include="..\..\lib\common\libcurl.lib" />
+    <Library Include="..\..\lib\public\libprotobuf.lib" />
     <Library Include="..\..\lib\public\libz.lib" />
     <Library Include="..\..\lib\public\mathlib.lib" />
     <Library Include="..\..\lib\public\matsys_controls.lib" />
@@ -382,8 +387,8 @@ exit 1
     <ClInclude Include="..\..\game\shared\weapon_ifmsteadycam.h" />
     <ClInclude Include="..\..\game\shared\weapon_parse.h" />
     <ClInclude Include="..\..\game\shared\weapon_proficiency.h" />
-    <ClInclude Include="..\server\bg2\bullet.h" />
     <ClInclude Include="..\server\bg2\weapon_bg2base.h" />
+    <ClInclude Include="..\shared\bg2\bg2_player_shared.h" />
     <ClInclude Include="..\shared\bg2\ironsights.h" />
     <ClInclude Include="bg2\bg2smokeemitter.h" />
     <ClInclude Include="bg2\bg2_hud_main.h" />
@@ -393,12 +398,9 @@ exit 1
     <ClInclude Include="bg2\commmenu2.h" />
     <ClInclude Include="bg2\c_ctfflag.h" />
     <ClInclude Include="bg2\c_flag.h" />
-    <ClInclude Include="bg2\vgui_Panel_MainMenu.h" />
-    <ClInclude Include="bg2\hintbox.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
+    <ClInclude Include="bg2\hintbox.h" />
     <ClInclude Include="bg2\vgui_bg2_options.h" />
+    <ClInclude Include="bg2\vgui_Panel_MainMenu.h" />
     <ClInclude Include="game_controls\baseviewport.h" />
     <ClInclude Include="game_controls\clientscoreboarddialog.h" />
     <ClInclude Include="game_controls\commandmenu.h" />
@@ -868,6 +870,7 @@ exit 1
     <ClInclude Include="hl2\c_corpse.h" />
     <ClInclude Include="hl2\c_hl2_playerlocaldata.h" />
     <ClInclude Include="hl2\c_prop_combine_ball.h" />
+    <ClInclude Include="hl2\c_vehicle_crane.h" />
     <ClInclude Include="..\..\game\shared\hl2\citadel_effects_shared.h" />
     <ClInclude Include="..\..\game\shared\hl2\env_headcrabcanister_shared.h" />
     <ClInclude Include="..\..\game\shared\hl2\hl2_gamerules.h" />
@@ -897,37 +900,21 @@ exit 1
     <ClInclude Include="toolframework_client.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\server\bg2\bullet.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\server\bg2\weapon_bg2base.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\server\bg2\weapon_bg2weapons.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="..\server\bg2\weapon_bg2base.cpp" />
+    <ClCompile Include="..\server\bg2\weapon_bg2weapons.cpp" />
     <ClCompile Include="bg2\bg2_hud_ctf.cpp" />
     <ClCompile Include="bg2\bg2_hud_flags.cpp" />
     <ClCompile Include="bg2\bg2_hud_ironsights.cpp" />
     <ClCompile Include="bg2\bg2_hud_main.cpp" />
     <ClCompile Include="bg2\bg2_hud_pickup.cpp" />
     <ClCompile Include="bg2\bg2_hud_stamina.cpp" />
-    <ClCompile Include="bg2\bg2_mapintros.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="bg2\bg2_mapintros.cpp" />
     <ClCompile Include="bg2\classmenu.cpp" />
     <ClCompile Include="bg2\commmenu.cpp" />
     <ClCompile Include="bg2\commmenu2.cpp" />
     <ClCompile Include="bg2\c_ctfflag.cpp" />
     <ClCompile Include="bg2\c_flag.cpp" />
-    <ClCompile Include="bg2\hintbox.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="bg2\hintbox.cpp" />
     <ClCompile Include="bg2\vgui_Panel_MainMenu.cpp" />
     <ClCompile Include="mp3player.cpp" />
     <ClCompile Include="replay\cdll_replay.cpp" />
@@ -1400,6 +1387,10 @@ exit 1
     <ClCompile Include="hl2\c_func_tankmortar.cpp" />
     <ClCompile Include="hl2\c_hl2_playerlocaldata.cpp" />
     <ClCompile Include="hl2\c_info_teleporter_countdown.cpp" />
+    <ClCompile Include="hl2\c_npc_antlionguard.cpp" />
+    <ClCompile Include="hl2\c_npc_combinegunship.cpp" />
+    <ClCompile Include="hl2\c_npc_manhack.cpp" />
+    <ClCompile Include="hl2\c_npc_rollermine.cpp" />
     <ClCompile Include="hl2\c_plasma_beam_node.cpp" />
     <ClCompile Include="hl2\c_prop_combine_ball.cpp" />
     <ClCompile Include="hl2\c_rotorwash.cpp" />
@@ -1410,6 +1401,9 @@ exit 1
     <ClCompile Include="hl2\c_thumper_dust.cpp" />
     <ClCompile Include="hl2\c_vehicle_airboat.cpp" />
     <ClCompile Include="hl2\c_vehicle_cannon.cpp" />
+    <ClCompile Include="hl2\c_vehicle_crane.cpp" />
+    <ClCompile Include="hl2\c_vehicle_prisoner_pod.cpp" />
+    <ClCompile Include="episodic\c_vort_charge_token.cpp" />
     <ClCompile Include="hl2\c_weapon__stubs_hl2.cpp" />
     <ClCompile Include="hl2\c_weapon_crossbow.cpp" />
     <ClCompile Include="..\..\game\shared\hl2\env_headcrabcanister_shared.cpp" />
@@ -1554,18 +1548,16 @@ exit 1
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(Filename).obj</Outputs>
     </CustomBuild>
     <CustomBuild Include="client_hl2mp.vpc">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Running VPC CRC Check - client_hl2mp.vpc</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if exist "..\..\devtools\bin\vpc.exe" "..\..\devtools\bin\vpc.exe" -crc2 "client_hl2mp.vcxproj"
+if ERRORLEVEL 1 exit /b 1
+echo crc_complete &gt; F:\Users\Awesome\source-sdk-2013\mp\src\game\client\client_hl2mp.vpc.sentinel</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">F:\Users\Awesome\source-sdk-2013\mp\src\game\client\client_hl2mp.vpc.sentinel</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Running VPC CRC Check - client_hl2mp.vpc</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if exist "..\..\devtools\bin\vpc.exe" "..\..\devtools\bin\vpc.exe" -crc2 "client_hl2mp.vcxproj"
+if ERRORLEVEL 1 exit /b 1
+echo crc_complete &gt; F:\Users\Awesome\source-sdk-2013\mp\src\game\client\client_hl2mp.vpc.sentinel</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">F:\Users\Awesome\source-sdk-2013\mp\src\game\client\client_hl2mp.vpc.sentinel</Outputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

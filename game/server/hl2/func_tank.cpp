@@ -16,6 +16,7 @@
 #include "in_buttons.h"
 #include "soundent.h"
 #include "ndebugoverlay.h"
+//#include "grenade_beam.h" //BG2 - removed include
 #include "vstdlib/random.h"
 #include "engine/IEngineSound.h"
 #include "physics_cannister.h"
@@ -27,6 +28,7 @@
 #include "IEffects.h"
 #include "ai_basenpc.h"
 #include "ai_behavior_functank.h"
+//#include "weapon_rpg.h" //BG2 - removed include
 #include "effects.h"
 #include "iservervehicle.h"
 #include "soundenvelope.h"
@@ -1271,6 +1273,17 @@ void CFuncTank::NPC_Fire( void )
 	Vector vecBarrelEnd = WorldBarrelPosition();		
 	Vector vecForward;
 	AngleVectors( GetAbsAngles(), &vecForward );
+
+	//BG2 - removed references to squads - Awesome
+	/*
+	if ( (pNPC->CapabilitiesGet() & bits_CAP_NO_HIT_SQUADMATES) && pNPC->IsInSquad() )
+	{
+		// Avoid shooting squadmates.
+		if ( pNPC->IsSquadmateInSpread( vecBarrelEnd, vecBarrelEnd + vecForward * 2048, gTankSpread[m_spread].x, 8*12 ) )
+		{
+			return;
+		}
+	}*/
 
 	if ( !HasSpawnFlags( SF_TANK_ALLOW_PLAYER_HITS ) && (pNPC->CapabilitiesGet() & bits_CAP_NO_HIT_PLAYER) )
 	{
@@ -2541,6 +2554,46 @@ void CFuncTankPulseLaser::Precache(void)
 //------------------------------------------------------------------------------
 void CFuncTankPulseLaser::Fire( int bulletCount, const Vector &barrelEnd, const Vector &vecForward, CBaseEntity *pAttacker, bool bIgnoreSpread )
 {
+	//BG2 - found this removed - no lasers in BG2 - Awesome
+	/*
+	// --------------------------------------------------
+	//  Get direction vectors for spread
+	// --------------------------------------------------
+	Vector vecUp = Vector(0,0,1);
+	Vector vecRight;
+	CrossProduct ( vecForward,  vecUp,		vecRight );	
+	CrossProduct ( vecForward, -vecRight,   vecUp  );	
+
+	for ( int i = 0; i < bulletCount; i++ )
+	{
+		// get circular gaussian spread
+		float x, y, z;
+		do {
+			x = random->RandomFloat(-0.5,0.5) + random->RandomFloat(-0.5,0.5);
+			y = random->RandomFloat(-0.5,0.5) + random->RandomFloat(-0.5,0.5);
+			z = x*x+y*y;
+		} while (z > 1);
+
+		Vector vecDir = vecForward + x * gTankSpread[m_spread].x * vecRight + y * gTankSpread[m_spread].y * vecUp;
+
+		CGrenadeBeam *pPulse =  CGrenadeBeam::Create( pAttacker, barrelEnd);
+		pPulse->Format(m_flPulseColor, m_flPulseWidth);
+		pPulse->Shoot(vecDir,m_flPulseSpeed,m_flPulseLife,m_flPulseLag,m_iBulletDamage);
+
+		if ( m_sPulseFireSound != NULL_STRING )
+		{
+			CPASAttenuationFilter filter( this, 0.6f );
+
+			EmitSound_t ep;
+			ep.m_nChannel = CHAN_WEAPON;
+			ep.m_pSoundName = (char*)STRING(m_sPulseFireSound);
+			ep.m_flVolume = 1.0f;
+			ep.m_SoundLevel = SNDLVL_85dB;
+
+			EmitSound( filter, entindex(), ep );
+		}
+
+	}*/
 	CFuncTank::Fire( bulletCount, barrelEnd, vecForward, pAttacker, bIgnoreSpread );
 }
 
@@ -2677,6 +2730,22 @@ void CFuncTankRocket::Precache( void )
 
 void CFuncTankRocket::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread )
 {
+	//BG2 - removed RPGs - Awesome
+	/*
+	CMissile *pRocket = (CMissile *) CBaseEntity::Create( "rpg_missile", barrelEnd, GetAbsAngles(), this );
+	
+	pRocket->DumbFire();
+	pRocket->SetNextThink( gpGlobals->curtime + 0.1f );
+	pRocket->SetAbsVelocity( forward * m_flRocketSpeed );
+	if ( GetController() && GetController()->IsPlayer() )
+	{
+		pRocket->SetDamage( m_iBulletDamage );
+	}
+	else
+	{
+		pRocket->SetDamage( m_iBulletDamageVsPlayer );
+	}*/
+
 	CFuncTank::Fire( bulletCount, barrelEnd, forward, this, bIgnoreSpread );
 }
 
@@ -3022,7 +3091,7 @@ void CFuncTankAPCRocket::Spawn( void )
 	AddEffects( EF_NODRAW );
 	m_nSide = 0;
 	m_bDying = false;
-	//m_hLaserDot = CreateLaserDot( GetAbsOrigin(), this, false );
+	//m_hLaserDot = CreateLaserDot( GetAbsOrigin(), this, false ); //BG2 - removed reference to laserdot - Awesome
 	m_nBulletCount = m_nBurstCount;
 	SetSolid( SOLID_NONE );
 	SetLocalVelocity( vec3_origin );
@@ -3055,6 +3124,19 @@ void CFuncTankAPCRocket::FireDying( const Vector &barrelEnd )
 	QAngle angles;
 	VectorAngles( vecDir, angles );
 
+	//BG2 - removed references to rockets/rpg - Awesome
+	/*
+	CAPCMissile *pRocket = (CAPCMissile *) CAPCMissile::Create( barrelEnd, angles, vecVelocity, this );
+	float flDeathTime = random->RandomFloat( 0.3f, 0.5f );
+	if ( random->RandomFloat( 0.0f, 1.0f ) < 0.3f )
+	{
+		pRocket->ExplodeDelay( flDeathTime );
+	}
+	else
+	{
+		pRocket->AugerDelay( flDeathTime );
+	}*/
+
 	// Make erratic firing
 	m_fireRate = random->RandomFloat( DEATH_VOLLEY_MIN_FIRE_RATE, DEATH_VOLLEY_MAX_FIRE_RATE ); 
 	if ( --m_nBulletCount <= 0 )
@@ -3085,6 +3167,11 @@ void CFuncTankAPCRocket::Fire( int bulletCount, const Vector &barrelEnd, const V
 	QAngle angles;
 	VectorAngles( vecDir, angles );
 
+	//BG2 - removed reference to rockets/rpg
+	//CAPCMissile *pRocket = (CAPCMissile *) CAPCMissile::Create( barrelEnd, angles, vecVelocity, this );
+	//pRocket->IgniteDelay();
+	//
+
 	CFuncTank::Fire( bulletCount, barrelEnd, forward, this, bIgnoreSpread );
 
 	if ( --m_nBulletCount <= 0 )
@@ -3107,6 +3194,11 @@ void CFuncTankAPCRocket::Think()
 	}
 
 	BaseClass::Think();
+	//BG2 - removed references to laser dots - Awesome
+	//m_hLaserDot->SetAbsOrigin( m_sightOrigin );
+	//SetLaserDotTarget( m_hLaserDot, m_hFuncTankTarget );
+	//EnableLaserDot( m_hLaserDot, m_hFuncTankTarget != NULL );
+	//
 
 	if ( m_bDying )
 	{
@@ -3821,8 +3913,12 @@ void CFuncTankMortar::Fire( int bulletCount, const Vector &barrelEnd, const Vect
 		vNoise.AsVector2D().Random( -6*12, 6*12);
 		vNoise.z = 0;
 		
-		// Don't apply noise when attacking a bullseye.
-		vecProjectedPosition += vNoise;
+		//BG2 - found if statement removed when porting to 2016 - Awesome
+		//if( m_hTarget->Classify() != CLASS_BULLSEYE )
+		//{
+			// Don't apply noise when attacking a bullseye.
+			vecProjectedPosition += vNoise;
+		//}
 	}
 	else if ( IsPlayerManned() )
 	{

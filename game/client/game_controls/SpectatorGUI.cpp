@@ -38,10 +38,15 @@
 #include <imapoverview.h>
 #include <shareddefs.h>
 #include <igameresources.h>
-//Includes. -HairyPotter
+//BG2 - Includes. -HairyPotter
 #include "hl2mp_gamerules.h"
 #include "c_team.h"
 //
+
+#ifdef TF_CLIENT_DLL
+#include "tf_gamerules.h"
+void AddSubKeyNamed( KeyValues *pKeys, const char *pszName );
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -66,6 +71,7 @@ static const char *s_SpectatorModes[] =
 	"#Spec_Mode2",	// 	OBS_MODE_FIXED,		
 	"#Spec_Mode3",	// 	OBS_MODE_IN_EYE,	
 	"#Spec_Mode4",	// 	OBS_MODE_CHASE,		
+	"#Spec_Mode_POI",	// 	OBS_MODE_POI, PASSTIME
 	"#Spec_Mode5",	// 	OBS_MODE_ROAMING,	
 };
 
@@ -79,7 +85,6 @@ ConVar cl_spec_mode(
 
 //BG2 - Spectator menu system not needed, never used. Empty anyway. So we'll just remove it for now. -HairyPotter
 /*
-
 //-----------------------------------------------------------------------------
 // Purpose: left and right buttons pointing buttons
 //-----------------------------------------------------------------------------
@@ -390,9 +395,7 @@ void CSpectatorMenu::Update( void )
 	// HPE_END
 	//=============================================================================
 }
-
-*/// -- BG2
-
+*/// -- BG2 - Spec menu unused
 //-----------------------------------------------------------------------------
 // main spectator panel
 
@@ -613,6 +616,7 @@ void CSpectatorGUI::Update()
 	int specmode = GetSpectatorMode();
 	int playernum = GetSpectatorTarget();
 
+	//BG2 - I think the overview panel is disabled - found when porting to 2016 engine - Awesome
 	/*IViewPortPanel *overview = gViewPortInterface->FindPanelByName( PANEL_OVERVIEW );
 
 	if ( overview && overview->IsVisible() )
@@ -704,8 +708,6 @@ void CSpectatorGUI::Update()
 
 	SetLabelText("extrainfo", szEtxraInfo );
 	SetLabelText("titlelabel", szTitleLabel );
-
-	UpdateTimer();//BG2 - Fire that timer! -HairyPotter
 }
 
 //-----------------------------------------------------------------------------
@@ -713,7 +715,7 @@ void CSpectatorGUI::Update()
 //-----------------------------------------------------------------------------
 void CSpectatorGUI::UpdateTimer()
 {
-	wchar_t szText[ 64 ];	//BG2 - Tjoppen - Valve! Wrong size this used to be.
+	wchar_t szText[ 64 ]; //BG2 - Tjoppen - Valve! Wrong size this used to be. Used to be 63, now 64
 
 	//BG2 - Tjoppen - m_iWaveTime is deprecated
 	//int timer = HL2MPRules()->m_iWaveTime;
@@ -721,20 +723,22 @@ void CSpectatorGUI::UpdateTimer()
 	int timer = ceilf(HL2MPRules()->m_fLastRespawnWave + mp_respawntime.GetFloat() - gpGlobals->curtime);
 	//
 
-	_snwprintf ( szText, sizeof( szText ), L"%d:%d\n", (timer / 60), (timer % 60) );
+	_snwprintf(szText, sizeof(szText), L"%d:%d\n", (timer / 60), (timer % 60));
 
 	SetLabelText("timerlabel", szText );
-	
+
+	//BG2 - found these while porting to 2016 engine - flags work on timers? - Awesome
 	C_Team *pAmer = GetGlobalTeam(TEAM_AMERICANS);
 	C_Team *pBrit = GetGlobalTeam(TEAM_BRITISH);
 
 	szText[64] = 0;
-	_snwprintf ( szText, sizeof( szText ), L"%s %d\n", g_pVGuiLocalize->Find("#BG2_Spec_British_Score"), pBrit ? pBrit->Get_Score() : 0 );	//BG2 - Tjoppen - avoid NULL
-	SetLabelText("BritishScoreLabel",szText);
+	_snwprintf(szText, sizeof(szText), L"%s %d\n", g_pVGuiLocalize->Find("#BG2_Spec_British_Score"), pBrit ? pBrit->Get_Score() : 0);	//BG2 - Tjoppen - avoid NULL
+	SetLabelText("BritishScoreLabel", szText);
 
 	szText[64] = 0;
-	_snwprintf ( szText, sizeof( szText ), L"%s %d\n", g_pVGuiLocalize->Find("#BG2_Spec_American_Score"), pAmer ? pAmer->Get_Score() : 0 );//BG2 - Tjoppen - avoid NULL
-	SetLabelText("AmericanScoreLabel",szText);
+	_snwprintf(szText, sizeof(szText), L"%s %d\n", g_pVGuiLocalize->Find("#BG2_Spec_American_Score"), pAmer ? pAmer->Get_Score() : 0);//BG2 - Tjoppen - avoid NULL
+	SetLabelText("AmericanScoreLabel", szText);
+	//
 }
 
 static void ForwardSpecCmdToServer( const CCommand &args )
@@ -829,6 +833,8 @@ CON_COMMAND_F( spec_mode, "Set spectator mode", FCVAR_CLIENTCMD_CAN_EXECUTE )
 
 				if ( mode > LAST_PLAYER_OBSERVERMODE )
 					mode = OBS_MODE_IN_EYE;
+				else if ( mode == OBS_MODE_POI ) // PASSTIME skip POI mode since hltv doesn't have the entity data required to make it work
+					mode = OBS_MODE_ROAMING;
 			}
 			
 			// handle the command clientside

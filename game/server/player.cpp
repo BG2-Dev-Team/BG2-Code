@@ -72,6 +72,7 @@
 //BG2 - Tjoppen - health fix
 #include "player_resource.h"
 //
+#include "../shared/bg2/bg2_player_shared.h"
 
 #if defined USES_ECON_ITEMS
 #include "econ_wearable.h"
@@ -81,14 +82,20 @@
 #include "haptics/haptic_utils.h"
 
 #ifdef HL2_DLL
+#include "combine_mine.h"
 #include "weapon_physcannon.h"
 #endif
 
 ConVar autoaim_max_dist( "autoaim_max_dist", "2160" ); // 2160 = 180 feet
 ConVar autoaim_max_deflect( "autoaim_max_deflect", "0.99" );
 
+//#ifdef CSTRIKE_DLL
+//ConVar	spec_freeze_time( "spec_freeze_time", "5.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Time spend frozen in observer freeze cam." );
+//ConVar	spec_freeze_traveltime( "spec_freeze_traveltime", "0.7", FCVAR_CHEAT | FCVAR_REPLICATED, "Time taken to zoom in to frame a target in observer freeze cam.", true, 0.01, false, 0 );
+//#else
 ConVar	spec_freeze_time( "spec_freeze_time", "4.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Time spend frozen in observer freeze cam." );
 ConVar	spec_freeze_traveltime( "spec_freeze_traveltime", "0.4", FCVAR_CHEAT | FCVAR_REPLICATED, "Time taken to zoom in to frame a target in observer freeze cam.", true, 0.01, false, 0 );
+//#endif
 
 ConVar sv_bonus_challenge( "sv_bonus_challenge", "0", FCVAR_REPLICATED, "Set to values other than 0 to select a bonus map challenge type." );
 
@@ -174,21 +181,14 @@ extern void AddMultiDamage( const CTakeDamageInfo &info, CBaseEntity *pEntity );
 //#define MAX_SAFE_FALL_UNITS			( PLAYER_MAX_SAFE_FALL_DIST * 12 )
 
 // player damage adjusters
-/* //BG2 - These are useless now. -HairyPotter
-ConVar	sk_player_head( "sk_player_head","2" );
-ConVar	sk_player_chest( "sk_player_chest","1" );
-ConVar	sk_player_stomach( "sk_player_stomach","1" );
-ConVar	sk_player_arm( "sk_player_arm","1" );
-ConVar	sk_player_leg( "sk_player_leg","1" );
-*/
 //BG2 - Tjoppen - hitgroup modifiers. these are taken from BG 1.0F
-const float HIT_HEAD_DMG = 1.8378f;		//3.4 / 1.85
-const float HIT_CHEST_DMG = 1.0f;		//used to be 1.85
-const float HIT_STOMACH_DMG = 0.9865f;	//1.825 / 1.85
-const float HIT_ARM_DMG = 0.6757f;		//1.25 / 1.85
-const float HIT_LEG_DMG = 0.7297f;		//1.35 / 1.85
+//BG3 - Awesome - moved these definitions to bg2_player_shared.h
+const float HIT_HEAD_DMG	= DMG_MOD_HEAD;		//3.4 / 1.85
+const float HIT_CHEST_DMG	= DMG_MOD_CHEST;		//used to be 1.85
+const float HIT_STOMACH_DMG = DMG_MOD_STOMACH;	//1.825 / 1.85
+const float HIT_ARM_DMG		= DMG_MOD_ARM;		//1.25 / 1.85
+const float HIT_LEG_DMG		= DMG_MOD_LEG;		//1.35 / 1.85
 //
-
 
 //ConVar	player_usercommand_timeout( "player_usercommand_timeout", "10", 0, "After this many seconds without a usercommand from a player, the client is kicked." );
 #ifdef _DEBUG
@@ -320,7 +320,7 @@ BEGIN_DATADESC( CBasePlayer )
 	//DEFINE_FIELD( m_fNextSuicideTime, FIELD_TIME ),
 	// DEFINE_FIELD( m_PlayerInfo, CPlayerInfo ),
 
-	DEFINE_FIELD( m_flTimeStepSound, FIELD_TIME ), //BG2 - Commented - Hairypotter
+	DEFINE_FIELD(m_flTimeStepSound, FIELD_TIME), //BG2 - Commented - Hairypotter
 	DEFINE_FIELD( m_flSwimTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flDuckTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flDuckJumpTime, FIELD_TIME ),
@@ -593,7 +593,9 @@ CBasePlayer::CBasePlayer( )
 	m_bForceOrigin = false;
 	m_hVehicle = NULL;
 	m_pCurrentCommand = NULL;
-	
+	m_iLockViewanglesTickNumber = 0;
+	m_qangLockViewangles.Init();
+
 	// Setup our default FOV
 	m_iDefaultFOV = g_pGameRules->DefaultFOV();
 
@@ -643,6 +645,8 @@ CBasePlayer::CBasePlayer( )
 
 	m_flLastUserCommandTime = 0.f;
 	m_flMovementTimeForUserCmdProcessingRemaining = 0.0f;
+
+	m_flLastObjectiveTime = -1.f;
 
 	//BG2 - Tjoppen - name change spam prevention
 	m_fNextNameChange = gpGlobals->curtime;
@@ -907,9 +911,8 @@ void CBasePlayer::DrawDebugGeometryOverlays(void)
 //=========================================================
 void CBasePlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
-
 	//BG2 - Spawned just a while ago, make them invincible. Also die here. - HairyPotter
-	if ( gpGlobals->curtime < m_fLastRespawn )
+	if (gpGlobals->curtime < m_fLastRespawn)
 		return;
 	//
 
@@ -922,6 +925,9 @@ void CBasePlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 			// --------------------------------------------------
 			//  If an NPC check if friendly fire is disallowed
 			// --------------------------------------------------
+			//CAI_BaseNPC *pNPC = info.GetAttacker()->MyNPCPointer();
+			//if ( pNPC && (pNPC->CapabilitiesGet() & bits_CAP_NO_HIT_PLAYER) && pNPC->IRelationType( this ) != D_HT )
+				//return;
 
 			// Prevent team damage here so blood doesn't appear
 			if ( info.GetAttacker()->IsPlayer() )
@@ -933,21 +939,22 @@ void CBasePlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 
 		SetLastHitGroup( ptr->hitgroup );
 
-		
+		//BG3 - Awesome - this was here, but it's been moved to CHL2MP_Player to work with the other
+		//	damage scales. This ought to break bots, but...
 		//BG2 - Tjoppen - some Msg()'s here..
-		switch ( ptr->hitgroup )
+		/*switch (ptr->hitgroup)
 		{
 		case HITGROUP_GENERIC:
-			info.ScaleDamage( HIT_ARM_DMG );	//at least give them something for hitting the generic.. let's be nice
+			info.ScaleDamage(HIT_ARM_DMG);	//at least give them something for hitting the generic.. let's be nice
 			break;
 		case HITGROUP_HEAD:
-			info.ScaleDamage( HIT_HEAD_DMG );
+			info.ScaleDamage(HIT_HEAD_DMG);
 			break;
 		case HITGROUP_CHEST:
-			info.ScaleDamage( HIT_CHEST_DMG );
+			info.ScaleDamage(HIT_CHEST_DMG);
 			break;
 		case HITGROUP_STOMACH:
-			info.ScaleDamage( HIT_STOMACH_DMG );
+			info.ScaleDamage(HIT_STOMACH_DMG);
 			break;
 		case HITGROUP_LEFTARM:
 		case HITGROUP_RIGHTARM:
@@ -955,29 +962,28 @@ void CBasePlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 			break;
 		case HITGROUP_LEFTLEG:
 		case HITGROUP_RIGHTLEG:
-			info.ScaleDamage( HIT_LEG_DMG );
+			info.ScaleDamage(HIT_LEG_DMG);
 			break;
 		default:
 			break;
-		}
-
+		}*/
 
 		//BG2 - Tjoppen - serverside blood
 		//show blood to all nearby players
 		CRecipientFilter recpfilter;
-		recpfilter.AddRecipientsByPAS( GetLocalOrigin() );
+		recpfilter.AddRecipientsByPAS(GetLocalOrigin());
 
-		UserMessageBegin( recpfilter, "ServerBlood" );
-			WRITE_VEC3COORD( ptr->endpos );
-			WRITE_VEC3NORMAL( vecDir );
-			WRITE_SHORT( inputInfo.GetDamage() );			//damage
+		UserMessageBegin(recpfilter, "ServerBlood");
+		WRITE_VEC3COORD(ptr->endpos);
+		WRITE_VEC3NORMAL(vecDir);
+		WRITE_SHORT(inputInfo.GetDamage());			//damage
 		MessageEnd();
 		//
 
 		//BG2 - Tjoppen - serverside blood
 		//SpawnBlood(ptr->endpos, vecDir, BloodColor(), info.GetDamage());// a little surface blood.
 		//
-		TraceBleed( info.GetDamage(), vecDir, ptr, info.GetDamageType() );
+		TraceBleed(info.GetDamage(), vecDir, ptr, info.GetDamageType());
 
 		AddMultiDamage( info, this );
 	}
@@ -998,7 +1004,7 @@ void CBasePlayer::DamageEffect(float flDamage, int fDamageType)
 	}
 	else if (fDamageType & DMG_DROWN)
 	{
-		//Red damage indicator
+		//Blue damage indicator
 		color32 blue = {0,0,128,128};
 		UTIL_ScreenFade( this, blue, 1.0f, 0.1f, FFADE_IN );
 	}
@@ -1082,6 +1088,7 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
 	// have suit diagnose the problem - ie: report damage type
 	int bitsDamage = inputInfo.GetDamageType();
+	//int ffound = true;
 	int fmajor;
 	int fcritical;
 	int fTookDamage;
@@ -1093,7 +1100,7 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	CTakeDamageInfo info = inputInfo;
 
 	//BG2 - Spawned just a while ago, make them invincible. - HairyPotter
-	if ( gpGlobals->curtime < m_fLastRespawn )
+	if (gpGlobals->curtime < m_fLastRespawn)
 		return 0;
 	//
 
@@ -1378,15 +1385,14 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	float flPunch = -2;
 
-	flPunch = RandomFloat( -5, -7 );
+	flPunch = RandomFloat(-5, -7);
 
 	//BG2 - Tjoppen - non-networked punchangle
 	//m_Local.m_vecPunchAngle.SetX( -2 );
 	m_Local.m_vecPunchAngle.x = -2;
 	//
-
 	//BG2 - Don't Need this. -HairyPotter
-	/*if (fTookDamage && !ftrivial && fmajor && flHealthPrev >= 75) 
+	/*if (fTookDamage && !ftrivial && fmajor && flHealthPrev >= 75)
 	{
 		// first time we take major damage...
 		// turn automedic on if not on
@@ -1580,6 +1586,11 @@ void CBasePlayer::RemoveAllItems( bool removeSuit )
 	RemoveAllWeapons();
  	RemoveAllAmmo();
 
+	//if ( removeSuit )
+	//{
+	//	RemoveSuit();
+	//}
+
 	UpdateClientData();
 }
 
@@ -1739,6 +1750,11 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 	// reset FOV
 	SetFOV( this, 0 );
 	
+	//if ( FlashlightIsOn() )
+	//{
+	//	 FlashlightTurnOff();
+	//}
+
 	m_flDeathTime = gpGlobals->curtime;
 
 	ClearLastKnownArea();
@@ -1823,11 +1839,11 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 	//BG2 - Tjoppen - PLAYER_ATTACK2
 	else if (playerAnim == PLAYER_ATTACK2)
 	{
-		if ( m_Activity == ACT_HOVER	|| 
-			 m_Activity == ACT_SWIM		||
-			 m_Activity == ACT_HOP		||
-			 m_Activity == ACT_LEAP		||
-			 m_Activity == ACT_DIESIMPLE )
+		if (m_Activity == ACT_HOVER ||
+			m_Activity == ACT_SWIM ||
+			m_Activity == ACT_HOP ||
+			m_Activity == ACT_LEAP ||
+			m_Activity == ACT_DIESIMPLE)
 		{
 			idealActivity = m_Activity;
 		}
@@ -1855,9 +1871,11 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 			idealActivity = ACT_WALK;
 		}
 	}
+
+	
 	//BG2 - Tjoppen - ACT_RANGE_ATTACK2
 	//if (idealActivity == ACT_RANGE_ATTACK1)
-	if (idealActivity == ACT_RANGE_ATTACK1 || idealActivity == ACT_RANGE_ATTACK2 )
+	if (idealActivity == ACT_RANGE_ATTACK1 || idealActivity == ACT_RANGE_ATTACK2)
 	{
 		if ( GetFlags() & FL_DUCKING )	// crouching
 		{
@@ -1870,9 +1888,7 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 		Q_strncat( szAnim, m_szAnimExtension ,sizeof(szAnim), COPY_ALL_CHARACTERS );
 		animDesired = LookupSequence( szAnim );
 		if (animDesired == -1)
-		{
 			animDesired = 0;
-		}
 
 		if ( GetSequence() != animDesired || !SequenceLoops() )
 		{
@@ -1882,7 +1898,7 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 		// Tracker 24588:  In single player when firing own weapon this causes eye and punchangle to jitter
 		//if (!SequenceLoops())
 		//{
-		//	AddEffects( EF_NOINTERP );
+		//	IncrementInterpolationFrame();
 		//}
 
 		SetActivity( idealActivity );
@@ -1974,7 +1990,7 @@ void CBasePlayer::WaterMove()
 	}
 
 	//BG2 - Tjoppen - unassigned and spectators.. and ghosts don't make water sounds either
-	if( GetTeamNumber() <= TEAM_SPECTATOR  )
+	if (GetTeamNumber() <= TEAM_SPECTATOR)
 		return;
 	//
 
@@ -2189,11 +2205,11 @@ void CBasePlayer::PlayerDeathThink(void)
 	//BG2 - Tjoppen - send the recently deceased off to deathcam, and then let them roam until they respawn
 	//if ( g_pGameRules->IsMultiplayer() && ( gpGlobals->curtime > (m_flDeathTime + DEATH_ANIMATION_TIME) ) && !IsObserver() )
 	//{
-		// go to dead camera. 
-		StartObserverMode( m_iObserverLastMode );
+	// go to dead camera. 
+	StartObserverMode(m_iObserverLastMode);
 	//}
-	
-// wait for any button down,  or mp_forcerespawn is set and the respawn time is up
+
+	// wait for any button down,  or mp_forcerespawn is set and the respawn time is up
 	//if (!fAnyButtonDown 
 	//	&& !( g_pGameRules->IsMultiplayer() && forcerespawn.GetInt() > 0 && (gpGlobals->curtime > (m_flDeathTime + 5))) )
 	//	return;
@@ -2366,6 +2382,7 @@ bool CBasePlayer::SetObserverMode(int mode )
 			break;
 
 		case OBS_MODE_CHASE :
+		case OBS_MODE_POI: // PASSTIME
 		case OBS_MODE_IN_EYE :	
 			// udpate FOV and viewmodels
 			SetObserverTarget( m_hObserverTarget );	
@@ -2461,8 +2478,7 @@ void CBasePlayer::CheckObserverSettings()
 	}
 
 	// check if our spectating target is still a valid one
-	
-	if (  m_iObserverMode == OBS_MODE_IN_EYE || m_iObserverMode == OBS_MODE_CHASE || m_iObserverMode == OBS_MODE_FIXED )
+	if (  m_iObserverMode == OBS_MODE_IN_EYE || m_iObserverMode == OBS_MODE_CHASE || m_iObserverMode == OBS_MODE_FIXED || m_iObserverMode == OBS_MODE_POI )
 	{
 		ValidateCurrentObserverTarget();
 				
@@ -2516,6 +2532,7 @@ void CBasePlayer::ValidateCurrentObserverTarget( void )
 		}
 		else
 		{
+#if !defined( TF_DLL )
 			// couldn't find new target, switch to temporary mode
 			if ( mp_forcecamera.GetInt() == OBS_ALLOW_ALL )
 			{
@@ -2523,10 +2540,11 @@ void CBasePlayer::ValidateCurrentObserverTarget( void )
 				ForceObserverMode( OBS_MODE_ROAMING );
 			}
 			else
+#endif
 			{
 				// fix player view right where it is
 				ForceObserverMode( OBS_MODE_FIXED );
-				m_hObserverTarget.Set( NULL ); // no traget to follow
+				m_hObserverTarget.Set( NULL ); // no target to follow
 			}
 		}
 	}
@@ -2672,7 +2690,10 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 		Vector	dir, end;
 		Vector	start = target->EyePosition();
 		
-		AngleVectors( target->EyeAngles(), &dir );
+		QAngle ang = target->EyeAngles();
+		ang.z = 0; // PASSTIME no view roll when spectating ball
+
+		AngleVectors( ang, &dir );
 		VectorNormalize( dir );
 		VectorMA( start, -64.0f, dir, end );
 
@@ -2682,7 +2703,7 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 		trace_t	tr;
 		UTIL_TraceRay( ray, MASK_PLAYERSOLID, target, COLLISION_GROUP_PLAYER_MOVEMENT, &tr );
 
-		JumptoPosition( tr.endpos, target->EyeAngles() );
+		JumptoPosition( tr.endpos, ang );
 	}
 	
 	return true;
@@ -2870,6 +2891,11 @@ bool CBasePlayer::CanPickupObject( CBaseEntity *pObject, float massLimit, float 
 
 	if ( checkEnable )
 	{
+		// Allowing picking up of bouncebombs.
+		//CBounceBomb *pBomb = dynamic_cast<CBounceBomb*>(pObject);
+		//if( pBomb )
+			//return true;
+
 		// Allow pickup of phys props that are motion enabled on player pickup
 		CPhysicsProp *pProp = dynamic_cast<CPhysicsProp*>(pObject);
 		CPhysBox *pBox = dynamic_cast<CPhysBox*>(pObject);
@@ -3445,6 +3471,8 @@ void CBasePlayer::ForceSimulation()
 	m_nSimulationTick = -1;
 }
 
+ConVar sv_usercmd_custom_random_seed( "sv_usercmd_custom_random_seed", "1", FCVAR_CHEAT, "When enabled server will populate an additional random seed independent of the client" );
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *buf - 
@@ -3469,6 +3497,16 @@ void CBasePlayer::ProcessUsercmds( CUserCmd *cmds, int numcmds, int totalcmds,
 		if ( !IsUserCmdDataValid( pCmd ) )
 		{
 			pCmd->MakeInert();
+		}
+
+		if ( sv_usercmd_custom_random_seed.GetBool() )
+		{
+			float fltTimeNow = float( Plat_FloatTime() * 1000.0 );
+			pCmd->server_random_seed = *reinterpret_cast<int*>( (char*)&fltTimeNow );
+		}
+		else
+		{
+			pCmd->server_random_seed = pCmd->random_seed;
 		}
 
 		ctx->cmds.AddToTail( *pCmd );
@@ -4895,6 +4933,7 @@ void CBasePlayer::Spawn( void )
 	//this fixes not being able to use ironsights on occasion
 	m_hZoomOwner = NULL;
 	//
+
 	SetFOV( this, 0 );
 
 	m_flNextDecalTime	= 0;// let this player decal as soon as he spawns.
@@ -5203,6 +5242,20 @@ void CBasePlayer::OnRestore( void )
 	Q_strncpy( m_szTeamName, pTeamName, TEAM_NAME_LENGTH );
 } */
 
+/*void CBasePlayer::SetArmorValue( int value )
+{
+	m_ArmorValue = value;
+}
+
+void CBasePlayer::IncrementArmorValue( int nCount, int nMaxValue )
+{ 
+	m_ArmorValue += nCount;
+	if (nMaxValue > 0)
+	{
+		if (m_ArmorValue > nMaxValue)
+			m_ArmorValue = nMaxValue;
+	}
+}*/
 
 // used by the physics gun and game physics... is there a better interface?
 void CBasePlayer::SetPhysicsFlag( int nFlag, bool bSet )
@@ -5607,7 +5660,7 @@ void CBloodSplat::Think( void )
 //-----------------------------------------------------------------------------
 // Purpose: Create and give the named item to the player. Then return it.
 //-----------------------------------------------------------------------------
-CBaseEntity	*CBasePlayer::GiveNamedItem( const char *pszName, int Skin, int iSubType )
+CBaseEntity	*CBasePlayer::GiveNamedItem(const char *pszName, int Skin, int iSubType)
 {
 	// If I already own this type don't create one
 	if ( Weapon_OwnsThisType(pszName, iSubType) )
@@ -5631,20 +5684,19 @@ CBaseEntity	*CBasePlayer::GiveNamedItem( const char *pszName, int Skin, int iSub
 	if ( pWeapon )
 	{
 		pWeapon->SetSubType( iSubType );
-		pWeapon->m_nSkin = Skin; //BG2 - Set the weapon skin. -HairyPotter
 	}
 
 	DispatchSpawn( pent );
 
 	//BG2 - Tjoppen - no weapon pickup
 #ifndef CLIENT_DLL
-	if( pent != NULL && !(pent->IsMarkedForDeletion()) ) 
+	if (pent != NULL && !(pent->IsMarkedForDeletion()))
 	{
-		if( pWeapon && !pWeapon->IsDissolving() && BumpWeapon(pWeapon) )
+		if (pWeapon && !pWeapon->IsDissolving() && BumpWeapon(pWeapon))
 			pWeapon->OnPickedUp(this);
 	}
 #endif
-		//pent->Touch( this );
+	//pent->Touch( this );
 	//
 
 	return pent;
@@ -5833,6 +5885,18 @@ void CBasePlayer::ImpulseCommands( )
 	int iImpulse = (int)m_nImpulse;
 	switch (iImpulse)
 	{
+	//case 100:
+        // temporary flashlight for level designers
+       // if ( FlashlightIsOn() )
+		//{
+		//	FlashlightTurnOff();
+		//}
+        //else 
+		//{
+		//	FlashlightTurnOn();
+		//}
+		//break;
+
 	case 200:
 		if ( sv_cheats->GetBool() )
 		{
@@ -6084,8 +6148,36 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 	case 101:
 		gEvilImpulse101 = true;
 
-		// Give the player everything!
+		//EquipSuit();
 
+		// Give the player everything!
+		/*GiveAmmo( 255,	"Pistol");
+		GiveAmmo( 255,	"AR2");
+		GiveAmmo( 5,	"AR2AltFire");
+		GiveAmmo( 255,	"SMG1");
+		GiveAmmo( 255,	"Buckshot");
+		GiveAmmo( 3,	"smg1_grenade");
+		GiveAmmo( 3,	"rpg_round");
+		GiveAmmo( 5,	"grenade");
+		GiveAmmo( 32,	"357" );
+		GiveAmmo( 16,	"XBowBolt" );
+#ifdef HL2_EPISODIC
+		GiveAmmo( 5,	"Hopwire" );
+#endif		
+		GiveNamedItem( "weapon_smg1" );
+		GiveNamedItem( "weapon_frag" );
+		GiveNamedItem( "weapon_crowbar" );
+		GiveNamedItem( "weapon_pistol" );
+		GiveNamedItem( "weapon_ar2" );
+		GiveNamedItem( "weapon_shotgun" );
+		GiveNamedItem( "weapon_physcannon" );
+		GiveNamedItem( "weapon_bugbait" );
+		GiveNamedItem( "weapon_rpg" );
+		GiveNamedItem( "weapon_357" );
+		GiveNamedItem( "weapon_crossbow" );
+#ifdef HL2_EPISODIC
+		// GiveNamedItem( "weapon_magnade" );
+#endif*/
 		if ( GetHealth() < 100 )
 		{
 			TakeHealth( 25, DMG_GENERIC );
@@ -6495,7 +6587,7 @@ bool CBasePlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 
 	// Act differently in the episodes
 	// Don't let the player fetch weapons through walls (use MASK_SOLID so that you can't pickup through windows)
-	if( pWeapon->FVisible( this, MASK_SOLID ) == false && !(GetFlags() & FL_NOTARGET) )
+	if (pWeapon->FVisible(this, MASK_SOLID) == false && !(GetFlags() & FL_NOTARGET))
 		return false;
 	
 	// ----------------------------------------
@@ -6532,7 +6624,30 @@ bool CBasePlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 		{
 			pWeapon->Holster();
 		}
+		/*else
+		{
+#ifdef HL2_DLL
 
+			if ( IsX360() )
+			{
+				CFmtStr hint;
+				hint.sprintf( "#valve_hint_select_%s", pWeapon->GetClassname() );
+				UTIL_HudHintText( this, hint.Access() );
+			}
+
+			// Always switch to a newly-picked up weapon
+			if ( !PlayerHasMegaPhysCannon() )
+			{
+				// If it uses clips, load it full. (this is the first time you've picked up this type of weapon)
+				if ( pWeapon->UsesClipsForAmmo1() )
+				{
+					pWeapon->m_iClip1 = pWeapon->GetMaxClip1();
+				}
+
+				Weapon_Switch( pWeapon );
+			}
+#endif
+		}*/
 		return true;
 	}
 }
@@ -6665,6 +6780,47 @@ void CBasePlayer::UpdateClientData( void )
 		MessageEnd();
 		world->SetDisplayTitle( false );
 	}
+
+	/*if (m_ArmorValue != m_iClientBattery)
+	{
+		m_iClientBattery = m_ArmorValue;
+
+		// send "battery" update message
+		if ( usermessages->LookupUserMessage( "Battery" ) != -1 )
+		{
+			UserMessageBegin( user, "Battery" );
+				WRITE_SHORT( (int)m_ArmorValue);
+			MessageEnd();
+		}
+	}
+
+#if 0 // BYE BYE!!
+	// Update Flashlight
+	if ((m_flFlashLightTime) && (m_flFlashLightTime <= gpGlobals->curtime))
+	{
+		if (FlashlightIsOn())
+		{
+			if (m_iFlashBattery)
+			{
+				m_flFlashLightTime = FLASH_DRAIN_TIME + gpGlobals->curtime;
+				m_iFlashBattery--;
+				
+				if (!m_iFlashBattery)
+					FlashlightTurnOff();
+			}
+		}
+		else
+		{
+			if (m_iFlashBattery < 100)
+			{
+				m_flFlashLightTime = FLASH_CHARGE_TIME + gpGlobals->curtime;
+				m_iFlashBattery++;
+			}
+			else
+				m_flFlashLightTime = 0;
+		}
+	}
+#endif */ 
 
 	CheckTrainUpdate();
 
@@ -7178,6 +7334,14 @@ void CBasePlayer::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 
 	bool bShouldSwitch = g_pGameRules->FShouldSwitchWeapon( this, pWeapon );
 
+/*#ifdef HL2_DLL
+	if ( bShouldSwitch == false && PhysCannonGetHeldEntity( GetActiveWeapon() ) == pWeapon && 
+		 Weapon_OwnsThisType( pWeapon->GetClassname(), pWeapon->GetSubType()) )
+	{
+		bShouldSwitch = true;
+	}
+#endif//HL2_DLL */
+
 	// should we switch to this item?
 	if ( bShouldSwitch )
 	{
@@ -7219,7 +7383,7 @@ void CBasePlayer::EquipWearable( CEconWearable *pItem )
 		pItem->Equip( this );
 	}
 
-#ifdef DEBUG
+#ifdef DBGFLAG_ASSERT
 	// Double check list integrity.
 	for ( int i = m_hMyWearables.Count()-1; i >= 0; --i )
 	{
@@ -7249,9 +7413,16 @@ void CBasePlayer::RemoveWearable( CEconWearable *pItem )
 			m_hMyWearables.Remove( i );
 			break;
 		}
+
+		// Integrety is failing, remove NULLs
+		if ( !pWearable )
+		{
+			m_hMyWearables.Remove( i );
+			break;
+		}
 	}
 
-#ifdef DEBUG
+#ifdef DBGFLAG_ASSERT
 	// Double check list integrity.
 	for ( int i = m_hMyWearables.Count()-1; i >= 0; --i )
 	{
@@ -7683,6 +7854,14 @@ void CMovementSpeedMod::InputSpeedMod(inputdata_t &data)
 				pPlayer->HideViewModels();
 			}
 
+			// Turn off the flashlight
+			//if ( pPlayer->FlashlightIsOn() )
+			//{
+			//	pPlayer->FlashlightTurnOff();
+			//}
+			
+			// Disable the flashlight's further use
+			//pPlayer->SetFlashlightEnabled( false );
 			pPlayer->DisableButtons( GetDisabledButtonMask() );
 
 			// Hide the HUD
@@ -7696,13 +7875,15 @@ void CMovementSpeedMod::InputSpeedMod(inputdata_t &data)
 			// Bring the weapon back
 			if  ( HasSpawnFlags( SF_SPEED_MOD_SUPPRESS_WEAPONS ) && pPlayer->GetActiveWeapon() == NULL )
 			{
-				pPlayer->SetActiveWeapon( pPlayer->Weapon_GetLast() );
+				pPlayer->SetActiveWeapon( pPlayer->GetLastWeapon() );
 				if ( pPlayer->GetActiveWeapon() )
 				{
 					pPlayer->GetActiveWeapon()->Deploy();
 				}
 			}
 
+			// Allow the flashlight again
+			//pPlayer->SetFlashlightEnabled( true );
 			pPlayer->EnableButtons( GetDisabledButtonMask() );
 
 			// Restore the HUD
@@ -8433,6 +8614,15 @@ bool CBasePlayer::IsFakeClient() const
 	return (GetFlags() & FL_FAKECLIENT) != 0;
 }
 
+/*void CBasePlayer::EquipSuit( bool bPlayEffects )
+{ 
+	m_Local.m_bWearingSuit = true; 
+}
+
+void CBasePlayer::RemoveSuit( void )
+{
+	m_Local.m_bWearingSuit = false;
+}*/
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -8768,8 +8958,27 @@ void CBasePlayer::HandleAnimEvent( animevent_t *pEvent )
 	BaseClass::HandleAnimEvent( pEvent );
 }
 
+
 //-----------------------------------------------------------------------------
-//  CPlayerInfo functions (simple passthroughts to get around the CBasePlayer multiple inheritence limitation)
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CBasePlayer::ShouldAnnounceAchievement( void )
+{
+	m_flAchievementTimes.AddToTail( gpGlobals->curtime );
+	if ( m_flAchievementTimes.Count() > 3 )
+	{
+		m_flAchievementTimes.Remove( 0 );
+		if ( m_flAchievementTimes.Tail() - m_flAchievementTimes.Head() <= 60.0 )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+//  CPlayerInfo functions (simple pass-through to get around the CBasePlayer multiple inheritance limitation)
 //-----------------------------------------------------------------------------
 const char *CPlayerInfo::GetName()
 { 
@@ -8957,6 +9166,16 @@ void CPlayerInfo::RemoveAllItems( bool removeSuit )
 
 void CPlayerInfo::SetActiveWeapon( const char *WeaponName ) 
 { 
+	/*Assert( m_pParent );
+	if ( m_pParent->IsBot() )
+	{
+		CBaseCombatWeapon *weap = m_pParent->Weapon_Create( WeaponName );
+		if ( weap )
+		{
+			m_pParent->Weapon_Equip(weap); 
+			m_pParent->Weapon_Switch(weap); 
+		}
+	}*/
 }
 
 void CPlayerInfo::SetLocalOrigin( const Vector& origin ) 

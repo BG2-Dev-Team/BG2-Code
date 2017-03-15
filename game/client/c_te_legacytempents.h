@@ -214,7 +214,7 @@ private:
 	void					MuzzleFlash_RPG_NPC( ClientEntityHandle_t hEntity, int attachmentIndex );
 
 	//BG2 - Tjoppen - flashpan
-	void					MuzzleFlash_Flashpan( ClientEntityHandle_t hEntity, int attachmentIndex, bool isFirstPerson );
+	void					MuzzleFlash_Flashpan(ClientEntityHandle_t hEntity, int attachmentIndex, bool isFirstPerson);
 	//
 };
 

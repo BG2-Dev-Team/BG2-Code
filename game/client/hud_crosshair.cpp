@@ -23,24 +23,32 @@
 #include "./bg2/ironsights.h"
 //
 
+#ifdef SIXENSE
+#include "sixense/in_sixense.h"
+#endif
+
+#ifdef PORTAL
+#include "c_portal_player.h"
+#endif // PORTAL
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 ConVar crosshair( "crosshair", "1", FCVAR_ARCHIVE );
 ConVar cl_observercrosshair( "cl_observercrosshair", "1", FCVAR_ARCHIVE );
 
+
 //BG2 - Tjoppen - cl_crosshair*
-ConVar cl_crosshair( "cl_crosshair", "14", FCVAR_ARCHIVE, "Bitmask describing how to draw the crosshair\n  1 = dynamic circular\n  2 = static three-lined\n  4 = dot(square) in the middle\n  8 = hud/crosshair.vtf" );
-ConVar cl_crosshair_scale( "cl_crosshair_scale", "1", FCVAR_ARCHIVE, "Scale of cl_crosshairstyle 1, 2 and 4" );
+ConVar cl_crosshair("cl_crosshair", "14", FCVAR_ARCHIVE, "Bitmask describing how to draw the crosshair\n  1 = dynamic circular\n  2 = static three-lined\n  4 = dot(square) in the middle\n  8 = hud/crosshair.vtf");
+ConVar cl_crosshair_scale("cl_crosshair_scale", "1", FCVAR_ARCHIVE, "Scale of cl_crosshairstyle 1, 2 and 4");
 
-ConVar cl_crosshair_r( "cl_crosshair_r", "197", FCVAR_ARCHIVE, "Crosshair redness. 0-255" );
-ConVar cl_crosshair_g( "cl_crosshair_g", "149", FCVAR_ARCHIVE, "Crosshair greenness. 0-255" );
-ConVar cl_crosshair_b( "cl_crosshair_b", "105", FCVAR_ARCHIVE, "Crosshair blueness. 0-255" );
-ConVar cl_crosshair_a( "cl_crosshair_a", "167", FCVAR_ARCHIVE, "Crosshair opacity(alpha). 0-255" );
+ConVar cl_crosshair_r("cl_crosshair_r", "197", FCVAR_ARCHIVE, "Crosshair redness. 0-255");
+ConVar cl_crosshair_g("cl_crosshair_g", "149", FCVAR_ARCHIVE, "Crosshair greenness. 0-255");
+ConVar cl_crosshair_b("cl_crosshair_b", "105", FCVAR_ARCHIVE, "Crosshair blueness. 0-255");
+ConVar cl_crosshair_a("cl_crosshair_a", "167", FCVAR_ARCHIVE, "Crosshair opacity(alpha). 0-255");
 
-ConVar cl_hitverifhairstyle( "cl_hitverifhairstyle", "0", FCVAR_ARCHIVE ); // BG2 - VisualMelon - Style of hit verification hairs
-ConVar cl_hitverifhairlen( "cl_hitverifhairlen", "1", FCVAR_ARCHIVE ); // BG2 - VisualMelon - Length of hit verification hairs
-
+ConVar cl_hitverifhairstyle("cl_hitverifhairstyle", "0", FCVAR_ARCHIVE); // BG2 - VisualMelon - Style of hit verification hairs
+ConVar cl_hitverifhairlen("cl_hitverifhairlen", "1", FCVAR_ARCHIVE); // BG2 - VisualMelon - Length of hit verification hairs
 
 using namespace vgui;
 
@@ -76,7 +84,7 @@ void CHudCrosshair::ApplySchemeSettings( IScheme *scheme )
 	BaseClass::ApplySchemeSettings( scheme );
 
 	//BG2 - Commented -HairyPotter
-	m_pCrosshair = gHUD.GetIcon( "hud_crosshair" );
+	m_pCrosshair = gHUD.GetIcon("hud_crosshair");
 	//m_pDefaultCrosshair = gHUD.GetIcon("crosshair_default");
 	//	
 	SetPaintBackgroundEnabled( false );
@@ -109,18 +117,23 @@ bool CHudCrosshair::ShouldDraw( void )
 		extern ConVar viewmodel_adjust_enabled;
 #endif
 
-// BG2 - VisualMelon - Moved this into the function that draws Iron Sights, as the hit verification cross needs to show up with iron sights
-/*		if ( pWeapon->m_bIsIronsighted ) //No crosshair in Iron Sights. -HairyPotter
-#ifdef TWEAK_IRONSIGHTS
-			return viewmodel_adjust_enabled.GetBool();	//BG2 - Tjoppen - unless we're adjusting the sights
-#else
-			return false;
-#endif*/
+		// BG2 - VisualMelon - Moved this into the function that draws Iron Sights, as the hit verification cross needs to show up with iron sights
+		/*		if ( pWeapon->m_bIsIronsighted ) //No crosshair in Iron Sights. -HairyPotter
+		#ifdef TWEAK_IRONSIGHTS
+		return viewmodel_adjust_enabled.GetBool();	//BG2 - Tjoppen - unless we're adjusting the sights
+		#else
+		return false;
+		#endif*/
 
-		if ( !pWeapon->ShouldDrawCrosshair() )
+		if (!pWeapon->ShouldDrawCrosshair())
 			return false;
-	}
+}
 
+#ifdef PORTAL
+	C_Portal_Player *portalPlayer = ToPortalPlayer(pPlayer);
+	if ( portalPlayer && portalPlayer->IsSuppressingCrosshair() )
+		return false;
+#endif // PORTAL
 
 	/* disabled to avoid assuming it's an HL2 player.
 	// suppress crosshair in zoom.
@@ -129,23 +142,23 @@ bool CHudCrosshair::ShouldDraw( void )
 	*/
 
 	// draw a crosshair only if alive or spectating in eye
-	bNeedsDraw = m_pCrosshair && 
+	bNeedsDraw = m_pCrosshair &&
 		crosshair.GetInt() &&
 		!engine->IsDrawingLoadingImage() &&
-		!engine->IsPaused() && 
+		!engine->IsPaused() &&
 		g_pClientMode->ShouldDrawCrosshair() &&
-		!( pPlayer->GetFlags() & FL_FROZEN ) &&
-		( pPlayer->entindex() == render->GetViewEntity() ) &&
+		!(pPlayer->GetFlags() & FL_FROZEN) &&
+		(pPlayer->entindex() == render->GetViewEntity()) &&
 		!pPlayer->IsInVGuiInputMode() &&
-		( pPlayer->IsAlive() ||	( pPlayer->GetObserverMode() == OBS_MODE_IN_EYE ) || ( cl_observercrosshair.GetBool() && pPlayer->GetObserverMode() == OBS_MODE_ROAMING ) );
+		(pPlayer->IsAlive() || (pPlayer->GetObserverMode() == OBS_MODE_IN_EYE) || (cl_observercrosshair.GetBool() && pPlayer->GetObserverMode() == OBS_MODE_ROAMING));
 
-	return ( bNeedsDraw && CHudElement::ShouldDraw() );
+	return (bNeedsDraw && CHudElement::ShouldDraw());
 }
 
 extern int hitVerificationHairs;
 extern int hitVerificationLatency;
 
-void CHudCrosshair::IronPaint( void )
+void CHudCrosshair::IronPaint(void)
 {
 	// BG2 - VisualMelon - TODO: find an event or something to reset hitVerificationHairs
 	// HORRIBLE HACK
@@ -157,20 +170,20 @@ void CHudCrosshair::IronPaint( void )
 	{
 		int w = ScreenWidth(),
 			h = ScreenHeight();
-		
+
 		float	cx = w / 2 - 0.5f,
-				cy = h / 2 - 0.5f;
+			cy = h / 2 - 0.5f;
 
 		//hitVerificationHairs--; // BG2 - VisualMelon - Need a better system than a frame counter
 
 		// BG2 - VisualMelon - Usual Colour and Scale
-		float	scale = cl_crosshair_scale.GetFloat() * min( w, h ) / 300.f;
+		float	scale = cl_crosshair_scale.GetFloat() * min(w, h) / 300.f;
 
-		Color hairColor( cl_crosshair_r.GetInt(), cl_crosshair_g.GetInt(),
-										cl_crosshair_b.GetInt(), cl_crosshair_a.GetInt() * (((float)(hitVerificationHairs - gpGlobals->curtime)) / hitVerificationLatency));
+		Color hairColor(cl_crosshair_r.GetInt(), cl_crosshair_g.GetInt(),
+			cl_crosshair_b.GetInt(), cl_crosshair_a.GetInt() * (((float)(hitVerificationHairs - gpGlobals->curtime)) / hitVerificationLatency));
 
 		float root2 = 1.41;
-		
+
 		if (cl_hitverifhairstyle.GetInt() == 0)
 		{
 			surface()->DrawSetColor(hairColor);
@@ -181,23 +194,23 @@ void CHudCrosshair::IronPaint( void )
 			//float dim1 = scale * 3.f;
 			float dim0 = scale * root2 * 0.5;
 			float dim1 = scale * 3.f * root2 * 0.5 * cl_hitverifhairlen.GetFloat();
-			
+
 			float bx0; float by0; float bx1; float by1;
 
 			float piby2scale = scale * root2 * 0.5;
 
 			int ti = (piby2scale - 0.5f) / 2;
 			int li = (int)piby2scale - ti;
-			
+
 			// middle line
 			bx0 = cx + dim0; by0 = cy + dim0; bx1 = cx + dim1; by1 = cy + dim1;
-			surface()->DrawLine( bx0, by0, bx1, by1 );
+			surface()->DrawLine(bx0, by0, bx1, by1);
 			bx0 = cx - dim0; by0 = cy + dim0; bx1 = cx - dim1; by1 = cy + dim1;
-			surface()->DrawLine( bx0, by0, bx1, by1 );
+			surface()->DrawLine(bx0, by0, bx1, by1);
 			bx0 = cx - dim0; by0 = cy - dim0; bx1 = cx - dim1; by1 = cy - dim1;
-			surface()->DrawLine( bx0, by0, bx1, by1 );
+			surface()->DrawLine(bx0, by0, bx1, by1);
 			bx0 = cx + dim0; by0 = cy - dim0; bx1 = cx + dim1; by1 = cy - dim1;
-			surface()->DrawLine( bx0, by0, bx1, by1 );
+			surface()->DrawLine(bx0, by0, bx1, by1);
 
 			// ++
 			bx0 = cx + dim0; by0 = cy + dim0; bx1 = cx + dim1; by1 = cy + dim1;
@@ -213,7 +226,7 @@ void CHudCrosshair::IronPaint( void )
 					by0--;
 					by1--;
 				}
-				surface()->DrawLine( bx0, by0, bx1, by1 );
+				surface()->DrawLine(bx0, by0, bx1, by1);
 			}
 
 			bx0 = cx + dim0; by0 = cy + dim0; bx1 = cx + dim1; by1 = cy + dim1;
@@ -229,7 +242,7 @@ void CHudCrosshair::IronPaint( void )
 					bx0--;
 					bx1--;
 				}
-				surface()->DrawLine( bx0, by0, bx1, by1 );
+				surface()->DrawLine(bx0, by0, bx1, by1);
 			}
 
 			// --
@@ -246,7 +259,7 @@ void CHudCrosshair::IronPaint( void )
 					by0++;
 					by1++;
 				}
-				surface()->DrawLine( bx0, by0, bx1, by1 );
+				surface()->DrawLine(bx0, by0, bx1, by1);
 			}
 
 			bx0 = cx - dim0; by0 = cy - dim0; bx1 = cx - dim1; by1 = cy - dim1;
@@ -262,7 +275,7 @@ void CHudCrosshair::IronPaint( void )
 					bx0++;
 					bx1++;
 				}
-				surface()->DrawLine( bx0, by0, bx1, by1 );
+				surface()->DrawLine(bx0, by0, bx1, by1);
 			}
 
 			// +-
@@ -279,7 +292,7 @@ void CHudCrosshair::IronPaint( void )
 					by0++;
 					by1++;
 				}
-				surface()->DrawLine( bx0, by0, bx1, by1 );
+				surface()->DrawLine(bx0, by0, bx1, by1);
 			}
 
 			bx0 = cx + dim0; by0 = cy - dim0; bx1 = cx + dim1; by1 = cy - dim1;
@@ -295,7 +308,7 @@ void CHudCrosshair::IronPaint( void )
 					bx0--;
 					bx1--;
 				}
-				surface()->DrawLine( bx0, by0, bx1, by1 );
+				surface()->DrawLine(bx0, by0, bx1, by1);
 			}
 
 			// -+
@@ -312,7 +325,7 @@ void CHudCrosshair::IronPaint( void )
 					by0--;
 					by1--;
 				}
-				surface()->DrawLine( bx0, by0, bx1, by1 );
+				surface()->DrawLine(bx0, by0, bx1, by1);
 			}
 
 			bx0 = cx - dim0; by0 = cy + dim0; bx1 = cx - dim1; by1 = cy + dim1;
@@ -328,7 +341,7 @@ void CHudCrosshair::IronPaint( void )
 					bx0++;
 					bx1++;
 				}
-				surface()->DrawLine( bx0, by0, bx1, by1 );
+				surface()->DrawLine(bx0, by0, bx1, by1);
 			}
 
 			// BG2 - VisualMelon - This only allows single width  lines
@@ -348,10 +361,10 @@ void CHudCrosshair::IronPaint( void )
 			float dim0 = scale * root2 * 0.5;
 			float dim1 = scale * 3.f * root2 * 0.5;
 
-			surface()->DrawLine( cx + dim0, cy + dim0, cx + dim1, cy + dim1 );
-			surface()->DrawLine( cx - dim0, cy + dim0, cx - dim1, cy + dim1 );
-			surface()->DrawLine( cx - dim0, cy - dim0, cx - dim1, cy - dim1 );
-			surface()->DrawLine( cx + dim0, cy - dim0, cx + dim1, cy - dim1 );
+			surface()->DrawLine(cx + dim0, cy + dim0, cx + dim1, cy + dim1);
+			surface()->DrawLine(cx - dim0, cy + dim0, cx - dim1, cy + dim1);
+			surface()->DrawLine(cx - dim0, cy - dim0, cx - dim1, cy - dim1);
+			surface()->DrawLine(cx + dim0, cy - dim0, cx + dim1, cy - dim1);
 		}
 	}
 }
@@ -455,29 +468,37 @@ void CHudCrosshair::GetDrawPosition ( float *pX, float *pY, bool *pbBehindCamera
 
 void CHudCrosshair::Paint( void )
 {
+	//BG2 - found this stuff while porting to 2016 - Awesome
 	C_BasePlayer* pPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( !pPlayer )
+	if (!pPlayer)
 		return;
 	C_BaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
 
-	if ( !pWeapon )
+	if (!pWeapon)
 		return;
-	
-	if ( pWeapon->m_bIsIronsighted ) //No crosshair in Iron Sights. -HairyPotter
+
+	if (pWeapon->m_bIsIronsighted) //No crosshair in Iron Sights. -HairyPotter
 	{
 #ifdef TWEAK_IRONSIGHTS
-		
+
 #else
 		IronPaint();
 		return;
 #endif
-	}
+	}//
+
 
 	if ( !m_pCrosshair )
 		return;
 
 	if ( !IsCurrentViewAccessAllowed() )
 		return;
+
+	//BG2 - found this missing while porting to 2016 - Awesome
+	/*
+	C_BasePlayer* pPlayer = C_BasePlayer::GetLocalPlayer();
+	if ( !pPlayer )
+		return;*/
 
 	float x, y;
 	bool bBehindCamera;
@@ -486,107 +507,106 @@ void CHudCrosshair::Paint( void )
 	if( bBehindCamera )
 		return;
 
-	float flWeaponScale = 1.f;
-	int iTextureW = m_pCrosshair->Width();
-	int iTextureH = m_pCrosshair->Height();
-
+	//float flWeaponScale = 1.f;
+	//int iTextureW = m_pCrosshair->Width();
+	//int iTextureH = m_pCrosshair->Height();
 	//BG2 - Same old code slightly tweaked - HairyPotter
-	C_BaseBG2Weapon *weapon = dynamic_cast<C_BaseBG2Weapon*>( pPlayer->GetActiveWeapon() );
+	C_BaseBG2Weapon *weapon = dynamic_cast<C_BaseBG2Weapon*>(pPlayer->GetActiveWeapon());
 
-	if( !weapon )
+	if (!weapon)
 		return;
 
-	if( weapon )
+	if (weapon)
 	{
 		int w = ScreenWidth(),
 			h = ScreenHeight();
-		
+
 		float	cx = w / 2,
-				cy = h / 2,
-				r = max( w, h ) / 2;
+			cy = h / 2,
+			r = max(w, h) / 2;
 
 		//only draw the circle if we're holding a firearm that is ready to fire
 		//when no, the circle will fade out. once holding a loaded firearm again, it will fade back in
 		bool drawCircle = false;
 
-		if( weapon->GetAttackType( C_BaseBG2Weapon::ATTACK_PRIMARY ) == C_BaseBG2Weapon::ATTACKTYPE_FIREARM )
+		if (weapon->GetAttackType(C_BaseBG2Weapon::ATTACK_PRIMARY) == C_BaseBG2Weapon::ATTACKTYPE_FIREARM)
 		{
 			drawCircle = weapon->m_iClip1;
 
 			//add both spreads (accuracy and internal ballistics) to give a more accurate circle
-			r *= weapon->GetAccuracy( C_BaseBG2Weapon::ATTACK_PRIMARY ) + weapon->GetCurrentAmmoSpread();
+			r *= weapon->GetAccuracy(C_BaseBG2Weapon::ATTACK_PRIMARY) + weapon->GetCurrentAmmoSpread();
 			r *= 0.008725f;
 		}
 		else
 			r *= 0.05f;
-		
+
 		static float lastr = 0;
 		static float circlealpha = 1;
 
-		r = lastr = r + (lastr - r) * expf( -13.0f * gpGlobals->frametime );
+		r = lastr = r + (lastr - r) * expf(-13.0f * gpGlobals->frametime);
 
 		//lerp circle alpha up or down
 		circlealpha += (drawCircle ? 6 : -6) * gpGlobals->frametime;
 
-		if( circlealpha < 0 ) circlealpha = 0;
-		if( circlealpha > 1 ) circlealpha = 1;
+		if (circlealpha < 0) circlealpha = 0;
+		if (circlealpha > 1) circlealpha = 1;
 
 		// BG2 - VisualMelon - paint all the stuff that shows up even in iron sights
 		IronPaint();
 
 		//Msg( "%f %f %f\n", cx, cy, r );
-		if( cl_crosshair.GetInt() & 4 )
+		if (cl_crosshair.GetInt() & 4)
 		{
-			float scale = cl_crosshair_scale.GetFloat() * min( w, h ) / 300;
+			float scale = cl_crosshair_scale.GetFloat() * min(w, h) / 300;
 
-			surface()->DrawSetColor( Color( cl_crosshair_r.GetInt(), cl_crosshair_g.GetInt(),
-											cl_crosshair_b.GetInt(), cl_crosshair_a.GetInt() ) );
+			surface()->DrawSetColor(Color(cl_crosshair_r.GetInt(), cl_crosshair_g.GetInt(),
+				cl_crosshair_b.GetInt(), cl_crosshair_a.GetInt()));
 			//surface()->DrawFilledRect( cx-1, cy-1, cx, cy );	//dot in the middle
 
 			//dot in the middle
-			surface()->DrawFilledRect( cx - scale * 0.25f, cy - scale * 0.25f,
-										cx + scale * 0.25f, cy + scale * 0.25f );
+			surface()->DrawFilledRect(cx - scale * 0.25f, cy - scale * 0.25f,
+				cx + scale * 0.25f, cy + scale * 0.25f);
 		}
-		
-		if( cl_crosshair.GetInt() & 2 )
-		{
-			float	scale = cl_crosshair_scale.GetFloat() * min( w, h ) / 300.f;/*,
-					expand = r * 0.25f;*/
 
-			surface()->DrawSetColor( Color( cl_crosshair_r.GetInt(), cl_crosshair_g.GetInt(),
-											cl_crosshair_b.GetInt(), cl_crosshair_a.GetInt() ) );
+		if (cl_crosshair.GetInt() & 2)
+		{
+			float	scale = cl_crosshair_scale.GetFloat() * min(w, h) / 300.f;/*,
+																			  expand = r * 0.25f;*/
+
+			surface()->DrawSetColor(Color(cl_crosshair_r.GetInt(), cl_crosshair_g.GetInt(),
+				cl_crosshair_b.GetInt(), cl_crosshair_a.GetInt()));
 
 			//without expansion
 			//left
-			surface()->DrawFilledRect( cx - scale * 3.f, cy - scale * 0.25f,
-										cx - scale, cy + scale * 0.25f );
+			surface()->DrawFilledRect(cx - scale * 3.f, cy - scale * 0.25f,
+				cx - scale, cy + scale * 0.25f);
 			//right
-			surface()->DrawFilledRect( cx + scale, cy - scale * 0.25f,
-										cx + scale * 3.f, cy + scale * 0.25f );
+			surface()->DrawFilledRect(cx + scale, cy - scale * 0.25f,
+				cx + scale * 3.f, cy + scale * 0.25f);
 			//bottom
-			surface()->DrawFilledRect( cx - scale * 0.25f, cy + scale, 
-										cx + scale * 0.25f, cy + scale * 3.f );
+			surface()->DrawFilledRect(cx - scale * 0.25f, cy + scale,
+				cx + scale * 0.25f, cy + scale * 3.f);
 		}
 
-		if( circlealpha > 0 && cl_crosshair.GetInt() & 1 )
+		if (circlealpha > 0 && cl_crosshair.GetInt() & 1)
 		{
 			int step = 10;
 
-			surface()->DrawSetColor( Color( (cl_crosshair_r.GetInt()*2)/3, (cl_crosshair_g.GetInt()*2)/3,
-											(cl_crosshair_b.GetInt()*2)/3, cl_crosshair_a.GetInt()/3*circlealpha ) );
-			for( int dx = -1; dx <= 1; dx++ )
-				for( int dy = -1; dy <= 1; dy++ )
+			surface()->DrawSetColor(Color((cl_crosshair_r.GetInt() * 2) / 3, (cl_crosshair_g.GetInt() * 2) / 3,
+				(cl_crosshair_b.GetInt() * 2) / 3, cl_crosshair_a.GetInt() / 3 * circlealpha));
+			for (int dx = -1; dx <= 1; dx++)
+				for (int dy = -1; dy <= 1; dy++)
 				{
-					if( dx == 0 && dy == 0 )
+					if (dx == 0 && dy == 0)
 						continue;
 
 					int cx2 = cx + dx,
 						cy2 = cy + dy;
 
 					int lastx = (int)(cx2 + r*cosf((float)-step * M_PI / 180.f)),
-						lasty =	(int)(cy2 + r*sinf((float)-step * M_PI / 180.f));
+						lasty = (int)(cy2 + r*sinf((float)-step * M_PI / 180.f));
 
-					for( int i = 0, j = 0; i < 360; i += step, j++ )
+					for (int i = 0, j = 0; i < 360; i += step, j++)
 					{
 						float	a = (float)i * M_PI / 180.f;
 
@@ -595,7 +615,7 @@ void CHudCrosshair::Paint( void )
 
 						//surface()->DrawSetColor( Color( (j&1)*255, (j&1)*255, (j&1)*255, 255 ) );
 
-						surface()->DrawLine( lastx, lasty, x, y );
+						surface()->DrawLine(lastx, lasty, x, y);
 
 						lastx = x;
 						lasty = y;
@@ -603,35 +623,35 @@ void CHudCrosshair::Paint( void )
 				}
 
 			int lastx = (int)(cx + r*cosf((float)-step * M_PI / 180.f)),
-				lasty =	(int)(cy + r*sinf((float)-step * M_PI / 180.f));
+				lasty = (int)(cy + r*sinf((float)-step * M_PI / 180.f));
 
-			surface()->DrawSetColor( Color( cl_crosshair_r.GetInt(), cl_crosshair_g.GetInt(),
-											cl_crosshair_b.GetInt(), cl_crosshair_a.GetInt()*circlealpha ) );
+			surface()->DrawSetColor(Color(cl_crosshair_r.GetInt(), cl_crosshair_g.GetInt(),
+				cl_crosshair_b.GetInt(), cl_crosshair_a.GetInt()*circlealpha));
 
-			for( int i = 0, j = 0; i < 360; i += step, j++ )
+			for (int i = 0, j = 0; i < 360; i += step, j++)
 			{
 				float	a = (float)i * M_PI / 180.f;
 
 				int x = (int)(cx + r*cosf(a)),
 					y = (int)(cy + r*sinf(a));
 
-				surface()->DrawLine( lastx, lasty, x, y );
+				surface()->DrawLine(lastx, lasty, x, y);
 
 				lastx = x;
 				lasty = y;
 			}
 		}
 
-		if( cl_crosshair.GetInt() & 8 )
+		if (cl_crosshair.GetInt() & 8)
 		{
-			Color iconColor( 255, 80, 0, 255 );
+			Color iconColor(255, 80, 0, 255);
 
 			r *= cl_crosshair_scale.GetFloat();
 
-			int x = ScreenWidth()/2 - r,
-				y = ScreenHeight()/2 - r;
+			int x = ScreenWidth() / 2 - r,
+				y = ScreenHeight() / 2 - r;
 
-			m_pCrosshair->DrawSelf( x, y, 2*r, 2*r, iconColor );
+			m_pCrosshair->DrawSelf(x, y, 2 * r, 2 * r, iconColor);
 		}
 	}
 	//

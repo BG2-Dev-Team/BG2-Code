@@ -61,7 +61,7 @@ public:
 
 	virtual void RagdollBone( C_BaseEntity *ent, mstudiobone_t *pbones, int boneCount, bool *boneSimulated, CBoneAccessor &pBoneToWorld );
 	virtual const Vector& GetRagdollOrigin( );
-	void SetRagdollOrigin( Vector origin, QAngle angles ); //BG2 - Force ragdoll's position. -HairyPotter
+	void SetRagdollOrigin(Vector origin, QAngle angles); //BG2 - Force ragdoll's position. -HairyPotter
 	virtual void GetRagdollBounds( Vector &theMins, Vector &theMaxs );
 	void	BuildRagdollBounds( C_BaseEntity *ent );
 	

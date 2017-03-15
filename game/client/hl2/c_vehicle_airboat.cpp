@@ -30,6 +30,8 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+//BG2 - remove vehicles - Awesome
 /*
 ConVar r_AirboatViewBlendTo( "r_AirboatViewBlendTo", "1", FCVAR_CHEAT );
 ConVar r_AirboatViewBlendToScale( "r_AirboatViewBlendToScale", "0.03", FCVAR_CHEAT );
@@ -928,4 +930,4 @@ int C_PropAirboat::DrawModel( int flags )
 		return 0;
 
 	return DrawWake();
-} */
+}*/

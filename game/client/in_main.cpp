@@ -26,6 +26,9 @@
 #include <voice_status.h>
 #include "cam_thirdperson.h"
 
+#ifdef SIXENSE
+#include "sixense/in_sixense.h"
+#endif
 
 #include "client_virtualreality.h"
 #include "sourcevr/isourcevirtualreality.h"
@@ -477,15 +480,15 @@ void IN_JumpDown ( const CCommand &args ) {KeyDown(&in_jump, args[1] );}
 void IN_JumpUp ( const CCommand &args ) {KeyUp(&in_jump, args[1] );}
 void IN_DuckDown( const CCommand &args ) {KeyDown(&in_duck, args[1] );}
 void IN_DuckUp( const CCommand &args ) {KeyUp(&in_duck, args[1] );}
-void IN_ReloadDown( const CCommand &args )
+void IN_ReloadDown(const CCommand &args)
 {
-	KeyDown(&in_reload, args[1] );
+	KeyDown(&in_reload, args[1]);
 
 	//BG2 - Tjoppen - unzoom when reloading
 	//this prevents going immediately back into ironsights
 	//after reloading if using the toggle command, since that
 	//might not always be desirable
-	KeyUp( &in_zoom, NULL );
+	KeyUp(&in_zoom, NULL);
 }
 void IN_ReloadUp( const CCommand &args ) {KeyUp(&in_reload, args[1] );}
 void IN_Alt1Down( const CCommand &args ) {KeyDown(&in_alt1, args[1] );}
@@ -515,16 +518,17 @@ void IN_DuckToggle( const CCommand &args )
 		KeyDown( &in_ducktoggle, args[1] ); 
 	}
 }
+
 //BG2 - Ironsights
-void IN_IronsightsToggle( const CCommand &args ) 
-{ 
-	if ( ::input->KeyState(&in_zoom) )
+void IN_IronsightsToggle(const CCommand &args)
+{
+	if (::input->KeyState(&in_zoom))
 	{
-		KeyUp( &in_zoom, args[1] ); 
+		KeyUp(&in_zoom, args[1]);
 	}
 	else
 	{
-		KeyDown( &in_zoom, args[1] ); 
+		KeyDown(&in_zoom, args[1]);
 	}
 }
 //
@@ -571,125 +575,125 @@ void IN_ScoreUp( const CCommand &args )
 }
 
 //BG2 - Tjoppen - enable togglescores and spec_menu
-void ToggleScores( void )
+void ToggleScores(void)
 {
-	if( gViewPortInterface )
+	if (gViewPortInterface)
 	{
-		IViewPortPanel *panel = gViewPortInterface->FindPanelByName( PANEL_SCOREBOARD );
-		if( panel )
+		IViewPortPanel *panel = gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD);
+		if (panel)
 		{
-			if( panel->IsVisible() )
+			if (panel->IsVisible())
 			{
-				panel->ShowPanel( false );
+				panel->ShowPanel(false);
 				GetClientVoiceMgr()->StopSquelchMode();
 			}
 			else
-				panel->ShowPanel( true );
+				panel->ShowPanel(true);
 		}
 	}
 }
 
-void SpecMenu( void )
+void SpecMenu(void)
 {
 	//BG2 - Removed for now. -HairyPotter
 	/*if( gViewPortInterface )
 	{
-		IViewPortPanel *panel = gViewPortInterface->FindPanelByName( PANEL_SPECMENU );
-		if( panel )
-		{
-			//toggle
-			panel->ShowPanel( !panel->IsVisible() );
-		}
+	IViewPortPanel *panel = gViewPortInterface->FindPanelByName( PANEL_SPECMENU );
+	if( panel )
+	{
+	//toggle
+	panel->ShowPanel( !panel->IsVisible() );
+	}
 	}*/
 }
 //
 
-void TeamMenu( void )
+void TeamMenu(void)
 {
-	if( gViewPortInterface )
+	if (gViewPortInterface)
 	{
-		CClassMenu *panel = static_cast<CClassMenu*>( gViewPortInterface->FindPanelByName( PANEL_CLASSES ) );
+		CClassMenu *panel = static_cast<CClassMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASSES));
 
-		if( !panel )
+		if (!panel)
 			return;
-		
-		panel->SetScreen( 1, !panel->IsInTeamMenu() );
 
-		gViewPortInterface->ShowPanel( PANEL_COMM, false );
-		gViewPortInterface->ShowPanel( PANEL_COMM2, false );
+		panel->SetScreen(1, !panel->IsInTeamMenu());
+
+		gViewPortInterface->ShowPanel(PANEL_COMM, false);
+		gViewPortInterface->ShowPanel(PANEL_COMM2, false);
 	}
 }
 
-void ClassMenu( void )
+void ClassMenu(void)
 {
-	if( gViewPortInterface )
+	if (gViewPortInterface)
 	{
-		CClassMenu *panel = static_cast<CClassMenu*>( gViewPortInterface->FindPanelByName( PANEL_CLASSES ) );
+		CClassMenu *panel = static_cast<CClassMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASSES));
 
-		if( !panel )
+		if (!panel)
 			return;
 
-		panel->SetScreen( 2, !panel->IsInClassMenu() );
+		panel->SetScreen(2, !panel->IsInClassMenu());
 
-		gViewPortInterface->ShowPanel( PANEL_COMM, false );
-		gViewPortInterface->ShowPanel( PANEL_COMM2, false );
+		gViewPortInterface->ShowPanel(PANEL_COMM, false);
+		gViewPortInterface->ShowPanel(PANEL_COMM2, false);
 	}
 }
-void WeaponMenu( void )
+void WeaponMenu(void)
 {
-	if( gViewPortInterface )
+	if (gViewPortInterface)
 	{
-		CClassMenu *panel = static_cast<CClassMenu*>( gViewPortInterface->FindPanelByName( PANEL_CLASSES ) );
+		CClassMenu *panel = static_cast<CClassMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASSES));
 
-		if( !panel )
+		if (!panel)
 			return;
 
-		panel->SetScreen( 3, !panel->IsInWeaponMenu() );
+		panel->SetScreen(3, !panel->IsInWeaponMenu());
 
-		gViewPortInterface->ShowPanel( PANEL_COMM, false );
-		gViewPortInterface->ShowPanel( PANEL_COMM2, false );
+		gViewPortInterface->ShowPanel(PANEL_COMM, false);
+		gViewPortInterface->ShowPanel(PANEL_COMM2, false);
 	}
 }
 
-void CommMenu( void )
+void CommMenu(void)
 {
-	if( gViewPortInterface )
+	if (gViewPortInterface)
 	{
-		IViewPortPanel *panel = gViewPortInterface->FindPanelByName( PANEL_COMM );
-		if( panel )
+		IViewPortPanel *panel = gViewPortInterface->FindPanelByName(PANEL_COMM);
+		if (panel)
 		{
 			//toggle
-			panel->ShowPanel( !panel->IsVisible() );
+			panel->ShowPanel(!panel->IsVisible());
 		}
 
-		gViewPortInterface->ShowPanel( PANEL_CLASSES, false );
-		gViewPortInterface->ShowPanel( PANEL_COMM2, false );
+		gViewPortInterface->ShowPanel(PANEL_CLASSES, false);
+		gViewPortInterface->ShowPanel(PANEL_COMM2, false);
 	}
 }
 
-void CommMenu2( void )
+void CommMenu2(void)
 {
 	//bool EnforceOfficerForCommenu2( void );
 
-	if( gViewPortInterface /*&& EnforceOfficerForCommenu2()*/ )
+	if (gViewPortInterface /*&& EnforceOfficerForCommenu2()*/)
 	{
-		IViewPortPanel *panel = gViewPortInterface->FindPanelByName( PANEL_COMM2 );
-		if( panel )
+		IViewPortPanel *panel = gViewPortInterface->FindPanelByName(PANEL_COMM2);
+		if (panel)
 		{
 			//toggle
-			panel->ShowPanel( !panel->IsVisible() );
+			panel->ShowPanel(!panel->IsVisible());
 		}
 
-		gViewPortInterface->ShowPanel( PANEL_CLASSES, false );
-		gViewPortInterface->ShowPanel( PANEL_COMM, false );
+		gViewPortInterface->ShowPanel(PANEL_CLASSES, false);
+		gViewPortInterface->ShowPanel(PANEL_COMM, false);
 	}
 }
 //
 
 //BG2 - Tjoppen - OpenBG2OptionsDialog
-void Do_OpenBG2OptionsDialog( void )
+void Do_OpenBG2OptionsDialog(void)
 {
-	bg2options->SetVisible( true );
+	bg2options->SetVisible(true);
 	bg2options->Activate();
 }
 //
@@ -1776,9 +1780,8 @@ static ConCommand commmenu2(PANEL_COMM2, CommMenu2);
 static ConCommand OpenBG2OptionsDialog("OpenBG2OptionsDialog", Do_OpenBG2OptionsDialog);
 //
 //BG2 - Ironsights - HairyPotter
-static ConCommand toggle_ironsights( "ironsights", IN_IronsightsToggle );
+static ConCommand toggle_ironsights("ironsights", IN_IronsightsToggle);
 //
-
 static ConCommand startgraph("+graph", IN_GraphDown);
 static ConCommand endgraph("-graph", IN_GraphUp);
 static ConCommand startbreak("+break",IN_BreakDown);

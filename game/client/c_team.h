@@ -62,8 +62,7 @@ public:
 public:
 
 	// Data received from the server
-	//BG2 - Tjoppen - part of bandwidth saving
-	//CUtlVector< int > m_aPlayers;
+	CUtlVector< int > m_aPlayers;
 	char	m_szTeamname[ MAX_TEAM_NAME_LENGTH ];
 	int		m_iScore;
 	int		m_iRoundsWon;
@@ -79,7 +78,7 @@ public:
 	int GetNumInfantry();
 	int GetNumOfficers();
 	int GetNumSnipers();
-	int GetNumOfClass( int iClass );
+	int GetNumOfClass(int iClass);
 	//
 };
 

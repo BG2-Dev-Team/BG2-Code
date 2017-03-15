@@ -19,7 +19,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 //BG2 - Don't need this. -HairyPotter
-/*using namespace vgui;
+/*
+using namespace vgui;
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays current ammunition level
@@ -138,7 +139,7 @@ void CHudAmmo::UpdatePlayerAmmo( C_BasePlayer *player )
 	SetPaintBackgroundEnabled(true);
 
 	// Get our icons for the ammo types
-	//m_iconPrimaryAmmo = gWR.GetAmmoIconFromWeapon( wpn->GetPrimaryAmmoType() );
+	m_iconPrimaryAmmo = gWR.GetAmmoIconFromWeapon( wpn->GetPrimaryAmmoType() );
 
 	// get the ammo in our clip
 	int ammo1 = wpn->Clip1();
@@ -488,7 +489,7 @@ protected:
 			m_hCurrentActiveWeapon = wpn;
 			
 			// Get the icon we should be displaying
-			//m_iconSecondaryAmmo = gWR.GetAmmoIconFromWeapon( m_hCurrentActiveWeapon->GetSecondaryAmmoType() );
+			m_iconSecondaryAmmo = gWR.GetAmmoIconFromWeapon( m_hCurrentActiveWeapon->GetSecondaryAmmoType() );
 		}
 	}
 	

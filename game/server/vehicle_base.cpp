@@ -25,6 +25,7 @@
 #define SF_PROP_VEHICLE_ALWAYSTHINK		0x00000001
 
 ConVar g_debug_vehiclebase( "g_debug_vehiclebase", "0", FCVAR_CHEAT );
+//extern ConVar g_debug_vehicledriver;
 
 // CFourWheelServerVehicle
 BEGIN_SIMPLE_DATADESC_( CFourWheelServerVehicle, CBaseServerVehicle )
@@ -364,6 +365,7 @@ BEGIN_DATADESC( CPropVehicleDriveable )
 	DEFINE_FIELD( m_flTurnOffKeepUpright, FIELD_TIME ),
 	//DEFINE_FIELD( m_flNoImpactDamageTime, FIELD_TIME ),
 
+	//DEFINE_FIELD( m_hNPCDriver, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_hKeepUpright, FIELD_EHANDLE ),
 
 END_DATADESC()
@@ -563,6 +565,8 @@ void CPropVehicleDriveable::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, 
 //-----------------------------------------------------------------------------
 CBaseEntity *CPropVehicleDriveable::GetDriver( void ) 
 { 
+	//if ( m_hNPCDriver ) 
+		//return m_hNPCDriver; 
 
 	return m_hPlayer; 
 }
@@ -735,6 +739,12 @@ void CPropVehicleDriveable::Think()
 	{
 		SetNextThink( gpGlobals->curtime );
 	}
+
+	// If we have an NPC Driver, tell him to drive
+	//if ( m_hNPCDriver )
+	//{
+	//	GetServerVehicle()->NPC_DriveVehicle();
+	//}
 
 	// Keep thinking while we're waiting to turn off the keep upright
 	if ( m_flTurnOffKeepUpright )
@@ -1226,12 +1236,70 @@ bool CFourWheelServerVehicle::IsPassengerExiting( void )
 	return GetFourWheelVehicle()->IsExitAnimOn();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+/*void CFourWheelServerVehicle::NPC_SetDriver( CNPC_VehicleDriver *pDriver )
+{
+	if ( pDriver )
+	{
+		m_nNPCButtons = 0;
+		GetFourWheelVehicle()->m_hNPCDriver = pDriver;
+		GetFourWheelVehicle()->StartEngine();
+		SetVehicleVolume( 1.0 );	// Vehicles driven by NPCs are louder
+
+		// Set our owner entity to be the NPC, so it can path check without hitting us
+		GetFourWheelVehicle()->SetOwnerEntity( pDriver );
+
+		// Start Thinking
+		GetFourWheelVehicle()->SetNextThink( gpGlobals->curtime );
+	}
+	else
+	{
+		GetFourWheelVehicle()->m_hNPCDriver = NULL;
+		GetFourWheelVehicle()->StopEngine();
+		GetFourWheelVehicle()->SetOwnerEntity( NULL );
+		SetVehicleVolume( 0.5 );
+	}
+}*/
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CFourWheelServerVehicle::NPC_DriveVehicle( void )
 {
+	/*
+#ifdef HL2_DLL
+	if ( g_debug_vehicledriver.GetInt() )
+	{
+		if ( m_nNPCButtons )
+		{
+			Vector vecForward, vecRight;
+			GetFourWheelVehicle()->GetVectors( &vecForward, &vecRight, NULL );
+			if ( m_nNPCButtons & IN_FORWARD )
+			{
+				NDebugOverlay::Line( GetFourWheelVehicle()->GetAbsOrigin(), GetFourWheelVehicle()->GetAbsOrigin() + vecForward * 200, 0,255,0, true, 0.1 );
+			}
+			if ( m_nNPCButtons & IN_BACK )
+			{
+				NDebugOverlay::Line( GetFourWheelVehicle()->GetAbsOrigin(), GetFourWheelVehicle()->GetAbsOrigin() - vecForward * 200, 0,255,0, true, 0.1 );
+			}
+			if ( m_nNPCButtons & IN_MOVELEFT )
+			{
+				NDebugOverlay::Line( GetFourWheelVehicle()->GetAbsOrigin(), GetFourWheelVehicle()->GetAbsOrigin() - vecRight * 200 * -m_flTurnDegrees, 0,255,0, true, 0.1 );
+			}
+			if ( m_nNPCButtons & IN_MOVERIGHT )
+			{
+				NDebugOverlay::Line( GetFourWheelVehicle()->GetAbsOrigin(), GetFourWheelVehicle()->GetAbsOrigin() + vecRight * 200 * m_flTurnDegrees, 0,255,0, true, 0.1 );
+			}
+			if ( m_nNPCButtons & IN_JUMP )
+			{
+				NDebugOverlay::Box( GetFourWheelVehicle()->GetAbsOrigin(), -Vector(20,20,20), Vector(20,20,20), 0,255,0, true, 0.1 );
+			}
+		}
+	}
+#endif*/
+
 	int buttonsChanged = m_nPrevNPCButtons ^ m_nNPCButtons;
 	int afButtonPressed = buttonsChanged & m_nNPCButtons;		// The changed ones still down are "pressed"
 	int afButtonReleased = buttonsChanged & (~m_nNPCButtons);	// The ones not down are "released"

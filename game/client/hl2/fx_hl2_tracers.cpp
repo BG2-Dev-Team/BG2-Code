@@ -33,9 +33,8 @@ CLIENTEFFECT_REGISTER_END()
 //-----------------------------------------------------------------------------
 // Purpose: Gunship's Tracer
 //-----------------------------------------------------------------------------
-//BG2 - Don't need this. -HairyPotter
-/*
-void GunshipTracerCallback( const CEffectData &data )
+//BG2 - Don't need this. - HairyPotter
+/*void GunshipTracerCallback( const CEffectData &data )
 {
 	float flVelocity = data.m_flScale;
 	bool bWhiz = (data.m_fFlags & TRACER_FLAG_WHIZ);

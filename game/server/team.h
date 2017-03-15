@@ -64,9 +64,9 @@ public:
 	int GetNumInfantry();
 	int GetNumOfficers();
 	int GetNumSnipers();
-	int GetNumOfClass( int iClass );
-	int GetNumOfNextClass( int iNextClass );
-	int GetNumOfAmmoKit( int iAmmoKit ); // BG2 - VisualMelon - May need revising
+	int GetNumOfClass(int iClass);
+	int GetNumOfNextClass(int iNextClass);
+	int GetNumOfAmmoKit(int iAmmoKit); // BG2 - VisualMelon - May need revising
 	/*float GetMorale();
 	void AddMorale(float New, float Time);
 	void AddMoralePoint(CBaseEntity * pEnt);
@@ -90,12 +90,12 @@ public:
 
 	virtual int GetAliveMembers( void );
 	//BG2 - Commented - HairyPotter
-	void ResetTickets( void );
-	int GetTicketsLeft( void );
-	void RemoveTicket( void );
+	void ResetTickets(void);
+	int GetTicketsLeft(void);
+	void RemoveTicket(void);
 
 	//we explicitly allow the number of tickets to be removed to be decimal
-	void RemoveTickets( float number );
+	void RemoveTickets(float number);
 private:
 	//fractional number of tickets left over from last call to RemoveTickets()
 	//zeroed on round restart
@@ -110,7 +110,7 @@ public:
 	CNetworkString( m_szTeamname, MAX_TEAM_NAME_LENGTH );
 	CNetworkVar( int, m_iScore );
 	CNetworkVar( int, m_iRoundsWon );
-	CNetworkVar( int, m_iTicketsLeft ); //BG2 - Commented - HairyPotter
+	CNetworkVar(int, m_iTicketsLeft); //BG2 - Commented - HairyPotter
 	int		m_iDeaths;
 
 	// Spawnpoints

@@ -47,15 +47,15 @@ ConVar log_verbose_interval( "log_verbose_interval", "3.0", FCVAR_GAMEDLL, "Dete
 
 static CViewVectors g_DefaultViewVectors(
 	//BG2 - Tjoppen - TWEAKME: eye position to match models because it's easier
-	Vector( 0, 0, 56 ),//Vector( 0, 0, 64 ), //56
-	//
+	Vector(0, 0, 56),//Vector( 0, 0, 64 ), //56
+	//,			//VEC_VIEW (m_vView)
 								
 	Vector(-16, -16, 0 ),		//VEC_HULL_MIN (m_vHullMin)
 	Vector( 16,  16,  72 ),		//VEC_HULL_MAX (m_vHullMax)
 													
 	Vector(-16, -16, 0 ),		//VEC_DUCK_HULL_MIN (m_vDuckHullMin)
 	//BG2 - Tjoppen - need crouch bbox slightly larger so we can score headshots on crouching players :o
-	Vector( 16,  16,  45 ),//Vector( 16,  16,  36 ),
+	Vector(16, 16, 45),//Vector( 16,  16,  36 ),
 	//
 	Vector( 0, 0, 28 ),			//VEC_DUCK_VIEW		(m_vDuckView)
 													
@@ -193,11 +193,14 @@ bool CGameRules::CanHaveAmmo( CBaseCombatCharacter *pPlayer, const char *szName 
 //=========================================================
 CBaseEntity *CGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 {
+	//CHL2MP_Player * pPlayer = nullptr;//dynamic_cast<CHL2MP_Player*>(pPlayer_orig);
+	Assert(pPlayer);
+
 	CBaseEntity *pSpawnSpot = pPlayer->EntSelectSpawnPoint();
 	Assert( pSpawnSpot );
 
 	//BG2 - Tjoppen - don't do squat in GetPlayerSpawnSpot if we get NULL.. we might be a spectator or something
-	if( !pSpawnSpot )
+	if (!pSpawnSpot)
 		return NULL;
 	//
 
@@ -209,9 +212,10 @@ CBaseEntity *CGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 	pPlayer->SnapEyeAngles( pSpawnSpot->GetLocalAngles() );
 
 	//BG2 - Commented - HairyPotter
-	CSpawnPoint *pSpawn = static_cast< CSpawnPoint * >( pSpawnSpot );
-	if ( pSpawn )
+	CSpawnPoint *pSpawn = static_cast< CSpawnPoint * >(pSpawnSpot);
+	if (pSpawn)
 		pSpawn->m_bReserved = false;
+
 
 	return pSpawnSpot;
 }
@@ -219,26 +223,26 @@ CBaseEntity *CGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 // checks if the spot is clear of players
 /*bool CGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer  )
 {
-	CBaseEntity *ent = NULL;
+CBaseEntity *ent = NULL;
 
-	if ( !pSpot->IsTriggered( pPlayer ) )
-	{
-		return false;
-	}
+if ( !pSpot->IsTriggered( pPlayer ) )
+{
+return false;
+}
 
-	//BG2 - Tjoppen - CSpawnPoint
-	if( (CSpawnPoint*)pSpot && !((CSpawnPoint*)pSpot)->IsEnabled() )
-		return false;
-	//
+//BG2 - Tjoppen - CSpawnPoint
+if( (CSpawnPoint*)pSpot && !((CSpawnPoint*)pSpot)->IsEnabled() )
+return false;
+//
 
-	for ( CEntitySphereQuery sphere( pSpot->GetAbsOrigin(), 128 ); (ent = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity() )
-	{
-		// if ent is a client, don't spawn on 'em
-		if ( ent->IsPlayer() && ent != pPlayer )
-			return false;
-	}
+for ( CEntitySphereQuery sphere( pSpot->GetAbsOrigin(), 128 ); (ent = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity() )
+{
+// if ent is a client, don't spawn on 'em
+if ( ent->IsPlayer() && ent != pPlayer )
+return false;
+}
 
-	return true;
+return true;
 }*/
 
 //=========================================================
@@ -276,9 +280,8 @@ bool CGameRules::CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pWe
 //=========================================================
 void CGameRules::RefreshSkillData ( bool forceUpdate )
 {
-		//BG2 - We'll just keep these files from loading alltogether. -HairyPotter
-/*
-#ifndef CLIENT_DLL
+	//BG2 - We'll just keep these files from loading alltogether. -HairyPotter
+	/*#ifndef CLIENT_DLL
 	if ( !forceUpdate )
 	{
 		if ( GlobalEntity_IsInTable( "skill.cfg" ) )
@@ -834,22 +837,22 @@ const char *CGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 	//BG2 - Change this up a bit. -HairyPotter
 	/*if ( pPlayer && pPlayer->IsAlive() == false )
 	{
-		if ( bTeamOnly )
-			return "*DEAD*(TEAM)";
-		else
-			return "*DEAD*";
+	if ( bTeamOnly )
+	return "*DEAD*(TEAM)";
+	else
+	return "*DEAD*";
 	}*/
-	if ( pPlayer )
+	if (pPlayer)
 	{
-		if ( pPlayer->IsAlive() == false )
+		if (pPlayer->IsAlive() == false)
 		{
-			if ( bTeamOnly )
+			if (bTeamOnly)
 				return "*DEAD*(TEAM)";
 			else
 				return "*DEAD*";
 		}
 		else
-			if ( bTeamOnly )
+			if (bTeamOnly)
 				return "(TEAM)";
 	}
 	

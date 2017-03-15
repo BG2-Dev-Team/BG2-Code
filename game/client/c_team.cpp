@@ -17,38 +17,39 @@
 //-----------------------------------------------------------------------------
 // Purpose: RecvProxy that converts the Team's player UtlVector to entindexes
 //-----------------------------------------------------------------------------
- //BG2 - Tjoppen - don't need this
+//BG2 - Tjoppen - don't need this
 /*void RecvProxy_PlayerList(  const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
-	C_Team *pTeam = (C_Team*)pOut;
-	pTeam->m_aPlayers[pData->m_iElement] = pData->m_Value.m_Int;
+C_Team *pTeam = (C_Team*)pOut;
+pTeam->m_aPlayers[pData->m_iElement] = pData->m_Value.m_Int;
 }
 
 
 void RecvProxyArrayLength_PlayerArray( void *pStruct, int objectID, int currentArrayLength )
 {
-	C_Team *pTeam = (C_Team*)pStruct;
-	
-	if ( pTeam->m_aPlayers.Size() != currentArrayLength )
-		pTeam->m_aPlayers.SetSize( currentArrayLength );
+C_Team *pTeam = (C_Team*)pStruct;
+
+if ( pTeam->m_aPlayers.Size() != currentArrayLength )
+pTeam->m_aPlayers.SetSize( currentArrayLength );
 }
 */
+
 
 IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_iTeamNum)),
 	RecvPropInt( RECVINFO(m_iScore)),
 	RecvPropInt( RECVINFO(m_iRoundsWon) ),
-	RecvPropInt( RECVINFO(m_iTicketsLeft) ),
+	RecvPropInt(RECVINFO(m_iTicketsLeft)),
 	RecvPropString( RECVINFO(m_szTeamname)),
 	
 	//BG2 - Tjoppen - don't need this
-	/*RecvPropArray2( 
-		RecvProxyArrayLength_PlayerArray,
-		RecvPropInt( "player_array_element", 0, SIZEOF_IGNORE, 0, RecvProxy_PlayerList ), 
-		MAX_PLAYERS, 
-		0, 
-		"player_array"
-		)*/
+	/*RecvPropArray2(
+	RecvProxyArrayLength_PlayerArray,
+	RecvPropInt( "player_array_element", 0, SIZEOF_IGNORE, 0, RecvProxy_PlayerList ),
+	MAX_PLAYERS,
+	0,
+	"player_array"
+	)*/
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_Team )
@@ -96,7 +97,7 @@ C_Team::~C_Team()
 //BG2 - Tjoppen - part of bandwidth saving
 /*void C_Team::RemoveAllPlayers()
 {
-	m_aPlayers.RemoveAll();
+m_aPlayers.RemoveAll();
 }*/
 
 void C_Team::PreDataUpdate( DataUpdateType_t updateType )
@@ -111,7 +112,7 @@ void C_Team::PreDataUpdate( DataUpdateType_t updateType )
 //BG2 - Tjoppen - part of bandwidth saving
 /*C_BasePlayer* C_Team::GetPlayer( int idx )
 {
-	return (C_BasePlayer*)cl_entitylist->GetEnt(m_aPlayers[idx]);
+return (C_BasePlayer*)cl_entitylist->GetEnt(m_aPlayers[idx]);
 }*/
 
 
@@ -162,11 +163,11 @@ int C_Team::Get_Number_Players( void )
 {
 	//BG2 - Tjoppen - part of bandwidth saving
 	int n = 0;
-	for( int x = 1; x <= gpGlobals->maxClients; x++ )
+	for (int x = 1; x <= gpGlobals->maxClients; x++)
 	{
-		C_BasePlayer *pPlayer = static_cast<C_BasePlayer*>( cl_entitylist->GetEnt(x) );
+		C_BasePlayer *pPlayer = static_cast<C_BasePlayer*>(cl_entitylist->GetEnt(x));
 
-		if( pPlayer && pPlayer->GetTeamNumber() == GetTeamNumber() )
+		if (pPlayer && pPlayer->GetTeamNumber() == GetTeamNumber())
 			n++;
 	}
 
@@ -180,13 +181,13 @@ int C_Team::Get_Number_Players( void )
 //BG2 - Tjoppen - part of bandwidth saving
 /*bool C_Team::ContainsPlayer( int iPlayerIndex )
 {
-	for (int i = 0; i < m_aPlayers.Size(); i++ )
-	{
-		if ( m_aPlayers[i] == iPlayerIndex )
-			return true;
-	}
+for (int i = 0; i < m_aPlayers.Size(); i++ )
+{
+if ( m_aPlayers[i] == iPlayerIndex )
+return true;
+}
 
-	return false;
+return false;
 }*/
 
 
@@ -238,15 +239,15 @@ int GetNumTeams()
 C_Team *GetPlayersTeam( int iPlayerIndex )
 {
 	//BG2 - Tjoppen - part of bandwidth saving
-	C_BasePlayer *pPlayer = static_cast<C_BasePlayer*>( cl_entitylist->GetEnt(iPlayerIndex) );
+	C_BasePlayer *pPlayer = static_cast<C_BasePlayer*>(cl_entitylist->GetEnt(iPlayerIndex));
 
-	if( !pPlayer )
+	if (!pPlayer)
 		return NULL;
 
-	for (int i = 0; i < g_Teams.Count(); i++ )
+	for (int i = 0; i < g_Teams.Count(); i++)
 	{
 		//if ( g_Teams[i]->ContainsPlayer( iPlayerIndex ) )
-		if( g_Teams[i]->GetTeamNumber() == pPlayer->GetTeamNumber() )
+		if (g_Teams[i]->GetTeamNumber() == pPlayer->GetTeamNumber())
 			return g_Teams[i];
 	}
 
@@ -267,15 +268,15 @@ C_Team *GetPlayersTeam( C_BasePlayer *pPlayer )
 bool ArePlayersOnSameTeam( int iPlayerIndex1, int iPlayerIndex2 )
 {
 	//BG2 - Tjoppen - part of bandwidth saving
-	C_BasePlayer	*pPlayer1 = static_cast<C_BasePlayer*>( cl_entitylist->GetEnt(iPlayerIndex1) ),
-					*pPlayer2 = static_cast<C_BasePlayer*>( cl_entitylist->GetEnt(iPlayerIndex2) );
+	C_BasePlayer	*pPlayer1 = static_cast<C_BasePlayer*>(cl_entitylist->GetEnt(iPlayerIndex1)),
+		*pPlayer2 = static_cast<C_BasePlayer*>(cl_entitylist->GetEnt(iPlayerIndex2));
 
 	return pPlayer1 && pPlayer2 && pPlayer1->GetTeamNumber() == pPlayer2->GetTeamNumber();
 
 	/*for (int i = 0; i < g_Teams.Count(); i++ )
 	{
-		if ( g_Teams[i]->ContainsPlayer( iPlayerIndex1 ) && g_Teams[i]->ContainsPlayer( iPlayerIndex2 ) )
-			return true;
+	if ( g_Teams[i]->ContainsPlayer( iPlayerIndex1 ) && g_Teams[i]->ContainsPlayer( iPlayerIndex2 ) )
+	return true;
 	}
 
 	return false;*/
@@ -292,31 +293,30 @@ int GetNumberOfTeams( void )
 //BG2 - Tjoppen - stuff in C_Team
 int C_Team::GetNumInfantry()
 {
-	return GetNumOfClass( CLASS_INFANTRY );
+	return GetNumOfClass(CLASS_INFANTRY);
 }
 
 int C_Team::GetNumOfficers()
 {
-	return GetNumOfClass( CLASS_OFFICER );
+	return GetNumOfClass(CLASS_OFFICER);
 }
 
 int C_Team::GetNumSnipers()
 {
-	return GetNumOfClass( CLASS_SNIPER );
+	return GetNumOfClass(CLASS_SNIPER);
 }
 
-int C_Team::GetNumOfClass( int iClass )
+int C_Team::GetNumOfClass(int iClass)
 {
 	int iAmount = 0;
-	
-	for( int x = 1; x <= gpGlobals->maxClients; x++ )
-	{
-		CHL2MP_Player *pHL2Player = ToHL2MPPlayer( cl_entitylist->GetEnt(x) );
 
-		if( pHL2Player && pHL2Player->GetTeamNumber() == GetTeamNumber() && pHL2Player->GetClass() == iClass )
+	for (int x = 1; x <= gpGlobals->maxClients; x++)
+	{
+		CHL2MP_Player *pHL2Player = ToHL2MPPlayer(cl_entitylist->GetEnt(x));
+
+		if (pHL2Player && pHL2Player->GetTeamNumber() == GetTeamNumber() && pHL2Player->GetClass() == iClass)
 			iAmount++;
 	}
 
 	return iAmount;
 }
-//

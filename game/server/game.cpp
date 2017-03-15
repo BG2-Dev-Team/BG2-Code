@@ -32,7 +32,7 @@ ConVar  lservercfgfile( "lservercfgfile","listenserver.cfg" );
 // multiplayer server rules
 //BG2 - Tjoppen - default to teamplay
 //ConVar	teamplay( "mp_teamplay","0", FCVAR_NOTIFY );
-ConVar	teamplay( "mp_teamplay","1", FCVAR_NOTIFY );
+ConVar	teamplay("mp_teamplay", "1", FCVAR_NOTIFY);
 //
 ConVar	falldamage( "mp_falldamage","0", FCVAR_NOTIFY );
 ConVar	weaponstay( "mp_weaponstay","0", FCVAR_NOTIFY );

@@ -58,7 +58,7 @@ public:
 	virtual void			AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QAngle& eyeAngles ) {};
 
 	//BG2 -Added for Iron Sights Testing. Credits to Jorg for the code. -HairyPotter
-	void		CalcIronsights( Vector &pos, QAngle &ang );
+	void					CalcIronsights(Vector &pos, QAngle &ang);
 	//
 
 	// Initializes the viewmodel for use							

@@ -78,42 +78,42 @@ void CBaseViewModel::Precache( void )
 }
 
 //BG2 -Added for Iron Sights. Credits to Jorg for the code. -HairyPotter
-void CBaseViewModel::CalcIronsights( Vector &pos, QAngle &ang )
+void CBaseViewModel::CalcIronsights(Vector &pos, QAngle &ang)
 {
 	//CBaseCombatWeapon *pWeapon = GetOwningWeapon();
 	CBaseCombatWeapon *pWeapon = m_hWeapon.Get();
- 
-	if ( !pWeapon )
+
+	if (!pWeapon)
 		return;
- 
+
 	//get delta time for interpolation
 	float time = pWeapon->IsIronsighted() ? IRONSIGHTS_ANGLE_IN_TIME : IRONSIGHTS_ANGLE_OUT_TIME;
-	float delta( ( gpGlobals->curtime - pWeapon->m_flIronsightedTime ) / time );
-	float exp = ( pWeapon->IsIronsighted() ) ? 
-		( delta > 1.0f ) ? 1.0f : delta : //normal blending
-		( delta > 1.0f ) ? 0.0f : 1.0f - delta; //reverse interpolation
- 
-	if( exp <= 0.0f ) //fully not ironsighted; save performance
+	float delta((gpGlobals->curtime - pWeapon->m_flIronsightedTime) / time);
+	float exp = (pWeapon->IsIronsighted()) ?
+		(delta > 1.0f) ? 1.0f : delta : //normal blending
+		(delta > 1.0f) ? 0.0f : 1.0f - delta; //reverse interpolation
+
+	if (exp <= 0.0f) //fully not ironsighted; save performance
 		return;
- 
-	if( exp > 1.0f )
+
+	if (exp > 1.0f)
 		exp = 1.0f;
 
 	Vector newPos = pos;
 	QAngle newAng = ang;
- 
+
 	Vector vForward, vRight, vUp, vOffset;
-	AngleVectors( newAng, &vForward, &vRight, &vUp );
+	AngleVectors(newAng, &vForward, &vRight, &vUp);
 	vOffset = pWeapon->GetIronsightPositionOffset();
- 
+
 	newPos += vForward * vOffset.x;
 	newPos += vRight * vOffset.y;
 	newPos += vUp * vOffset.z;
 	newAng += pWeapon->GetIronsightAngleOffset(); //This also handles the pitch...
 	//fov is handled by CBaseCombatWeapon
- 
-	pos += ( newPos - pos ) * exp;
-	ang += ( newAng - ang ) * exp;
+
+	pos += (newPos - pos) * exp;
+	ang += (newAng - ang) * exp;
 }
 //
 
@@ -126,7 +126,6 @@ void CBaseViewModel::Spawn( void )
 	SetSize( Vector( -8, -4, -2), Vector(8, 4, 2) );
 	SetSolid( SOLID_NONE );
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -421,7 +420,7 @@ void CBaseViewModel::CalcViewModelView( CBasePlayer *owner, const Vector& eyePos
 
 	CBaseCombatWeapon *pWeapon = m_hWeapon.Get();
 	//Allow weapon lagging
-	if ( pWeapon != NULL && !pWeapon->IsIronsighted() )
+	if ( pWeapon != NULL && !pWeapon->IsIronsighted())
 	{
 #if defined( CLIENT_DLL )
 		if ( !prediction->InPrediction() )
@@ -436,6 +435,7 @@ void CBaseViewModel::CalcViewModelView( CBasePlayer *owner, const Vector& eyePos
 	// This was causing weapon jitter when rotating in updated CS:S; original Source had this in above InPrediction block  07/14/10
 	// Add lag
 	CalcViewModelLag( vmorigin, vmangles, vmangoriginal );
+
 
 #if defined( CLIENT_DLL )
 	if ( !prediction->InPrediction() )
@@ -476,7 +476,7 @@ void CBaseViewModel::CalcViewModelView( CBasePlayer *owner, const Vector& eyePos
 		}
 #endif
 
-		vmangles = EyeAngles() +  gun_angles
+		vmangles = EyeAngles() +  gun_angles;
 
 		CalcIronsights( vmorigin, vmangles ); //BG2 -Added for Iron Sights. Credits to Jorg for the code. -HairyPotter
 		SetLocalOrigin( Vector( vmorigin.x, vmorigin.y, vmorigin.z ) );

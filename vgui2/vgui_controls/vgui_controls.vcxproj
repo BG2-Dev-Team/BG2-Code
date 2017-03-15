@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -19,11 +19,13 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <TargetName>vgui_controls</TargetName>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <TargetName>vgui_controls</TargetName>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -40,13 +42,13 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\lib\public\.\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\Debug\.\</IntDir>
     <ExecutablePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\devtools\vstools;$(ExecutablePath);$(Path)</ExecutablePath>
-    <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</PreBuildEventUseInBuild>
+    <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</PreBuildEventUseInBuild>
     <PreLinkEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</PreLinkEventUseInBuild>
     <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</PostBuildEventUseInBuild>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\lib\public\.\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\Release\.\</IntDir>
     <ExecutablePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\devtools\vstools;$(ExecutablePath);$(Path)</ExecutablePath>
-    <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreBuildEventUseInBuild>
+    <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</PreBuildEventUseInBuild>
     <PreLinkEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</PreLinkEventUseInBuild>
     <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</PostBuildEventUseInBuild>
   </PropertyGroup>
@@ -65,9 +67,10 @@ if ERRORLEVEL 1 exit /b 1
 </Command>
     </PreBuildEvent>
     <ClCompile>
+      <AdditionalOptions> /Gw /Zc:inline</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;generated_proto;..\..\thirdparty\protobuf-2.3.0\src;..\..\thirdparty;..\..\thirdparty\cef;generated_proto</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>VPC;RAD_TELEMETRY_DISABLED;_HAS_ITERATOR_DEBUGGING=0;WIN32;_WIN32;_DEBUG;DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_ALLOW_RUNTIME_LIBRARY_MISMATCH;_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH;_ALLOW_MSC_VER_MISMATCH;%(PreprocessorDefinitions);COMPILER_MSVC32;COMPILER_MSVC32;COMPILER_MSVC;_DLL_EXT=.dll;LIBNAME=vgui_controls;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;DEV_BUILD;FRAME_POINTER_OMISSION_DISABLED;_EXTERNAL_DLL_EXT=.dll;VPCGAMECAPS=HL2MP;PROJECTDIR=C:\Users\Andrew\Desktop\bg2-Source\vgui2\vgui_controls;_DLL_EXT=.dll;SOURCE1=1;VPCGAME=hl2mp</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VPC;RAD_TELEMETRY_DISABLED;_HAS_ITERATOR_DEBUGGING=0;WIN32;_WIN32;_DEBUG;DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_ALLOW_RUNTIME_LIBRARY_MISMATCH;_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH;_ALLOW_MSC_VER_MISMATCH;%(PreprocessorDefinitions);COMPILER_MSVC32;COMPILER_MSVC32;COMPILER_MSVC;_DLL_EXT=.dll;LIBNAME=vgui_controls;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;DEV_BUILD;FRAME_POINTER_OMISSION_DISABLED;_EXTERNAL_DLL_EXT=.dll;VPCGAMECAPS=HL2MP;PROJECTDIR=F:\Users\Awesome\source-sdk-2013\mp\src\vgui2\vgui_controls;_DLL_EXT=.dll;VPCGAME=hl2mp;SOURCE1=1</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -88,9 +91,11 @@ if ERRORLEVEL 1 exit /b 1
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
       <BrowseInformation>false</BrowseInformation>
       <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
       <UseFullPaths>true</UseFullPaths>
+      <DisableSpecificWarnings>;4316</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <BrowseInformationFile>$(IntDir)/</BrowseInformationFile>
       <ErrorReporting>Prompt</ErrorReporting>
@@ -130,13 +135,13 @@ if ERRORLEVEL 1 exit /b 1
 </Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalOptions>/d2Zi+</AdditionalOptions>
+      <AdditionalOptions> /Zo /Gw /Zc:inline</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;generated_proto;..\..\thirdparty\protobuf-2.3.0\src;..\..\thirdparty;..\..\thirdparty\cef;generated_proto</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>VPC;RAD_TELEMETRY_DISABLED;WIN32;_WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_ALLOW_RUNTIME_LIBRARY_MISMATCH;_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH;_ALLOW_MSC_VER_MISMATCH;%(PreprocessorDefinitions);COMPILER_MSVC32;COMPILER_MSVC32;COMPILER_MSVC;_DLL_EXT=.dll;LIBNAME=vgui_controls;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;DEV_BUILD;FRAME_POINTER_OMISSION_DISABLED;_EXTERNAL_DLL_EXT=.dll;VPCGAMECAPS=HL2MP;PROJECTDIR=C:\Users\Andrew\Desktop\bg2-Source\vgui2\vgui_controls;_DLL_EXT=.dll;SOURCE1=1;VPCGAME=hl2mp</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VPC;RAD_TELEMETRY_DISABLED;WIN32;_WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_ALLOW_RUNTIME_LIBRARY_MISMATCH;_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH;_ALLOW_MSC_VER_MISMATCH;%(PreprocessorDefinitions);COMPILER_MSVC32;COMPILER_MSVC32;COMPILER_MSVC;_DLL_EXT=.dll;LIBNAME=vgui_controls;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;DEV_BUILD;FRAME_POINTER_OMISSION_DISABLED;_EXTERNAL_DLL_EXT=.dll;VPCGAMECAPS=HL2MP;PROJECTDIR=F:\Users\Awesome\source-sdk-2013\mp\src\vgui2\vgui_controls;_DLL_EXT=.dll;VPCGAME=hl2mp;SOURCE1=1</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -157,9 +162,11 @@ if ERRORLEVEL 1 exit /b 1
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
       <BrowseInformation>false</BrowseInformation>
       <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
       <UseFullPaths>true</UseFullPaths>
+      <DisableSpecificWarnings>;4316</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <BrowseInformationFile>$(IntDir)/</BrowseInformationFile>
       <ErrorReporting>Prompt</ErrorReporting>
@@ -187,7 +194,6 @@ if ERRORLEVEL 1 exit /b 1
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="generated_proto\htmlmessages.pb.h" />
     <ClInclude Include="..\..\public\vgui_controls\AnalogBar.h" />
     <ClInclude Include="..\..\public\vgui_controls\AnimatingImagePanel.h" />
     <ClInclude Include="..\..\public\vgui_controls\AnimationController.h" />
@@ -280,10 +286,6 @@ if ERRORLEVEL 1 exit /b 1
     <ClInclude Include="..\..\public\vgui_controls\WizardSubPanel.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="generated_proto\htmlmessages.pb.cc">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="AnalogBar.cpp" />
     <ClCompile Include="AnimatingImagePanel.cpp" />
     <ClCompile Include="AnimationController.cpp" />
@@ -311,7 +313,6 @@ if ERRORLEVEL 1 exit /b 1
     <ClCompile Include="Frame.cpp" />
     <ClCompile Include="GraphPanel.cpp" />
     <ClCompile Include="HTML.cpp" />
-    <ClCompile Include="..\..\public\html\htmlprotobuf.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="ImageList.cpp" />
     <ClCompile Include="ImagePanel.cpp" />
@@ -366,29 +367,17 @@ if ERRORLEVEL 1 exit /b 1
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\..\vgui2\chromehtml\htmlmessages.proto">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Running Protocol Buffer Compiler on %(Filename)%(Extension)...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if not exist generated_proto mkdir generated_proto
-..\..\gcsdk\bin\protoc.exe --proto_path=..\..\thirdparty\protobuf-2.3.0\src --proto_path=%(RootDir)%(Directory) --proto_path=..\..\gcsdk --cpp_out=generated_proto %(FullPath)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">generated_proto\%(Filename).pb.cc;generated_proto\%(Filename).pb.h</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Running Protocol Buffer Compiler on %(Filename)%(Extension)...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if not exist generated_proto mkdir generated_proto
-..\..\gcsdk\bin\protoc.exe --proto_path=..\..\thirdparty\protobuf-2.3.0\src --proto_path=%(RootDir)%(Directory) --proto_path=..\..\gcsdk --cpp_out=generated_proto %(FullPath)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">generated_proto\%(Filename).pb.cc;generated_proto\%(Filename).pb.h</Outputs>
-    </CustomBuild>
     <CustomBuild Include="vgui_controls.vpc">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Running VPC CRC Check - vgui_controls.vpc</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if exist "..\..\devtools\bin\vpc.exe" "..\..\devtools\bin\vpc.exe" -crc2 "vgui_controls.vcxproj"
+if ERRORLEVEL 1 exit /b 1
+echo crc_complete &gt; F:\Users\Awesome\source-sdk-2013\mp\src\vgui2\vgui_controls\vgui_controls.vpc.sentinel</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">F:\Users\Awesome\source-sdk-2013\mp\src\vgui2\vgui_controls\vgui_controls.vpc.sentinel</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Running VPC CRC Check - vgui_controls.vpc</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if exist "..\..\devtools\bin\vpc.exe" "..\..\devtools\bin\vpc.exe" -crc2 "vgui_controls.vcxproj"
+if ERRORLEVEL 1 exit /b 1
+echo crc_complete &gt; F:\Users\Awesome\source-sdk-2013\mp\src\vgui2\vgui_controls\vgui_controls.vpc.sentinel</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">F:\Users\Awesome\source-sdk-2013\mp\src\vgui2\vgui_controls\vgui_controls.vpc.sentinel</Outputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

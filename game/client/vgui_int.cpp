@@ -23,32 +23,34 @@
 #include <KeyValues.h>
 #include "filesystem.h"
 #include "matsys_controls/matsyscontrols.h"
+
+
 #include "../bg2/vgui_Panel_MainMenu.h"
 //BG2 - Tjoppen - options panel
 #include "../bg2/vgui_bg2_options.h"
 //
 class CBG2Version : public vgui::Panel
 {
-	DECLARE_CLASS_SIMPLE( CBG2Version, vgui::Panel );
-	CBG2Version( vgui::Panel parent ) : BaseClass( NULL, "BG2Version" )
+	DECLARE_CLASS_SIMPLE(CBG2Version, vgui::Panel);
+	CBG2Version(vgui::Panel parent) : BaseClass(NULL, "BG2Version")
 	{
 		vgui::Panel *pParent = g_pClientMode->GetViewport();
-		SetParent( pParent );
+		SetParent(pParent);
 
 		//BG2 - Print out the BG2 version number in the main menu panel. -HairyPotter
-		Color ColourWhite( 255, 255, 255, 255 );
+		Color ColourWhite(255, 255, 255, 255);
 		vgui::Label *m_pLabelBGVersion = NULL;
-		m_pLabelBGVersion = new vgui::Label( this, "RoundState_warmup", "");
-		m_pLabelBGVersion->SetPaintBackgroundEnabled( false );
-		m_pLabelBGVersion->SetPaintBorderEnabled( false );
-		m_pLabelBGVersion->SetText( "1.3.00b (SVN)" );
+		m_pLabelBGVersion = new vgui::Label(this, "RoundState_warmup", "");
+		m_pLabelBGVersion->SetPaintBackgroundEnabled(false);
+		m_pLabelBGVersion->SetPaintBorderEnabled(false);
+		m_pLabelBGVersion->SetText("1.3.00b (SVN)");
 		m_pLabelBGVersion->SizeToContents();
-		m_pLabelBGVersion->SetContentAlignment( vgui::Label::a_west );
-		m_pLabelBGVersion->SetFgColor( ColourWhite );
-		m_pLabelBGVersion->SetPos( GetWide() - 20, GetTall() - 20);
+		m_pLabelBGVersion->SetContentAlignment(vgui::Label::a_west);
+		m_pLabelBGVersion->SetFgColor(ColourWhite);
+		m_pLabelBGVersion->SetPos(GetWide() - 20, GetTall() - 20);
 		//
-		
-		SetVisible( true );
+
+		SetVisible(true);
 	}
 
 	~CBG2Version()
@@ -56,6 +58,14 @@ class CBG2Version : public vgui::Panel
 	}
 };
 extern CBG2Version *bg2version;
+
+#ifdef SIXENSE
+#include "sixense/in_sixense.h"
+#endif
+
+#if defined( TF_CLIENT_DLL )
+#include "tf_gamerules.h"
+#endif
 
 using namespace vgui;
 
@@ -67,6 +77,7 @@ vgui::IInputInternal *g_InputInternal = NULL;
 
 #include <vgui_controls/Controls.h>
 #include "game_controls/vguitextwindow.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -231,7 +242,7 @@ void VGui_CreateGlobalPanels( void )
 #endif
 	// Part of game
 	internalCenterPrint->Create( gameToolParent );
-	//loadingdisc->Create( gameToolParent );
+	//loadingdisc->Create( gameToolParent ); //BG2 - found this commented out while porting to 2016 - Awesome
 	messagechars->Create( gameToolParent );
 
 	// Debugging or related tool
@@ -242,12 +253,13 @@ void VGui_CreateGlobalPanels( void )
 	netgraphpanel->Create( toolParent );
 	debugoverlaypanel->Create( gameToolParent );
 
+	// Create mp3 player off of tool parent panel
 	MP3Player_Create( toolParent );
 
 	//BG2 - Tjoppen - options panel
 	VPANEL GameUiDll = enginevgui->GetPanel( PANEL_GAMEUIDLL );
-	SMenu->Create( GameUiDll ); //new Main menu
-	bg2options = new CBG2OptionsPanel( GameUiDll );	//make into main menu panel
+	SMenu->Create(GameUiDll); //new Main menu
+	bg2options = new CBG2OptionsPanel(GameUiDll);	//make into main menu panel
 	//
 }
 
@@ -264,17 +276,18 @@ void VGui_Shutdown()
 #endif
 	fps->Destroy();
 	SMenu->Destroy(); // to VGui_Shutdown().
+
 	messagechars->Destroy();
-	//loadingdisc->Destroy();
+	//loadingdisc->Destroy(); //BG2 - found this commented out while porting to 2016 - Awesome
 	internalCenterPrint->Destroy();
+
 	//BG2 - Tjoppen - options panel
-	if( bg2options )
+	if (bg2options)
 	{
 		delete bg2options;
 		bg2options = NULL;
 	}
 	//
-
 
 	if ( g_pClientMode )
 	{

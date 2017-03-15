@@ -34,6 +34,7 @@
 #include "cbase.h"
 #include "npcevent.h"
 #include "in_buttons.h"
+#include "../shared/bg2/bg2_player_shared.h"
 
 #ifdef CLIENT_DLL
 	#include "c_hl2mp_player.h"
@@ -114,15 +115,6 @@ public:
 
 	attackinfo	m_Attackinfos[2];
 
-	/*float		m_flRange,
-				m_flFireRate,
-				m_flImpactDelay,
-				m_flShotDamage,
-				m_flStabDamage;
-
-	Vector		m_vDuckSpread,
-				m_vStandSpread;*/
-
 	const char	*m_pBayonetDeathNotice;
 
 	CBaseBG2Weapon( void );
@@ -176,8 +168,12 @@ public:
 		if( iAttack == ATTACK_NONE )
 			return 0;
 
-		return m_Attackinfos[iAttack].m_iDamage;
+		int damage = m_Attackinfos[iAttack].m_iDamage;
+
+		return damage;
 	}
+
+	//static float GetDamageScale(CHL2MP_Player * pAttacker, CHL2MP_Player * pHitPlayer);
 
 	float	GetAccuracy( int iAttack )
 	{
@@ -195,46 +191,60 @@ public:
 		return m_Attackinfos[iAttack].m_vStandSpread * (moving ? 2.0f : 1.0f);*/
 
 		float modifier = 0;
+		float multiplier = 1.0f;
 
 		CHL2MP_Player *pPlayer = ToHL2MPPlayer( GetOwner() );
 
-		if ( pPlayer && m_iNumShot > 0 && pPlayer->GetCurrentAmmoKit() == AMMO_KIT_BUCKSHOT )
-			modifier = m_flShotAimModifier;
+		if (pPlayer) {
+			if (m_iNumShot > 0 && pPlayer->GetCurrentAmmoKit() == AMMO_KIT_BUCKSHOT)
+				modifier = m_flShotAimModifier;
+			if ((pPlayer->RallyGetCurrentRallies() & RALLY_ACCURACY) && (m_bIsIronsighted || (pPlayer->GetFlags() & FL_DUCKING)))
+				multiplier = RALLY_ACCURACY_MOD;
+		}
+
+		float base;
 
 		if( GetOwner() && (GetOwner()->GetFlags() & FL_DUCKING) ) //we're crouching
 		{
 			if( moving ) //we're moving.
 			{
 				if ( m_bIsIronsighted ) //So we're aiming... yet moving...
-					return m_Attackinfos[iAttack].m_flCrouchAimMoving + modifier;
+					base = m_Attackinfos[iAttack].m_flCrouchAimMoving + modifier;
 				else //Hip shot.
-					return m_Attackinfos[iAttack].m_flCrouchMoving + modifier;
+					base = m_Attackinfos[iAttack].m_flCrouchMoving + modifier;
 			}
 			else	//we're not moving.
 			{
 				if ( m_bIsIronsighted ) //So we're aiming...
-					return m_Attackinfos[iAttack].m_flCrouchAimStill + modifier;
+					base = m_Attackinfos[iAttack].m_flCrouchAimStill + modifier;
 				else //Hip shot.
-					return m_Attackinfos[iAttack].m_flCrouchStill + modifier;
+					base = m_Attackinfos[iAttack].m_flCrouchStill + modifier;
 			}
+		}
+		else if (moving && pPlayer && pPlayer->m_nButtons & IN_WALK){
+			if (m_bIsIronsighted) //So we're aiming...
+				base = FLerp(m_Attackinfos[iAttack].m_flStandAimMoving, m_Attackinfos[iAttack].m_flStandAimStill, 0, 1, ACCURACY_WALK_LERP) + modifier;
+			else //Hip shot.
+				base = FLerp(m_Attackinfos[iAttack].m_flStandMoving, m_Attackinfos[iAttack].m_flStandStill, 0, 1, ACCURACY_WALK_LERP) + modifier;
 		}
 		else //We're not crouching.
 		{
 			if( moving ) //We're standing and moving.
 			{
 				if ( m_bIsIronsighted ) //So we're aiming...
-					return m_Attackinfos[iAttack].m_flStandAimMoving + modifier;
+					base = m_Attackinfos[iAttack].m_flStandAimMoving + modifier;
 				else //Hip shot.
-					return m_Attackinfos[iAttack].m_flStandMoving + modifier;
+					base = m_Attackinfos[iAttack].m_flStandMoving + modifier;
 			}
 			else // We're not moving.
 			{
 				if ( m_bIsIronsighted ) //So we're aiming...
-					return m_Attackinfos[iAttack].m_flStandAimStill + modifier;
+					base = m_Attackinfos[iAttack].m_flStandAimStill + modifier;
 				else //Hip shot.
-					return m_Attackinfos[iAttack].m_flStandStill + modifier;
+					base = m_Attackinfos[iAttack].m_flStandStill + modifier;
 			}
 		}
+		return base * multiplier;
 	}
 
 	Activity	GetActivity( int iAttack )

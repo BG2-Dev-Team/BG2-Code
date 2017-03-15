@@ -24,7 +24,6 @@ END_SEND_TABLE()
 BEGIN_SIMPLE_DATADESC( CHL2PlayerLocalData )
 	DEFINE_FIELD( m_bZooming, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bWeaponLowered, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bDisplayReticle, FIELD_BOOLEAN ),
 	// Ladder related stuff
 	DEFINE_FIELD( m_hLadder, FIELD_EHANDLE ),
 	DEFINE_EMBEDDED( m_LadderMove ),

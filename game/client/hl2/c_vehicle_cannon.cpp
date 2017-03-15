@@ -145,7 +145,7 @@ int	C_PropCannon::GetPassengerRole( C_BaseCombatCharacter *pPassenger )
 //-----------------------------------------------------------------------------
 // Purpose: Modify the player view/camera while in a vehicle
 //-----------------------------------------------------------------------------
-void C_PropCannon::GetVehicleViewPosition( int nRole, Vector *pAbsOrigin, QAngle *pAbsAngles, float *pFOV  )
+void C_PropCannon::GetVehicleViewPosition( int nRole, Vector *pAbsOrigin, QAngle *pAbsAngles, float *pFOV /*=NULL*/ /*)
 {
 	SharedVehicleViewSmoothing( m_hPlayer, 
 								pAbsOrigin, pAbsAngles, 
@@ -184,5 +184,5 @@ void C_PropCannon::GetRenderBounds( Vector &theMins, Vector &theMaxs )
 	// allow for the full extension of the crane arm.
 	BaseClass::GetRenderBounds( theMins, theMaxs );
 	theMaxs.y += 660.0f;
-} */
+}*/
 

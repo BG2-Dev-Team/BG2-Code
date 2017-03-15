@@ -25,7 +25,10 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+//BG2 - no bows - yet! - Awesome
 /*
+
 //#define BOLT_MODEL			"models/crossbow_bolt.mdl"
 #define BOLT_MODEL	"models/weapons/w_missile_closed.mdl"
 

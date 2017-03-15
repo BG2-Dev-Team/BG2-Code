@@ -31,6 +31,24 @@
 //-----------------------------------------------------------------------------
 bool CAI_BaseHumanoid::HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt)
 {
+	//BG2 - found this removed while porting to 2016 - Awesome
+	/*
+#ifdef HL2_DLL
+	// Annoying to ifdef this out. Copy it into all the HL2 specific humanoid NPC's instead?
+	if ( interactionType == g_interactionBarnacleVictimDangle )
+	{
+		// Force choosing of a new schedule
+		ClearSchedule( "Grabbed by a barnacle" );
+		return true;
+	}
+	else if ( interactionType == g_interactionBarnacleVictimReleased )
+	{
+		// Destroy the entity, the barnacle is going to use the ragdoll that it is releasing
+		// as the corpse.
+		UTIL_Remove( this );
+		return true;
+	}
+#endif*/
 	return BaseClass::HandleInteraction( interactionType, data, sourceEnt);
 }
 
@@ -114,6 +132,37 @@ static bool IsSmall( CBaseEntity *pBlocker )
 
 bool CAI_BaseHumanoid::OnMoveBlocked( AIMoveResult_t *pResult )
 {
+	if ( *pResult != AIMR_BLOCKED_NPC && GetNavigator()->GetBlockingEntity() && !GetNavigator()->GetBlockingEntity()->IsNPC() )
+	{
+		CBaseEntity *pBlocker = GetNavigator()->GetBlockingEntity();
+
+		float massBonus = ( IsNavigationUrgent() ) ? 40.0 : 0;
+
+		if ( pBlocker->GetMoveType() == MOVETYPE_VPHYSICS && 
+			 pBlocker != GetGroundEntity() && 
+			 !pBlocker->IsNavIgnored() &&
+			 !dynamic_cast<CBasePropDoor *>(pBlocker) &&
+			 pBlocker->VPhysicsGetObject() && 
+			 pBlocker->VPhysicsGetObject()->IsMoveable() && 
+			 ( pBlocker->VPhysicsGetObject()->GetMass() <= 35.0 + massBonus + 0.1 || 
+			   ( pBlocker->VPhysicsGetObject()->GetMass() <= 50.0 + massBonus + 0.1 && IsSmall( pBlocker ) ) ) )
+		{
+			DbgNavMsg1( this, "Setting ignore on object %s", pBlocker->GetDebugName() );
+			pBlocker->SetNavIgnore( 2.5 );
+		}
+#if 0
+		else
+		{
+			CPhysicsProp *pProp = dynamic_cast<CPhysicsProp*>( pBlocker );
+			if ( pProp && pProp->GetHealth() && pProp->GetExplosiveDamage() == 0.0 && GetActiveWeapon() && !GetActiveWeapon()->ClassMatches( "weapon_rpg" ) )
+			{
+				Msg( "!\n" );
+				// Destroy!
+			}
+		}
+#endif
+	}
+
 	return BaseClass::OnMoveBlocked( pResult );
 }
 

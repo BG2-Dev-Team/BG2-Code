@@ -165,7 +165,10 @@ void C_BaseCombatWeapon::OnDataChanged( DataUpdateType_t updateType )
 		}
 	}
 
-	UpdateVisibility();
+	if ( updateType == DATA_UPDATE_CREATED )
+	{
+		UpdateVisibility();
+	}
 
 	m_iOldState = m_iState;
 
@@ -233,7 +236,6 @@ void C_BaseCombatWeapon::DrawCrosshair()
 		return;
 
 	Color clr = gHUD.m_clrNormal;
-/*
 /*
 
 	// TEST: if the thing under your crosshair is on a different team, light the crosshair with a different color.

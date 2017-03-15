@@ -333,6 +333,10 @@ int	CAI_Network::NearestNodeToPoint( CAI_BaseNPC *pNPC, const Vector &vecOrigin,
 		if ( smallest == cachedNode )
 			continue;
 
+		// Check that this node is usable by the current hull size
+		//if ( pNPC && !pNPC->GetNavigator()->CanFitAtNode(smallest))
+			//continue;
+
 		if ( bCheckVisibility )
 		{
 			trace_t tr;
@@ -418,6 +422,17 @@ int	CAI_Network::GetCachedNode(const Vector &checkPos, Hull_t nHull, int *pCache
 
 int	CAI_Network::GetCachedNearestNode(const Vector &checkPos, CAI_BaseNPC *pNPC, int *pCachePos )
 {
+	if ( pNPC )
+	{
+		CNodeFilter filter( pNPC, checkPos );
+
+		int nodeID = GetCachedNode( checkPos, pNPC->GetHullType(), pCachePos );
+		if ( nodeID >= 0 )
+		{
+			if ( filter.NodeIsValid( *m_pAInode[nodeID] ) && pNPC->GetNavigator()->CanFitAtNode(nodeID) )
+				return nodeID;
+		}
+	}
 	return NO_NODE;
 }
 

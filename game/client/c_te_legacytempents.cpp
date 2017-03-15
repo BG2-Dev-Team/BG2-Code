@@ -45,34 +45,30 @@
 
 extern ConVar muzzleflash_light;
 
-#define TENT_WIND_ACCEL 50
+void MuzzleFlash_Pistol_Shared( /*int*/ClientEntityHandle_t hEntity, int attachmentIndex, bool isFirstPerson);
 
-void MuzzleFlash_Pistol_Shared( /*int*/ClientEntityHandle_t hEntity, int attachmentIndex, bool isFirstPerson );
+#define TENT_WIND_ACCEL 50
 
 //Precache the effects
 #ifndef TF_CLIENT_DLL
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectMuzzleFlash )
-	CLIENTEFFECT_MATERIAL( "sprites/ar2_muzzle1" )
-	CLIENTEFFECT_MATERIAL( "sprites/ar2_muzzle3" )
-	CLIENTEFFECT_MATERIAL( "sprites/ar2_muzzle4" )
-	CLIENTEFFECT_MATERIAL( "sprites/muzzleflash4" )
-	CLIENTEFFECT_MATERIAL( "particle/fire" )
 
-	CLIENTEFFECT_MATERIAL( "effects/combinemuzzle1_noz" )
-	CLIENTEFFECT_MATERIAL( "effects/combinemuzzle2_noz" )
-
+	CLIENTEFFECT_MATERIAL( "effects/muzzleflash1" )
+	CLIENTEFFECT_MATERIAL( "effects/muzzleflash2" )
+	CLIENTEFFECT_MATERIAL( "effects/muzzleflash3" )
+	CLIENTEFFECT_MATERIAL( "effects/muzzleflash4" )
 	CLIENTEFFECT_MATERIAL( "effects/muzzleflash1_noz" )
 	CLIENTEFFECT_MATERIAL( "effects/muzzleflash2_noz" )
 	CLIENTEFFECT_MATERIAL( "effects/muzzleflash3_noz" )
 	CLIENTEFFECT_MATERIAL( "effects/muzzleflash4_noz" )
-
-	CLIENTEFFECT_MATERIAL( "particle/particle_musketsmoke1" )
-	CLIENTEFFECT_MATERIAL( "particle/particle_musketsmoke2" )
-	CLIENTEFFECT_MATERIAL( "particle/particle_musketsmoke3" )
-	CLIENTEFFECT_MATERIAL( "particle/particle_musketsmoke4" )
-	CLIENTEFFECT_MATERIAL( "particle/particle_musketsmoke5" )
-
-	CLIENTEFFECT_REGISTER_END()
+#ifndef CSTRIKE_DLL
+	CLIENTEFFECT_MATERIAL( "effects/combinemuzzle1" )
+	CLIENTEFFECT_MATERIAL( "effects/combinemuzzle2" )
+	CLIENTEFFECT_MATERIAL( "effects/combinemuzzle1_noz" )
+	CLIENTEFFECT_MATERIAL( "effects/combinemuzzle2_noz" )
+	CLIENTEFFECT_MATERIAL( "effects/strider_muzzle" )
+#endif
+CLIENTEFFECT_REGISTER_END()
 #endif
 
 //Whether or not to eject brass from weapons
@@ -1549,7 +1545,7 @@ void CTempEnts::BloodSprite( const Vector &org, int r, int g, int b, int a, int 
 	{
 		C_LocalTempEntity		*pTemp;
 		int						frameCount = modelinfo->GetModelFrameCount( model );
-		color32					impactcolor = { r, g, b, a };
+		color32					impactcolor = { (byte)r, (byte)g, (byte)b, (byte)a };
 
 		//Large, single blood sprite is a high-priority tent
 		if ( ( pTemp = TempEntAllocHigh( org, model ) ) != NULL )
@@ -1798,7 +1794,7 @@ void CTempEnts::MuzzleFlash( int type, ClientEntityHandle_t hEntity, int attachm
 		break;
 		//BG2 - Tjoppen - flashpan
 	case MUZZLEFLASH_FLASHPAN:
-			MuzzleFlash_Flashpan( hEntity, attachmentIndex, firstPerson );
+			MuzzleFlash_Flashpan(hEntity, attachmentIndex, firstPerson);
 		break;
 		//
 	default:
@@ -2420,6 +2416,22 @@ void CTempEnts::LevelInit()
 	m_pShells[1] = (model_t *) engine->LoadModel( "models/weapons/rifleshell.mdl" );
 	m_pShells[2] = (model_t *) engine->LoadModel( "models/weapons/shotgun_shell.mdl" );
 #endif
+
+	//BG2 - found these removed while porting to 2016 - no HL1 or CS stuff in BG2 - Awesome
+	/*
+#if defined( HL1_CLIENT_DLL )
+	m_pHL1Shell			= (model_t *)engine->LoadModel( "models/shell.mdl" );
+	m_pHL1ShotgunShell	= (model_t *)engine->LoadModel( "models/shotgunshell.mdl" );
+#endif
+
+#if defined( CSTRIKE_DLL ) || defined ( SDK_DLL )
+	m_pCS_9MMShell		= (model_t *)engine->LoadModel( "models/Shells/shell_9mm.mdl" );
+	m_pCS_57Shell		= (model_t *)engine->LoadModel( "models/Shells/shell_57.mdl" );
+	m_pCS_12GaugeShell	= (model_t *)engine->LoadModel( "models/Shells/shell_12gauge.mdl" );
+	m_pCS_556Shell		= (model_t *)engine->LoadModel( "models/Shells/shell_556.mdl" );
+	m_pCS_762NATOShell	= (model_t *)engine->LoadModel( "models/Shells/shell_762nato.mdl" );
+	m_pCS_338MAGShell	= (model_t *)engine->LoadModel( "models/Shells/shell_338mag.mdl" );
+#endif*/
 }
 
 
@@ -2448,6 +2460,16 @@ void CTempEnts::Init (void)
 	m_pHL1Shell			= NULL;
 	m_pHL1ShotgunShell	= NULL;
 #endif
+	//BG2 - found these removed while porting to 2016 - no HL1 or CS stuff in BG2 - Awesome
+	/*
+#if defined( CSTRIKE_DLL ) || defined ( SDK_DLL )
+	m_pCS_9MMShell		= NULL;
+	m_pCS_57Shell		= NULL;
+	m_pCS_12GaugeShell	= NULL;
+	m_pCS_556Shell		= NULL;
+	m_pCS_762NATOShell	= NULL;
+	m_pCS_338MAGShell	= NULL;
+#endif*/
 
 	// Clear out lists to start
 	Clear();
@@ -2863,7 +2885,7 @@ void CTempEnts::MuzzleFlash_Shotgun_Player( ClientEntityHandle_t hEntity, int at
 {
 	//BG2 - Tjoppen - HACKHACK: just redirect shotgun muzzleflash to pistol for now
 	//also, muskets have shotgun flashes, pistols have pistol flashes
-	MuzzleFlash_Pistol_Shared( hEntity, attachmentIndex, true );
+	MuzzleFlash_Pistol_Shared(hEntity, attachmentIndex, true);
 	return;
 
 	/*VPROF_BUDGET( "MuzzleFlash_Shotgun_Player", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
@@ -2892,29 +2914,29 @@ void CTempEnts::MuzzleFlash_Shotgun_Player( ClientEntityHandle_t hEntity, int at
 	// Flash
 	for ( int i = 1; i < 6; i++ )
 	{
-		offset = origin + (forward * (i*8.0f*flScale));
+	offset = origin + (forward * (i*8.0f*flScale));
 
-		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), m_Material_MuzzleFlash_Player[random->RandomInt(0,3)], offset );
-			
-		if ( pParticle == NULL )
-			return;
+	pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), m_Material_MuzzleFlash_Player[random->RandomInt(0,3)], offset );
 
-		pParticle->m_flLifetime		= 0.0f;
-		pParticle->m_flDieTime		= 0.0001f;
+	if ( pParticle == NULL )
+	return;
 
-		pParticle->m_vecVelocity.Init();
+	pParticle->m_flLifetime		= 0.0f;
+	pParticle->m_flDieTime		= 0.0001f;
 
-		pParticle->m_uchColor[0]	= 255;
-		pParticle->m_uchColor[1]	= 255;
-		pParticle->m_uchColor[2]	= 200+random->RandomInt(0,55);
+	pParticle->m_vecVelocity.Init();
 
-		pParticle->m_uchStartAlpha	= 255;
-		pParticle->m_uchEndAlpha	= 255;
+	pParticle->m_uchColor[0]	= 255;
+	pParticle->m_uchColor[1]	= 255;
+	pParticle->m_uchColor[2]	= 200+random->RandomInt(0,55);
 
-		pParticle->m_uchStartSize	= ( (random->RandomFloat( 6.0f, 8.0f ) * (8-(i))/6) * flScale );
-		pParticle->m_uchEndSize		= pParticle->m_uchStartSize;
-		pParticle->m_flRoll			= random->RandomInt( 0, 360 );
-		pParticle->m_flRollDelta	= 0.0f;
+	pParticle->m_uchStartAlpha	= 255;
+	pParticle->m_uchEndAlpha	= 255;
+
+	pParticle->m_uchStartSize	= ( (random->RandomFloat( 6.0f, 8.0f ) * (8-(i))/6) * flScale );
+	pParticle->m_uchEndSize		= pParticle->m_uchStartSize;
+	pParticle->m_flRoll			= random->RandomInt( 0, 360 );
+	pParticle->m_flRollDelta	= 0.0f;
 	}*/
 }
 
@@ -2927,7 +2949,7 @@ void CTempEnts::MuzzleFlash_Shotgun_NPC( ClientEntityHandle_t hEntity, int attac
 {
 	//BG2 - Tjoppen - HACKHACK: just redirect shotgun muzzleflash to pistol for now
 	//also, muskets have shotgun flashes, pistols have pistol flashes
-	MuzzleFlash_Pistol_Shared( hEntity, attachmentIndex, false );
+	MuzzleFlash_Pistol_Shared(hEntity, attachmentIndex, false);
 	return;
 
 	/*
@@ -2937,7 +2959,7 @@ void CTempEnts::MuzzleFlash_Shotgun_NPC( ClientEntityHandle_t hEntity, int attac
 	// If the material isn't available, let's not do anything else.
 	if ( g_Mat_SMG_Muzzleflash[0] == NULL )
 	{
-		return;
+	return;
 	}
 
 	QAngle	angles;
@@ -2949,7 +2971,7 @@ void CTempEnts::MuzzleFlash_Shotgun_NPC( ClientEntityHandle_t hEntity, int attac
 	Vector	origin;
 	IClientRenderable *pRenderable = ClientEntityList().GetClientRenderableFromHandle( hEntity );
 	if ( !pRenderable )
-		return;
+	return;
 
 	pRenderable->GetAttachment( attachmentIndex, origin, angles );
 	AngleVectors( angles, &forward );
@@ -2957,49 +2979,49 @@ void CTempEnts::MuzzleFlash_Shotgun_NPC( ClientEntityHandle_t hEntity, int attac
 	//Embers less often
 	if ( random->RandomInt( 0, 2 ) == 0 )
 	{
-		//Embers
-		CSmartPtr<CEmberEffect> pEmbers = CEmberEffect::Create( "muzzle_embers" );
-		pEmbers->SetSortOrigin( origin );
+	//Embers
+	CSmartPtr<CEmberEffect> pEmbers = CEmberEffect::Create( "muzzle_embers" );
+	pEmbers->SetSortOrigin( origin );
 
-		SimpleParticle	*pParticle;
+	SimpleParticle	*pParticle;
 
-		int	numEmbers = random->RandomInt( 0, 4 );
+	int	numEmbers = random->RandomInt( 0, 4 );
 
-		for ( int i = 0; i < numEmbers; i++ )
-		{
-			pParticle = (SimpleParticle *) pEmbers->AddParticle( sizeof( SimpleParticle ), g_Mat_SMG_Muzzleflash[0], origin );
-				
-			if ( pParticle == NULL )
-				return;
+	for ( int i = 0; i < numEmbers; i++ )
+	{
+	pParticle = (SimpleParticle *) pEmbers->AddParticle( sizeof( SimpleParticle ), g_Mat_SMG_Muzzleflash[0], origin );
 
-			pParticle->m_flLifetime		= 0.0f;
-			pParticle->m_flDieTime		= random->RandomFloat( 0.2f, 0.4f );
+	if ( pParticle == NULL )
+	return;
 
-			pParticle->m_vecVelocity.Random( -0.05f, 0.05f );
-			pParticle->m_vecVelocity += forward;
-			VectorNormalize( pParticle->m_vecVelocity );
+	pParticle->m_flLifetime		= 0.0f;
+	pParticle->m_flDieTime		= random->RandomFloat( 0.2f, 0.4f );
 
-			pParticle->m_vecVelocity	*= random->RandomFloat( 64.0f, 256.0f );
+	pParticle->m_vecVelocity.Random( -0.05f, 0.05f );
+	pParticle->m_vecVelocity += forward;
+	VectorNormalize( pParticle->m_vecVelocity );
 
-			pParticle->m_uchColor[0]	= 255;
-			pParticle->m_uchColor[1]	= 128;
-			pParticle->m_uchColor[2]	= 64;
+	pParticle->m_vecVelocity	*= random->RandomFloat( 64.0f, 256.0f );
 
-			pParticle->m_uchStartAlpha	= 255;
-			pParticle->m_uchEndAlpha	= 0;
+	pParticle->m_uchColor[0]	= 255;
+	pParticle->m_uchColor[1]	= 128;
+	pParticle->m_uchColor[2]	= 64;
 
-			pParticle->m_uchStartSize	= 1;
-			pParticle->m_uchEndSize		= 0;
+	pParticle->m_uchStartAlpha	= 255;
+	pParticle->m_uchEndAlpha	= 0;
 
-			pParticle->m_flRoll			= 0;
-			pParticle->m_flRollDelta	= 0;
-		}
+	pParticle->m_uchStartSize	= 1;
+	pParticle->m_uchEndSize		= 0;
+
+	pParticle->m_flRoll			= 0;
+	pParticle->m_flRollDelta	= 0;
+	}
 	}
 
 	//
 	// Trails
 	//
-	
+
 	CSmartPtr<CTrailParticles> pTrails = CTrailParticles::Create( "MuzzleFlash_Shotgun_NPC" );
 	pTrails->SetSortOrigin( origin );
 
@@ -3012,31 +3034,31 @@ void CTempEnts::MuzzleFlash_Shotgun_NPC( ClientEntityHandle_t hEntity, int attac
 
 	for ( i = 0; i < numEmbers; i++ )
 	{
-		pTrailParticle = (TrailParticle *) pTrails->AddParticle( sizeof( TrailParticle ), g_Mat_SMG_Muzzleflash[0], origin );
-			
-		if ( pTrailParticle == NULL )
-			return;
+	pTrailParticle = (TrailParticle *) pTrails->AddParticle( sizeof( TrailParticle ), g_Mat_SMG_Muzzleflash[0], origin );
 
-		pTrailParticle->m_flLifetime		= 0.0f;
-		pTrailParticle->m_flDieTime		= random->RandomFloat( 0.1f, 0.2f );
+	if ( pTrailParticle == NULL )
+	return;
 
-		float spread = 0.05f;
+	pTrailParticle->m_flLifetime		= 0.0f;
+	pTrailParticle->m_flDieTime		= random->RandomFloat( 0.1f, 0.2f );
 
-		pTrailParticle->m_vecVelocity.Random( -spread, spread );
-		pTrailParticle->m_vecVelocity += forward;
-		
-		VectorNormalize( pTrailParticle->m_vecVelocity );
-		VectorNormalize( forward );
+	float spread = 0.05f;
 
-		float dot = forward.Dot( pTrailParticle->m_vecVelocity );
+	pTrailParticle->m_vecVelocity.Random( -spread, spread );
+	pTrailParticle->m_vecVelocity += forward;
 
-		dot = (1.0f-fabs(dot)) / spread;
-		pTrailParticle->m_vecVelocity *= (random->RandomFloat( 256.0f, 1024.0f ) * (1.0f-dot));
+	VectorNormalize( pTrailParticle->m_vecVelocity );
+	VectorNormalize( forward );
 
-		Color32Init( pTrailParticle->m_color, 255, 242, 191, 255 );
+	float dot = forward.Dot( pTrailParticle->m_vecVelocity );
 
-		pTrailParticle->m_flLength	= 0.05f;
-		pTrailParticle->m_flWidth	= random->RandomFloat( 0.25f, 0.5f );
+	dot = (1.0f-fabs(dot)) / spread;
+	pTrailParticle->m_vecVelocity *= (random->RandomFloat( 256.0f, 1024.0f ) * (1.0f-dot));
+
+	Color32Init( pTrailParticle->m_color, 255, 242, 191, 255 );
+
+	pTrailParticle->m_flLength	= 0.05f;
+	pTrailParticle->m_flWidth	= random->RandomFloat( 0.25f, 0.5f );
 	}*/
 }
 
@@ -3134,89 +3156,89 @@ void CTempEnts::MuzzleFlash_357_Player( ClientEntityHandle_t hEntity, int attach
 //#define SMOKE_TESTCVARS --Comment this out for release.
 
 #if defined( SMOKE_TESTCVARS )
-ConVar cl_smoke_muzzle_length( "cl_smoke_muzzle_length", "120", FCVAR_ARCHIVE, "Length of forward smoke cone when created" );
-ConVar cl_smoke_muzzle_count( "cl_smoke_muzzle_count", "11", FCVAR_ARCHIVE, "Number of 'puff' sprites along the length of the smoke cone" );
-ConVar cl_smoke_muzzle_lifetime_min( "cl_smoke_muzzle_lifetime_min", "1", FCVAR_ARCHIVE, "Minimum lifetime of smoke puffs" );
-ConVar cl_smoke_muzzle_lifetime_max( "cl_smoke_muzzle_lifetime_max", "18", FCVAR_ARCHIVE, "Maximum lifetime of smoke puffs" );
-ConVar cl_smoke_muzzle_speed( "cl_smoke_muzzle_speed", "20000", FCVAR_ARCHIVE, "Initial speed of smoke in forward direction" );
-ConVar cl_smoke_muzzle_size_start( "cl_smoke_muzzle_size_start", "10", FCVAR_ARCHIVE, "Size of smoke puff nearest the muzzle" );
-ConVar cl_smoke_muzzle_size_end( "cl_smoke_muzzle_size_end", "28", FCVAR_ARCHIVE, "Size of smoke puff furthest away from the muzzle" );
+ConVar cl_smoke_muzzle_length("cl_smoke_muzzle_length", "120", FCVAR_ARCHIVE, "Length of forward smoke cone when created");
+ConVar cl_smoke_muzzle_count("cl_smoke_muzzle_count", "11", FCVAR_ARCHIVE, "Number of 'puff' sprites along the length of the smoke cone");
+ConVar cl_smoke_muzzle_lifetime_min("cl_smoke_muzzle_lifetime_min", "1", FCVAR_ARCHIVE, "Minimum lifetime of smoke puffs");
+ConVar cl_smoke_muzzle_lifetime_max("cl_smoke_muzzle_lifetime_max", "18", FCVAR_ARCHIVE, "Maximum lifetime of smoke puffs");
+ConVar cl_smoke_muzzle_speed("cl_smoke_muzzle_speed", "20000", FCVAR_ARCHIVE, "Initial speed of smoke in forward direction");
+ConVar cl_smoke_muzzle_size_start("cl_smoke_muzzle_size_start", "10", FCVAR_ARCHIVE, "Size of smoke puff nearest the muzzle");
+ConVar cl_smoke_muzzle_size_end("cl_smoke_muzzle_size_end", "28", FCVAR_ARCHIVE, "Size of smoke puff furthest away from the muzzle");
 
-ConVar cl_smoke_flashpan_length( "cl_smoke_flashpan_length", "20", FCVAR_ARCHIVE, "Length of upward smoke cone when created" );
-ConVar cl_smoke_flashpan_count( "cl_smoke_flashpan_count", "8", FCVAR_ARCHIVE, "Number of 'puff' sprites along the length of the smoke cone" );
-ConVar cl_smoke_flashpan_lifetime_min( "cl_smoke_flashpan_lifetime_min", "1", FCVAR_ARCHIVE, "Minimum lifetime of smoke puffs" );
-ConVar cl_smoke_flashpan_lifetime_max( "cl_smoke_flashpan_lifetime_max", "5", FCVAR_ARCHIVE, "Maximum lifetime of smoke puffs" );
-ConVar cl_smoke_flashpan_speed( "cl_smoke_flashpan_speed", "1000", FCVAR_ARCHIVE, "Initial speed of smoke in upward direction" );
-ConVar cl_smoke_flashpan_size_start( "cl_smoke_flashpan_size_start", "4", FCVAR_ARCHIVE, "Size of smoke puff nearest the flashpan" );
-ConVar cl_smoke_flashpan_size_end( "cl_smoke_flashpan_size_end", "8", FCVAR_ARCHIVE, "Size of smoke puff furthest away from the flashpan" );
+ConVar cl_smoke_flashpan_length("cl_smoke_flashpan_length", "20", FCVAR_ARCHIVE, "Length of upward smoke cone when created");
+ConVar cl_smoke_flashpan_count("cl_smoke_flashpan_count", "8", FCVAR_ARCHIVE, "Number of 'puff' sprites along the length of the smoke cone");
+ConVar cl_smoke_flashpan_lifetime_min("cl_smoke_flashpan_lifetime_min", "1", FCVAR_ARCHIVE, "Minimum lifetime of smoke puffs");
+ConVar cl_smoke_flashpan_lifetime_max("cl_smoke_flashpan_lifetime_max", "5", FCVAR_ARCHIVE, "Maximum lifetime of smoke puffs");
+ConVar cl_smoke_flashpan_speed("cl_smoke_flashpan_speed", "1000", FCVAR_ARCHIVE, "Initial speed of smoke in upward direction");
+ConVar cl_smoke_flashpan_size_start("cl_smoke_flashpan_size_start", "4", FCVAR_ARCHIVE, "Size of smoke puff nearest the flashpan");
+ConVar cl_smoke_flashpan_size_end("cl_smoke_flashpan_size_end", "8", FCVAR_ARCHIVE, "Size of smoke puff furthest away from the flashpan");
 
-ConVar cl_smoke_owner_velocity_bonus( "cl_smoke_owner_velocity_bonus", "0.25", FCVAR_ARCHIVE, "Amount of extra velocity to take from player to add to smoke. Setting too high (> 0.5) looks silly" );
-ConVar cl_smoke_opacity_start( "cl_smoke_opacity_start", "35", FCVAR_ARCHIVE, "Initial opacity of smoke" );
-ConVar cl_smoke_opacity_end( "cl_smoke_opacity_end", "0", FCVAR_ARCHIVE, "Final opacity of smoke, before dying" );
-ConVar cl_smoke_size_expansion( "cl_smoke_size_expansion", "4", FCVAR_ARCHIVE, "Ratio between initial and final smoke size" );
-ConVar cl_smoke_rotation( "cl_smoke_rotation", "99", FCVAR_ARCHIVE, "Rotation speed of sprites" );
-ConVar cl_smoke_speed_dropoff( "cl_smoke_speed_dropoff", "999999", FCVAR_ARCHIVE, "Smoke speed drops off to drift speed at a rate of expf(-dropoff * dt) each dt" );
+ConVar cl_smoke_owner_velocity_bonus("cl_smoke_owner_velocity_bonus", "0.25", FCVAR_ARCHIVE, "Amount of extra velocity to take from player to add to smoke. Setting too high (> 0.5) looks silly");
+ConVar cl_smoke_opacity_start("cl_smoke_opacity_start", "35", FCVAR_ARCHIVE, "Initial opacity of smoke");
+ConVar cl_smoke_opacity_end("cl_smoke_opacity_end", "0", FCVAR_ARCHIVE, "Final opacity of smoke, before dying");
+ConVar cl_smoke_size_expansion("cl_smoke_size_expansion", "4", FCVAR_ARCHIVE, "Ratio between initial and final smoke size");
+ConVar cl_smoke_rotation("cl_smoke_rotation", "99", FCVAR_ARCHIVE, "Rotation speed of sprites");
+ConVar cl_smoke_speed_dropoff("cl_smoke_speed_dropoff", "999999", FCVAR_ARCHIVE, "Smoke speed drops off to drift speed at a rate of expf(-dropoff * dt) each dt");
 #endif
 //
 
 //BG2 - Tjoppen - shared muzzleflash function(both first- and thirdperson)
-void MuzzleFlash_Pistol_Shared( ClientEntityHandle_t hEntity, int attachmentIndex, bool isFirstPerson )
+void MuzzleFlash_Pistol_Shared(ClientEntityHandle_t hEntity, int attachmentIndex, bool isFirstPerson)
 {
-	VPROF_BUDGET( "MuzzleFlash_Pistol_Player", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
+	VPROF_BUDGET("MuzzleFlash_Pistol_Player", VPROF_BUDGETGROUP_PARTICLE_RENDERING);
 	CSmartPtr<CSimpleEmitter> pSimple;
 	CSmartPtr<CLocalSpaceEmitter> pSimple2;
 	CSmartPtr<CBG2SmokeEmitter> pSimple3;
 
-	pSimple = CSimpleEmitter::Create( "MuzzleFlash_Pistol_Shared" );
-	if( isFirstPerson )
+	pSimple = CSimpleEmitter::Create("MuzzleFlash_Pistol_Shared");
+	if (isFirstPerson)
 	{
 		//pSimple = CSimpleEmitter::Create( "MuzzleFlash_Pistol_Shared" );
-		pSimple->SetDrawBeforeViewModel( true );
+		pSimple->SetDrawBeforeViewModel(true);
 	}
 	else
-		pSimple2 = CLocalSpaceEmitter::Create( "MuzzleFlash", hEntity, attachmentIndex );
+		pSimple2 = CLocalSpaceEmitter::Create("MuzzleFlash", hEntity, attachmentIndex);
 
-	pSimple3 = CBG2SmokeEmitter::Create( "MuzzleFlash_Smoke_Shared" );
-	if( isFirstPerson )
+	pSimple3 = CBG2SmokeEmitter::Create("MuzzleFlash_Smoke_Shared");
+	if (isFirstPerson)
 	{
-		pSimple3->SetDrawBeforeViewModel( true );
+		pSimple3->SetDrawBeforeViewModel(true);
 	}
-	
 
-	Vector origin(0,0,0);
+
+	Vector origin(0, 0, 0);
 	QAngle angles;
 
-	Vector forward(1,0,0);
-	
+	Vector forward(1, 0, 0);
+
 	// Get our attachment's transformation matrix
-	if( isFirstPerson )
+	if (isFirstPerson)
 	{
-		FX_GetAttachmentTransform( hEntity, attachmentIndex, &origin, &angles );
-        AngleVectors( angles, &forward, NULL, NULL );
+		FX_GetAttachmentTransform(hEntity, attachmentIndex, &origin, &angles);
+		AngleVectors(angles, &forward, NULL, NULL);
 	}
 
 	//assume this is a weapon. it's owned by a player. the player has a velocity
 	//BG2 - Tjoppen - HACKHACK: dropped weapons used to discharge smoke. this fixes it, while getting the velocty
-	Vector	ownervelocity(0,0,0);
-	int Ent = ClientEntityList().HandleToEntIndex( hEntity ); //Had to do this. -HairyPotter
-	C_BaseViewModel *pEnt = dynamic_cast<C_BaseViewModel*>( ClientEntityList().GetEnt( Ent ) );
-	C_BaseCombatWeapon *pWeap = dynamic_cast<C_BaseCombatWeapon*>( ClientEntityList().GetEnt( Ent ) );
+	Vector	ownervelocity(0, 0, 0);
+	int Ent = ClientEntityList().HandleToEntIndex(hEntity); //Had to do this. -HairyPotter
+	C_BaseViewModel *pEnt = dynamic_cast<C_BaseViewModel*>(ClientEntityList().GetEnt(Ent));
+	C_BaseCombatWeapon *pWeap = dynamic_cast<C_BaseCombatWeapon*>(ClientEntityList().GetEnt(Ent));
 
-	if( pEnt )
+	if (pEnt)
 	{
 		C_BaseEntity *pEnt2 = pEnt->GetOwner();
 
-		if( pEnt2 )
+		if (pEnt2)
 		{
 			ownervelocity = pEnt2->GetLocalVelocity();	//success!
 			//BG2 - Tjoppen - HACKHACK: make smoke use owner's eyeangles instead of attachment's angles. This is because
 			//					the muzzle attachment is either angled the wrong way or the entire model is(pistols)
-			AngleVectors( pEnt2->EyeAngles(), &forward, NULL, NULL );
+			AngleVectors(pEnt2->EyeAngles(), &forward, NULL, NULL);
 		}
 		else
 			return;	//vphysobj = on ground, or no owner. don't do smoke.
 	}
-	else if( !(pWeap && !pWeap->VPhysicsGetObject() && pWeap->GetOwner()) )
+	else if (!(pWeap && !pWeap->VPhysicsGetObject() && pWeap->GetOwner()))
 		return;		//vphysobj = on ground, or no owner. don't do smoke.
 
 	SimpleParticle *pParticle;
@@ -3224,74 +3246,74 @@ void MuzzleFlash_Pistol_Shared( ClientEntityHandle_t hEntity, int attachmentInde
 
 	//BG2 - Tjoppen - bigger flash..
 	//float flScale = random->RandomFloat( 1.0f, 1.25f );
-	float flScale = random->RandomFloat( 1.5f, 2.0f );
+	float flScale = random->RandomFloat(1.5f, 2.0f);
 
 	// Flash
-	for ( int i = 1; i < 8; i++ )
+	for (int i = 1; i < 8; i++)
 	{
 		//BG2 - Tjoppen - flash shall stay!
-		offset = origin + forward * (float)(i*2);
+		offset = origin + forward * (float)(i * 2);
 
 		//BG2 - Tjoppen - in third person mode, flash must be handled separately
 		//			otherwise it "shines through" the terrain
-		if( isFirstPerson )
-			pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), pSimple->GetPMaterial( VarArgs( "effects/muzzleflash%d_noz", random->RandomInt(1,4) ) ), offset );
+		if (isFirstPerson)
+			pParticle = (SimpleParticle *)pSimple->AddParticle(sizeof(SimpleParticle), pSimple->GetPMaterial(VarArgs("effects/muzzleflash%d_noz", random->RandomInt(1, 4))), offset);
 		else
-			pParticle = (SimpleParticle *) pSimple2->AddParticle( sizeof( SimpleParticle ), pSimple2->GetPMaterial( VarArgs( "effects/muzzleflash%d", random->RandomInt(1,4) ) ), offset );
-			
-		if ( pParticle == NULL )
+			pParticle = (SimpleParticle *)pSimple2->AddParticle(sizeof(SimpleParticle), pSimple2->GetPMaterial(VarArgs("effects/muzzleflash%d", random->RandomInt(1, 4))), offset);
+
+		if (pParticle == NULL)
 			return;
 
-		pParticle->m_flLifetime		= 0.0f;
+		pParticle->m_flLifetime = 0.0f;
 		//BG2 - Tjoppen - flash lives longer
 		//pParticle->m_flDieTime		= 0.01f;
-		pParticle->m_flDieTime		= 0.15f;
+		pParticle->m_flDieTime = 0.15f;
 
 		pParticle->m_vecVelocity.Init();
 
-		pParticle->m_uchColor[0]	= 255;
-		pParticle->m_uchColor[1]	= 255;
-		pParticle->m_uchColor[2]	= 200+random->RandomInt(0,55);
+		pParticle->m_uchColor[0] = 255;
+		pParticle->m_uchColor[1] = 255;
+		pParticle->m_uchColor[2] = 200 + random->RandomInt(0, 55);
 
-		pParticle->m_uchStartAlpha	= 255;
+		pParticle->m_uchStartAlpha = 255;
 		//BG2 - Tjoppen - fade flash out
 		//pParticle->m_uchEndAlpha	= 255;
-		pParticle->m_uchEndAlpha	= 128;
+		pParticle->m_uchEndAlpha = 128;
 
 		//BG2 - Tjoppen - larger flash
 		//pParticle->m_uchStartSize	= ( (random->RandomFloat( 6.0f, 8.0f ) * (8-(i))/6) * flScale );
 		//pParticle->m_uchEndSize		= pParticle->m_uchStartSize;
-		pParticle->m_uchStartSize	= 0.65 * (random->RandomFloat( 6.0f, 8.0f ) * (24-(i))/6) * flScale;
-		pParticle->m_uchEndSize		= 0;
-		pParticle->m_flRoll			= random->RandomInt( 0, 360 );
-		pParticle->m_flRollDelta	= 0.0f;
+		pParticle->m_uchStartSize = 0.65 * (random->RandomFloat(6.0f, 8.0f) * (24 - (i)) / 6) * flScale;
+		pParticle->m_uchEndSize = 0;
+		pParticle->m_flRoll = random->RandomInt(0, 360);
+		pParticle->m_flRollDelta = 0.0f;
 	}
 
-	if( !isFirstPerson )
+	if (!isFirstPerson)
 	{
-		FX_GetAttachmentTransform( hEntity, attachmentIndex, &origin, &angles );
-		AngleVectors( angles, &forward, NULL, NULL );
+		FX_GetAttachmentTransform(hEntity, attachmentIndex, &origin, &angles);
+		AngleVectors(angles, &forward, NULL, NULL);
 	}
 
 	// Smoke
 
 	//BG2 - Tjoppen - cvar configurable smoke
 #if defined ( SMOKE_TESTCVARS )
-	for( int j = 0; j < cl_smoke_muzzle_count.GetInt(); j++ )
+	for (int j = 0; j < cl_smoke_muzzle_count.GetInt(); j++)
 	{
 		//BG2 - Tjoppen - smoke pops up along a line, to simulate the initial very fast exhaust
-		offset = origin + forward * cl_smoke_muzzle_length.GetFloat() * (j+1) / cl_smoke_muzzle_count.GetFloat();
+		offset = origin + forward * cl_smoke_muzzle_length.GetFloat() * (j + 1) / cl_smoke_muzzle_count.GetFloat();
 
 		char name[64];
-		Q_snprintf( name, sizeof(name), "particle/particle_musketsmoke%i", random->RandomInt(1,5) );
+		Q_snprintf(name, sizeof(name), "particle/particle_musketsmoke%i", random->RandomInt(1, 5));
 
-		pParticle = (SimpleParticle *) pSimple3->AddParticle( sizeof( SimpleParticle ), pSimple3->GetPMaterial( name ), offset );
-			
-		if ( pParticle == NULL )
+		pParticle = (SimpleParticle *)pSimple3->AddParticle(sizeof(SimpleParticle), pSimple3->GetPMaterial(name), offset);
+
+		if (pParticle == NULL)
 			return;
 
-		pParticle->m_flLifetime		= 0.0f;
-		pParticle->m_flDieTime		= random->RandomFloat( cl_smoke_muzzle_lifetime_min.GetFloat(), cl_smoke_muzzle_lifetime_max.GetFloat() );
+		pParticle->m_flLifetime = 0.0f;
+		pParticle->m_flDieTime = random->RandomFloat(cl_smoke_muzzle_lifetime_min.GetFloat(), cl_smoke_muzzle_lifetime_max.GetFloat());
 
 		pParticle->m_vecVelocity = forward * cl_smoke_muzzle_speed.GetFloat();
 
@@ -3299,43 +3321,43 @@ void MuzzleFlash_Pistol_Shared( ClientEntityHandle_t hEntity, int attachmentInde
 		pParticle->m_vecVelocity += ownervelocity * cl_smoke_owner_velocity_bonus.GetFloat();
 
 		//Find area ambient light color and use it to tint smoke
-		Vector	worldLight = WorldGetLightForPoint( origin, false );	
+		Vector	worldLight = WorldGetLightForPoint(origin, false);
 
-		int color = random->RandomInt( 215, 255 );//( 200, 255 );
+		int color = random->RandomInt(215, 255);//( 200, 255 );
 		float finalcolor = worldLight[0] * color + 30;
-		if ( finalcolor > 205 )
+		if (finalcolor > 205)
 			finalcolor = 205;
-		if ( finalcolor < 130 )
+		if (finalcolor < 130)
 			finalcolor = 130;
-		pParticle->m_uchColor[0]	= finalcolor;
-		pParticle->m_uchColor[1]	= finalcolor;
-		pParticle->m_uchColor[2]	= finalcolor;
+		pParticle->m_uchColor[0] = finalcolor;
+		pParticle->m_uchColor[1] = finalcolor;
+		pParticle->m_uchColor[2] = finalcolor;
 
-		pParticle->m_uchStartAlpha	= cl_smoke_opacity_start.GetFloat();
-		pParticle->m_uchEndAlpha	= cl_smoke_opacity_end.GetFloat();
+		pParticle->m_uchStartAlpha = cl_smoke_opacity_start.GetFloat();
+		pParticle->m_uchEndAlpha = cl_smoke_opacity_end.GetFloat();
 
-		pParticle->m_uchStartSize	= cl_smoke_muzzle_size_start.GetFloat() + (cl_smoke_muzzle_size_end.GetFloat() - cl_smoke_muzzle_size_start.GetFloat())* (j+1) / cl_smoke_muzzle_count.GetFloat();
-		pParticle->m_uchEndSize		= pParticle->m_uchStartSize * cl_smoke_size_expansion.GetFloat();
-		pParticle->m_flRoll			= random->RandomInt( 0, 360 );
-		pParticle->m_flRollDelta	= random->RandomFloat( -cl_smoke_rotation.GetFloat(), cl_smoke_rotation.GetFloat() );
+		pParticle->m_uchStartSize = cl_smoke_muzzle_size_start.GetFloat() + (cl_smoke_muzzle_size_end.GetFloat() - cl_smoke_muzzle_size_start.GetFloat())* (j + 1) / cl_smoke_muzzle_count.GetFloat();
+		pParticle->m_uchEndSize = pParticle->m_uchStartSize * cl_smoke_size_expansion.GetFloat();
+		pParticle->m_flRoll = random->RandomInt(0, 360);
+		pParticle->m_flRollDelta = random->RandomFloat(-cl_smoke_rotation.GetFloat(), cl_smoke_rotation.GetFloat());
 
 	}
 #else
-	for( int j = 0; j < 11; j++ )
+	for (int j = 0; j < 11; j++)
 	{
 		//BG2 - Tjoppen - smoke pops up along a line, to simulate the initial very fast exhaust
-		offset = origin + forward * 120 * (j+1) / 11;
+		offset = origin + forward * 120 * (j + 1) / 11;
 
 		char name[64];
-		Q_snprintf( name, sizeof(name), "particle/particle_musketsmoke%i", random->RandomInt(1,5) );
+		Q_snprintf(name, sizeof(name), "particle/particle_musketsmoke%i", random->RandomInt(1, 5));
 
-		pParticle = (SimpleParticle *) pSimple3->AddParticle( sizeof( SimpleParticle ), pSimple3->GetPMaterial( name ), offset );
-			
-		if ( pParticle == NULL )
+		pParticle = (SimpleParticle *)pSimple3->AddParticle(sizeof(SimpleParticle), pSimple3->GetPMaterial(name), offset);
+
+		if (pParticle == NULL)
 			return;
 
-		pParticle->m_flLifetime		= 0.0f;
-		pParticle->m_flDieTime		= random->RandomFloat( 1, 18 );
+		pParticle->m_flLifetime = 0.0f;
+		pParticle->m_flDieTime = random->RandomFloat(1, 18);
 
 		pParticle->m_vecVelocity = forward * 20000;
 
@@ -3343,25 +3365,25 @@ void MuzzleFlash_Pistol_Shared( ClientEntityHandle_t hEntity, int attachmentInde
 		pParticle->m_vecVelocity += ownervelocity * 0.25;
 
 		//Find area ambient light color and use it to tint smoke
-		Vector	worldLight = WorldGetLightForPoint( origin, false );	
+		Vector	worldLight = WorldGetLightForPoint(origin, false);
 
-		int color = random->RandomInt( 215, 255 );//( 200, 255 );
+		int color = random->RandomInt(215, 255);//( 200, 255 );
 		float finalcolor = worldLight[0] * color + 30;
-		if ( finalcolor > 205 )
+		if (finalcolor > 205)
 			finalcolor = 205;
-		if ( finalcolor < 130 )
+		if (finalcolor < 130)
 			finalcolor = 130;
-		pParticle->m_uchColor[0]	= finalcolor;
-		pParticle->m_uchColor[1]	= finalcolor;
-		pParticle->m_uchColor[2]	= finalcolor;
+		pParticle->m_uchColor[0] = finalcolor;
+		pParticle->m_uchColor[1] = finalcolor;
+		pParticle->m_uchColor[2] = finalcolor;
 
-		pParticle->m_uchStartAlpha	= 35;
-		pParticle->m_uchEndAlpha	= 0;
+		pParticle->m_uchStartAlpha = 35;
+		pParticle->m_uchEndAlpha = 0;
 
-		pParticle->m_uchStartSize	= 10 + (28 - 10)* (j+1) / 11;
-		pParticle->m_uchEndSize		= pParticle->m_uchStartSize * 4;
-		pParticle->m_flRoll			= random->RandomInt( 0, 360 );
-		pParticle->m_flRollDelta	= random->RandomFloat( -99, 99 );
+		pParticle->m_uchStartSize = 10 + (28 - 10)* (j + 1) / 11;
+		pParticle->m_uchEndSize = pParticle->m_uchStartSize * 4;
+		pParticle->m_flRoll = random->RandomInt(0, 360);
+		pParticle->m_flRollDelta = random->RandomFloat(-99, 99);
 
 	}
 #endif
@@ -3372,9 +3394,9 @@ void MuzzleFlash_Pistol_Shared( ClientEntityHandle_t hEntity, int attachmentInde
 // Input: 
 //==================================================
 
-void CTempEnts::MuzzleFlash_Pistol_Player( ClientEntityHandle_t hEntity, int attachmentIndex )
+void CTempEnts::MuzzleFlash_Pistol_Player(ClientEntityHandle_t hEntity, int attachmentIndex)
 {
-	MuzzleFlash_Pistol_Shared( hEntity, attachmentIndex, true ); //BG2
+	MuzzleFlash_Pistol_Shared(hEntity, attachmentIndex, true); //BG2
 	return;
 }
 
@@ -3385,14 +3407,13 @@ void CTempEnts::MuzzleFlash_Pistol_Player( ClientEntityHandle_t hEntity, int att
 
 void CTempEnts::MuzzleFlash_Pistol_NPC( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
-	MuzzleFlash_Pistol_Shared( hEntity, attachmentIndex, false ); //BG2
-	return;
+	FX_MuzzleEffectAttached( 0.5f, hEntity, attachmentIndex, NULL, true );
 }
 
 //BG2 - Tjoppen - shared flashpan function
-void CTempEnts::MuzzleFlash_Flashpan( ClientEntityHandle_t hEntity, int attachmentIndex, bool isFirstPerson )
+void CTempEnts::MuzzleFlash_Flashpan(ClientEntityHandle_t hEntity, int attachmentIndex, bool isFirstPerson)
 {
-	VPROF_BUDGET( "MuzzleFlash_Flashpan", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
+	VPROF_BUDGET("MuzzleFlash_Flashpan", VPROF_BUDGETGROUP_PARTICLE_RENDERING);
 
 	//if( cl_simple_smoke.GetBool() )
 	//	return;
@@ -3400,69 +3421,69 @@ void CTempEnts::MuzzleFlash_Flashpan( ClientEntityHandle_t hEntity, int attachme
 	CSmartPtr<CBG2SmokeEmitter> pSimple;
 	//CSmartPtr<CLocalSpaceEmitter> pSimple2;
 
-	pSimple = CBG2SmokeEmitter::Create( "MuzzleFlash_Flashpan" );
-	if( isFirstPerson )
+	pSimple = CBG2SmokeEmitter::Create("MuzzleFlash_Flashpan");
+	if (isFirstPerson)
 	{
-		pSimple->SetDrawBeforeViewModel( true );
+		pSimple->SetDrawBeforeViewModel(true);
 	}
 	/*else
-		pSimple2 = CLocalSpaceEmitter::Create( "MuzzleFlash", entityIndex, attachmentIndex );*/
+	pSimple2 = CLocalSpaceEmitter::Create( "MuzzleFlash", entityIndex, attachmentIndex );*/
 
-	Vector origin(0,0,0);
+	Vector origin(0, 0, 0);
 	QAngle angles;
 
 	//BG2 - Tjoppen - forward is _always_ up
-	Vector forward(0,0,1);//1,0,0);
+	Vector forward(0, 0, 1);//1,0,0);
 
 	// Get our attachment's transformation matrix
-	FX_GetAttachmentTransform( hEntity , attachmentIndex, &origin, &angles );
+	FX_GetAttachmentTransform(hEntity, attachmentIndex, &origin, &angles);
 
-	Vector right(0,0,0);
+	Vector right(0, 0, 0);
 	//AngleVectors( angles, NULL, NULL, &right );	//HACKHACK - I can't be bothered rotating attachments and recompiling models
-												//they might become corrupt again :\
-    
+	//they might become corrupt again :\
+	    
 	SimpleParticle *pParticle;
 
 	//assume this is a weapon. it's owned by a player. the player has a velocity
 	//BG2 - Tjoppen - HACKHACK: dropped weapons used to discharge smoke. this fixes it, while getting the velocty
-	Vector	ownervelocity(0,0,0);
-	int Ent = ClientEntityList().HandleToEntIndex( hEntity ); //Had to do this. -HairyPotter
-	C_BaseViewModel *pEnt = dynamic_cast<C_BaseViewModel*>( ClientEntityList().GetEnt( Ent ) );
-	C_BaseCombatWeapon *pWeap = dynamic_cast<C_BaseCombatWeapon*>( ClientEntityList().GetEnt( Ent ) );
+	Vector	ownervelocity(0, 0, 0);
+	int Ent = ClientEntityList().HandleToEntIndex(hEntity); //Had to do this. -HairyPotter
+	C_BaseViewModel *pEnt = dynamic_cast<C_BaseViewModel*>(ClientEntityList().GetEnt(Ent));
+	C_BaseCombatWeapon *pWeap = dynamic_cast<C_BaseCombatWeapon*>(ClientEntityList().GetEnt(Ent));
 
-	if( pEnt )
+	if (pEnt)
 	{
 		C_BaseEntity *pEnt2 = pEnt->GetOwner();
 
-		if( pEnt2 )
+		if (pEnt2)
 		{
 			ownervelocity = pEnt2->GetLocalVelocity();	//success!
 
-			AngleVectors( pEnt2->GetLocalAngles(), NULL, &right, NULL );
+			AngleVectors(pEnt2->GetLocalAngles(), NULL, &right, NULL);
 		}
 		else
 			return;	//vphysobj = on ground, or no owner. don't do smoke.
 	}
-	else if( !(pWeap && !pWeap->VPhysicsGetObject() && pWeap->GetOwner()) )
+	else if (!(pWeap && !pWeap->VPhysicsGetObject() && pWeap->GetOwner()))
 		return;		//vphysobj = on ground, or no owner. don't do smoke.
 
 	//BG2 - Tjoppen - cvar configurable smoke
 #if defined ( SMOKE_TESTCVARS )
-	for( int j = 0; j < cl_smoke_flashpan_count.GetInt(); j++ )
+	for (int j = 0; j < cl_smoke_flashpan_count.GetInt(); j++)
 	{
 		//BG2 - Tjoppen - smoke pops up along a line, to simulate the initial very fast exhaust
-		Vector offset = origin + forward * cl_smoke_flashpan_length.GetFloat() * (j+1) / cl_smoke_flashpan_count.GetFloat();
+		Vector offset = origin + forward * cl_smoke_flashpan_length.GetFloat() * (j + 1) / cl_smoke_flashpan_count.GetFloat();
 
 		char name[64];
-		Q_snprintf( name, sizeof(name), "particle/particle_musketsmoke%i", random->RandomInt(1,5) );
+		Q_snprintf(name, sizeof(name), "particle/particle_musketsmoke%i", random->RandomInt(1, 5));
 
-		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), pSimple->GetPMaterial( name ), offset );
-			
-		if ( pParticle == NULL )
+		pParticle = (SimpleParticle *)pSimple->AddParticle(sizeof(SimpleParticle), pSimple->GetPMaterial(name), offset);
+
+		if (pParticle == NULL)
 			return;
 
-		pParticle->m_flLifetime		= 0.0f;
-		pParticle->m_flDieTime		= random->RandomFloat( cl_smoke_flashpan_lifetime_min.GetFloat(), cl_smoke_flashpan_lifetime_max.GetFloat() );
+		pParticle->m_flLifetime = 0.0f;
+		pParticle->m_flDieTime = random->RandomFloat(cl_smoke_flashpan_lifetime_min.GetFloat(), cl_smoke_flashpan_lifetime_max.GetFloat());
 
 		pParticle->m_vecVelocity = forward * cl_smoke_flashpan_speed.GetFloat();
 
@@ -3470,42 +3491,42 @@ void CTempEnts::MuzzleFlash_Flashpan( ClientEntityHandle_t hEntity, int attachme
 		pParticle->m_vecVelocity += ownervelocity * cl_smoke_owner_velocity_bonus.GetFloat();
 
 		//Find area ambient light color and use it to tint smoke
-		Vector	worldLight = WorldGetLightForPoint( origin, false );	
+		Vector	worldLight = WorldGetLightForPoint(origin, false);
 
-		int color = random->RandomInt( 215, 255 );//( 200, 255 );
+		int color = random->RandomInt(215, 255);//( 200, 255 );
 		float finalcolor = worldLight[0] * color + 30;
-		if ( finalcolor > 205 )
+		if (finalcolor > 205)
 			finalcolor = 205;
-		if ( finalcolor < 130 )
+		if (finalcolor < 130)
 			finalcolor = 130;
-		pParticle->m_uchColor[0]	= finalcolor;
-		pParticle->m_uchColor[1]	= finalcolor;
-		pParticle->m_uchColor[2]	= finalcolor;
+		pParticle->m_uchColor[0] = finalcolor;
+		pParticle->m_uchColor[1] = finalcolor;
+		pParticle->m_uchColor[2] = finalcolor;
 
-		pParticle->m_uchStartAlpha	= cl_smoke_opacity_start.GetFloat();
-		pParticle->m_uchEndAlpha	= cl_smoke_opacity_end.GetFloat();
+		pParticle->m_uchStartAlpha = cl_smoke_opacity_start.GetFloat();
+		pParticle->m_uchEndAlpha = cl_smoke_opacity_end.GetFloat();
 
-		pParticle->m_uchStartSize	= cl_smoke_flashpan_size_start.GetFloat() + (cl_smoke_flashpan_size_end.GetFloat() - cl_smoke_flashpan_size_start.GetFloat())* (j+1) / cl_smoke_flashpan_count.GetFloat();
-		pParticle->m_uchEndSize		= pParticle->m_uchStartSize * cl_smoke_size_expansion.GetFloat();
-		pParticle->m_flRoll			= random->RandomInt( 0, 360 );
-		pParticle->m_flRollDelta	= random->RandomFloat( -cl_smoke_rotation.GetFloat(), cl_smoke_rotation.GetFloat() );
+		pParticle->m_uchStartSize = cl_smoke_flashpan_size_start.GetFloat() + (cl_smoke_flashpan_size_end.GetFloat() - cl_smoke_flashpan_size_start.GetFloat())* (j + 1) / cl_smoke_flashpan_count.GetFloat();
+		pParticle->m_uchEndSize = pParticle->m_uchStartSize * cl_smoke_size_expansion.GetFloat();
+		pParticle->m_flRoll = random->RandomInt(0, 360);
+		pParticle->m_flRollDelta = random->RandomFloat(-cl_smoke_rotation.GetFloat(), cl_smoke_rotation.GetFloat());
 	}
 #else
-	for( int j = 0; j < 8; j++ )
+	for (int j = 0; j < 8; j++)
 	{
 		//BG2 - Tjoppen - smoke pops up along a line, to simulate the initial very fast exhaust
-		Vector offset = origin + forward * 20 * (j+1) / 8;
+		Vector offset = origin + forward * 20 * (j + 1) / 8;
 
 		char name[64];
-		Q_snprintf( name, sizeof(name), "particle/particle_musketsmoke%i", random->RandomInt(1,5) );
+		Q_snprintf(name, sizeof(name), "particle/particle_musketsmoke%i", random->RandomInt(1, 5));
 
-		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), pSimple->GetPMaterial( name ), offset );
-			
-		if ( pParticle == NULL )
+		pParticle = (SimpleParticle *)pSimple->AddParticle(sizeof(SimpleParticle), pSimple->GetPMaterial(name), offset);
+
+		if (pParticle == NULL)
 			return;
 
-		pParticle->m_flLifetime		= 0.0f;
-		pParticle->m_flDieTime		= random->RandomFloat( 1, 5 );
+		pParticle->m_flLifetime = 0.0f;
+		pParticle->m_flDieTime = random->RandomFloat(1, 5);
 
 		pParticle->m_vecVelocity = forward * 1000;
 
@@ -3513,29 +3534,28 @@ void CTempEnts::MuzzleFlash_Flashpan( ClientEntityHandle_t hEntity, int attachme
 		pParticle->m_vecVelocity += ownervelocity * 0.25;
 
 		//Find area ambient light color and use it to tint smoke
-		Vector	worldLight = WorldGetLightForPoint( origin, false );	
+		Vector	worldLight = WorldGetLightForPoint(origin, false);
 
-		int color = random->RandomInt( 215, 255 );//( 200, 255 );
+		int color = random->RandomInt(215, 255);//( 200, 255 );
 		float finalcolor = worldLight[0] * color + 30;
-		if ( finalcolor > 205 )
+		if (finalcolor > 205)
 			finalcolor = 205;
-		if ( finalcolor < 130 )
+		if (finalcolor < 130)
 			finalcolor = 130;
-		pParticle->m_uchColor[0]	= finalcolor;
-		pParticle->m_uchColor[1]	= finalcolor;
-		pParticle->m_uchColor[2]	= finalcolor;
+		pParticle->m_uchColor[0] = finalcolor;
+		pParticle->m_uchColor[1] = finalcolor;
+		pParticle->m_uchColor[2] = finalcolor;
 
-		pParticle->m_uchStartAlpha	= 35;
-		pParticle->m_uchEndAlpha	= 0;
+		pParticle->m_uchStartAlpha = 35;
+		pParticle->m_uchEndAlpha = 0;
 
-		pParticle->m_uchStartSize	= 4 + (8 - 4)* (j+1) / 8;
-		pParticle->m_uchEndSize		= pParticle->m_uchStartSize * 4;
-		pParticle->m_flRoll			= random->RandomInt( 0, 360 );
-		pParticle->m_flRollDelta	= random->RandomFloat( -99, 99 );
+		pParticle->m_uchStartSize = 4 + (8 - 4)* (j + 1) / 8;
+		pParticle->m_uchEndSize = pParticle->m_uchStartSize * 4;
+		pParticle->m_flRoll = random->RandomInt(0, 360);
+		pParticle->m_flRollDelta = random->RandomFloat(-99, 99);
 	}
 #endif
 }
-
 
 
 //==================================================

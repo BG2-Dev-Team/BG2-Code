@@ -36,15 +36,26 @@
 #include "te_effect_dispatch.h" 
 #include "ai_basenpc.h"
 #include "AI_Criteria.h"
+//#include "npc_barnacle.h" //BG2 - no barnacles - Awesome
 #include "entitylist.h"
 #include "env_zoom.h"
 #include "hl2_gamerules.h"
+//#include "prop_combine_ball.h" //BG2 - just no - Awesome
 #include "datacache/imdlcache.h"
 #include "eventqueue.h"
 #include "gamestats.h"
 #include "filters.h"
 #include "tier0/icommandline.h"
 
+//BG2 - nope
+/*
+#ifdef HL2_EPISODIC
+#include "npc_alyx_episodic.h"
+#endif
+
+#ifdef PORTAL
+#include "portal_player.h"
+#endif // PORTAL*/
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -95,6 +106,9 @@ ConVar player_squad_double_tap_time( "player_squad_double_tap_time", "0.25" );
 ConVar sv_infinite_aux_power( "sv_infinite_aux_power", "0", FCVAR_CHEAT );
 
 ConVar autoaim_unlock_target( "autoaim_unlock_target", "0.8666" );
+
+//BG2 - no sprinting
+//ConVar sv_stickysprint("sv_stickysprint", "0", FCVAR_ARCHIVE | FCVAR_ARCHIVE_XBOX);
 
 #define	FLASH_DRAIN_TIME	 1.1111	// 100 units / 90 secs
 #define	FLASH_CHARGE_TIME	 50.0f	// 100 units / 2 secs
@@ -190,6 +204,8 @@ public:
 	COutputInt m_RequestedPlayerHealth;
 
 	void InputRequestPlayerHealth( inputdata_t &inputdata );
+	//void InputSetFlashlightSlowDrain( inputdata_t &inputdata ); //BG2 - no flashlight - Awesome
+	//void InputSetFlashlightNormalDrain( inputdata_t &inputdata );
 	void InputSetPlayerHealth( inputdata_t &inputdata );
 	void InputRequestAmmoState( inputdata_t &inputdata );
 	void InputLowerWeapon( inputdata_t &inputdata );
@@ -212,6 +228,19 @@ public:
 //------------------------------------------------------------------------------
 void CC_ToggleZoom( void )
 {
+	//BG2 - no zoom
+	/*\
+	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+
+	if( pPlayer )
+	{
+		CHL2_Player *pHL2Player = dynamic_cast<CHL2_Player*>(pPlayer);
+
+		if( pHL2Player && pHL2Player->IsSuitEquipped() )
+		{
+			pHL2Player->ToggleZoom();
+		}
+	}*/
 }
 
 static ConCommand toggle_zoom("toggle_zoom", CC_ToggleZoom, "Toggles zoom display" );
@@ -296,7 +325,7 @@ BEGIN_DATADESC( CHL2_Player )
 
 	DEFINE_FIELD( m_bSprintEnabled, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flTimeAllSuitDevicesOff, FIELD_TIME ),
-	//DEFINE_FIELD( m_fIsSprinting, FIELD_BOOLEAN ),
+	//DEFINE_FIELD( m_fIsSprinting, FIELD_BOOLEAN ), //BG2 - neither of these - Awesome
 	//DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
 
 	/*
@@ -343,6 +372,8 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "IgnoreFallDamage", InputIgnoreFallDamage ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "IgnoreFallDamageWithoutReset", InputIgnoreFallDamageWithoutReset ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "OnSquadMemberKilled", OnSquadMemberKilled ),
+	//DEFINE_INPUTFUNC( FIELD_VOID, "DisableFlashlight", InputDisableFlashlight ), //BG2 - no flashlights - Awesome
+	//DEFINE_INPUTFUNC( FIELD_VOID, "EnableFlashlight", InputEnableFlashlight ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "ForceDropPhysObjects", InputForceDropPhysObjects ),
 
 	DEFINE_SOUNDPATCH( m_sndLeeches ),
@@ -364,15 +395,37 @@ END_DATADESC()
 CHL2_Player::CHL2_Player()
 {
 	m_nNumMissPositions	= 0;
+	//m_pPlayerAISquad = 0;
 	m_bSprintEnabled = true;
 
 	m_flArmorReductionTime = 0.0f;
 	m_iArmorReductionFrom = 0;
 }
 
+//BG2 - no hev please - Awesome
+/*
+//
+// SUIT POWER DEVICES
+//
+#define SUITPOWER_CHARGE_RATE	12.5											// 100 units in 8 seconds
+
+#ifdef HL2MP
+	CSuitPowerDevice SuitDeviceSprint( bits_SUIT_DEVICE_SPRINT, 25.0f );				// 100 units in 4 seconds
+#else
+	CSuitPowerDevice SuitDeviceSprint( bits_SUIT_DEVICE_SPRINT, 12.5f );				// 100 units in 8 seconds
+#endif
+
+#ifdef HL2_EPISODIC
+	CSuitPowerDevice SuitDeviceFlashlight( bits_SUIT_DEVICE_FLASHLIGHT, 1.111 );	// 100 units in 90 second
+#else
+	CSuitPowerDevice SuitDeviceFlashlight( bits_SUIT_DEVICE_FLASHLIGHT, 2.222 );	// 100 units in 45 second
+#endif
+CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100 units in 15 seconds (plus three padded seconds)
+*/
+
 IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
 	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable),
-	//SendPropBool( SENDINFO(m_fIsSprinting) ),
+	//SendPropBool( SENDINFO(m_fIsSprinting) ), //BG2 - no sprinting - Awesome
 END_SEND_TABLE()
 
 
@@ -392,49 +445,146 @@ void CHL2_Player::Precache( void )
 	PrecacheScriptSound( "HL2Player.BurnPain" );
 }
 
+//BG2 - not needed - Awesome
+/*
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CHL2_Player::CheckSuitZoom( void )
+{
+//#ifndef _XBOX 
+	//Adrian - No zooming without a suit!
+	if ( IsSuitEquipped() )
+	{
+		if ( m_afButtonReleased & IN_ZOOM )
+		{
+			StopZooming();
+		}	
+		else if ( m_afButtonPressed & IN_ZOOM )
+		{
+			StartZooming();
+		}
+	}
+//#endif//_XBOX
+}*/
 
 void CHL2_Player::EquipSuit( bool bPlayEffects )
 {
 	MDLCACHE_CRITICAL_SECTION();
+	
+	//BG2 - no HEV please
+	/*
+	BaseClass::EquipSuit();
+	
+	m_HL2Local.m_bDisplayReticle = true;
+
+	if ( bPlayEffects == true )
+	{
+		StartAdmireGlovesAnimation();
+	}*/
 }
 
 void CHL2_Player::RemoveSuit( void )
 {
+	//BG2 - no suit
+	/*
+	BaseClass::RemoveSuit();
+
+	m_HL2Local.m_bDisplayReticle = false;*/
 }
 
 void CHL2_Player::HandleSpeedChanges( void )
 {
+	//BG2 - player speed is handled in player_shared I think - Awesome
+	/*
+	int buttonsChanged = m_afButtonPressed | m_afButtonReleased;
+
+	bool bCanSprint = CanSprint();
+	bool bIsSprinting = IsSprinting();
+	bool bWantSprint = ( bCanSprint && IsSuitEquipped() && (m_nButtons & IN_SPEED) );
+	if ( bIsSprinting != bWantSprint && (buttonsChanged & IN_SPEED) )
+	{
+		// If someone wants to sprint, make sure they've pressed the button to do so. We want to prevent the
+		// case where a player can hold down the sprint key and burn tiny bursts of sprint as the suit recharges
+		// We want a full debounce of the key to resume sprinting after the suit is completely drained
+		if ( bWantSprint )
+		{
+			if ( sv_stickysprint.GetBool() )
+			{
+				StartAutoSprint();
+			}
+			else
+			{
+				StartSprinting();
+			}
+		}
+		else
+		{
+			if ( !sv_stickysprint.GetBool() )
+			{
+				StopSprinting();
+			}
+			// Reset key, so it will be activated post whatever is suppressing it.
+			m_nButtons &= ~IN_SPEED;
+		}
+	}
+
+	bool bIsWalking = IsWalking();
+	// have suit, pressing button, not sprinting or ducking
+	bool bWantWalking;
+	
+	if( IsSuitEquipped() )
+	{
+		bWantWalking = (m_nButtons & IN_WALK) && !IsSprinting() && !(m_nButtons & IN_DUCK);
+	}
+	else
+	{
+		bWantWalking = true;
+	}
+	
+	if( bIsWalking != bWantWalking )
+	{
+		if ( bWantWalking )
+		{
+			StartWalking();
+		}
+		else
+		{
+			StopWalking();
+		}
+	}*/
 }
 
 //-----------------------------------------------------------------------------
 // This happens when we powerdown from the mega physcannon to the regular one
 //-----------------------------------------------------------------------------
 //BG2 - Don't need armor. -HairyPotter
-/*void CHL2_Player::HandleArmorReduction( void )
+	/*void CHL2_Player::HandleArmorReduction(void)
 {
 	if ( m_flArmorReductionTime < gpGlobals->curtime )
 		return;
 
-	if ( ArmorValue() <= 0 )
+		if ( ArmorValue() <= 0 )
 		return;
 
-	float flPercent = 1.0f - (( m_flArmorReductionTime - gpGlobals->curtime ) / ARMOR_DECAY_TIME );
+		float flPercent = 1.0f - (( m_flArmorReductionTime - gpGlobals->curtime ) / ARMOR_DECAY_TIME );
 
-	int iArmor = Lerp( flPercent, m_iArmorReductionFrom, 0 );
+		int iArmor = Lerp( flPercent, m_iArmorReductionFrom, 0 );
 
-	SetArmorValue( iArmor );
+		SetArmorValue( iArmor );
+		
 }*/
-
-void CHL2_Player::DrainStamina( int iAmount )
+	//BG2 - handle stamina change
+void CHL2_Player::DrainStamina(int iAmount)
 {
 	//limit drain to be no more than 50 at once
-	if( iAmount > 50 )
+	if (iAmount > 50)
 		iAmount = 50;
 
 	m_iStamina -= iAmount;
 
 	//clamp
-	if( m_iStamina < 0 )
+	if (m_iStamina < 0)
 		m_iStamina = 0;
 }
 
@@ -453,6 +603,20 @@ void CHL2_Player::PreThink(void)
 		NDebugOverlay::Line( GetAbsOrigin(), predPos, 0, 255, 0, 0, 0.01f );
 	}
 
+	//BG2 - nope - Awesome
+	/*
+#ifdef HL2_EPISODIC
+	if( m_hLocatorTargetEntity != NULL )
+	{
+		// Keep track of the entity here, the client will pick up the rest of the work
+		m_HL2Local.m_vecLocatorOrigin = m_hLocatorTargetEntity->WorldSpaceCenter();
+	}
+	else
+	{
+		m_HL2Local.m_vecLocatorOrigin = vec3_invalid; // This tells the client we have no locator target.
+	}
+#endif//HL2_EPISODIC*/
+
 	// Riding a vehicle?
 	if ( IsInAVehicle() )	
 	{
@@ -461,6 +625,10 @@ void CHL2_Player::PreThink(void)
 		UpdateClientData();		
 		CheckTimeBasedDamage();
 
+		// Allow the suit to recharge when in the vehicle.
+		/*SuitPower_Update();
+		CheckSuitUpdate();
+		CheckSuitZoom();*/ //BG2 - no suits
 
 		WaterMove();	
 		return;
@@ -512,6 +680,42 @@ void CHL2_Player::PreThink(void)
 	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-Speed" );
 	HandleSpeedChanges();
 
+	//BG2 - no sprinting and no armor please - Awesome
+	/*
+#ifdef HL2_EPISODIC
+	HandleArmorReduction();
+#endif
+
+	if( sv_stickysprint.GetBool() && m_bIsAutoSprinting )
+	{
+		// If we're ducked and not in the air
+		if( IsDucked() && GetGroundEntity() != NULL )
+		{
+			StopSprinting();
+		}
+		// Stop sprinting if the player lets off the stick for a moment.
+		else if( GetStickDist() == 0.0f )
+		{
+			if( gpGlobals->curtime > m_fAutoSprintMinTime )
+			{
+				StopSprinting();
+			}
+		}
+		else
+		{
+			// Stop sprinting one half second after the player stops inputting with the move stick.
+			m_fAutoSprintMinTime = gpGlobals->curtime + 0.5f;
+		}
+	}
+	else if ( IsSprinting() )
+	{
+		// Disable sprint while ducked unless we're in the air (jumping)
+		if ( IsDucked() && ( GetGroundEntity() != NULL ) )
+		{
+			StopSprinting();
+		}
+	}*/
+
 	VPROF_SCOPE_END();
 
 	if ( g_fGameOver || IsPlayerLockedInPlace() )
@@ -535,6 +739,12 @@ void CHL2_Player::PreThink(void)
 	CommanderUpdate();
 	VPROF_SCOPE_END();
 
+	/* //BG2 - no suits please - Awesome
+	// Operate suit accessories and manage power consumption/charge
+	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-SuitPower_Update" );
+	SuitPower_Update();
+	VPROF_SCOPE_END();*/
+
 	// checks if new client data (for HUD and view control) needs to be sent to the client
 	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-UpdateClientData" );
 	UpdateClientData();
@@ -548,12 +758,20 @@ void CHL2_Player::PreThink(void)
 	CheckSuitUpdate();
 	VPROF_SCOPE_END();
 
+	/*VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-CheckSuitZoom" );
+	CheckSuitZoom();
+	VPROF_SCOPE_END();*/ //BG2 - no suits - Awesome
 
 	if (m_lifeState >= LIFE_DYING)
 	{
 		PlayerDeathThink();
 		return;
 	}
+
+	/* //BG2 - no flashlights
+#ifdef HL2_EPISODIC
+	CheckFlashlight();
+#endif	// HL2_EPISODIC*/
 
 	// So the correct flags get sent to client asap.
 	//
@@ -655,6 +873,36 @@ void CHL2_Player::PreThink(void)
 		m_Local.m_flFallVelocity = -GetAbsVelocity().z;
 	}
 
+	//BG2 - no barnacles - Awesome
+	/*
+	if ( m_afPhysicsFlags & PFLAG_ONBARNACLE )
+	{
+		bool bOnBarnacle = false;
+		CNPC_Barnacle *pBarnacle = NULL;
+		do
+		{
+			// FIXME: Not a good or fast solution, but maybe it will catch the bug!
+			pBarnacle = (CNPC_Barnacle*)gEntList.FindEntityByClassname( pBarnacle, "npc_barnacle" );
+			if ( pBarnacle )
+			{
+				if ( pBarnacle->GetEnemy() == this )
+				{
+					bOnBarnacle = true;
+				}
+			}
+		} while ( pBarnacle );
+		
+		if ( !bOnBarnacle )
+		{
+			Warning( "Attached to barnacle?\n" );
+			Assert( 0 );
+			m_afPhysicsFlags &= ~PFLAG_ONBARNACLE;
+		}
+		else
+		{
+			SetAbsVelocity( vec3_origin );
+		}
+	}*/
 	// StudioFrameAdvance( );//!!!HACKHACK!!! Can't be hit by traceline when not animating?
 
 	// Update weapon's ready status
@@ -664,9 +912,10 @@ void CHL2_Player::PreThink(void)
 	//BG2 - Tjoppen - Allow shooting while zooming
 	/*if ( m_nButtons & IN_ZOOM )
 	{
-		//FIXME: Held weapons like the grenade get sad when this happens
-		m_nButtons &= ~(IN_ATTACK|IN_ATTACK2);
+	//FIXME: Held weapons like the grenade get sad when this happens
+	m_nButtons &= ~(IN_ATTACK|IN_ATTACK2);
 	}*/
+
 }
 
 void CHL2_Player::PostThink( void )
@@ -679,7 +928,30 @@ void CHL2_Player::PostThink( void )
 void CHL2_Player::Activate( void )
 {
 	BaseClass::Activate();
+	//InitSprinting();
+	//BG2 - none of this - Awesome 
+/*#ifdef HL2_EPISODIC
 
+	// Delay attacks by 1 second after loading a game.
+	if ( GetActiveWeapon() )
+	{
+		float flRemaining = GetActiveWeapon()->m_flNextPrimaryAttack - gpGlobals->curtime;
+
+		if ( flRemaining < HL2PLAYER_RELOADGAME_ATTACK_DELAY )
+		{
+			GetActiveWeapon()->m_flNextPrimaryAttack = gpGlobals->curtime + HL2PLAYER_RELOADGAME_ATTACK_DELAY;
+		}
+
+		flRemaining = GetActiveWeapon()->m_flNextSecondaryAttack - gpGlobals->curtime;
+
+		if ( flRemaining < HL2PLAYER_RELOADGAME_ATTACK_DELAY )
+		{
+			GetActiveWeapon()->m_flNextSecondaryAttack = gpGlobals->curtime + HL2PLAYER_RELOADGAME_ATTACK_DELAY;
+		}
+	}
+
+#endif 
+*/
 	GetPlayerProxy();
 }
 
@@ -718,7 +990,35 @@ Class_T  CHL2_Player::Classify ( void )
 //			 false - if sub-class has no response
 //-----------------------------------------------------------------------------
 bool CHL2_Player::HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt)
-{	
+{
+	//BG2 - found this commented out while porting to 2016 - Awesome
+	/*if ( interactionType == g_interactionBarnacleVictimDangle )
+		return false;
+	
+	if (interactionType ==	g_interactionBarnacleVictimReleased)
+	{
+		m_afPhysicsFlags &= ~PFLAG_ONBARNACLE;
+		SetMoveType( MOVETYPE_WALK );
+		return true;
+	}
+	else if (interactionType ==	g_interactionBarnacleVictimGrab)
+	{
+#ifdef HL2_EPISODIC
+		CNPC_Alyx *pAlyx = CNPC_Alyx::GetAlyx();
+		if ( pAlyx )
+		{
+			// Make Alyx totally hate this barnacle so that she saves the player.
+			int priority;
+
+			priority = pAlyx->IRelationPriority(sourceEnt);
+			pAlyx->AddEntityRelationship( sourceEnt, D_HT, priority + 5 );
+		}
+#endif//HL2_EPISODIC
+
+		m_afPhysicsFlags |= PFLAG_ONBARNACLE;
+		ClearUseEntity();
+		return true;
+	}*/
 	return false;
 }
 
@@ -784,6 +1084,13 @@ void CHL2_Player::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 //-----------------------------------------------------------------------------
 void CHL2_Player::Spawn(void)
 {
+
+#ifndef HL2MP
+#ifndef PORTAL
+	SetModel( "models/player.mdl" );
+#endif
+#endif
+
 	BaseClass::Spawn();
 
 	//
@@ -801,8 +1108,10 @@ void CHL2_Player::Spawn(void)
 //-----------------------------------------------------------------------------
 void CHL2_Player::UpdateLocatorPosition( const Vector &vecPosition )
 {
+#ifdef HL2_EPISODIC
+	m_HL2Local.m_vecLocatorOrigin = vecPosition;
+#endif//HL2_EPISODIC 
 }
-
 /* BG2 - Don't Need this. -HairyPotter
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -810,6 +1119,7 @@ void CHL2_Player::InitSprinting( void )
 {
 	StopSprinting();
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns whether or not we are allowed to sprint now.
@@ -858,6 +1168,8 @@ void CHL2_Player::StartSprinting( void )
 		return;
 	}
 
+	if( !SuitPower_AddDevice( SuitDeviceSprint ) )
+		return;
 
 	CPASAttenuationFilter filter( this );
 	filter.UsePredictionRules();
@@ -872,6 +1184,11 @@ void CHL2_Player::StartSprinting( void )
 //-----------------------------------------------------------------------------
 void CHL2_Player::StopSprinting( void )
 {
+	if ( m_HL2Local.m_bitsActiveDevices & SuitDeviceSprint.GetDeviceID() )
+	{
+		SuitPower_RemoveDevice( SuitDeviceSprint );
+	}
+
 	if( IsSuitEquipped() )
 	{
 		SetMaxSpeed( HL2_NORM_SPEED );
@@ -987,8 +1304,6 @@ bool CHL2_Player::IsZooming( void )
 	return false;
 }*/
 
-//
-
 class CPhysicsPlayerCallback : public IPhysicsPlayerControllerEvent
 {
 public:
@@ -1039,12 +1354,10 @@ bool CHL2_Player::CommanderFindGoal( commandgoal_t *pGoal )
 	Vector	forward;
 
 	EyeVectors( &forward );
-	
-	//---------------------------------
-
 
 	if( !tr.DidHitWorld() )
 	{
+		
 	}
 
 	if( tr.fraction == 1.0 || (tr.surface.flags & SURF_SKY) )
@@ -1214,7 +1527,6 @@ void CHL2_Player::CommanderExecute( CommanderCommand_t command )
 	}
 #endif // _DEBUG
 
-
 	//---------------------------------
 	// If the trace hits an NPC, send all ally NPCs a "target" order. Always
 	// goes to targeted one first
@@ -1262,7 +1574,7 @@ void CHL2_Player::CommanderMode()
 //-----------------------------------------------------------------------------
 void CHL2_Player::CheatImpulseCommands( int iImpulse )
 {
-	switch( iImpulse )
+	switch (iImpulse)
 	{
 	case 50:
 	{
@@ -1274,15 +1586,15 @@ void CHL2_Player::CheatImpulseCommands( int iImpulse )
 	{
 		// Cheat to create a dynamic resupply item
 		Vector vecForward;
-		AngleVectors( EyeAngles(), &vecForward );
-		CBaseEntity *pItem = (CBaseEntity *)CreateEntityByName( "item_dynamic_resupply" );
-		if ( pItem )
+		AngleVectors(EyeAngles(), &vecForward);
+		CBaseEntity *pItem = (CBaseEntity *)CreateEntityByName("item_dynamic_resupply");
+		if (pItem)
 		{
-			Vector vecOrigin = GetAbsOrigin() + vecForward * 256 + Vector(0,0,64);
-			QAngle vecAngles( 0, GetAbsAngles().y - 90, 0 );
-			pItem->SetAbsOrigin( vecOrigin );
-			pItem->SetAbsAngles( vecAngles );
-			pItem->KeyValue( "targetname", "resupply" );
+			Vector vecOrigin = GetAbsOrigin() + vecForward * 256 + Vector(0, 0, 64);
+			QAngle vecAngles(0, GetAbsAngles().y - 90, 0);
+			pItem->SetAbsOrigin(vecOrigin);
+			pItem->SetAbsAngles(vecAngles);
+			pItem->KeyValue("targetname", "resupply");
 			pItem->Spawn();
 			pItem->Activate();
 		}
@@ -1293,21 +1605,21 @@ void CHL2_Player::CheatImpulseCommands( int iImpulse )
 	{
 		// Rangefinder
 		trace_t tr;
-		UTIL_TraceLine( EyePosition(), EyePosition() + EyeDirection3D() * MAX_COORD_RANGE, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
+		UTIL_TraceLine(EyePosition(), EyePosition() + EyeDirection3D() * MAX_COORD_RANGE, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
 
-		if( tr.fraction != 1.0 )
+		if (tr.fraction != 1.0)
 		{
 			float flDist = (tr.startpos - tr.endpos).Length();
 			float flDist2D = (tr.startpos - tr.endpos).Length2D();
-			DevMsg( 1,"\nStartPos: %.4f %.4f %.4f --- EndPos: %.4f %.4f %.4f\n", tr.startpos.x,tr.startpos.y,tr.startpos.z,tr.endpos.x,tr.endpos.y,tr.endpos.z );
-			DevMsg( 1,"3D Distance: %.4f units  (%.2f feet) --- 2D Distance: %.4f units  (%.2f feet)\n", flDist, flDist / 12.0, flDist2D, flDist2D / 12.0 );
+			DevMsg(1, "\nStartPos: %.4f %.4f %.4f --- EndPos: %.4f %.4f %.4f\n", tr.startpos.x, tr.startpos.y, tr.startpos.z, tr.endpos.x, tr.endpos.y, tr.endpos.z);
+			DevMsg(1, "3D Distance: %.4f units  (%.2f feet) --- 2D Distance: %.4f units  (%.2f feet)\n", flDist, flDist / 12.0, flDist2D, flDist2D / 12.0);
 		}
 
 		break;
 	}
 
 	default:
-		BaseClass::CheatImpulseCommands( iImpulse );
+		BaseClass::CheatImpulseCommands(iImpulse);
 	}
 }
 
@@ -1316,29 +1628,28 @@ void CHL2_Player::CheatImpulseCommands( int iImpulse )
 //-----------------------------------------------------------------------------
 void CHL2_Player::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize )
 {
-	BaseClass::SetupVisibility( pViewEntity, pvs, pvssize );
+	BaseClass::SetupVisibility(pViewEntity, pvs, pvssize);
 
 	int area = pViewEntity ? pViewEntity->NetworkProp()->AreaNum() : NetworkProp()->AreaNum();
-	PointCameraSetupVisibility( this, area, pvs, pvssize );
+	PointCameraSetupVisibility(this, area, pvs, pvssize);
 
 	// If the intro script is playing, we want to get it's visibility points
-	if ( g_hIntroScript )
+	if (g_hIntroScript)
 	{
 		Vector vecOrigin;
 		CBaseEntity *pCamera;
-		if ( g_hIntroScript->GetIncludedPVSOrigin( &vecOrigin, &pCamera ) )
+		if (g_hIntroScript->GetIncludedPVSOrigin(&vecOrigin, &pCamera))
 		{
 			// If it's a point camera, turn it on
-			CPointCamera *pPointCamera = dynamic_cast< CPointCamera* >(pCamera); 
-			if ( pPointCamera )
+			CPointCamera *pPointCamera = dynamic_cast< CPointCamera* >(pCamera);
+			if (pPointCamera)
 			{
-				pPointCamera->SetActive( true );
+				pPointCamera->SetActive(true);
 			}
-			engine->AddOriginToPVS( vecOrigin );
+			engine->AddOriginToPVS(vecOrigin);
 		}
 	}
 }
-
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1348,7 +1659,6 @@ bool CHL2_Player::ApplyBattery( float powerMultiplier )
 {
 	return false;
 }
-
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1472,6 +1782,10 @@ void CHL2_Player::NotifyFriendsOfDamage( CBaseEntity *pAttackerEntity )
 	}
 }
 
+void CHL2_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator)
+{
+	BaseClass::TraceAttack(info, vecDir, ptr, pAccumulator);
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1569,7 +1883,6 @@ int CHL2_Player::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	{
 		EmitSound( "HL2Player.BurnPain" );
 	}
-
 
 	// Call the base class implementation
 	return BaseClass::OnTakeDamage_Alive( info );
@@ -1909,6 +2222,7 @@ void CHL2_Player::PlayerUse ( void )
 
 			usedSomething = true;
 		}
+
 	}
 	else if ( m_afButtonPressed & IN_USE )
 	{
@@ -2121,6 +2435,7 @@ float CHL2_Player::GetHeldObjectMass( IPhysicsObject *pHeldObject )
 //-----------------------------------------------------------------------------
 void CHL2_Player::ForceDropOfCarriedPhysObjects( CBaseEntity *pOnlyIfHoldingThis )
 {
+
 }
 
 void CHL2_Player::InputForceDropPhysObjects( inputdata_t &data )
@@ -2218,6 +2533,7 @@ void CHL2_Player::UpdateClientData( void )
 void CHL2_Player::OnRestore()
 {
 	BaseClass::OnRestore();
+	//m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
 }
 
 //---------------------------------------------------------
@@ -2258,6 +2574,12 @@ bool CHL2_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex 
 
 	// Recalculate proficiency!
 	SetCurrentWeaponProficiency( CalcWeaponProficiency( pWeapon ) );
+
+	// Come out of suit zoom mode
+	//if ( IsZooming() )
+	//{
+	//	StopZooming();
+	//}
 
 	return BaseClass::Weapon_Switch( pWeapon, viewmodelindex );
 }
@@ -2707,6 +3029,8 @@ BEGIN_DATADESC( CLogicPlayerProxy )
 	DEFINE_OUTPUT( m_PlayerDied,	"PlayerDied" ),
 	DEFINE_OUTPUT( m_PlayerMissedAR2AltFire, "PlayerMissedAR2AltFire" ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"RequestPlayerHealth",	InputRequestPlayerHealth ),
+	//DEFINE_INPUTFUNC( FIELD_VOID,	"SetFlashlightSlowDrain",	InputSetFlashlightSlowDrain ),
+	//DEFINE_INPUTFUNC( FIELD_VOID,	"SetFlashlightNormalDrain",	InputSetFlashlightNormalDrain ),
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetPlayerHealth",	InputSetPlayerHealth ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"RequestAmmoState", InputRequestAmmoState ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"LowerWeapon", InputLowerWeapon ),

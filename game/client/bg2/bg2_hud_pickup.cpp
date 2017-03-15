@@ -146,7 +146,7 @@ void CHudPickup::MsgFunc_PickupDelay( bf_read &msg )
 }
 void CHudPickup::MsgFunc_WeaponPickup( bf_read &msg )
 {
-	bool loaded = msg.ReadOneBit();
+	msg.ReadOneBit(); //BG2 - Awesome - changed this from "bool loaded = msg.ReadOneBit();" to just "msg.ReadOneBit();"
 	char weapon[128];
 	char texture[128];
 

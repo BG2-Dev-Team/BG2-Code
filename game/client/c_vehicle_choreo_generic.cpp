@@ -17,7 +17,6 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
 /* //BG2 - Vehicles - HairyPotter
 extern float RemapAngleRange( float startInterval, float endInterval, float value );
 
@@ -205,7 +204,7 @@ int	C_PropVehicleChoreoGeneric::GetPassengerRole( C_BaseCombatCharacter *pPassen
 //-----------------------------------------------------------------------------
 // Purpose: Modify the player view/camera while in a vehicle
 //-----------------------------------------------------------------------------
-void C_PropVehicleChoreoGeneric::GetVehicleViewPosition( int nRole, Vector *pAbsOrigin, QAngle *pAbsAngles, float *pFOV )
+void C_PropVehicleChoreoGeneric::GetVehicleViewPosition( int nRole, Vector *pAbsOrigin, QAngle *pAbsAngles, float *pFOV /*=NULL*/ /* )
 {
 	SharedVehicleViewSmoothing( m_hPlayer, 
 								pAbsOrigin, pAbsAngles, 
@@ -255,6 +254,6 @@ void C_PropVehicleChoreoGeneric::GetVehicleClipPlanes( float &flZNear, float &fl
 //-----------------------------------------------------------------------------
 void C_PropVehicleChoreoGeneric::DrawHudElements( )
 {
-} */
+}*/
 
 

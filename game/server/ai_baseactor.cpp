@@ -1225,6 +1225,29 @@ bool CAI_BaseActor::PickTacticalLookTarget( AILookTargetArgs_t *pArgs )
 
 bool CAI_BaseActor::PickRandomLookTarget( AILookTargetArgs_t *pArgs )
 {
+	//bool bIsNavigating = ( GetNavigator()->IsGoalActive() && GetNavigator()->IsGoalSet() );
+	
+	//BG2 - found this removed while porting - Awesome
+	/*if ( bIsNavigating && random->RandomInt(1, 10) <= 3 )
+	{
+		Vector navLookPoint;
+		Vector delta;
+		if ( GetNavigator()->GetPointAlongPath( &navLookPoint, 12 * 12 ) && (delta = navLookPoint - GetAbsOrigin()).Length() > 8.0 * 12.0 )
+		{
+			if ( random->RandomInt(1, 10) <= 5 )
+			{
+				pArgs->vTarget = navLookPoint;
+				pArgs->flDuration = random->RandomFloat( 0.2, 0.4 );
+			}
+			else
+			{
+				pArgs->hTarget = this;
+				pArgs->flDuration = random->RandomFloat( 1.0, 2.0 );
+			}
+			pArgs->flRamp = 0.2;
+			return true;
+		}
+	}*/
 
 	if ( GetState() == NPC_STATE_COMBAT && random->RandomInt(1, 10) <= 8 )
 	{

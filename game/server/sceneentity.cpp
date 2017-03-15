@@ -1706,7 +1706,18 @@ void CSceneEntity::DispatchStartSpeak( CChoreoScene *scene, CBaseFlex *actor, CC
 
 		// Add padding to prevent any other talker talking right after I'm done, because I might 
 		// be continuing speaking with another scene.
-		float flDuration = event->GetDuration() - time_in_past;
+		/*float flDuration = */event->GetDuration() /*- time_in_past*/; //BG2 - unused variable but these functions aren't flagged as const - Awesome
+
+		//BG2 - no actors - Awesome
+		/*CAI_BaseActor *pBaseActor = dynamic_cast<CAI_BaseActor*>(actor);
+		if ( pBaseActor )
+		{
+			pBaseActor->NoteSpeaking( flDuration, GetPostSpeakDelay() );
+		}
+		else if ( actor->IsNPC() )
+		{
+			GetSpeechSemaphore( actor->MyNPCPointer() )->Acquire( flDuration + GetPostSpeakDelay(), actor );
+		}*/
 
 		EmitSound_t es;
 		es.m_nChannel = CHAN_VOICE;
@@ -2153,16 +2164,74 @@ void CSceneEntity::InputTriggerEvent( inputdata_t &inputdata )
 	}
 }
 
-struct NPCInterjection
-{
-	AI_Response *response;
-};
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : &inputdata - 
 //-----------------------------------------------------------------------------
 void CSceneEntity::InputInterjectResponse( inputdata_t &inputdata )
 {
+	//BG2 - found all of this removed while porting to 2016
+	/*
+	// Not currently playing a scene
+	if ( !m_pScene )
+		return;
+
+	CUtlVector<CAI_BaseActor *> candidates;
+
+	for ( int i = 0 ; i < m_pScene->GetNumActors(); i++ )
+	{
+		CBaseFlex *pTestActor = FindNamedActor( i );
+		if ( !pTestActor )
+			continue;
+
+		CAI_BaseActor *pBaseActor = dynamic_cast<CAI_BaseActor *>(pTestActor);
+		if ( !pBaseActor || !pBaseActor->IsAlive() )
+			continue;
+
+		candidates.AddToTail( pBaseActor );
+	}
+
+	int c = candidates.Count();
+	if ( !c )
+		return;
+
+	if ( !m_bIsPlayingBack )
+	{
+		// Use any actor if not playing a scene
+		// int useIndex = RandomInt( 0, c - 1 );
+		Assert( !"m_bIsPlayBack is false and this code does nothing. Should it?");
+	}
+	else
+	{
+		CUtlString modifiers("scene:");
+		modifiers += STRING( GetEntityName() );
+
+		while (candidates.Count() > 0)
+		{
+			// Pick a random slot in the candidates array.
+			int slot = RandomInt( 0, candidates.Count() - 1 );
+
+			CAI_BaseActor *npc = candidates[ slot ];
+
+			// Try to find the response for this slot.
+			AI_Response response;
+			bool result = npc->SpeakFindResponse( response, inputdata.value.String(), modifiers.Get() );
+			if ( result )
+			{
+				float duration = npc->GetResponseDuration( response );
+
+				if ( ( duration > 0.0f ) && npc->PermitResponse( duration ) )
+				{
+					// If we could look it up, dispatch it and bail.
+					npc->SpeakDispatchResponse( inputdata.value.String(), response );
+					return;
+				}
+			}
+
+			// Remove this entry and look for another one.
+			candidates.FastRemove(slot);
+		}
+	}*/
 }
 
 //-----------------------------------------------------------------------------
@@ -2671,6 +2740,27 @@ void CSceneEntity::QueueResumePlayback( void )
 		{
 			bStartedScene = InstancedScriptedScene( NULL, STRING(m_iszResumeSceneFile), &m_hWaitingForThisResumeScene, 0, false ) != 0;
 		}
+
+		//BG2 - no actors - Awesome
+		// HACKHACK: For now, get the first target, and see if we can find a response for him
+		/*if ( !bStartedScene )
+		{
+			CBaseFlex *pActor = FindNamedActor( 0 );
+			if ( pActor )
+			{
+				CAI_BaseActor *pBaseActor = dynamic_cast<CAI_BaseActor*>(pActor);
+				if ( pBaseActor )
+				{
+					AI_Response response;
+					bool result = pBaseActor->SpeakFindResponse( response, STRING(m_iszResumeSceneFile), NULL );
+					if ( result )
+					{
+						const char *szResponse = response.GetResponsePtr();
+						bStartedScene = InstancedScriptedScene( NULL, szResponse, &m_hWaitingForThisResumeScene, 0, false ) != 0;
+					}
+				}
+			}
+		}*/
 
 		// If we started a scene/response, wait for it to finish
 		if ( bStartedScene )
@@ -4865,8 +4955,9 @@ void CSceneManager::RemoveScenesInvolvingActor( CBaseFlex *pActor )
 	if ( !pActor )
 		return;
 
+	// This loop can remove items from m_ActiveScenes array, so loop through backwards.
 	int c = m_ActiveScenes.Count();
-	for ( int i = 0; i < c; i++ )
+	for ( int i = c - 1 ; i >= 0; --i )
 	{
 		CSceneEntity *pScene = m_ActiveScenes[ i ].Get();
 		if ( !pScene )

@@ -40,26 +40,26 @@ int SendProxyArrayLength_PlayerArray( const void *pStruct, int objectID )
 	return pTeam->m_aPlayers.Count();
 }*/
 
-// Datatable
+
 // Datatable
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_iTeamNum), 5 ),
 	//BG2 - Tjoppen - allocate more bits for team score. 65535 points ought to be enough for anyone
 	//SendPropInt( SENDINFO(m_iScore), 8 ),
-	SendPropInt( SENDINFO(m_iScore), 16, SPROP_UNSIGNED ),
+	SendPropInt(SENDINFO(m_iScore), 16, SPROP_UNSIGNED),
 	//
 	SendPropInt( SENDINFO(m_iRoundsWon), 8 ),
-	SendPropInt( SENDINFO(m_iTicketsLeft), 12, SPROP_UNSIGNED ),
+	SendPropInt(SENDINFO(m_iTicketsLeft), 12, SPROP_UNSIGNED),
 	SendPropString( SENDINFO( m_szTeamname ) ),
 
 	//BG2 - Tjoppen - don't need this
-	/*SendPropArray2( 
-		SendProxyArrayLength_PlayerArray,
-		SendPropInt("player_array_element", 0, 4, 10, SPROP_UNSIGNED, SendProxy_PlayerList), 
-		MAX_PLAYERS, 
-		0, 
-		"player_array"
-		)*/
+	/*SendPropArray2(
+	SendProxyArrayLength_PlayerArray,
+	SendPropInt("player_array_element", 0, 4, 10, SPROP_UNSIGNED, SendProxy_PlayerList),
+	MAX_PLAYERS,
+	0,
+	"player_array"
+	)*/
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( team_manager, CTeam );
@@ -292,7 +292,7 @@ void CTeam::AddScore( int iScore )
 {
 	//BG2 - Tjoppen - scoreboard fix
 	//m_iScore += iScore;
-	SetScore( m_iScore + iScore );
+	SetScore(m_iScore + iScore);
 	//
 }
 
@@ -301,15 +301,15 @@ void CTeam::SetScore( int iScore )
 	m_iScore = iScore;
 	//BG2 - Tjoppen - scoreboard fix
 	extern ConVar	mp_americanscore,
-					mp_britishscore;
+		mp_britishscore;
 
-	switch( GetTeamNumber() )
+	switch (GetTeamNumber())
 	{
 	case TEAM_AMERICANS:
-		mp_americanscore.SetValue( GetScore() );
+		mp_americanscore.SetValue(GetScore());
 		break;
 	case TEAM_BRITISH:
-		mp_britishscore.SetValue( GetScore() );
+		mp_britishscore.SetValue(GetScore());
 		break;
 	default:
 		break;
@@ -377,57 +377,57 @@ int CTeam::GetAliveMembers( void )
 //BG2 - Draco - Start
 int CTeam::GetNumInfantry()
 {
-	return GetNumOfClass( CLASS_INFANTRY );
+	return GetNumOfClass(CLASS_INFANTRY);
 }
 
 int CTeam::GetNumOfficers()
 {
-	return GetNumOfClass( CLASS_OFFICER );
+	return GetNumOfClass(CLASS_OFFICER);
 }
 int CTeam::GetNumSnipers()
 {
-	return GetNumOfClass( CLASS_SNIPER );
+	return GetNumOfClass(CLASS_SNIPER);
 }
 
-int CTeam::GetNumOfClass( int iClass )
+int CTeam::GetNumOfClass(int iClass)
 {
 	int iAmount = 0;
-	
-	for( int x = 0; x < GetNumPlayers(); x++ )
-	{
-		CHL2MP_Player *pHL2Player = ToHL2MPPlayer( GetPlayer( x ) );
 
-		if( pHL2Player && pHL2Player->GetClass() == iClass )
+	for (int x = 0; x < GetNumPlayers(); x++)
+	{
+		CHL2MP_Player *pHL2Player = ToHL2MPPlayer(GetPlayer(x));
+
+		if (pHL2Player && pHL2Player->GetClass() == iClass)
 			iAmount++;
 	}
 
 	return iAmount;
 }
 
-int CTeam::GetNumOfNextClass( int iNextClass )
+int CTeam::GetNumOfNextClass(int iNextClass)
 {
 	int iAmount = 0;
-	
-	for( int x = 0; x < GetNumPlayers(); x++ )
-	{
-		CHL2MP_Player *pHL2Player = ToHL2MPPlayer( GetPlayer( x ) );
 
-		if( pHL2Player && pHL2Player->GetNextClass() == iNextClass )
+	for (int x = 0; x < GetNumPlayers(); x++)
+	{
+		CHL2MP_Player *pHL2Player = ToHL2MPPlayer(GetPlayer(x));
+
+		if (pHL2Player && pHL2Player->GetNextClass() == iNextClass)
 			iAmount++;
 	}
 
 	return iAmount;
 }
 
-int CTeam::GetNumOfAmmoKit( int iAmmoKit )
+int CTeam::GetNumOfAmmoKit(int iAmmoKit)
 {
 	int iAmount = 0;
-	
-	for( int x = 0; x < GetNumPlayers(); x++ )
-	{
-		CHL2MP_Player *pHL2Player = ToHL2MPPlayer( GetPlayer( x ) );
 
-		if( pHL2Player && pHL2Player->m_iAmmoKit == iAmmoKit )
+	for (int x = 0; x < GetNumPlayers(); x++)
+	{
+		CHL2MP_Player *pHL2Player = ToHL2MPPlayer(GetPlayer(x));
+
+		if (pHL2Player && pHL2Player->m_iAmmoKit == iAmmoKit)
 			iAmount++;
 	}
 
@@ -436,66 +436,66 @@ int CTeam::GetNumOfAmmoKit( int iAmmoKit )
 /*
 void CTeam::AddMorale(float New, float Time)
 {
-	m_flMorale += New;
-	if (gpGlobals->curtime > m_flMoraleTime)
-	{
-		m_flMoraleTime = Time + gpGlobals->curtime;
-	}
-	else
-	{
-		m_flMoraleTime += Time;
-	}
+m_flMorale += New;
+if (gpGlobals->curtime > m_flMoraleTime)
+{
+m_flMoraleTime = Time + gpGlobals->curtime;
+}
+else
+{
+m_flMoraleTime += Time;
+}
 }
 
 void CTeam::AddMoraleBonus(float New)
 {
-	m_flMoraleBonus += New;
+m_flMoraleBonus += New;
 }
 
 float CTeam::GetMorale()
 {
-	return (m_flMorale + m_flMoraleBonus); 
+return (m_flMorale + m_flMoraleBonus);
 }
 
 void CTeam::AddMoralePoint(CBaseEntity * pEnt)
 {
-	m_aMoralePoints.AddToTail( pEnt );
+m_aMoralePoints.AddToTail( pEnt );
 }
 
 void CTeam::RemoveMoralePoint(CBaseEntity * pEnt)
 {
-	m_aMoralePoints.FindAndRemove( pEnt );
+m_aMoralePoints.FindAndRemove( pEnt );
 }
 */
 //BG2 - Draco - End
 
-void CTeam::ResetTickets( void )
+void CTeam::ResetTickets(void)
 {
 	m_flTicketRemovalFraction = 0;
 
-	if ( m_iTeamNum == TEAM_AMERICANS )
+	if (m_iTeamNum == TEAM_AMERICANS)
 		m_iTicketsLeft = mp_tickets_a.GetInt();
 	else
 		m_iTicketsLeft = mp_tickets_b.GetInt();
 }
 
-int CTeam::GetTicketsLeft( void )
+int CTeam::GetTicketsLeft(void)
 {
 	return m_iTicketsLeft;
 }
 
-void CTeam::RemoveTicket( void )
+void CTeam::RemoveTicket(void)
 {
-	if( m_iTicketsLeft > 0 )
+	if (m_iTicketsLeft > 0)
 		m_iTicketsLeft--;
 }
 
-void CTeam::RemoveTickets( float number )
+void CTeam::RemoveTickets(float number)
 {
 	number += m_flTicketRemovalFraction;
 	int intPart = (int)number;
 
-	if ( intPart >= m_iTicketsLeft )
+	if (intPart >= m_iTicketsLeft)
 	{
 		m_iTicketsLeft = 0;
 		m_flTicketRemovalFraction = 0;

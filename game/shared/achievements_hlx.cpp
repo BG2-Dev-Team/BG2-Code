@@ -112,7 +112,19 @@ protected:
 	}
 
 	virtual void Event_EntityKilled( CBaseEntity *pVictim, CBaseEntity *pAttacker, CBaseEntity *pInflictor, IGameEvent *event ) 
-	{		
+	{
+		/*CBaseGrenade *pGrenade = dynamic_cast<CBaseGrenade *>( pInflictor );
+		if ( pGrenade )
+		{
+			CBaseEntity *pThrower = pGrenade->GetThrower();
+			CBaseEntity *pOriginalThrower = pGrenade->GetOriginalThrower();
+			CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+			// check if player was most recent thrower, but the victim was the original thrower
+			if ( ( pPlayer == pThrower ) && ( pOriginalThrower == pVictim ) )
+			{
+				IncrementCount();
+			}				
+		}*/			
 	}
 };
 DECLARE_ACHIEVEMENT( CAchievementHLXKillSoldierWithOwnGrenade, ACHIEVEMENT_HLX_KILL_SOLDIER_WITHHISGRENADE, "HLX_KILL_SOLDIER_WITHHISGRENADE", 10 );
@@ -159,7 +171,6 @@ protected:
 	int m_iLocalCount;
 };
 DECLARE_ACHIEVEMENT( CAchievementHLXKillWithOneEnergyBall, ACHIEVEMENT_HLX_KILL_ENEMIES_WITHONEENERGYBALL, "HLX_KILL_ENEMIES_WITHONEENERGYBALL", 5 );
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Counts the accumulated # of primary and secondary attacks from all

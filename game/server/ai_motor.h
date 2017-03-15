@@ -143,6 +143,7 @@ public:
 
 	//---------------------------------
 
+	//CAI_Navigator		*GetNavigator( void );
 	int					SelectWeightedSequence( Activity activity );
 	float				GetSequenceGroundSpeed( int iSequence );
 

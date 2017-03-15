@@ -10,6 +10,7 @@
 #include "team.h"
 #include "engine/IEngineSound.h"
 #include "flag.h"
+#include "../shared/bg2/bg2_player_shared.h"
 
 //ConVar sv_ctf_flagweight ("sv_ctf_flagweight", "0", FCVAR_NOTIFY | FCVAR_GAMEDLL, "How much speed does carrying this flag drain?");
 ConVar sv_ctf_returnstyle ("sv_ctf_returnstyle", "1", FCVAR_NOTIFY | FCVAR_GAMEDLL, "Which way is a flag returned? Setting this to '2' will allow teams to return their own flags when they touch them.");
@@ -164,19 +165,22 @@ void CtfFlag::Think( void )
 			switch( pPlayer->GetClass() )
 			{
 				case CLASS_INFANTRY:
-					scale = 1;
+					scale = SPEED_MOD_CARRY_INFANTRY;
 					break;
 				case CLASS_OFFICER:
-					scale = 1.6f;
+					scale = SPEED_MOD_CARRY_OFFICER;
 					break;
 				case CLASS_SNIPER:
-					scale = 1.2f;
+					scale = SPEED_MOD_CARRY_SNIPER;
 					break;
 				case CLASS_SKIRMISHER:
-					scale = 1.1;
+					scale = SPEED_MOD_CARRY_SKIRMISHER;
 					break;
 				case CLASS_LIGHT_INFANTRY:
-					scale = 1.05;
+					scale = SPEED_MOD_CARRY_LIGHT_INFANTRY;
+					break;
+				case CLASS_GRENADIER:
+					scale = SPEED_MOD_CARRY_GRENADIER;
 					break;
 			}
 

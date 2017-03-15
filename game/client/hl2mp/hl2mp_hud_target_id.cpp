@@ -21,7 +21,7 @@
 #define PLAYER_HINT_DISTANCE_SQ	(PLAYER_HINT_DISTANCE*PLAYER_HINT_DISTANCE)
 
 static ConVar hud_centerid( "hud_centerid", "1" );
-ConVar hud_showtargetid( "hud_showtargetid", "1" );
+ConVar hud_showtargetid("hud_showtargetid", "1"); //BG2 - found this while porting to 2016 - Valve had this ConVar as static? - Awesome
 extern ConVar sv_show_enemy_names; //BG2 - Commented - Hairypotter
 
 //-----------------------------------------------------------------------------
@@ -159,23 +159,22 @@ void CTargetID::Paint()
 			bShowPlayerName = true;
 			g_pVGuiLocalize->ConvertANSIToUnicode( pPlayer->GetPlayerName(),  wszPlayerName, sizeof(wszPlayerName) );
 			
-			if ( hud_showtargetid.GetBool() ) //BG2 - Add option to disable name displays entirely. -HairyPotter
+			if (hud_showtargetid.GetBool()) //BG2 - Add option to disable name displays entirely. -HairyPotter
 			{
-				if ( pPlayer->InSameTeam(pLocalPlayer) )
+				if (pPlayer->InSameTeam(pLocalPlayer))
 				{
 					printFormatString = "#Playerid_sameteam";
 					bShowHealth = true;
 				}
 				else
 				{
-					if( sv_show_enemy_names.GetBool()) //BG2 - Make this optional! -HairyPotter
+					if (sv_show_enemy_names.GetBool()) //BG2 - Make this optional! -HairyPotter
 					{
 						printFormatString = "#Playerid_diffteam";
 					}
 					else return;
 				}
 			}
-		
 
 			if ( bShowHealth )
 			{

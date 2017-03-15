@@ -141,6 +141,7 @@
 
 #if defined( TF_CLIENT_DLL )
 #include "econ/tool_items/custom_texture_cache.h"
+
 #endif
 
 #ifdef WORKSHOP_IMPORT_ENABLED
@@ -568,7 +569,8 @@ void DisplayBoneSetupEnts()
 		if ( pEnt->m_Count >= 3 )
 		{
 			printInfo.color[0] = 1;
-			printInfo.color[1] = printInfo.color[2] = 0;
+			printInfo.color[1] = 0;
+			printInfo.color[2] = 0;
 		}
 		else if ( pEnt->m_Count == 2 )
 		{
@@ -578,7 +580,9 @@ void DisplayBoneSetupEnts()
 		}
 		else
 		{
-			printInfo.color[0] = printInfo.color[0] = printInfo.color[0] = 1;
+			printInfo.color[0] = 1;
+			printInfo.color[1] = 1;
+			printInfo.color[2] = 1;
 		}
 		engine->Con_NXPrintf( &printInfo, "%25s / %3d / %3d", pEnt->m_ModelName, pEnt->m_Count, pEnt->m_Index );
 		printInfo.index++;
@@ -1076,14 +1080,16 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	ClientWorldFactoryInit();
 
 	C_BaseAnimating::InitBoneSetupThreadPool();
-/*
+
+	//BG2 - found this commented out while porting to 2016 - Awesome
+	/*
 #if defined( WIN32 ) && !defined( _X360 )
 	// NVNT connect haptics sytem
 	ConnectHaptics(appSystemFactory);
 #endif
 #ifndef _X360
 	HookHapticMessages(); // Always hook the messages
-#endif */
+#endif*/
 
 	return true;
 }
@@ -1217,6 +1223,7 @@ void CHLClient::Shutdown( void )
 	DisconnectTier1Libraries( );
 
 	gameeventmanager = NULL;
+
 #if defined( WIN32 ) && !defined( _X360 )
 	// NVNT Disconnect haptics system
 	DisconnectHaptics();
@@ -1716,7 +1723,11 @@ void CHLClient::LevelShutdown( void )
 
 	messagechars->Clear();
 
+#ifndef TF_CLIENT_DLL
+	// don't want to do this for TF2 because we have particle systems in our
+	// character loadout screen that can be viewed when we're not connected to a server
 	g_pParticleSystemMgr->UncacheAllParticleSystems();
+#endif
 	UncacheAllMaterials();
 
 #ifdef _XBOX
@@ -2387,7 +2398,7 @@ void CHLClient::WriteSaveGameScreenshot( const char *pFilename )
 void CHLClient::EmitSentenceCloseCaption( char const *tokenstream )
 {
 	//extern ConVar closecaption;
-	
+
 	//if ( !closecaption.GetBool() )
 	//	return;
 
@@ -2395,7 +2406,7 @@ void CHLClient::EmitSentenceCloseCaption( char const *tokenstream )
 	/*CHudCloseCaption *hudCloseCaption = GET_HUDELEMENT( CHudCloseCaption );
 	if ( hudCloseCaption )
 	{
-		hudCloseCaption->ProcessSentenceCaptionStream( tokenstream );
+	hudCloseCaption->ProcessSentenceCaptionStream( tokenstream );
 	}*/
 }
 
@@ -2411,7 +2422,7 @@ void CHLClient::EmitCloseCaption( char const *captionname, float duration )
 	/*CHudCloseCaption *hudCloseCaption = GET_HUDELEMENT( CHudCloseCaption );
 	if ( hudCloseCaption )
 	{
-		hudCloseCaption->ProcessCaption( captionname, duration );
+	hudCloseCaption->ProcessCaption( captionname, duration );
 	}*/
 }
 
@@ -2558,8 +2569,8 @@ void CHLClient::ClientAdjustStartSoundParams( StartSoundParams_t& params )
 		// Halloween voice futzery?
 		else
 		{
-			float flHeadScale = 1.f;
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pEntity, flHeadScale, head_scale );
+			float flVoicePitchScale = 1.f;
+			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pEntity, flVoicePitchScale, voice_pitch_scale );
 
 			int iHalloweenVoiceSpell = 0;
 			CALL_ATTRIB_HOOK_INT_ON_OTHER( pEntity, iHalloweenVoiceSpell, halloween_voice_modulation );
@@ -2567,17 +2578,9 @@ void CHLClient::ClientAdjustStartSoundParams( StartSoundParams_t& params )
 			{
 				params.pitch *= 0.8f;
 			}
-			else if( flHeadScale != 1.f )
+			else if( flVoicePitchScale != 1.f )
 			{
-				// Big head, deep voice
-				if( flHeadScale > 1.f )
-				{
-					params.pitch *= 0.8f;
-				}
-				else	// Small head, high voice
-				{
-					params.pitch *= 1.3f;
-				}
+				params.pitch *= flVoicePitchScale;
 			}
 		}
 	}

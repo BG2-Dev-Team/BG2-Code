@@ -26,7 +26,8 @@
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
- /*
+//BG2 - no achievements in our game - Awesome
+/*
 #define ACHIEVEMENT_NOTIFICATION_DURATION 10.0f
 
 //-----------------------------------------------------------------------------

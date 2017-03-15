@@ -104,6 +104,7 @@ public:
 
 #define TIME_TO_DUCK		0.4
 #define TIME_TO_DUCK_MS		400.0f
+
 #define TIME_TO_UNDUCK		0.2
 #define TIME_TO_UNDUCK_MS	200.0f
 
@@ -136,7 +137,7 @@ typedef enum
 	VOTE_FAILED_ISSUE_DISABLED,
 	VOTE_FAILED_MAP_NOT_FOUND,
 	VOTE_FAILED_MAP_NAME_REQUIRED,
-	VOTE_FAILED_FAILED_RECENTLY,
+	VOTE_FAILED_ON_COOLDOWN,
 	VOTE_FAILED_TEAM_CANT_CALL,
 	VOTE_FAILED_WAITINGFORPLAYERS,
 	VOTE_FAILED_PLAYERNOTFOUND,
@@ -147,6 +148,8 @@ typedef enum
 	VOTE_FAILED_MAP_NOT_VALID,
 	VOTE_FAILED_CANNOT_KICK_FOR_TIME,
 	VOTE_FAILED_CANNOT_KICK_DURING_ROUND,
+	VOTE_FAILED_VOTE_IN_PROGRESS,
+	VOTE_FAILED_KICK_LIMIT_REACHED,
 
 	// TF-specific?
 	VOTE_FAILED_MODIFICATION_ALREADY_ACTIVE,
@@ -214,7 +217,7 @@ enum CastVote
 #if defined( CSTRIKE_DLL )
 	#define MAX_PLAYERS				65  // Absolute max players supported
 #else
-	#define MAX_PLAYERS				65  // Absolute max players supported //BG2 - Upped this from 33. -HairyPotter
+#define MAX_PLAYERS					65  // Absolute max players supported //BG2 - Upped this from 33. -HairyPotter
 #endif
 
 #define MAX_PLACE_NAME_LENGTH		18
@@ -449,6 +452,7 @@ enum {
 	OBS_MODE_FIXED,		// view from a fixed camera position
 	OBS_MODE_IN_EYE,	// follow a player in first person view
 	OBS_MODE_CHASE,		// follow a player in third person view
+	OBS_MODE_POI,		// PASSTIME point of interest - game objective, big fight, anything interesting; added in the middle of the enum due to tons of hard-coded "<ROAMING" enum compares
 	OBS_MODE_ROAMING,	// free roaming
 
 	NUM_OBSERVER_MODES,
@@ -682,10 +686,10 @@ struct FireBulletsInfo_t
 		m_vecDirShooting.Init( VEC_T_NAN, VEC_T_NAN, VEC_T_NAN );
 #endif
 		m_bPrimaryAttack = true;
-
 		//BG2 - Tjoppen - stuff for arcscan bullet
 		m_bArc = false;
 		//
+		m_bUseServerRandomSeed = false;
 	}
 
 	FireBulletsInfo_t( int nShots, const Vector &vecSrc, const Vector &vecDir, const Vector &vecSpread, float flDistance, int nAmmoType, bool bPrimaryAttack = true )
@@ -704,7 +708,7 @@ struct FireBulletsInfo_t
 		m_pAdditionalIgnoreEnt = NULL;
 		m_flDamageForceScale = 1.0f;
 		m_bPrimaryAttack = bPrimaryAttack;
-
+		m_bUseServerRandomSeed = false;
 		//BG2 - Tjoppen - stuff for arcscan bullet
 		m_bArc = false;
 		//
@@ -725,6 +729,7 @@ struct FireBulletsInfo_t
 	CBaseEntity *m_pAttacker;
 	CBaseEntity *m_pAdditionalIgnoreEnt;
 	bool m_bPrimaryAttack;
+	bool m_bUseServerRandomSeed;
 
 	//BG2 - Tjoppen - stuff for arcscan bullets
 	bool m_bArc;

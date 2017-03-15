@@ -66,7 +66,7 @@ C_PlayerResource::C_PlayerResource()
 	}
 
 #ifdef HL2MP
-	m_Colors[TEAM_AMERICANS] = COLOR_BLUE;
+	m_Colors[TEAM_AMERICANS] = COLOR_BLUE; //BG2 - replaced team names
 	m_Colors[TEAM_BRITISH] = COLOR_RED;
 	m_Colors[TEAM_UNASSIGNED] = COLOR_YELLOW;
 #endif

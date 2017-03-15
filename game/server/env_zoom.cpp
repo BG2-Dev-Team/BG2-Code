@@ -79,6 +79,15 @@ void CEnvZoom::InputZoom( inputdata_t &inputdata )
 	if ( pPlayer )
 	{
 
+/*#ifdef HL2_DLL
+		if ( pPlayer == pPlayer->GetFOVOwner() )
+		{
+			CHL2_Player *pHLPlayer = static_cast<CHL2_Player*>( pPlayer );
+
+			pHLPlayer->StopZooming();
+		}
+#endif*/
+
 		// If the player's already holding a fov from another env_zoom, we're allowed to overwrite it
 		if ( pPlayer->GetFOVOwner() && FClassnameIs( pPlayer->GetFOVOwner(), "env_zoom" ) )
 		{

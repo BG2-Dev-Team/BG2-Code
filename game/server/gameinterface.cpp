@@ -92,22 +92,24 @@
 
 //BG2 - Tjoppen - #includes
 #ifndef CLIENT_DLL
-	#include "hl2mp_gamerules.h"
-	#include "sdk/sdk_bot_temp.h"
+#include "hl2mp_gamerules.h"
+#include "sdk/sdk_bot_temp.h"
 #ifndef USE_ENTITY_BULLET
-	#include "bg2/bullet.h"
+#include "bg2/bullet.h"
 #endif
 #endif
 #include "team.h"
+
+
 
 #ifdef USE_NAV_MESH
 #include "nav_mesh.h"
 #endif
 
+
 #ifdef USES_ECON_ITEMS
 #include "econ_item_system.h"
 #endif // USES_ECON_ITEMS
-
 
 #if defined( REPLAY_ENABLED )
 #include "replay/ireplaysystem.h"
@@ -543,11 +545,11 @@ void DrawAllDebugOverlays( void )
 
 CServerGameDLL g_ServerGameDLL;
 // INTERFACEVERSION_SERVERGAMEDLL_VERSION_8 is compatible with the latest since we're only adding things to the end, so expose that as well.
-EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CServerGameDLL, IServerGameDLL008, INTERFACEVERSION_SERVERGAMEDLL_VERSION_8, g_ServerGameDLL );
+//EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CServerGameDLL, IServerGameDLL008, INTERFACEVERSION_SERVERGAMEDLL_VERSION_8, g_ServerGameDLL );
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CServerGameDLL, IServerGameDLL, INTERFACEVERSION_SERVERGAMEDLL, g_ServerGameDLL);
 
 // When bumping the version to this interface, check that our assumption is still valid and expose the older version in the same way
-COMPILE_TIME_ASSERT( INTERFACEVERSION_SERVERGAMEDLL_INT == 9 );
+COMPILE_TIME_ASSERT( INTERFACEVERSION_SERVERGAMEDLL_INT == 10 );
 
 bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory, 
 		CreateInterfaceFn physicsFactory, CreateInterfaceFn fileSystemFactory, 
@@ -659,6 +661,7 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetEntitySaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetPhysSaveRestoreBlockHandler() );
+	//g_pGameSaveRestoreBlockSet->AddBlockHandler( GetAISaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetTemplateSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetDefaultResponseSystemSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetCommentarySaveRestoreBlockHandler() );
@@ -744,6 +747,7 @@ void CServerGameDLL::DLLShutdown( void )
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetEventQueueSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetDefaultResponseSystemSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetTemplateSaveRestoreBlockHandler() );
+	//g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetAISaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetPhysSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetEntitySaveRestoreBlockHandler() );
 
@@ -993,16 +997,16 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 		}
 
 		//BG2 - DOn't need this. - HairyPotter
-		/*if ( pOldLevel && sv_autosave.GetBool() == true ) 
+		/*if ( pOldLevel && sv_autosave.GetBool() == true )
 		{
-			// This is a single-player style level transition.
-			// Queue up an autosave one second into the level
-			CBaseEntity *pAutosave = CBaseEntity::Create( "logic_autosave", vec3_origin, vec3_angle, NULL );
-			if ( pAutosave )
-			{
-				g_EventQueue.AddEvent( pAutosave, "Save", 1.0, NULL, NULL );
-				g_EventQueue.AddEvent( pAutosave, "Kill", 1.1, NULL, NULL );
-			}
+		// This is a single-player style level transition.
+		// Queue up an autosave one second into the level
+		CBaseEntity *pAutosave = CBaseEntity::Create( "logic_autosave", vec3_origin, vec3_angle, NULL );
+		if ( pAutosave )
+		{
+		g_EventQueue.AddEvent( pAutosave, "Save", 1.0, NULL, NULL );
+		g_EventQueue.AddEvent( pAutosave, "Kill", 1.1, NULL, NULL );
+		}
 		}*/
 	}
 	else
@@ -1063,12 +1067,12 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	mp_limit_inf_b_##size.Revert(); mp_limit_off_b_##size.Revert(); mp_limit_rif_b_##size.Revert(); mp_limit_ski_b_##size.Revert(); mp_limit_linf_b_##size.Revert();	
 
 	//class limits..
-	LIMIT_REVERT( sml )
-	LIMIT_REVERT( med )
-	LIMIT_REVERT( lrg )
+	LIMIT_REVERT(sml)
+		LIMIT_REVERT(med)
+		LIMIT_REVERT(lrg)
 
-	//other game related cvars
-	extern ConVar mp_winbonus, mp_respawnstyle, mp_respawntime;
+		//other game related cvars
+		extern ConVar mp_winbonus, mp_respawnstyle, mp_respawntime;
 	extern ConVar mp_tickets_rounds, mp_tickets_roundtime, mp_tickets_a, mp_tickets_b;
 	extern ConVar mp_tickets_drain_a, mp_tickets_drain_b;
 	extern ConVar mp_limit_mapsize_low, mp_limit_mapsize_high;
@@ -1086,8 +1090,8 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 
 	//done. we can now exec the map config
 	char	szExec[256];
-	Q_snprintf( szExec, sizeof(szExec), "exec %s.cfg\n", pMapName );
-	engine->ServerCommand( szExec );
+	Q_snprintf(szExec, sizeof(szExec), "exec %s.cfg\n", pMapName);
+	engine->ServerCommand(szExec);
 	engine->ServerExecute();
 	//
 
@@ -1095,6 +1099,7 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	//we need to call CTeam::ResetTickets() here rather than in CTeam::Init() since the teams get inited before the map config is loaded
 	g_Teams[TEAM_AMERICANS]->ResetTickets();
 	g_Teams[TEAM_BRITISH]->ResetTickets();
+
 	return true;
 }
 
@@ -1111,9 +1116,7 @@ bool g_bCheckForChainedActivate;
 	{ \
 		if ( bCheck ) \
 		{ \
-			char msg[ 1024 ];	\
-			Q_snprintf( msg, sizeof( msg ),  "Entity (%i/%s/%s) failed to call base class Activate()\n", pClass->entindex(), pClass->GetClassname(), STRING( pClass->GetEntityName() ) );	\
-			AssertMsg( g_bReceivedChainedActivate == true, msg ); \
+			AssertMsg( g_bReceivedChainedActivate, "Entity (%i/%s/%s) failed to call base class Activate()\n", pClass->entindex(), pClass->GetClassname(), STRING( pClass->GetEntityName() ) );	\
 		} \
 		g_bCheckForChainedActivate = false; \
 	}
@@ -1130,7 +1133,7 @@ void CServerGameDLL::ServerActivate( edict_t *pEdictList, int edictCount, int cl
 
 	if ( gEntList.ResetDeleteList() != 0 )
 	{
-		Msg( "ERROR: Entity delete queue not empty on level start!\n" );
+		Msg( "%s", "ERROR: Entity delete queue not empty on level start!\n" );
 	}
 
 	for ( CBaseEntity *pClass = gEntList.FirstEnt(); pClass != NULL; pClass = gEntList.NextEnt(pClass) )
@@ -1165,7 +1168,7 @@ void CServerGameDLL::ServerActivate( edict_t *pEdictList, int edictCount, int cl
 #endif
 #endif
 
-	m_bServerReady = true; //BG2 - This is for BG2 bots. This lets the server know it's okat to spawn them.
+	m_bServerReady = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -1174,6 +1177,7 @@ void CServerGameDLL::ServerActivate( edict_t *pEdictList, int edictCount, int cl
 void CServerGameDLL::GameServerSteamAPIActivated( void )
 {
 #ifndef NO_STEAM
+	steamgameserverapicontext->Clear();
 	steamgameserverapicontext->Init();
 	if ( steamgameserverapicontext->SteamGameServer() && engine->IsDedicatedServer() )
 	{
@@ -1184,6 +1188,7 @@ void CServerGameDLL::GameServerSteamAPIActivated( void )
 #ifdef TF_DLL
 	GCClientSystem()->GameServerActivate();
 	InventoryManager()->GameServerSteamAPIActivated();
+	TFMapsWorkshop()->GameServerSteamAPIActivated();
 #endif
 }
 
@@ -1590,9 +1595,11 @@ int	CServerGameDLL::CreateEntityTransitionList( CSaveRestoreData *s, int a)
 	if ( movedCount )
 	{
 		g_pGameSaveRestoreBlockSet->CallBlockHandlerRestore( GetPhysSaveRestoreBlockHandler(), base, &restoreHelper, false );
+		//g_pGameSaveRestoreBlockSet->CallBlockHandlerRestore( GetAISaveRestoreBlockHandler(), base, &restoreHelper, false );
 	}
 
 	GetPhysSaveRestoreBlockHandler()->PostRestore();
+	//GetAISaveRestoreBlockHandler()->PostRestore();
 
 	return movedCount;
 }
@@ -1915,9 +1922,13 @@ void CServerGameDLL::SetServerHibernation( bool bHibernating )
 const char *CServerGameDLL::GetServerBrowserMapOverride()
 {
 #ifdef TF_DLL
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && g_pPopulationManager && g_pPopulationManager->GetPopulationFilenameShort() != '\0' )
+	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
 	{
-		return g_pPopulationManager->GetPopulationFilenameShort();
+		const char *pszFilenameShort = g_pPopulationManager ? g_pPopulationManager->GetPopulationFilenameShort() : NULL;
+		if ( pszFilenameShort && pszFilenameShort[0] )
+		{
+			return pszFilenameShort;
+		}
 	}
 #endif
 	return NULL;
@@ -1948,6 +1959,61 @@ const char *CServerGameDLL::GetServerBrowserGameData()
 	static char rchResult[2048];
 	V_strcpy_safe( rchResult, sResult );
 	return rchResult;
+}
+
+//-----------------------------------------------------------------------------
+void CServerGameDLL::Status( void (*print) (const char *fmt, ...) )
+{
+	if ( g_pGameRules )
+	{
+		g_pGameRules->Status( print );
+	}
+}
+
+//-----------------------------------------------------------------------------
+void CServerGameDLL::PrepareLevelResources( /* in/out */ char *pszMapName, size_t nMapNameSize,
+                                            /* in/out */ char *pszMapFile, size_t nMapFileSize )
+{
+#ifdef TF_DLL
+	TFMapsWorkshop()->PrepareLevelResources( pszMapName, nMapNameSize, pszMapFile, nMapFileSize );
+#endif // TF_DLL
+}
+
+//-----------------------------------------------------------------------------
+IServerGameDLL::ePrepareLevelResourcesResult
+CServerGameDLL::AsyncPrepareLevelResources( /* in/out */ char *pszMapName, size_t nMapNameSize,
+                                            /* in/out */ char *pszMapFile, size_t nMapFileSize,
+                                            float *flProgress /* = NULL */ )
+{
+#ifdef TF_DLL
+	return TFMapsWorkshop()->AsyncPrepareLevelResources( pszMapName, nMapNameSize, pszMapFile, nMapFileSize, flProgress );
+#endif // TF_DLL
+
+	if ( flProgress )
+	{
+		*flProgress = 1.f;
+	}
+	return IServerGameDLL::ePrepareLevelResources_Prepared;
+}
+
+//-----------------------------------------------------------------------------
+IServerGameDLL::eCanProvideLevelResult CServerGameDLL::CanProvideLevel( /* in/out */ char *pMapName, int nMapNameMax )
+{
+#ifdef TF_DLL
+	return TFMapsWorkshop()->OnCanProvideLevel( pMapName, nMapNameMax );
+#endif // TF_DLL
+	return IServerGameDLL::eCanProvideLevel_CannotProvide;
+}
+
+//-----------------------------------------------------------------------------
+bool CServerGameDLL::IsManualMapChangeOkay( const char **pszReason )
+{
+	if ( GameRules() )
+	{
+		return GameRules()->IsManualMapChangeOkay( pszReason );
+	}
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -2662,7 +2728,7 @@ void CServerGameClients::ClientActive( edict_t *pEdict, bool bLoadGame )
 
 	#if defined( TF_DLL )
 		Assert( pPlayer );
-		if ( pPlayer && !pPlayer->IsFakeClient() )
+		if ( pPlayer && !pPlayer->IsFakeClient() && !pPlayer->IsHLTV() && !pPlayer->IsReplay() )
 		{
 			CSteamID steamID;
 			if ( pPlayer->GetSteamID( &steamID ) )
@@ -2671,7 +2737,10 @@ void CServerGameClients::ClientActive( edict_t *pEdict, bool bLoadGame )
 			}
 			else
 			{
-				Log("WARNING: ClientActive, but we don't know his SteamID?\n");
+				if ( !pPlayer->IsReplay() && !pPlayer->IsHLTV() )
+				{
+					Log("WARNING: ClientActive, but we don't know his SteamID?\n");
+				}
 			}
 		}
 	#endif
@@ -2745,7 +2814,10 @@ void CServerGameClients::ClientDisconnect( edict_t *pEdict )
 				}
 				else
 				{
-					Log("WARNING: ClientDisconnected, but we don't know his SteamID?\n");
+					if ( !player->IsReplay() && !player->IsHLTV() )
+					{
+						Log("WARNING: ClientDisconnected, but we don't know his SteamID?\n");
+					}
 				}
 			}
 		#endif
@@ -2991,17 +3063,20 @@ void CServerGameClients::ClientSetupVisibility( edict_t *pViewEntity, edict_t *p
 	// Flush the remaining areaportal states.
 	engine->SetAreaPortalStates( portalNums, isOpen, iOutPortal );
 
-	// Update the area bits that get sent to the client.
-	pPlayer->m_Local.UpdateAreaBits( pPlayer, portalBits );
+	if ( pPlayer )
+	{
+		// Update the area bits that get sent to the client.
+		pPlayer->m_Local.UpdateAreaBits( pPlayer, portalBits );
 
 #ifdef PORTAL 
-	// *After* the player's view has updated its area bits, add on any other areas seen by portals
-	CPortal_Player* pPortalPlayer = dynamic_cast<CPortal_Player*>( pPlayer );
-	if ( pPortalPlayer )
-	{
-		pPortalPlayer->UpdatePortalViewAreaBits( pvs, pvssize );
-	}
+		// *After* the player's view has updated its area bits, add on any other areas seen by portals
+		CPortal_Player* pPortalPlayer = dynamic_cast<CPortal_Player*>( pPlayer );
+		if ( pPortalPlayer )
+		{
+			pPortalPlayer->UpdatePortalViewAreaBits( pvs, pvssize );
+		}
 #endif //PORTAL
+	}
 }
 
 
@@ -3352,7 +3427,7 @@ void MessageWriteEHandle( CBaseEntity *pEntity )
 	{
 		EHANDLE hEnt = pEntity;
 
-		int iSerialNum = hEnt.GetSerialNumber() & (1 << NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS) - 1;
+		int iSerialNum = hEnt.GetSerialNumber() & ( (1 << NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS) - 1 );
 		iEncodedEHandle = hEnt.GetEntryIndex() | (iSerialNum << MAX_EDICT_BITS);
 	}
 	else

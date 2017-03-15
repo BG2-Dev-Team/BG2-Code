@@ -144,5 +144,4 @@ void CHudBattery::OnThink( void )
 void CHudBattery::MsgFunc_Battery( bf_read &msg )
 {
 	m_iNewBat = msg.ReadShort();
-}
-*/
+}*/

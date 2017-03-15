@@ -30,12 +30,13 @@ ConVar cl_npc_speedmod_outtime( "cl_npc_speedmod_outtime", "1.5", FCVAR_CLIENTDL
 
 IMPLEMENT_CLIENTCLASS_DT(C_BaseHLPlayer, DT_HL2_Player, CHL2_Player)
 	RecvPropDataTable( RECVINFO_DT(m_HL2Local),0, &REFERENCE_RECV_TABLE(DT_HL2Local) ),
-	//RecvPropBool( RECVINFO( m_fIsSprinting ) ),
+	//RecvPropBool( RECVINFO( m_fIsSprinting ) ),//BG2 - no sprinting - found this while porting to 2016 engine - Awesome
+	
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_BaseHLPlayer )
 	DEFINE_PRED_TYPEDESCRIPTION( m_HL2Local, C_HL2PlayerLocalData ),
-	//DEFINE_PRED_FIELD( m_fIsSprinting, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_fIsSprinting, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),//BG2 - no sprinting - found this while porting
 END_PREDICTION_DATA()
 
 //-----------------------------------------------------------------------------
@@ -62,7 +63,6 @@ C_BaseHLPlayer::C_BaseHLPlayer()
 	//AddVar( &m_Local.m_vecPunchAngle, &m_Local.m_iv_vecPunchAngle, LATCH_SIMULATION_VAR );
 	//AddVar( &m_Local.m_vecPunchAngleVel, &m_Local.m_iv_vecPunchAngleVel, LATCH_SIMULATION_VAR );
 	//
-
 	m_flZoomStart		= 0.0f;
 	m_flZoomEnd			= 0.0f;
 	m_flZoomRate		= 0.0f;

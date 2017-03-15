@@ -23,6 +23,7 @@
 #include "ai_hint.h"
 #include "ai_memory.h"
 #include "ai_navigator.h"
+//#include "ai_tacticalservices.h"
 #include "ai_moveprobe.h"
 #include "ai_squadslot.h"
 #include "ai_squad.h"
@@ -838,6 +839,13 @@ bool CAI_BaseNPC::FindCoverPos( CBaseEntity *pEntity, Vector *pResult )
 {
 	AI_PROFILE_SCOPE(CAI_BaseNPC_FindCoverPos);
 
+	/*if ( !GetTacticalServices()->FindLateralCover( pEntity->EyePosition(), 0, pResult ) )
+	{
+		if ( !GetTacticalServices()->FindCoverPos( pEntity->GetAbsOrigin(), pEntity->EyePosition(), 0, CoverRadius(), pResult ) ) 
+		{
+			return false;
+		}
+	}*/
 	return true;
 }
 
@@ -854,6 +862,8 @@ bool CAI_BaseNPC::FindCoverPosInRadius( CBaseEntity *pEntity, const Vector &goal
 	}
 
 	Vector					coverPos			= vec3_invalid;
+	//CAI_TacticalServices *	pTacticalServices	= GetTacticalServices();
+	//const Vector &			enemyPos			= pEntity->GetAbsOrigin();
 	Vector					enemyEyePos			= pEntity->EyePosition();
 
 	if( ( !GetSquad() || GetSquad()->GetFirstMember() == this ) &&
@@ -862,6 +872,16 @@ bool CAI_BaseNPC::FindCoverPosInRadius( CBaseEntity *pEntity, const Vector &goal
 	{
 		coverPos = goalPos;
 	}
+	/*else if ( !pTacticalServices->FindCoverPos( goalPos, enemyPos, enemyEyePos, 0, coverRadius * 0.5, &coverPos ) )
+	{
+		if ( !pTacticalServices->FindLateralCover( goalPos, enemyEyePos, 0, coverRadius * 0.5, 3, &coverPos ) )
+		{
+			if ( !pTacticalServices->FindCoverPos( goalPos, enemyPos, enemyEyePos, coverRadius * 0.5 - 0.1, coverRadius, &coverPos ) )
+			{
+				pTacticalServices->FindLateralCover( goalPos, enemyEyePos, 0, coverRadius, 5, &coverPos );
+			}
+		}
+	}*/
 	
 	if ( coverPos == vec3_invalid )
 		return false;
@@ -873,6 +893,15 @@ bool CAI_BaseNPC::FindCoverPosInRadius( CBaseEntity *pEntity, const Vector &goal
 
 bool CAI_BaseNPC::FindCoverPos( CSound *pSound, Vector *pResult )
 {
+	/*if ( !GetTacticalServices()->FindCoverPos( pSound->GetSoundReactOrigin(), 
+												pSound->GetSoundReactOrigin(), 
+												MIN( pSound->Volume(), 120.0 ), 
+												CoverRadius(), 
+												pResult ) )
+	{
+		return GetTacticalServices()->FindLateralCover( pSound->GetSoundReactOrigin(), MIN( pSound->Volume(), 60.0 ), pResult );
+	}*/
+
 	return true;
 }
 
@@ -933,6 +962,9 @@ bool CAI_BaseNPC::FindCoverFromEnemy( bool bNodesOnly, float flMinDistance, floa
 	{
 		if ( flMaxDistance == FLT_MAX )
 			flMaxDistance = CoverRadius();
+		
+		//if ( !GetTacticalServices()->FindCoverPos( pEntity->GetAbsOrigin(), pEntity->EyePosition(), flMinDistance, flMaxDistance, &coverPos ) )
+			//return false;
 	}
 	else
 	{
@@ -1426,6 +1458,31 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 
 	case TASK_FIND_BACKAWAY_FROM_SAVEPOSITION:
 		{
+			/*if ( GetEnemy() != NULL )
+			{
+				Vector backPos;
+				if ( !GetTacticalServices()->FindBackAwayPos( m_vSavePosition, &backPos ) )
+				{
+					// no place to backaway
+					TaskFail(FAIL_NO_BACKAWAY_NODE);
+				}
+				else 
+				{
+					if (GetNavigator()->SetGoal( AI_NavGoal_t( backPos, ACT_RUN ) ) )
+					{
+						TaskComplete();
+					}
+					else
+					{
+						// no place to backaway
+						TaskFail(FAIL_NO_ROUTE);
+					}
+				}
+			}
+			else
+			{
+				TaskFail(FAIL_NO_ENEMY);
+			}*/
 		}
 		break;
 
@@ -1452,6 +1509,20 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 
 	case TASK_FIND_COVER_FROM_ORIGIN:
 		{
+			/*Vector coverPos;
+
+			if ( GetTacticalServices()->FindCoverPos( GetLocalOrigin(), EyePosition(), 0, CoverRadius(), &coverPos ) ) 
+			{
+				AI_NavGoal_t goal(coverPos, ACT_RUN, AIN_HULL_TOLERANCE);
+				GetNavigator()->SetGoal( goal );
+
+				m_flMoveWaitFinished = gpGlobals->curtime + pTask->flTaskData;
+			}
+			else
+			{
+				// no coverwhatsoever.
+				TaskFail(FAIL_NO_COVER);
+			}*/
 		}
 
 		break;
@@ -1855,7 +1926,40 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 			Vector posLos;
 			bool found = false;
 
+			/*if ( ( task != TASK_GET_FLANK_RADIUS_PATH_TO_ENEMY_LOS ) && ( task != TASK_GET_FLANK_ARC_PATH_TO_ENEMY_LOS ) )
+			{
+				if ( GetTacticalServices()->FindLateralLos( vecEnemyEye, &posLos ) )
+				{
+					float dist = ( posLos - vecEnemyEye ).Length();
+					if ( dist < flMaxRange && dist > flMinRange )
+						found = true;
+				}
+			}
 			
+			if ( !found )
+			{
+				FlankType_t eFlankType = FLANKTYPE_NONE;
+				Vector vecFlankRefPos = vec3_origin;
+				float flFlankParam = 0;
+			
+				if ( task == TASK_GET_FLANK_RADIUS_PATH_TO_ENEMY_LOS )
+				{
+					eFlankType = FLANKTYPE_RADIUS;
+					vecFlankRefPos = m_vSavePosition;
+					flFlankParam = pTask->flTaskData;
+				}
+				else if ( task == TASK_GET_FLANK_ARC_PATH_TO_ENEMY_LOS )
+				{
+					eFlankType = FLANKTYPE_ARC;
+					vecFlankRefPos = m_vSavePosition;
+					flFlankParam = pTask->flTaskData;
+				}
+
+				if ( GetTacticalServices()->FindLos( vecEnemy, vecEnemyEye, flMinRange, flMaxRange, 1.0, eFlankType, vecFlankRefPos, flFlankParam, &posLos ) )
+				{
+					found = true;
+				}
+			}*/
 
 			if ( !found )
 			{
@@ -1986,13 +2090,63 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 
 					Vector	eyePosition = ( m_hStoredPathTarget != NULL ) ? m_hStoredPathTarget->EyePosition() : m_vecStoredPathGoal;
 
+					Vector posLos;
+
+					// See if we've found it
+					/*if ( GetTacticalServices()->FindLos( m_vecStoredPathGoal, eyePosition, flMinRange, flMaxRange, 1.0f, &posLos ) )
+					{
+						goal.dest = posLos;
+						foundPath = GetNavigator()->SetGoal( goal );
+					}
+					else
+					{
+						// No LOS to goal
+						TaskFail( FAIL_NO_SHOOT );
+						return;
+					}*/
 				}
 				
 				break;
 
 			case PATH_COVER:	//Get a path to cover FROM our goal
 				{
+					/*CBaseEntity *pEntity = ( m_hStoredPathTarget == NULL ) ? this : m_hStoredPathTarget;
 
+					//Find later cover first
+					Vector coverPos;
+
+					if ( GetTacticalServices()->FindLateralCover( pEntity->EyePosition(), 0, &coverPos ) )
+					{
+						AI_NavGoal_t goal( coverPos, ACT_RUN );
+						GetNavigator()->SetGoal( goal, AIN_CLEAR_PREVIOUS_STATE );
+						
+ 						//FIXME: What exactly is this doing internally?
+						m_flMoveWaitFinished = gpGlobals->curtime + pTask->flTaskData;
+						TaskComplete();
+						return;
+					}
+					else
+					{
+						//Try any cover
+						if ( GetTacticalServices()->FindCoverPos( pEntity->GetAbsOrigin(), pEntity->EyePosition(), 0, CoverRadius(), &coverPos ) ) 
+						{
+							//If we've found it, find a safe route there
+							AI_NavGoal_t coverGoal( GOALTYPE_COVER, 
+													coverPos,
+													ACT_RUN,
+													AIN_HULL_TOLERANCE,
+													AIN_DEF_FLAGS,
+													m_hStoredPathTarget );
+							
+							foundPath = GetNavigator()->SetGoal( goal );
+
+							m_flMoveWaitFinished = gpGlobals->curtime + pTask->flTaskData;
+						}
+						else
+						{
+							TaskFail( FAIL_NO_COVER );
+						}
+					}*/
 				}
 
 				break;
@@ -2092,6 +2246,15 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 
 		Vector posLos;
 
+		/*if (GetTacticalServices()->FindLos(m_vSavePosition,m_vSavePosition, flMinRange, flMaxRange, 1.0, &posLos))
+		{
+			GetNavigator()->SetGoal( AI_NavGoal_t( posLos, ACT_RUN, AIN_HULL_TOLERANCE ) );
+		}
+		else
+		{
+			// no coverwhatsoever.
+			TaskFail(FAIL_NO_SHOOT);
+		}*/
 		break;
 	}
 
@@ -3593,6 +3756,18 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 			case 2:
 				{
 					ClearTaskInterrupt();
+					/*Vector coverPos;
+
+					if ( GetTacticalServices()->FindCoverPos( GetLocalOrigin(), EyePosition(), 0, CoverRadius(), &coverPos ) && IsValidMoveAwayDest( GetNavigator()->GetGoalPos() ) ) 
+					{
+						GetNavigator()->SetGoal( AI_NavGoal_t( coverPos, ACT_RUN ) );
+						m_flMoveWaitFinished = gpGlobals->curtime + 2;
+					}
+					else
+					{
+						// no coverwhatsoever.
+						TaskFail(FAIL_NO_ROUTE);
+					}*/
 				}
 				break;
 

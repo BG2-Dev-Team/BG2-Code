@@ -242,7 +242,9 @@ protected:
 	static bool				LoadSchedules()							{ return true; }
 	virtual bool			IsBehaviorSchedule( int scheduleType )	{ return false; }
 
+	//CAI_Navigator *			GetNavigator() 							{ return GetOuter()->GetNavigator(); 		}
 	CAI_Motor *				GetMotor() 								{ return GetOuter()->GetMotor(); 			}
+	//CAI_TacticalServices *	GetTacticalServices()					{ return GetOuter()->GetTacticalServices();	}
 
 	bool 				 m_fOverrode;
 	IBehaviorBackBridge *m_pBackBridge;

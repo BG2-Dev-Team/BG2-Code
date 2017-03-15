@@ -65,7 +65,7 @@ public:
 	//  client can predict conveyors correctly.  Server zeroes it, so we need to store here, too.
 	// auto-decaying view angle adjustment
 	//BG2 - Tjoppen - no punchangle over the network!
-	/*CNetworkQAngle( m_vecPunchAngle );		
+	/*CNetworkQAngle( m_vecPunchAngle );
 	CNetworkQAngle( m_vecPunchAngleVel );*/
 	QAngle	m_vecPunchAngle;
 	QAngle	m_vecPunchAngleVel;

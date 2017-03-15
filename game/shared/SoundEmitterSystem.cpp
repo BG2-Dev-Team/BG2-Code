@@ -337,6 +337,15 @@ public:
 		FinishLog();
 #endif
 	}
+
+	void Flush()
+	{
+		Assert( soundemitterbase );
+#if !defined( CLIENT_DLL )
+		FinishLog();
+#endif
+		soundemitterbase->Flush();
+	}
 		
 	void InternalPrecacheWaves( int soundIndex )
 	{
@@ -465,7 +474,6 @@ public:
 		{
 			return;
 		}
-#endif // STAGING_ONLY
 
 		if ( !Q_strncasecmp( params.soundname, "vo", 2 ) &&
 			!( params.channel == CHAN_STREAM ||
@@ -475,6 +483,7 @@ public:
 			DevMsg( "EmitSound:  Voice wave file %s doesn't specify CHAN_VOICE, CHAN_VOICE2 or CHAN_STREAM for sound %s\n",
 				params.soundname, ep.m_pSoundName );
 		}
+#endif // STAGING_ONLY
 
 		// handle SND_CHANGEPITCH/SND_CHANGEVOL and other sound flags.etc.
 		if( ep.m_nFlags & SND_CHANGE_PITCH )
@@ -547,11 +556,11 @@ public:
 		{
 			EmitCloseCaption( filter, entindex, params, ep );
 		}
-/* //BG2 - This crashes the game every time there's a sound made. -HairyPotter
-#if defined( WIN32 ) && !defined( _X360 )
+		/* //BG2 - This crashes the game every time there's a sound made. -HairyPotter
+		#if defined( WIN32 ) && !defined( _X360 )
 		// NVNT notify the haptics system of this sound
 		HapticProcessSound(ep.m_pSoundName, entindex);
-#endif*/
+		#endif*/
 	}
 
 	void EmitSound( IRecipientFilter& filter, int entindex, const EmitSound_t & ep )
@@ -999,10 +1008,7 @@ void S_SoundEmitterSystemFlush( void )
 
 	// save the current soundscape
 	// kill the system
-	g_SoundEmitterSystem.Shutdown();
-
-	// restart the system
-	g_SoundEmitterSystem.Init();
+	g_SoundEmitterSystem.Flush();
 
 #if !defined( CLIENT_DLL )
 	// Redo precache all wave files... (this should work now that we have dynamic string tables)

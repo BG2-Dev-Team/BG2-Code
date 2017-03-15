@@ -460,7 +460,7 @@ void UpdateBullets()
 	//	DevMsg("Updating Bullets for %f of %f (%f)\n", btime, lastFrameTime, btime / lastFrameTime);
 }
 
-#endif
+#endif //SERVER_DLL
 #else
 
 #include "weapon_bg2base.h"

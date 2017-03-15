@@ -3,6 +3,7 @@
 // Purpose: 
 //
 //=============================================================================//
+//BG2 - found lots of lines missing in this file, which is odd considering BG2 doesn't have NPCs - found these while porting - Awesome
 
 #include "cbase.h"
 
@@ -71,6 +72,7 @@
 #include "iservervehicle.h"
 #include "filters.h"
 #ifdef HL2_DLL
+//#include "npc_bullseye.h"
 #include "hl2_player.h"
 #include "weapon_physcannon.h"
 #endif
@@ -384,6 +386,14 @@ void CPostFrameNavigationHook::EnqueueEntityNavigationQuery( CAI_BaseNPC *pNPC, 
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::ClearAllSchedules(void)
 {
+	/*CAI_BaseNPC *npc = gEntList.NextEntByClass( (CAI_BaseNPC *)NULL );
+
+	while (npc)
+	{
+		npc->ClearSchedule( "CAI_BaseNPC::ClearAllSchedules" );
+		npc->GetNavigator()->ClearGoal();
+		npc = gEntList.NextEntByClass(npc);
+	}*/
 }
 
 // ==============================================================================
@@ -1429,6 +1439,21 @@ void CAI_BaseNPC::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::FireBullets( const FireBulletsInfo_t &info )
 {
+/*#ifdef HL2_DLL
+	// If we're shooting at a bullseye, become perfectly accurate if the bullseye demands it
+	if ( GetEnemy() && GetEnemy()->Classify() == CLASS_BULLSEYE )
+	{
+		CNPC_Bullseye *pBullseye = dynamic_cast<CNPC_Bullseye*>(GetEnemy()); 
+		if ( pBullseye && pBullseye->UsePerfectAccuracy() )
+		{
+			FireBulletsInfo_t accurateInfo = info;
+			accurateInfo.m_vecSpread = vec3_origin;
+			BaseClass::FireBullets( accurateInfo );
+			return;
+		}
+	}
+#endif*/
+
 	BaseClass::FireBullets( info );
 }
 
@@ -2179,6 +2204,47 @@ float	CAI_BaseNPC::GetHintDelay( short sHintType )
 	return 0;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose:	Return incoming grenade if spotted
+// Input  :
+// Output :
+//-----------------------------------------------------------------------------
+/*
+CBaseGrenade* CAI_BaseNPC::IncomingGrenade(void)
+{
+	int				iDist;
+
+	AIEnemiesIter_t iter;
+	for( AI_EnemyInfo_t *pEMemory = GetEnemies()->GetFirst(&iter); pEMemory != NULL; pEMemory = GetEnemies()->GetNext(&iter) )
+	{
+		CBaseGrenade* pBG = dynamic_cast<CBaseGrenade*>((CBaseEntity*)pEMemory->hEnemy);
+
+		// Make sure this memory is for a grenade and grenade is not dead
+		if (!pBG || pBG->m_lifeState == LIFE_DEAD)
+			continue;
+
+		// Make sure it's visible
+		if (!FVisible(pBG))
+			continue;
+
+		// Check if it's near me
+		iDist = ( pBG->GetAbsOrigin() - GetAbsOrigin() ).Length();
+		if ( iDist <= NPC_GRENADE_FEAR_DIST )
+			return pBG;
+
+		// Check if it's headed towards me
+		Vector	vGrenadeDir = GetAbsOrigin() - pBG->GetAbsOrigin();
+		Vector  vGrenadeVel;
+		pBG->GetVelocity( &vGrenadeVel, NULL );
+		VectorNormalize(vGrenadeDir);
+		VectorNormalize(vGrenadeVel);
+		float	flDotPr		= DotProduct(vGrenadeDir, vGrenadeVel);
+		if (flDotPr > 0.85)
+			return pBG;
+	}
+	return NULL;
+}
+*/
 
 //-----------------------------------------------------------------------------
 // Purpose: Check my physical state with the environment
@@ -2673,6 +2739,16 @@ void CAI_BaseNPC::MaintainLookTargets ( float flInterval )
 	}
 #endif
 
+	/*
+	// --------------------------------------------------------
+	// If I'm moving, look at my target position
+	// --------------------------------------------------------
+	if (GetNavigator()->IsGoalActive() && ValidEyeTarget(GetNavigator()->GetCurWaypointPos()))
+	{
+		SetHeadDirection(GetNavigator()->GetCurWaypointPos(),flInterval);
+		SetViewtarget( GetNavigator()->GetCurWaypointPos() );
+		return;
+	}*/
 
 
 	// -------------------------------------
@@ -2771,6 +2847,9 @@ void CAI_BaseNPC::PerformMovement()
 	AI_PROFILE_SCOPE(CAI_BaseNPC_PerformMovement);
 	g_AIMoveTimer.Start();
 
+	//float flInterval = ( m_flTimeLastMovement != FLT_MAX ) ? gpGlobals->curtime - m_flTimeLastMovement : 0.1;
+
+	//m_pNavigator->Move( ROUND_TO_TICKS( flInterval ) );
 	m_flTimeLastMovement = gpGlobals->curtime;
 
 	g_AIMoveTimer.End();
@@ -2867,6 +2946,10 @@ bool CAI_BaseNPC::PreThink( void )
 	{
 		if (m_nDebugCurIndex >= CAI_BaseNPC::m_nDebugPauseIndex)
 		{
+			//if (!GetNavigator()->IsGoalActive())
+			//{
+			//	m_flPlaybackRate = 0;
+			//}
 			return false;
 		}
 		else
@@ -2891,9 +2974,15 @@ void CAI_BaseNPC::RunAnimation( void )
 
 	if ( !GetModelPtr() )
 		return;
+
+	//float flInterval = GetAnimTimeInterval();
 		
 	StudioFrameAdvance( ); // animate
 
+	//if ((CAI_BaseNPC::m_nDebugBits & bits_debugStepAI) && !GetNavigator()->IsGoalActive())
+	//{
+	//	flInterval = 0;
+	//}
 
 	// start or end a fidget
 	// This needs a better home -- switching animations over time should be encapsulated on a per-activity basis
@@ -2963,6 +3052,9 @@ void CAI_BaseNPC::PostRun( void )
 
 void CAI_BaseNPC::PostRunStopMoving()
 {
+	//DbgNavMsg1( this, "NPC %s failed to stop properly, slamming activity\n", GetDebugName() );
+	//if ( !GetNavigator()->SetGoalFromStoppingPath() )
+	//	SetIdealActivity( GetStoppedActivity() ); // This is to prevent running in place
 }
 
 //-----------------------------------------------------------------------------
@@ -4742,6 +4834,10 @@ void CAI_BaseNPC::RunAI( void )
 	m_bConditionsGathered = false;
 	m_bSkippedChooseEnemy = false;
 
+	//if ( g_pDeveloper->GetInt() && !GetNavigator()->IsOnNetwork() )
+	//{
+	//	AddTimedOverlay( "NPC w/no reachable nodes!", 5 );
+	//}
 
 	AI_PROFILE_SCOPE_BEGIN(CAI_BaseNPC_RunAI_GatherConditions);
 	GatherConditions();
@@ -5387,9 +5483,30 @@ float CAI_BaseNPC::GetReactionDelay( CBaseEntity *pEnemy )
 // Output : Returns true is new enemy, false is known enemy
 //-----------------------------------------------------------------------------
 bool CAI_BaseNPC::UpdateEnemyMemory( CBaseEntity *pEnemy, const Vector &position, CBaseEntity *pInformer )
-{	
+{
+	//bool firstHand = ( pInformer == NULL || pInformer == this );
+	
 	AI_PROFILE_SCOPE(CAI_BaseNPC_UpdateEnemyMemory);
 	
+	/*if ( GetEnemies() )
+	{
+		// If the was eluding me and allow the NPC to play a sound
+		if (GetEnemies()->HasEludedMe(pEnemy))
+		{
+			FoundEnemySound();
+		}
+		float reactionDelay = ( !pInformer || pInformer == this ) ? GetReactionDelay( pEnemy ) : 0.0;
+		bool result = GetEnemies()->UpdateMemory(GetNavigator()->GetNetwork(), pEnemy, position, reactionDelay, firstHand);
+
+		if ( !firstHand && pEnemy && result && GetState() == NPC_STATE_IDLE ) // if it's a new potential enemy
+			ForceDecisionThink();
+
+		if ( firstHand && pEnemy && m_pSquad )
+		{
+			m_pSquad->UpdateEnemyMemory( this, pEnemy, position );
+		}
+		return result;
+	}*/
 	return true;
 }
 
@@ -5588,6 +5705,14 @@ void CAI_BaseNPC::GatherEnemyConditions( CBaseEntity *pEnemy )
 	// ----------------------------------------------------------------------------
 	// Check if enemy is reachable via the node graph unless I'm not on a network
 	// ----------------------------------------------------------------------------
+	/*if (GetNavigator()->IsOnNetwork())
+	{
+		// Note that unreachablity times out
+		if (IsUnreachable(GetEnemy()))
+		{
+			SetCondition(COND_ENEMY_UNREACHABLE);
+		}
+	}*/
 
 	//-----------------------------------------------------------------------
 	// If I haven't seen the enemy in a while he may have eluded me
@@ -5623,6 +5748,22 @@ void CAI_BaseNPC::GatherEnemyConditions( CBaseEntity *pEnemy )
 //-----------------------------------------------------------------------------
 float CAI_BaseNPC::GetGoalRepathTolerance( CBaseEntity *pGoalEnt, GoalType_t type, const Vector &curGoal, const Vector &curTargetPos )
 {
+	/*float distToGoal = ( GetAbsOrigin() - curTargetPos ).Length() - GetNavigator()->GetArrivalDistance();
+	float distMoved1Sec = GetSmoothedVelocity().Length();
+	float result = 120;  // FIXME: why 120?
+	
+	if (distMoved1Sec > 0.0)
+	{
+		float t = distToGoal / distMoved1Sec;
+
+		result = clamp( 120.f * t, 0.f, 120.f );
+		// Msg("t %.2f : d %.0f  (%.0f)\n", t, result, distMoved1Sec );
+	}
+		
+	if ( !pGoalEnt->IsPlayer() )
+		result *= 1.20;
+		
+	return result;*/
 	return 0;
 }
 
@@ -5631,13 +5772,39 @@ float CAI_BaseNPC::GetGoalRepathTolerance( CBaseEntity *pGoalEnt, GoalType_t typ
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::UpdateEnemyPos()
 {
+	// Don't perform path recomputations during a climb or a jump
+	/*if ( !GetNavigator()->IsInterruptable() )
+		return;
+
 	if ( m_AnyUpdateEnemyPosTimer.Expired() && m_UpdateEnemyPosTimer.Expired() )
 	{
 		// FIXME: does GetGoalRepathTolerance() limit re-routing enough to remove this?
 		// m_UpdateEnemyPosTimer.Set( 0.5, 1.0 );
 		
 		// If my enemy has moved significantly, or if the enemy has changed update my path
-	}
+		if ( GetNavigator()->GetGoalType() == GOALTYPE_ENEMY )
+		{
+			if (m_hEnemy != GetNavigator()->GetGoalTarget())
+			{
+				GetNavigator()->SetGoalTarget( m_hEnemy, vec3_origin );
+			}
+			else
+			{
+				Vector vEnemyLKP = GetEnemyLKP();
+				TranslateNavGoal( GetEnemy(), vEnemyLKP );
+				float tolerance = GetGoalRepathTolerance( GetEnemy(), GOALTYPE_ENEMY, GetNavigator()->GetGoalPos(), vEnemyLKP);
+				if ( (GetNavigator()->GetGoalPos() - vEnemyLKP).Length() > tolerance )
+				{
+					// FIXME: when fleeing crowds, won't this severely limit the effectiveness of each individual?  Shouldn't this be a mutex that's held for some period so that at least one attacker is effective?
+					m_AnyUpdateEnemyPosTimer.Set( 0.1 ); // FIXME: what's a reasonable interval?
+					if ( !GetNavigator()->RefindPathToGoal( false ) )
+					{	
+						TaskFail( FAIL_NO_ROUTE );
+					}
+				}
+			}
+		}
+	}*/
 }
 
 
@@ -5646,6 +5813,32 @@ void CAI_BaseNPC::UpdateEnemyPos()
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::UpdateTargetPos()
 {
+	// BRJ 10/7/02
+	// FIXME: make this check time based instead of distance based!
+
+	// Don't perform path recomputations during a climb or a jump
+	/*if ( !GetNavigator()->IsInterruptable() )
+		return;
+
+	// If my target entity has moved significantly, or has changed, update my path
+	// This is an odd place to put this, but where else should it go?
+	if ( GetNavigator()->GetGoalType() == GOALTYPE_TARGETENT )
+	{
+		if (m_hTargetEnt != GetNavigator()->GetGoalTarget())
+		{
+			GetNavigator()->SetGoalTarget( m_hTargetEnt, vec3_origin );
+		}
+		else if ( GetNavigator()->GetGoalFlags() & AIN_UPDATE_TARGET_POS )
+		{
+			if ( GetTarget() == NULL || (GetNavigator()->GetGoalPos() - GetTarget()->GetAbsOrigin()).Length() > GetGoalRepathTolerance( GetTarget(), GOALTYPE_TARGETENT, GetNavigator()->GetGoalPos(), GetTarget()->GetAbsOrigin()) )
+			{
+				if ( !GetNavigator()->RefindPathToGoal( false ) )
+				{
+					TaskFail( FAIL_NO_ROUTE );
+				}
+			}
+		}
+	}*/
 }
 
 //-----------------------------------------------------------------------------
@@ -5690,6 +5883,30 @@ void CAI_BaseNPC::CheckTarget( CBaseEntity *pTarget )
 //-----------------------------------------------------------------------------
 CAI_BaseNPC *CAI_BaseNPC::CreateCustomTarget( const Vector &vecOrigin, float duration )
 {
+	/*
+#ifdef HL2_DLL
+	CNPC_Bullseye *pTarget = (CNPC_Bullseye*)CreateEntityByName( "npc_bullseye" );
+
+	ASSERT( pTarget != NULL );
+
+	// Build a nonsolid bullseye and place it in the desired location
+	// The bullseye must take damage or the SetHealth 0 call will not be able
+	pTarget->AddSpawnFlags( SF_BULLSEYE_NONSOLID );
+	pTarget->SetAbsOrigin( vecOrigin );
+	pTarget->Spawn();
+
+	// Set it up to remove itself, unless told to be infinite (-1)
+	if( duration > -1 )
+	{
+		variant_t value;
+		value.SetFloat(0);
+		g_EventQueue.AddEvent( pTarget, "SetHealth", value, duration, this, this );
+	}
+
+	return pTarget;
+#else
+	return NULL;
+#endif// HL2_DLL*/
 	return NULL;
 }
 
@@ -6253,6 +6470,10 @@ void CAI_BaseNPC::SetSequenceById( int iSequence )
 //-----------------------------------------------------------------------------
 CBaseEntity *CAI_BaseNPC::GetNavTargetEntity(void)
 {
+	//if ( GetNavigator()->GetGoalType() == GOALTYPE_ENEMY )
+	//	return m_hEnemy;
+	//else if ( GetNavigator()->GetGoalType() == GOALTYPE_TARGETENT )
+	//	return m_hTargetEnt;
 	return NULL;
 }
 
@@ -6610,6 +6831,7 @@ void CAI_BaseNPC::NPCInit ( void )
 	ClearCommandGoal();
 
 	ClearSchedule( "Initializing NPC" );
+	//GetNavigator()->ClearGoal();
 	InitBoneControllers( ); // FIX: should be done in Spawn
 	if ( GetModelPtr() )
 	{
@@ -7185,6 +7407,7 @@ void CAI_BaseNPC::StartNPC( void )
 
 	//---------------------------------
 
+	//m_ScriptArrivalActivity = AIN_DEF_ACTIVITY;
 	m_strScriptArrivalSequence = NULL_STRING;
 
 	if ( HasSpawnFlags(SF_NPC_WAIT_FOR_SCRIPT) )
@@ -7200,6 +7423,23 @@ void CAI_BaseNPC::StartNPC( void )
 
 void CAI_BaseNPC::StartTargetHandling( CBaseEntity *pTargetEnt )
 {
+	// set the npc up to walk a path corner path.
+	// !!!BUGBUG - this is a minor bit of a hack.
+	// JAYJAY
+
+	// NPC will start turning towards his destination
+	/*bool bIsFlying = (GetMoveType() == MOVETYPE_FLY) || (GetMoveType() == MOVETYPE_FLYGRAVITY);
+	AI_NavGoal_t goal( GOALTYPE_PATHCORNER, pTargetEnt->GetAbsOrigin(),
+					   bIsFlying ? ACT_FLY : ACT_WALK,
+					   AIN_DEF_TOLERANCE, AIN_YAW_TO_DEST);
+
+	SetState( NPC_STATE_IDLE );
+	SetSchedule( SCHED_IDLE_WALK );
+
+	if ( !GetNavigator()->SetGoal( goal ) )
+	{
+		DevWarning( 2, "Can't Create Route!\n" );
+	}*/
 }
 
 //-----------------------------------------------------------------------------
@@ -7292,6 +7532,14 @@ void CAI_BaseNPC::TaskMovementComplete( void )
 		SetIdealActivity( GetStoppedActivity() );
 	}
 
+	// Advance past the last node (in case there is some event at this node)
+	//if ( GetNavigator()->IsGoalActive() )
+	//{
+	//	GetNavigator()->AdvancePath();
+	//}
+
+	// Now clear the path, it's done.
+	//GetNavigator()->ClearGoal();
 
 	OnMovementComplete();
 }
@@ -7468,7 +7716,9 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 		if (!pEnemy || !pEnemy->IsAlive())
 		{
 			if ( pEnemy )
+			{
 				DbgEnemyMsg( this, "    %s rejected: dead\n", pEnemy->GetDebugName() );
+			}
 			continue;
 		}
 		
@@ -7543,7 +7793,9 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 		{
 			DbgEnemyMsg( this, "    %s accepted (1)\n", pEnemy->GetDebugName() );
 			if ( pBestEnemy )
+			{
 				DbgEnemyMsg( this, "    (%s displaced)\n", pBestEnemy->GetDebugName() );
+			}
 
 			iBestPriority	 = IRelationPriority ( pEnemy );
 			iBestDistSq		 = (pEnemy->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr();
@@ -7557,7 +7809,9 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 		{
 			DbgEnemyMsg( this, "    %s accepted\n", pEnemy->GetDebugName() );
 			if ( pBestEnemy )
+			{
 				DbgEnemyMsg( this, "    (%s displaced due to priority, %d > %d )\n", pBestEnemy->GetDebugName(), IRelationPriority( pEnemy ), iBestPriority );
+			}
 			// this entity is disliked MORE than the entity that we
 			// currently think is the best visible enemy. No need to do
 			// a distance check, just get mad at this one for now.
@@ -7691,7 +7945,9 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 
 			DbgEnemyMsg( this, "    %s accepted\n", pEnemy->GetDebugName() );
 			if ( pBestEnemy )
+			{
 				DbgEnemyMsg( this, "    (%s displaced due to distance/visibility)\n", pBestEnemy->GetDebugName() );
+			}
 			fBestSeen		 = fCurSeen;
 			fBestVisible	 = fCurVisible;
 			iBestDistSq		 = iDistSq;
@@ -7700,7 +7956,9 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 			bBestUnreachable = bUnreachable;
 		}
 		else
+		{
 			DbgEnemyMsg( this, "    %s rejected: lower priority\n", pEnemy->GetDebugName() );
+		}
 	}
 
 	DbgEnemyMsg( this, "} == %s\n", pBestEnemy->GetDebugName() );
@@ -7784,8 +8042,29 @@ Activity CAI_BaseNPC::GetCoverActivity( CAI_Hint *pHint )
 //=========================================================
 float CAI_BaseNPC::CalcIdealYaw( const Vector &vecTarget )
 {
+	/*Vector	vecProjection;
 
-	return UTIL_VecToYaw ( vecTarget - GetLocalOrigin() );
+	// strafing npc needs to face 90 degrees away from its goal
+	if ( GetNavigator()->GetMovementActivity() == ACT_STRAFE_LEFT )
+	{
+		vecProjection.x = -vecTarget.y;
+		vecProjection.y = vecTarget.x;
+		vecProjection.z = 0;
+
+		return UTIL_VecToYaw( vecProjection - GetLocalOrigin() );
+	}
+	else if ( GetNavigator()->GetMovementActivity() == ACT_STRAFE_RIGHT )
+	{
+		vecProjection.x = vecTarget.y;
+		vecProjection.y = vecTarget.x;
+		vecProjection.z = 0;
+
+		return UTIL_VecToYaw( vecProjection - GetLocalOrigin() );
+	}
+	else
+	{*/
+		return UTIL_VecToYaw ( vecTarget - GetLocalOrigin() );
+	//}
 }
 
 //=========================================================
@@ -8158,6 +8437,11 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 
 	case NPC_EVENT_OPEN_DOOR:
 		{
+			/*CBasePropDoor *pDoor = (CBasePropDoor *)(CBaseEntity *)GetNavigator()->GetPath()->GetCurWaypoint()->GetEHandleData();
+			if (pDoor != NULL)
+			{
+				OpenPropDoorNow( pDoor );
+			}*/
 	
 			break;
 		}
@@ -8174,6 +8458,9 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 
  				GetActiveWeapon()->Holster();
 				SetActiveWeapon( NULL );
+
+				//Force the NPC to recalculate it's arrival activity since it'll most likely be wrong now that we don't have a weapon out.
+				//GetNavigator()->SetArrivalSequence( ACT_INVALID );
 
 				if ( m_iDesiredWeaponState == DESIREDWEAPONSTATE_CHANGING_DESTROY )
 				{
@@ -8195,6 +8482,8 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 				{
 					GetActiveWeapon()->Deploy();
 
+					//Force the NPC to recalculate it's arrival activity since it'll most likely be wrong now.
+					//GetNavigator()->SetArrivalSequence( ACT_INVALID );
 
 					if ( m_iDesiredWeaponState != DESIREDWEAPONSTATE_IGNORE )
 					{
@@ -8408,6 +8697,13 @@ void CAI_BaseNPC::DrawDebugGeometryOverlays(void)
 	// ------------------------------
 	if ((m_debugOverlays & OVERLAY_NPC_ROUTE_BIT))
 	{
+		/*GetNavigator()->DrawDebugRouteOverlay();
+		if ( IsMoving() )
+		{
+			float yaw = GetMotor()->GetIdealYaw();
+			Vector vecYaw = UTIL_YawToVector(yaw);
+			NDebugOverlay::Line(WorldSpaceCenter(),WorldSpaceCenter() + vecYaw * GetHullWidth() * .5,255,255,255,true,0.0);
+		}*/
 	}
 
 	if (!(CAI_BaseNPC::m_nDebugBits & bits_debugDisableAI) && (IsCurSchedule(SCHED_FORCED_GO) || IsCurSchedule(SCHED_FORCED_GO_RUN)))
@@ -8429,6 +8725,11 @@ void CAI_BaseNPC::DrawDebugGeometryOverlays(void)
 	// ------------------------------
 	if ((m_debugOverlays & OVERLAY_NPC_NEAREST_BIT))
 	{
+		/*int iNodeID = GetPathfinder()->NearestNodeToNPC();
+		if (iNodeID != NO_NODE)
+		{
+			NDebugOverlay::Box(GetNavigator()->GetNetwork()->AccessNodes()[iNodeID]->GetPosition(GetHullType()), Vector(-10,-10,-10),Vector(10,10,10), 255, 255, 255, 0, 0);
+		}*/
 	}
 
 	// ------------------------------
@@ -8938,6 +9239,21 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 			}
 		}
 
+		/*if ( GetGoalEnt() && GetNavigator()->GetGoalType() == GOALTYPE_PATHCORNER )
+		{
+			Q_strncpy(tempstr,"Pathcorner/goal ent: ",sizeof(tempstr));
+			if (GetGoalEnt()->GetEntityName() != NULL_STRING)
+			{
+				Q_strncat(tempstr,STRING(GetGoalEnt()->GetEntityName()),sizeof(tempstr), COPY_ALL_CHARACTERS);
+			}
+			else
+			{
+				Q_strncat(tempstr,STRING(GetGoalEnt()->m_iClassname),sizeof(tempstr), COPY_ALL_CHARACTERS);
+			}
+			EntityText(text_offset, tempstr, 0);
+			text_offset++;
+		}*/
+
 		if ( VPhysicsGetObject() )
 		{
 			vphysics_objectstress_t stressOut;
@@ -9442,7 +9758,15 @@ Vector CAI_BaseNPC::GetActualShootTrajectory( const Vector &shootOrigin )
 
 	// Apply appropriate accuracy.
 	bool bUsePerfectAccuracy = false;
-
+	/*if ( GetEnemy() && GetEnemy()->Classify() == CLASS_BULLSEYE )
+	{
+		CNPC_Bullseye *pBullseye = dynamic_cast<CNPC_Bullseye*>(GetEnemy()); 
+		if ( pBullseye && pBullseye->UsePerfectAccuracy() )
+		{
+			bUsePerfectAccuracy = true;
+		}
+	}
+	*/
 	if ( !bUsePerfectAccuracy )
 	{
 		manipulator.ApplySpread( GetAttackSpread( GetActiveWeapon(), GetEnemy() ), GetSpreadBias( GetActiveWeapon(), GetEnemy() ) );
@@ -10178,6 +10502,15 @@ void CAI_BaseNPC::JustMadeSound( int soundPriority, float flSoundLength )
 
 Activity CAI_BaseNPC::GetStoppedActivity( void )
 {
+	/*if (GetNavigator()->IsGoalActive())
+	{
+		Activity activity = GetNavigator()->GetArrivalActivity();
+
+		if (activity > ACT_RESET)
+		{
+			return activity;
+		}
+	}*/
 
 	return ACT_IDLE;
 }
@@ -10189,9 +10522,15 @@ void CAI_BaseNPC::OnScheduleChange ( void )
 {
 	EndTaskOverlay();
 
+	//m_pNavigator->OnScheduleChange();
+
 	m_flMoveWaitFinished = 0;
 
 	VacateStrategySlot();
+
+	// If I still have have a route, clear it
+	// FIXME: Routes should only be cleared inside of tasks (kenb)
+	//GetNavigator()->ClearGoal();
 
 	UnlockBestSound();
 
@@ -10282,6 +10621,8 @@ BEGIN_DATADESC( CAI_BaseNPC )
 	DEFINE_FIELD( m_afCapability,				FIELD_INTEGER ),
 	DEFINE_FIELD( m_flMoveWaitFinished,			FIELD_TIME ),
 	DEFINE_FIELD( m_hOpeningDoor,				FIELD_EHANDLE ),
+	//DEFINE_EMBEDDEDBYREF( m_pNavigator ),
+	//DEFINE_EMBEDDEDBYREF( m_pLocalNavigator ),
 	DEFINE_EMBEDDEDBYREF( m_pPathfinder ),
 	DEFINE_EMBEDDEDBYREF( m_pMoveProbe ),
 	DEFINE_EMBEDDEDBYREF( m_pMotor ),
@@ -10332,9 +10673,11 @@ BEGIN_DATADESC( CAI_BaseNPC )
     DEFINE_FIELD( m_iMySquadSlot,				FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_strHintGroup,			FIELD_STRING, "hintgroup" ),
 	DEFINE_KEYFIELD( m_bHintGroupNavLimiting,	FIELD_BOOLEAN, "hintlimiting" ),
+ 	//DEFINE_EMBEDDEDBYREF( m_pTacticalServices ),
  	DEFINE_FIELD( m_flWaitFinished,			FIELD_TIME ),
 	DEFINE_FIELD( m_flNextFlinchTime,		FIELD_TIME ),
 	DEFINE_FIELD( m_flNextDodgeTime,		FIELD_TIME ),
+	//DEFINE_EMBEDDED( m_MoveAndShootOverlay ),
 	DEFINE_FIELD( m_vecLastPosition,			FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_vSavePosition,			FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_vInterruptSavePosition,		FIELD_POSITION_VECTOR ),
@@ -10632,6 +10975,8 @@ int CAI_BaseNPC::Save( ISave &save )
 		saveHeader.flags |= AIESH_HAD_ENEMY;
 	if ( GetTarget() )
 		saveHeader.flags |= AIESH_HAD_TARGET;
+	//if ( GetNavigator()->IsGoalActive() )
+		//saveHeader.flags |= AIESH_HAD_NAVGOAL;
 	
 	if ( m_pSchedule )
 	{
@@ -10696,6 +11041,9 @@ int CAI_BaseNPC::Save( ISave &save )
 	SaveConditions( save, ignoreConditions );
 	save.EndBlock();
 
+	//save.StartBlock();
+	//GetNavigator()->Save( save );
+	//save.EndBlock();
 
 	return BaseClass::Save(save);
 }
@@ -10704,6 +11052,8 @@ int CAI_BaseNPC::Save( ISave &save )
 
 void CAI_BaseNPC::DiscardScheduleState()
 {
+	// We don't save/restore routes yet
+	//GetNavigator()->ClearGoal();
 
 	// We don't save/restore schedules yet
 	ClearSchedule( "Restoring NPC" );
@@ -10734,6 +11084,17 @@ void CAI_BaseNPC::DiscardScheduleState()
 void CAI_BaseNPC::OnRestore()
 {
 	gm_iszPlayerSquad = AllocPooledString( PLAYER_SQUADNAME ); // cache for fast IsPlayerSquad calls
+
+	/*if ( m_bDoPostRestoreRefindPath  && CAI_NetworkManager::NetworksLoaded() )
+	{
+		CAI_DynamicLink::InitDynamicLinks();
+		if ( !GetNavigator()->RefindPathToGoal( false ) )
+			DiscardScheduleState();
+	}
+	else
+	{
+		GetNavigator()->ClearGoal();
+	}*/
 	BaseClass::OnRestore();
 	m_bCheckContacts = true;
 }
@@ -10758,6 +11119,12 @@ int CAI_BaseNPC::Restore( IRestore &restore )
 		restore.EndBlock();
 	}
 
+	/*if ( saveHeader.version >= AI_EXTENDED_SAVE_HEADER_FIRST_VERSION_WITH_NAVIGATOR_SAVE )
+	{
+		restore.StartBlock();
+		GetNavigator()->Restore( restore );
+		restore.EndBlock();
+	}*/
 	
 	// do a normal restore
 	int status = BaseClass::Restore(restore);
@@ -10950,8 +11317,10 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 {
 	m_pMotor = NULL;
 	m_pMoveProbe = NULL;
+	//m_pNavigator = NULL;
 	m_pSenses = NULL;
 	m_pPathfinder = NULL;
+	//m_pLocalNavigator = NULL;
 
 	m_pSchedule = NULL;
 	m_IdealSchedule = SCHED_NONE;
@@ -11039,9 +11408,12 @@ CAI_BaseNPC::~CAI_BaseNPC(void)
 	RemoveMemory();
 
 	delete m_pPathfinder;
+	//delete m_pNavigator;
 	delete m_pMotor;
+	//delete m_pLocalNavigator;
 	delete m_pMoveProbe;
 	delete m_pSenses;
+	//delete m_pTacticalServices;
 }
 
 //-----------------------------------------------------------------------------
@@ -11085,18 +11457,33 @@ bool CAI_BaseNPC::CreateComponents()
 	if ( !m_pMotor )
 		return false;
 
+	//m_pLocalNavigator = CreateLocalNavigator();
+	//if ( !m_pLocalNavigator )
+		//return false;
 
 	m_pMoveProbe = CreateMoveProbe();
 	if ( !m_pMoveProbe )
 		return false;
 
-
-	m_pPathfinder = CreatePathfinder();
-	if ( !m_pPathfinder )
+	//m_pNavigator = CreateNavigator();
+	if ( !m_pNavigator )
 		return false;
-		
 
+	//m_pPathfinder = CreatePathfinder();
+	//if ( !m_pPathfinder )
+		//return false;
+		
+	//m_pTacticalServices = CreateTacticalServices();
+	//if ( !m_pTacticalServices )
+	//	return false;
+		
+	//m_MoveAndShootOverlay.SetOuter( this );
+
+	//m_pMotor->Init( m_pLocalNavigator );
+	//m_pLocalNavigator->Init( m_pNavigator );
+	//m_pNavigator->Init( g_pBigAINet );
 	m_pPathfinder->Init( g_pBigAINet );
+	//m_pTacticalServices->Init( g_pBigAINet );
 	
 	return true;
 }
@@ -11126,7 +11513,24 @@ CAI_MoveProbe *CAI_BaseNPC::CreateMoveProbe()
 
 //-----------------------------------------------------------------------------
 
+/*CAI_LocalNavigator *CAI_BaseNPC::CreateLocalNavigator()
+{
+	return new CAI_LocalNavigator( this );
+}
 
+//-----------------------------------------------------------------------------
+
+CAI_TacticalServices *CAI_BaseNPC::CreateTacticalServices()
+{
+	return new CAI_TacticalServices( this );
+}
+
+//-----------------------------------------------------------------------------
+
+CAI_Navigator *CAI_BaseNPC::CreateNavigator()
+{
+	return new CAI_Navigator( this );
+}*/
 
 //-----------------------------------------------------------------------------
 
@@ -11336,6 +11740,29 @@ void CAI_BaseNPC::CleanupScriptsOnTeleport( bool bEnrouteAsWell )
 //-----------------------------------------------------------------------------
 bool CAI_BaseNPC::HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt)
 {
+	/*
+#ifdef HL2_DLL
+	if ( interactionType == g_interactionBarnacleVictimGrab )
+	{
+		// Make the victim stop thinking so they're as good as dead without 
+		// shocking the system by destroying the entity.
+		StopLoopingSounds();
+		BarnacleDeathSound();
+ 		SetThink( NULL );
+
+		// Gag the NPC so they won't talk anymore
+		AddSpawnFlags( SF_NPC_GAG );
+
+		// Drop any weapon they're holding
+		if ( GetActiveWeapon() )
+		{
+			Weapon_Drop( GetActiveWeapon() );
+		}
+
+		return true;
+	}
+#endif // HL2_DLL
+	*/
 	return BaseClass::HandleInteraction( interactionType, data, sourceEnt );
 }
 
@@ -11636,6 +12063,21 @@ bool CAI_BaseNPC::IsNavigationUrgent()
 
 bool CAI_BaseNPC::ShouldFailNav( bool bMovementFailed )
 {
+/*#ifdef HL2_EPISODIC
+
+	if ( ai_vehicle_avoidance.GetBool() )
+	{
+		// Never be blocked this way by a vehicle (creates too many headaches around the levels)
+		CBaseEntity *pEntity = GetNavigator()->GetBlockingEntity();
+		if ( pEntity && pEntity->GetServerVehicle() )
+		{
+			// Vital allies never get stuck, and urgent moves cannot be blocked by a vehicle
+			if ( Classify() == CLASS_PLAYER_ALLY_VITAL || IsNavigationUrgent() )
+				return false;
+		}
+	}
+
+#endif // HL2_EPISODIC*/
 
 	// It's up to the schedule that requested movement to deal with failed movement.  Currently, only a handfull of 
 	// schedules are considered Urgent, and they need to deal with what to do when there's no route, which by inspection
@@ -11656,6 +12098,7 @@ Navigation_t CAI_BaseNPC::GetNavType() const
 
 void CAI_BaseNPC::SetNavType( Navigation_t navType )
 {
+	//m_pNavigator->SetNavType( navType );
 }
 
 //-----------------------------------------------------------------------------
@@ -11827,6 +12270,7 @@ bool CAI_BaseNPC::OnUpcomingPropDoor( AILocalMoveGoal_t *pMoveGoal,
 			//		should I just walk the path until I find it?
 			pOpenDoorRoute->m_hData = pDoor;
 
+			//GetNavigator()->GetPath()->PrependWaypoints( pOpenDoorRoute );
 
 			m_hOpeningDoor = pDoor;
 			pMoveGoal->maxDist = distClear;
@@ -12360,6 +12804,13 @@ bool CAI_BaseNPC::FindNearestValidGoalPos( const Vector &vTestPoint, Vector *pRe
 {
 	AIMoveTrace_t moveTrace;
 	Vector vCandidate = vec3_invalid;
+	/*if ( GetNavigator()->CanFitAtPosition( vTestPoint, MASK_SOLID_BRUSHONLY ) )
+	{
+		if ( GetMoveProbe()->CheckStandPosition( vTestPoint, MASK_SOLID_BRUSHONLY ) )
+		{
+			vCandidate = vTestPoint;
+		}
+	}*/
 
 	if ( vCandidate == vec3_invalid )
 	{
