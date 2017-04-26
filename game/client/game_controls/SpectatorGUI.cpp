@@ -409,6 +409,7 @@ CSpectatorGUI::CSpectatorGUI(IViewPort *pViewPort) : EditablePanel( NULL, PANEL_
 // 	m_bHelpShown = false;
 //	m_bInsetVisible = false;
 //	m_iDuckKey = KEY_NONE;
+
 	SetSize( 10, 10 ); // Quiet "parent not sized yet" spew
 	m_bSpecScoreboard = false;
 
@@ -568,7 +569,6 @@ void CSpectatorGUI::SetLabelText(const char *textEntryName, wchar_t *text)
 		entry->SetText(text);
 	}
 }
-
 //-----------------------------------------------------------------------------
 // Purpose: Sets the text of a control by name
 //-----------------------------------------------------------------------------
@@ -606,6 +606,7 @@ bool CSpectatorGUI::ShouldShowPlayerLabel( int specmode )
 //-----------------------------------------------------------------------------
 void CSpectatorGUI::Update()
 {
+
 	int wide, tall;
 	int bx, by, bwide, btall;
 
@@ -615,6 +616,8 @@ void CSpectatorGUI::Update()
 	IGameResources *gr = GameResources();
 	int specmode = GetSpectatorMode();
 	int playernum = GetSpectatorTarget();
+
+	
 
 	//BG2 - I think the overview panel is disabled - found when porting to 2016 engine - Awesome
 	/*IViewPortPanel *overview = gViewPortInterface->FindPanelByName( PANEL_OVERVIEW );
@@ -708,6 +711,8 @@ void CSpectatorGUI::Update()
 
 	SetLabelText("extrainfo", szEtxraInfo );
 	SetLabelText("titlelabel", szTitleLabel );
+
+	UpdateTimer();//BG2 - Fire that timer! -HairyPotter
 }
 
 //-----------------------------------------------------------------------------
@@ -731,11 +736,11 @@ void CSpectatorGUI::UpdateTimer()
 	C_Team *pAmer = GetGlobalTeam(TEAM_AMERICANS);
 	C_Team *pBrit = GetGlobalTeam(TEAM_BRITISH);
 
-	szText[64] = 0;
+	//szText[64] = 0; //BG3 - Awesome - for some reason re-assigning this crashes the game! :(
 	_snwprintf(szText, sizeof(szText), L"%s %d\n", g_pVGuiLocalize->Find("#BG2_Spec_British_Score"), pBrit ? pBrit->Get_Score() : 0);	//BG2 - Tjoppen - avoid NULL
 	SetLabelText("BritishScoreLabel", szText);
 
-	szText[64] = 0;
+	//szText[64] = 0;
 	_snwprintf(szText, sizeof(szText), L"%s %d\n", g_pVGuiLocalize->Find("#BG2_Spec_American_Score"), pAmer ? pAmer->Get_Score() : 0);//BG2 - Tjoppen - avoid NULL
 	SetLabelText("AmericanScoreLabel", szText);
 	//
@@ -833,8 +838,6 @@ CON_COMMAND_F( spec_mode, "Set spectator mode", FCVAR_CLIENTCMD_CAN_EXECUTE )
 
 				if ( mode > LAST_PLAYER_OBSERVERMODE )
 					mode = OBS_MODE_IN_EYE;
-				else if ( mode == OBS_MODE_POI ) // PASSTIME skip POI mode since hltv doesn't have the entity data required to make it work
-					mode = OBS_MODE_ROAMING;
 			}
 			
 			// handle the command clientside

@@ -8,6 +8,8 @@
 #include "cbase.h"
 #include "basegrenade_shared.h"
 #include "grenade_frag.h"
+#include "bg2/weapon_bg2base.h"
+#include "../shared/bg2/bg3_weapon_shared.h"
 #include "Sprite.h"
 #include "SpriteTrail.h"
 #include "soundent.h"
@@ -30,6 +32,7 @@ ConVar sk_npc_dmg_fraggrenade	( "sk_npc_dmg_fraggrenade","0");
 ConVar sk_fraggrenade_radius	( "sk_fraggrenade_radius", "0");
 
 #define GRENADE_MODEL "models/Weapons/w_grenade.mdl"
+#define GRENADE_FUSE_MATERIAL "effects/fuse_animated.vmt"
 
 class CGrenadeFrag : public CBaseGrenade
 {
@@ -50,7 +53,7 @@ public:
 	void	SetTimer( float detonateDelay, float warnDelay );
 	void	SetVelocity( const Vector &velocity, const AngularImpulse &angVelocity );
 	int		OnTakeDamage( const CTakeDamageInfo &inputInfo );
-	void	BlipSound() { EmitSound( "Grenade.Blip" ); }
+	void	FuseSound();
 	void	DelayThink();
 	void	VPhysicsUpdate( IPhysicsObject *pPhysics );
 	void	OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
@@ -68,7 +71,7 @@ public:
 
 protected:
 	CHandle<CSprite>		m_pMainGlow;
-	CHandle<CSpriteTrail>	m_pGlowTrail;
+	//CHandle<CSpriteTrail>	m_pGlowTrail;
 
 	float	m_flNextBlipTime;
 	bool	m_inSolid;
@@ -82,7 +85,7 @@ BEGIN_DATADESC( CGrenadeFrag )
 
 	// Fields
 	DEFINE_FIELD( m_pMainGlow, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_pGlowTrail, FIELD_EHANDLE ),
+	//DEFINE_FIELD( m_pGlowTrail, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_flNextBlipTime, FIELD_TIME ),
 	DEFINE_FIELD( m_inSolid, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_combineSpawned, FIELD_BOOLEAN ),
@@ -110,16 +113,8 @@ void CGrenadeFrag::Spawn( void )
 
 	SetModel( GRENADE_MODEL );
 
-	if( GetOwnerEntity() && GetOwnerEntity()->IsPlayer() )
-	{
-		m_flDamage		= sk_plr_dmg_fraggrenade.GetFloat();
-		m_DmgRadius		= sk_fraggrenade_radius.GetFloat();
-	}
-	else
-	{
-		m_flDamage		= sk_npc_dmg_fraggrenade.GetFloat();
-		m_DmgRadius		= sk_fraggrenade_radius.GetFloat();
-	}
+	m_flDamage		= CBaseBG2Weapon::GetGrenadeDamage();
+	m_DmgRadius		= sk_fraggrenade_radius.GetFloat();
 
 	m_takedamage	= DAMAGE_YES;
 	m_iHealth		= 1;
@@ -128,8 +123,9 @@ void CGrenadeFrag::Spawn( void )
 	SetCollisionGroup( COLLISION_GROUP_WEAPON );
 	CreateVPhysics();
 
-	BlipSound();
-	m_flNextBlipTime = gpGlobals->curtime + FRAG_GRENADE_BLIP_FREQUENCY;
+	FuseSound(); //BG3 - Awesome - this fuse sounds cool
+	//BlipSound();
+	//m_flNextBlipTime = gpGlobals->curtime + FRAG_GRENADE_BLIP_FREQUENCY;
 
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
 
@@ -157,7 +153,7 @@ void CGrenadeFrag::OnRestore( void )
 void CGrenadeFrag::CreateEffects( void )
 {
 	// Start up the eye glow
-	m_pMainGlow = CSprite::SpriteCreate( "sprites/redglow1.vmt", GetLocalOrigin(), false );
+	m_pMainGlow = CSprite::SpriteCreate( GRENADE_FUSE_MATERIAL, GetLocalOrigin(), false );
 
 	int	nAttachment = LookupAttachment( "fuse" );
 
@@ -166,12 +162,12 @@ void CGrenadeFrag::CreateEffects( void )
 		m_pMainGlow->FollowEntity( this );
 		m_pMainGlow->SetAttachment( this, nAttachment );
 		m_pMainGlow->SetTransparency( kRenderGlow, 255, 255, 255, 200, kRenderFxNoDissipation );
-		m_pMainGlow->SetScale( 0.2f );
+		m_pMainGlow->SetScale( 0.05f );
 		m_pMainGlow->SetGlowProxySize( 4.0f );
 	}
 
 	// Start up the eye trail
-	m_pGlowTrail	= CSpriteTrail::SpriteTrailCreate( "sprites/bluelaser1.vmt", GetLocalOrigin(), false );
+	/*m_pGlowTrail	= CSpriteTrail::SpriteTrailCreate( "sprites/bluelaser1.vmt", GetLocalOrigin(), false );
 
 	if ( m_pGlowTrail != NULL )
 	{
@@ -181,7 +177,7 @@ void CGrenadeFrag::CreateEffects( void )
 		m_pGlowTrail->SetStartWidth( 8.0f );
 		m_pGlowTrail->SetEndWidth( 1.0f );
 		m_pGlowTrail->SetLifeTime( 0.5f );
-	}
+	}*/
 }
 
 bool CGrenadeFrag::CreateVPhysics()
@@ -279,7 +275,8 @@ void CGrenadeFrag::Precache( void )
 {
 	PrecacheModel( GRENADE_MODEL );
 
-	PrecacheScriptSound( "Grenade.Blip" );
+	//PrecacheScriptSound( "Grenade.Blip" );
+	PrecacheScriptSound(GRENADE_FUSE_SOUND);
 
 	PrecacheModel( "sprites/redglow1.vmt" );
 	PrecacheModel( "sprites/bluelaser1.vmt" );
@@ -304,8 +301,8 @@ void CGrenadeFrag::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t r
 #ifdef HL2MP
 	SetTimer( FRAG_GRENADE_GRACE_TIME_AFTER_PICKUP, FRAG_GRENADE_GRACE_TIME_AFTER_PICKUP / 2);
 
-	BlipSound();
-	m_flNextBlipTime = gpGlobals->curtime + FRAG_GRENADE_BLIP_FAST_FREQUENCY;
+	//BlipSound();
+	//m_flNextBlipTime = gpGlobals->curtime + FRAG_GRENADE_BLIP_FAST_FREQUENCY;
 	m_bHasWarnedAI = true;
 #else
 	if( IsX360() )
@@ -340,7 +337,7 @@ void CGrenadeFrag::DelayThink()
 		m_bHasWarnedAI = true;
 	}
 	
-	if( gpGlobals->curtime > m_flNextBlipTime )
+	/*if( gpGlobals->curtime > m_flNextBlipTime )
 	{
 		BlipSound();
 		
@@ -352,7 +349,7 @@ void CGrenadeFrag::DelayThink()
 		{
 			m_flNextBlipTime = gpGlobals->curtime + FRAG_GRENADE_BLIP_FREQUENCY;
 		}
-	}
+	}*/
 
 	SetNextThink( gpGlobals->curtime + 0.1 );
 }
@@ -376,6 +373,11 @@ int CGrenadeFrag::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		return 0;
 
 	return BaseClass::OnTakeDamage( inputInfo );
+}
+
+void CGrenadeFrag::FuseSound() { 
+	if (!m_bDidExplode)
+		EmitSound(GRENADE_FUSE_SOUND); 
 }
 
 #if defined(HL2_EPISODIC) && 0 // FIXME: HandleInteraction() is no longer called now that base grenade derives from CBaseAnimating
@@ -428,6 +430,11 @@ CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, 
 	pGrenade->SetThrower( ToBaseCombatCharacter( pOwner ) );
 	pGrenade->m_takedamage = DAMAGE_EVENTS_ONLY;
 	pGrenade->SetCombineSpawned( combineSpawned );
+
+	//we have to do this or else the sound might be dispatched after it has exploded
+	//this check fixes the fuse sound playing even after it exploded
+	//if (abs(timer - gpGlobals->curtime) > 0.05f)
+		//pGrenade->FuseSound();
 
 	return pGrenade;
 }

@@ -138,10 +138,8 @@ public:
 	void State_Enter_OBSERVER_MODE();
 	void State_PreThink_OBSERVER_MODE();
 
-
 	virtual bool StartObserverMode( int mode );
 	virtual void StopObserverMode( void );
-
 
 	Vector m_vecTotalBulletForce;	//Accumulator for bullet force in a single frame
 
@@ -154,6 +152,8 @@ public:
 	int	GetClass(void) const { return m_iClass; }
 	int	GetNextClass(void) const { return m_iNextClass; }
 	void SetNextClass(int iNextClass) { m_iNextClass = iNextClass; }
+
+	//inline bool IsBritish(void) { return GetTeamNumber() == TEAM_BRITISH; }
 
 		
 private:
@@ -225,7 +225,7 @@ public:
 	float	RallyGetNextRallyTime(void) const { return m_flNextRallyTime; }
 	void	RallySetNextRallyTime(float nextTime) { m_flNextRallyTime = nextTime; }
 	static float	RallyGetRallyDuration(int rallyFlags);
-	void	RallyEffectEnable();
+	void	RallyEffectEnable(); //visual effects, not functionality. Exact behavior depends on m_iCurrentRallies
 	void	RallyEffectDisable();
 private:
 	bool	CanRally(void) const; //Checks that we're officer and that curtime < m_flEndRallyTime

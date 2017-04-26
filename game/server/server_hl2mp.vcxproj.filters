@@ -40,6 +40,9 @@
     <Filter Include="Source Files\BG2">
       <UniqueIdentifier>{a4585bcf-13a7-4ff2-9a4d-7ccef3daf939}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\BG2\Bots">
+      <UniqueIdentifier>{fd6474f8-07c7-428f-8ace-9932fb15316e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\choreoobjects.lib">
@@ -1730,11 +1733,17 @@
     <ClInclude Include="..\shared\bg2\ironsights.h">
       <Filter>Source Files\BG2</Filter>
     </ClInclude>
-    <ClInclude Include="sdk\sdk_bot_temp.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\bg2\bg2_player_shared.h">
       <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\bg2\bg3_weapon_shared.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\bg3_bot.h">
+      <Filter>Source Files\BG2\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3_player_search.h">
+      <Filter>Source Files\BG2\Bots</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -3235,8 +3244,11 @@
     <ClCompile Include="bg2\weapon_bg2weapons.cpp">
       <Filter>Source Files\BG2</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\sdk_bot_temp.cpp">
-      <Filter>Source Files\BG2</Filter>
+    <ClCompile Include="sdk\bg3_bot.cpp">
+      <Filter>Source Files\BG2\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3_player_search.cpp">
+      <Filter>Source Files\BG2\Bots</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

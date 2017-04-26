@@ -63,6 +63,7 @@ public:
 	void				DangerSoundThink( void );
 	void				PreDetonate( void );
 	virtual void		Detonate( void );
+	//virtual void		PostDetonate(void);
 	void				DetonateUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	void				TumbleThink( void );
 
@@ -125,6 +126,7 @@ public:
 	CNetworkVar( float, m_flNextAttack );
 	float				m_flDetonateTime;			// Time at which to detonate.
 	float				m_flWarnAITime;				// Time at which to warn the AI
+	bool				m_bDidExplode;
 
 protected:
 

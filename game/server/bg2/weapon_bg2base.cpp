@@ -299,7 +299,7 @@ void CBaseBG2Weapon::Fire( int iAttack )
 
 	//flintlock delay is based on our weapon type
 	float flintlockDelay;
-	if (weaponType == RIFLE)
+	if (m_eWeaponType == RIFLE)
 		flintlockDelay = sv_flintlock_delay_rifle.GetFloat();
 	else 
 		flintlockDelay = sv_flintlock_delay.GetFloat();
@@ -827,4 +827,9 @@ void CBaseBG2Weapon::Equip( CBaseCombatCharacter *pOwner )
 
 	return BaseClass::Equip( pOwner );
 
+}
+
+float CBaseBG2Weapon::GetGrenadeDamage()
+{
+	return DMG_GRENADE;
 }

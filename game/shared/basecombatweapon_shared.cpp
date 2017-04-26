@@ -98,7 +98,7 @@ float CBaseCombatWeapon::GetIronsightFOVOffset(void) const
 #else
 	CHL2MP_Player * pOwner = ToHL2MPPlayer(GetOwner());
 #endif
-	if (weaponType == RIFLE && pOwner && (pOwner->m_nButtons & IN_DUCK)) {
+	if (m_eWeaponType == RIFLE && pOwner && (pOwner->m_nButtons & IN_DUCK)) {
 		offset *= 1.5;
 	}
 		
@@ -125,7 +125,7 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 	m_bIsIronsighted = false;
 	m_flIronsightedTime = 0.0f;
 	m_flNextDisableIronsights = 0;
-	weaponType = GENERIC; //BG3 - default value - Awesome
+	m_eWeaponType = GENERIC; //BG3 - default value - Awesome
 	//
 
 	m_bReloadsSingly	= false;
@@ -2224,7 +2224,7 @@ char *CBaseCombatWeapon::GetDeathNoticeName( void )
 #if !defined( CLIENT_DLL )
 	return (char*)STRING( m_iszName );
 #else
-	return "GetDeathNoticeName not implemented on client yet";
+	return (char*)GetClassname();
 #endif
 }
 

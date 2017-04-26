@@ -1,0 +1,1275 @@
+/*
+The Battle Grounds 2 - A Source modification
+Copyright (C) 2005, The Battle Grounds 2 Team and Contributors
+
+The Battle Grounds 2 free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+The Battle Grounds 2 is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+Contact information:
+Tomas "Tjoppen" Härdin		mail, in reverse: se . gamedev @ tjoppen
+
+You may also contact the (future) team via the Battle Grounds website and/or forum at:
+www.bgmod.com
+
+Note that because of the sheer volume of files in the Source SDK this
+notice cannot be put in all of them, but merely the ones that have any
+changes from the original SDK.
+In order to facilitate easy searching, all changes are and must be
+commented on the following form:
+
+//BG2 - <name of contributer>[ - <small description>]
+*/
+/*
+Contrib by HairyPotter: These bots could do soo much more, and also be soo much more efficient as far as CPU goes.
+Maybe I'll remove some code and do a few teaks here and there. Then again it's not like these will be used much anyway.
+*/
+
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//
+// Purpose: Basic BOT handling.
+//
+// $Workfile:     $
+// $Date:         $
+//
+//-----------------------------------------------------------------------------
+// $Log: $
+//
+// $NoKeywords: $
+//=============================================================================//
+
+#include "cbase.h"
+#include "player.h"
+//#include "sdk_player.h"
+#include "in_buttons.h"
+#include "movehelper_server.h"
+#include "gameinterface.h"
+#include "team.h"
+#include "hl2mp_gamerules.h"
+#include "bg3_bot.h"
+#include "hl2mp_player.h"
+#include "../bg2/flag.h"
+#include "../bg2/weapon_bg2base.h"
+
+Vector LerpVector(const Vector& v0, const Vector& v1, float lerp) {
+	return (v1 * lerp) + (v0 * (1 - lerp));
+}
+
+class CSDKBot;
+void Bot_Think(CSDKBot *pBot);
+
+
+ConVar bot_forcefireweapon("bot_forcefireweapon", "", 0, "Force bots with the specified weapon to fire.");
+ConVar bot_forceattack2("bot_forceattack2", "0", 0, "When firing, use attack2.");
+ConVar bot_forceattackon("bot_forceattackon", "0", 0, "When firing, don't tap fire, hold it down.");
+ConVar bot_flipout("bot_flipout", "1", 0, "When on, all bots fire their guns.");
+ConVar bot_limitclass("bot_limitclass", "1", 0, "Force bots to conform to class regulations.");
+ConVar bot_forceclass("bot_forceclass", "0", FCVAR_GAMEDLL | FCVAR_HIDDEN, "Force bots to spawn as given class. 0 = Infantry, 1 = Officer, 2 = Sniper, 3 = Skirmisher");
+static ConVar bot_mimic("bot_mimic", "0", 0, "Bot uses usercmd of player by index.");
+static ConVar bot_mimic_yaw_offset("bot_mimic_yaw_offset", "0", 0, "Offsets the bot yaw.");
+ConVar bot_pause("bot_pause", "0", 0, "Stops the bot thinking cycle entirely.");
+ConVar bot_voicecomms("bot_voicecomms", "0", 0, "Allows bots to use voicecomm commands.");
+ConVar bot_difficulty("bot_difficulty", "3", FCVAR_GAMEDLL, "Bot skill level. 0,1,2,3 are easy, norm, hard, and random, respectively.", true, 0.f, true, 1.f);
+
+//ConVar bot_sendcmd( "bot_sendcmd", "", 0, "Forces bots to send the specified command." );
+
+//So what if these are global? Want to fight about it?
+int g_CurBotNumber = 1; //This int here is pretty much used for the bot names only.
+CSDKBot	gBots[MAX_PLAYERS];
+bool m_bServerReady = false; //Are we ready to use the temp int below?
+int m_iWaitingAmount = 0; //This is just a temp int really.
+
+static const Vector downToChest(0.f, 0.f, -10.f);
+
+const char* g_ppszEasyBotPrefixes[] = { "Pte.", "Pte.", "LCpl.", };
+
+const char* g_ppszMedBotPrefixes[] = { "Pte.", "Pte.", "LCpl.", "LCpl.", "Cpl.", };
+
+const char* g_ppszHardBotPrefixes[] = { "Cpl.", "Cpl.", "Sjt.", "Sjt.", };
+
+const char* g_ppszRareBotPrefixes[] = { "Lt.", "Capt.", "Maj.", "LtCol.", };
+
+const char* g_ppszBotNames[] = { 
+	"Martin", "Smith", "Williams", "Jones", "Coleman", "Jenkins", "Adams", "Clark",
+	"Hall", "Nelson", "Campbell", "Cox", "Cook", "Washington", "Cooper", "Harris", "Rogers",
+	"Torres", "Ward", "Murphy", "Long", "Alexander", "Thomas", "Wright", "Bell", "Richardson",
+	"Evans", "Butler", "Kelly", "Lee", "Rivera", "Miller", "Davis", "Garcia", "Griffin",
+	"Bailey", "Powell", "Ross", "Wood", "Reed", "Lewis", "Taylor", "Perry", "Young",
+};
+
+const char* g_ppszBotRareNames[] = { 
+	"Karpinsky", "Allen", "Hale", "Revere", "Tallmadge", "Gates", "Morgan", "Ziegler",
+	"Arnold", "Greene", "Howe", "Prescott",
+
+};
+
+//Bot difficulties - the meanings of these numbers are
+//						 (aimAngle,	reload,	earlyFire,	meleeTurn,	brave,	meleeRangeOffset)
+BotDifficulty BotDiffEasy(6.f,		0.4f,	0.4f,		0.6f,		0.5f,	-12.f);
+BotDifficulty BotDiffNorm(4.f,		0.1f,	0.25f,		0.75f,		0.5f,	-6.f);
+BotDifficulty BotDiffHard(2.f,		0.03f,	0.05f,		0.9f,		0.6f,	-1.f);
+
+//Bot Thinkers - artificial BRAINS these are
+//the floats are the times between thinks
+namespace BotThinkers{
+	BotThinker Waypoint	(&CSDKBot::ThinkWaypoint_Begin,		&CSDKBot::ThinkWaypoint_Check,	&CSDKBot::ThinkWaypoint,	&CSDKBot::ThinkWaypoint_End,	1.0f, "Waypoint Think");
+	BotThinker Flag		(&CSDKBot::ThinkFlag_Begin,			&CSDKBot::ThinkFlag_Check,		&CSDKBot::ThinkFlag,		&CSDKBot::ThinkFlag_End,		0.4f, "Flag Think");
+	BotThinker LongRange(&CSDKBot::ThinkLongRange_Begin,	&CSDKBot::ThinkLongRange_Check, &CSDKBot::ThinkLongRange,	&CSDKBot::ThinkLongRange_End,	0.4f, "Long Range Think");
+	BotThinker MedRange	(&CSDKBot::ThinkMedRange_Begin,		&CSDKBot::ThinkMedRange_Check,	&CSDKBot::ThinkMedRange,	&CSDKBot::ThinkMedRange_End,	0.18f, "Med Range Think");
+	BotThinker Melee	(&CSDKBot::ThinkMelee_Begin,		&CSDKBot::ThinkMelee_Check,		&CSDKBot::ThinkMelee,		&CSDKBot::ThinkMelee_End,		0.07f, "Melee Think");
+	BotThinker Retreat	(&CSDKBot::ThinkRetreat_Begin,		&CSDKBot::ThinkRetreat_Check,	&CSDKBot::ThinkRetreat,		&CSDKBot::ThinkRetreat_End,		0.3f, "Retreat Think");
+	BotThinker PointBlank(&CSDKBot::ThinkPointBlank_Begin,	&CSDKBot::ThinkPointBlank_Check,&CSDKBot::ThinkPointBlank,	&CSDKBot::ThinkPointBlank_End,	0.1f, "PointBlank Think");
+	BotThinker Death	(&CSDKBot::ThinkDeath_Begin,		&CSDKBot::ThinkDeath_Check,		&CSDKBot::ThinkDeath,		&CSDKBot::ThinkDeath_End,		1.0f, "Death Think");
+}
+//Default thinker is death
+BotThinker* CSDKBot::s_pDefaultThinker = &BotThinkers::Death;
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Create a new Bot and put it in the game.
+// Output : Pointer to the new Bot, or NULL if there's no free clients.
+//-----------------------------------------------------------------------------
+CBasePlayer *BotPutInServer(int iAmount, bool bFrozen)
+{
+	int i = 1;
+	while (i <= iAmount)
+	{
+		char botname[32];
+		const char * pRank;
+		const char * pName;
+
+		//First choose a difficulty
+		BotDifficulty* pDifficulty = CSDKBot::GetDifficulty();
+
+		//randomly get a name
+		if (pDifficulty == &BotDiffEasy) {
+			pRank = g_ppszEasyBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszEasyBotPrefixes) - 1)];
+			pName = g_ppszBotNames[RandomInt(0, ARRAYSIZE(g_ppszBotNames) - 1)];
+		} else if (pDifficulty == &BotDiffNorm) {
+			pRank = g_ppszMedBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszMedBotPrefixes) - 1)];
+			pName = g_ppszBotNames[RandomInt(0, ARRAYSIZE(g_ppszBotNames) - 1)];
+		} else {
+			if (RandomFloat() > 0.95f) {
+				pRank = g_ppszRareBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszRareBotPrefixes) - 1)];
+				pName = g_ppszBotRareNames[RandomInt(0, ARRAYSIZE(g_ppszBotRareNames) - 1)];
+			} else {
+				pRank = g_ppszHardBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszHardBotPrefixes) - 1)];
+				pName = g_ppszBotNames[RandomInt(0, ARRAYSIZE(g_ppszBotNames) - 1)];
+			}
+		}
+
+		Q_snprintf(botname, sizeof(botname), "%s %s", pRank, pName);
+
+		// This trick lets us create a CSDKBot for this client instead of the CSDKPlayer
+		// that we would normally get when ClientPutInServer is called.
+		//ClientPutInServerOverride( &CBotManager::ClientPutInServerOverride_Bot );
+		edict_t *pEdict = engine->CreateFakeClient(botname);
+		//ClientPutInServerOverride( NULL );
+
+		if (!pEdict)
+		{
+			Msg("Failed to create Bot(%s).\n", botname);
+			return NULL;
+		}
+
+		// Allocate a player entity for the bot, and call spawn
+		CSDKPlayer *pPlayer = ((CSDKPlayer *)CBaseEntity::Instance(pEdict));
+
+		if (!pPlayer)
+		{
+			Msg("Couldn't cast bot to player\n");
+			return NULL;
+		}
+
+		//gBots[pPlayer->GetClientIndex()].m_bInuse = true;
+		CSDKBot& curBot = gBots[pPlayer->GetClientIndex()];
+		curBot.m_pPlayer = pPlayer;
+		curBot.m_flNextStrafeTime = 0;
+		
+		curBot.m_pDifficult = pDifficulty;
+		curBot.m_flNextThink = gpGlobals->curtime + 0.1f;
+		pPlayer->ClearFlags();
+
+		//new team/class picking code. it works.
+		static int lastTeam = 0;
+
+		//lastClass = (lastClass + 1) % 4; //4 classes now.
+		int lastClass = RandomInt(0, 3);
+
+		int iTeam = TEAM_AMERICANS + lastTeam;
+		pPlayer->ChangeTeam(iTeam);
+
+		//BG2 - Obey Class Limits now. -HairyPotter
+		if (bot_forceclass.GetInt() > -1) //Force the bot to spawn as the given class.
+			((CHL2MP_Player*)pPlayer)->SetNextClass(bot_forceclass.GetInt());
+
+		else if (bot_limitclass.GetBool() && bot_forceclass.GetInt() < 0) //Just make sure we're not trying to force a class that has a limit.
+		{
+			int limit = HL2MPRules()->GetLimitTeamClass(iTeam, lastClass);
+			if (limit >= 0 && g_Teams[iTeam]->GetNumOfNextClass(lastClass) >= limit)
+			{
+				Msg("Tried to spawn too much of class %i. Spawning as infantry. \n", lastClass);
+				((CHL2MP_Player*)pPlayer)->SetNextClass(0); //Infantry by default
+			}
+			else
+				((CHL2MP_Player*)pPlayer)->SetNextClass(lastClass);
+		}
+		else //Otherwise just spawn as whatever RandomInt() turns up.
+			((CHL2MP_Player*)pPlayer)->SetNextClass(lastClass);
+
+		lastTeam = !lastTeam; //Alternate after we've aready set the other bot's team.
+
+		pPlayer->AddFlag(FL_CLIENT | FL_FAKECLIENT);
+		pPlayer->Spawn();
+		curBot.m_PlayerSearchInfo.Init(pPlayer);
+		g_CurBotNumber++;
+
+		i++;
+		//return pPlayer;
+	}
+	return NULL;
+}
+
+// Handler for the "bot" command.
+/*void BotAdd_f()
+{
+if ( args.ArgC()> 1 )
+BotPutInServer( args[1], false );//bFrozen ); //Spawn given number of bots.
+else
+BotPutInServer( 1, false );//bFrozen ); //Just spawn 1 bot.
+}*/
+
+//ConCommand  cc_Bot( "bot_add", BotAdd_f, "Add a bot", FCVAR_CHEAT );
+CON_COMMAND_F(bot_add, "Creates bot(s)in the server. <Bot Count>", FCVAR_GAMEDLL)
+{
+	int m_iCount = 0;
+	if (args.ArgC() > 1)
+		m_iCount = atoi(args[1]); //Spawn given number of bots.
+	else
+		m_iCount = 1; //Just spawn 1 bot.
+
+	if (m_bServerReady) //Server is already loaded, just do it.
+		BotPutInServer(m_iCount, false);
+	else				  //Server just exec'd the server.cfg, but isn't ready to handle players. Just wait a while.
+		m_iWaitingAmount = m_iCount;
+}
+
+CSDKBot::CSDKBot() {
+	m_bLastThinkWasStateChange = false;
+	m_bUpdateFlags = false;
+	m_bTowardFlag = false;
+	m_pPlayer = NULL;
+	m_flNextFireTime = FLT_MAX;
+	m_flNextStrafeTime = FLT_MAX;
+	m_flEndRetreatTime = FLT_MAX;
+
+	m_pCurThinker = m_pPrevThinker = s_pDefaultThinker;
+
+}
+
+BotDifficulty* CSDKBot::GetDifficulty() {
+	//determine bot skill level based on cvar
+	BotDifficulty* result;
+	switch (bot_difficulty.GetInt()) {
+	case 0: result = &BotDiffEasy; break;
+	case 1: result = &BotDiffNorm; break;
+	case 2: result = &BotDiffHard; break;
+	default: result = BotDifficulty::Random();
+	}
+	return result;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Dispatches thinker start-end functions and switches to next Thinker, with a given delay
+//-------------------------------------------------------------------------------------------------
+void CSDKBot::ScheduleThinker(BotThinker* pNextThinker, float delay) {
+	(this->*(m_pCurThinker->m_pPostThink))(); //wonderful syntax here right?
+	(this->*(pNextThinker->m_pPreThink))();
+	m_pPrevThinker = m_pCurThinker;
+	m_pCurThinker = pNextThinker;
+	m_flNextThink = gpGlobals->curtime + delay;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks enemy position, current weapon, a little randomness etc. to decide to stab
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::DoMelee() {
+	bool shouldMelee = false;
+	bool didMelee = false;
+	static const Vector downToStomach(0, 0, -25);
+
+	if (!IsAimingAtTeammate(m_flMeleeRange)) {
+		if (m_pWeapon) {
+			//add a little randomness
+			float detectedRange = m_PlayerSearchInfo.CloseEnemyDist() + RandomFloat(-2.f, 2.f);
+
+			//for some reason our bots are too short-sighted so let's decrease this
+			detectedRange -= 10;
+
+			//take into consideration the melee range of the current bayonet
+			shouldMelee = (m_flMeleeRange + m_pDifficult->m_flMeleeRangeOffset > detectedRange);
+		}
+
+		if (shouldMelee && bot_randfloat() < 0.45f) {
+			CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
+			if (pEnemy) {
+				LookAt(pEnemy->Weapon_ShootPosition() + (downToStomach * bot_randfloat()), m_pDifficult->m_flMeleeTurnLerp, m_pDifficult->m_flRandomAim);
+				didMelee = true;
+			}
+		}
+	}
+	if (didMelee) {
+		m_curCmd.buttons |= IN_ATTACK2;
+	} else {
+		m_curCmd.buttons &= ~IN_ATTACK2;
+	}
+
+	return shouldMelee;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks whether or not the musket is capable of firing at this moment. Does not look for FF
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::CanFire() const {
+	bool canFire = false;
+
+	if (m_pWeapon) {
+		canFire = m_pWeapon->Clip1() > 0;
+	}
+
+	return canFire;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if the player is looking at a teammate within the specified range
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::IsAimingAtTeammate(vec_t range) const {
+	trace_t tr;
+	Vector forward;
+
+	AngleVectors(m_curCmd.viewangles, &forward);
+
+	UTIL_TraceLine(m_pPlayer->Weapon_ShootPosition(),
+				m_pPlayer->Weapon_ShootPosition() + forward * range,
+				MASK_SOLID, m_pPlayer, COLLISION_GROUP_NONE, &tr);
+
+	CBasePlayer* pPlayer = dynamic_cast<CBasePlayer*>(tr.m_pEnt);
+	if (pPlayer && pPlayer->GetTeamNumber() == m_pPlayer->GetTeamNumber())
+		return true;
+
+	return false;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if the player is capturing or attempting to capture an enemy flag
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::IsCapturingEnemyFlag() const {
+	CFlag* pFlag = m_PlayerSearchInfo.CloseEnemyFlagVisible();
+	if (pFlag && (m_pPlayer->GetAbsOrigin() - pFlag->GetAbsOrigin()).Length() < pFlag->m_flCaptureRadius)
+		return true;
+
+	return false;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Modifies the angles of m_curCmd to look at the given location
+//-------------------------------------------------------------------------------------------------
+void CSDKBot::LookAt(Vector location, float lerp, vec_t randomOffset) {
+	//create a new set of angles to compute
+	QAngle angles;
+
+	//build vector from our head to the given location
+	Vector forward = location - m_pPlayer->Weapon_ShootPosition();
+	VectorAngles(forward, angles);
+
+	//apply some randomness
+	angles += RandomAngle(-randomOffset, randomOffset);
+
+	Quaternion qAngles(angles);
+	QuaternionSlerp(m_LastAngles, qAngles, lerp, qAngles);
+	angles = RadianEuler(qAngles).ToQAngle();
+
+	//apply the linear interpolation from the last angle
+	//angles = (lerp * angles) + (1 - lerp) * m_LastAngles;
+
+	m_pPlayer->SetLocalAngles(angles);
+	m_curCmd.viewangles = angles;
+	m_LastAngles = qAngles;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if we're dead, and if so, schedules the Death BotThinker
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkCheckDeath() {
+	if (m_pPlayer->IsDead()) {
+		ScheduleThinker(&BotThinkers::Death, 1.0);
+		return false;
+	}
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if we our m_flNextFireTime tells us to start point-blanking
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkCheckPointBlank() {
+	if (CanFire() && m_flNextFireTime < gpGlobals->curtime) {
+		ScheduleThinker(&BotThinkers::PointBlank, 0.0f);
+		return false;
+	}
+
+	return true;
+}
+
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if immediately close to the enemy, and if so, schedules the Melee BotThinker
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkCheckMelee() {
+	//check for emergency close-quarters combat
+	if (m_PlayerSearchInfo.CloseEnemyDist() < MELEE_RANGE_START) {
+		ScheduleThinker(&BotThinkers::Melee, BotThinkers::Melee.m_flThinkDelay);
+		return false;
+	}
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Returns us to the last thinker if melee is over
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkCheckExitMelee() {
+	if (m_PlayerSearchInfo.CloseEnemyDist() > MELEE_RANGE_START) {
+		ScheduleThinker(m_pPrevThinker, m_pPrevThinker->m_flThinkDelay);
+		return false;
+	}
+	return true;
+}
+
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if we should RETREAT! If so, schedules the retreat BotThinker
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkCheckRetreat() {
+	//check for emergency close-quarters combat
+	if (m_PlayerSearchInfo.OutNumbered() > 0.55 && m_PlayerSearchInfo.CloseFriendDist() < 600) {
+		ScheduleThinker(&BotThinkers::Retreat, BotThinkers::Retreat.m_flThinkDelay);
+		return false;
+	}
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if we should stop retreating
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkCheckRetreatEnd() {
+	bool nearFriend = false;
+	if (m_PlayerSearchInfo.CloseFriend() && m_PlayerSearchInfo.CloseFriendDist() < 300)
+		nearFriend = true;
+	
+	CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
+	if (!pEnemy || nearFriend || m_flEndRetreatTime < gpGlobals->curtime) {
+		ScheduleThinker(m_pPrevThinker, 0.1f);
+		return false;
+	}
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if we have a visible flag to go to
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkCheckFlag() {
+	if (m_PlayerSearchInfo.CloseEnemyFlagVisible()) {
+		ScheduleThinker(&BotThinkers::Flag, BotThinkers::Flag.m_flThinkDelay);
+		return false;
+	}
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if we should fight nearest enemy or run to flag, if we're already in a mid-range engagement
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkCheckFlagOrFight() {
+	CFlag* pFlag = m_PlayerSearchInfo.CloseEnemyFlagVisible();
+	CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
+	if (pFlag && pEnemy) {
+		float enemyDistanceToFlag = (pEnemy->GetAbsOrigin() - pFlag->GetAbsOrigin()).Length();
+		float ourDistanceToFlag = (m_PlayerSearchInfo.OwnerOrigin() - pFlag->GetAbsOrigin()).Length();
+		if (enemyDistanceToFlag < ourDistanceToFlag && m_PlayerSearchInfo.CloseEnemyDist() > MELEE_RANGE_START) {
+			m_bTowardFlag = true;
+			ScheduleThinker(&BotThinkers::Flag, 0.1f);
+			return false;
+		}
+	}
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if we should enter long-range combat
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkCheckEnterLongRangeCombat() {
+	if (m_PlayerSearchInfo.CloseEnemyDist() < LONG_RANGE_START && m_PlayerSearchInfo.CloseEnemyDist() > MED_RANGE_START
+		&& !IsCapturingEnemyFlag() && !m_bTowardFlag) {
+		ScheduleThinker(&BotThinkers::LongRange, 0.2f);
+		return false;
+	}
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if we should enter med-range combat from short-range or long-range combat
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkCheckEnterMedRangeCombat() {
+	if (m_PlayerSearchInfo.CloseEnemyDist() < MED_RANGE_START && m_PlayerSearchInfo.CloseEnemyDist() > MELEE_RANGE_START
+		&& !IsCapturingEnemyFlag() && !m_bTowardFlag) {
+		ScheduleThinker(&BotThinkers::MedRange, 0.3f);
+		return false;
+	}
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if we should stop worrying about enemies and go back to waypoints
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkCheckExitCombat() {
+	if ( m_PlayerSearchInfo.CloseEnemyDist() > LONG_RANGE_START) {
+		ScheduleThinker(&BotThinkers::Waypoint, 0.3f);
+		return false;
+	}
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Master think function - uses the current thinker to check for state changes or otherwise think
+//-------------------------------------------------------------------------------------------------
+void CSDKBot::Think() {
+	bool didThink = false;
+	if (gpGlobals->curtime > m_flNextThink) {
+		didThink = true;
+		//Msg(m_pPlayer->GetPlayerName());
+		//Msg(" Updating Players...");
+		m_PlayerSearchInfo.UpdateOwnerLocation();
+		m_PlayerSearchInfo.UpdatePlayers();
+		
+		if (m_bLastThinkWasStateChange) {
+			m_bLastThinkWasStateChange = false;
+			PostStateChangeThink();
+		}
+
+		//Msg("Flags...");
+		if (m_bUpdateFlags)
+			m_PlayerSearchInfo.UpdateFlags();
+		//Msg("Check...");
+		if ((this->*(m_pCurThinker->m_pThinkCheck))()) {
+			//Msg("%s...", m_pCurThinker->m_ppszThinkerName);
+			(this->*(m_pCurThinker->m_pThink))();
+			m_flNextThink = gpGlobals->curtime + m_pCurThinker->m_flThinkDelay;
+		} 	
+		//else
+			//Msg("Change...");
+		m_LastCmd = m_curCmd;
+		//Msg("Buttons...");
+		ButtonThink();
+	} else {
+		m_bLastThinkWasStateChange = true;
+	}
+	//if (didThink)
+		//Msg("Move...");
+	RunPlayerMove(m_pPlayer, m_curCmd, gpGlobals->frametime);
+	//if (didThink)
+		//Msg("Finished!\n");
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Button think function translate movement buttons into movement floats
+//-------------------------------------------------------------------------------------------------
+void CSDKBot::ButtonThink() {
+	int& buttons = m_curCmd.buttons;
+	if (buttons & IN_FORWARD)
+		m_curCmd.forwardmove = 1000.f;
+	else if (buttons & IN_BACK)
+		m_curCmd.forwardmove = -1000.f;
+	else
+		m_curCmd.forwardmove = 0.0f;
+
+	if (buttons & IN_RIGHT)
+		m_curCmd.sidemove = 600.f;
+	else if (buttons & IN_LEFT)
+		m_curCmd.sidemove = -600.f;
+	else
+		m_curCmd.sidemove = 0.0f;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Provides common functionalities and changes for 1 think after any state change
+//-------------------------------------------------------------------------------------------------
+void CSDKBot::PostStateChangeThink() {
+	if (m_pWeapon)
+		m_pWeapon->DisableIronsights();
+}
+
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: 
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkWaypoint_Begin() {
+	return true;
+}
+
+bool CSDKBot::ThinkWaypoint_Check() {
+	//we could do a whole bunch of nested ifs, but short-circuiting works as well.
+	return ThinkCheckDeath() && ThinkCheckEnterLongRangeCombat() && ThinkCheckEnterMedRangeCombat()
+		&& ThinkCheckMelee() && ThinkCheckFlag();
+}
+
+bool CSDKBot::ThinkWaypoint() {
+	return true;
+}
+
+bool CSDKBot::ThinkWaypoint_End() {
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: 
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkFlag_Begin() {
+	m_bUpdateFlags = true;
+	return true;
+}
+
+bool CSDKBot::ThinkFlag_Check() {
+	return ThinkCheckDeath() && ThinkCheckRetreat() && ThinkCheckEnterLongRangeCombat() && ThinkCheckEnterMedRangeCombat()
+		&& ThinkCheckMelee();
+}
+
+bool CSDKBot::ThinkFlag() {
+	if (IsCapturingEnemyFlag()) {
+		m_curCmd.buttons = 0;
+		CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
+		if (pEnemy) {
+			LookAt(pEnemy->Weapon_ShootPosition(), 0.5f, 3);
+		}
+	} else {
+		CFlag* pFlag = m_PlayerSearchInfo.CloseEnemyFlagVisible();
+		if (pFlag) {
+			m_curCmd.buttons |= IN_FORWARD;
+			LookAt(pFlag->GetAbsOrigin() + Vector(0, 0, 40), 0.8f, 5);
+		}
+	}
+	return true;
+}
+
+bool CSDKBot::ThinkFlag_End() {
+	m_curCmd.buttons = 0;
+	m_bTowardFlag = false;
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Long-range combat
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkLongRange_Begin() {
+	m_bUpdateFlags = true;
+	if (CanFire()) {
+		float random = RandomFloat();
+		if (random < m_pDifficult->m_flLongRangeFire) {
+			m_flNextFireTime = gpGlobals->curtime + RandomFloat(0.5f, 4.2f);
+		}
+	}
+	return true;
+}
+
+bool CSDKBot::ThinkLongRange_Check() {
+	return ThinkCheckDeath() && ThinkCheckPointBlank() && ThinkCheckEnterMedRangeCombat()
+		&& ThinkCheckMelee() && ThinkCheckExitCombat();
+	return true;
+}
+
+bool CSDKBot::ThinkLongRange() {
+	m_curCmd.buttons |= IN_FORWARD;
+	Vector lookTarget;
+	CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
+	CFlag* pFlag = m_PlayerSearchInfo.CloseEnemyFlagVisible();
+	//if there's a flag move towards the flag as well
+	if (pEnemy && pFlag) {
+		lookTarget = LerpVector(pFlag->GetAbsOrigin(), pEnemy->Weapon_ShootPosition(), 0.3f);
+	} else if (pEnemy) {
+		lookTarget = pEnemy->Weapon_ShootPosition();
+	}
+	LookAt(lookTarget, 0.6f, 5.f);
+	return true;
+}
+
+bool CSDKBot::ThinkLongRange_End() {
+	m_flNextFireTime = FLT_MAX;
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Medium-range combat
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkMedRange_Begin() {
+	m_bUpdateFlags = true;
+	if (CanFire()) {
+		float random = bot_randfloat();
+		if (m_pPlayer->GetHealth() < 70)
+			random += 0.1;
+		if (random > 0.3) {
+			m_flNextFireTime = gpGlobals->curtime + RandomFloat(0.5f, 3.2f);
+		}
+	}
+	m_curCmd.buttons |= IN_FORWARD;
+	m_flNextStrafeTime = gpGlobals->curtime + RandomFloat(0.5f, 1.0f);
+	return true;
+}
+
+bool CSDKBot::ThinkMedRange_Check() {
+	return ThinkCheckDeath() && ThinkCheckEnterLongRangeCombat() && ThinkCheckPointBlank()
+		&& ThinkCheckMelee() && ThinkCheckRetreat() && ThinkCheckFlagOrFight() && ThinkCheckExitCombat();
+}
+
+bool CSDKBot::ThinkMedRange() {
+	CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
+	CBasePlayer* pEnemySecond = m_PlayerSearchInfo.CloseEnemySecond();
+	bool bForceForward = false;
+
+	if (pEnemy && pEnemySecond) {
+		Vector lookTarget;
+		lookTarget = LerpVector(pEnemy->Weapon_ShootPosition(), pEnemySecond->Weapon_ShootPosition(), 0.3);
+		LookAt(lookTarget, m_pDifficult->m_flMeleeTurnLerp - 0.1, 5.f);
+		//move more aggressively forward if the second enemy is far away
+		if (m_PlayerSearchInfo.CloseEnemyDist() + 400 < m_PlayerSearchInfo.CloseEnemySecondDist()) {
+			bForceForward = true;
+			m_curCmd.buttons |= IN_FORWARD;
+		}
+	} else if (pEnemy) {
+		Vector lookTarget;
+		lookTarget = pEnemy->Weapon_ShootPosition();
+		LookAt(lookTarget, m_pDifficult->m_flMeleeTurnLerp - 0.1, 5.f);
+	}
+	
+	if (gpGlobals->curtime > m_flNextStrafeTime) {
+		float randomStrafe = bot_randfloat();
+		if (randomStrafe < 0.4f) {
+			m_curCmd.buttons |= IN_LEFT;
+			m_curCmd.buttons &= ~IN_RIGHT;
+		} else if (randomStrafe < 0.8f) {
+			m_curCmd.buttons &= ~IN_LEFT;
+			m_curCmd.buttons |= IN_RIGHT;
+		} else {
+			m_curCmd.buttons &= ~IN_LEFT;
+			m_curCmd.buttons &= ~IN_RIGHT;
+		}
+
+		if (bot_randfloat() < 0.4f) {
+			m_curCmd.buttons |= IN_FORWARD;
+		} else if (!bForceForward) {
+			m_curCmd.buttons &= ~IN_FORWARD;
+		}
+
+		m_flNextStrafeTime += RandomFloat(0.1f, 1.4f);
+	}
+	return true;
+}
+
+bool CSDKBot::ThinkMedRange_End() {
+	m_curCmd.buttons = 0;
+	m_flNextFireTime = FLT_MAX;
+	m_flNextStrafeTime = FLT_MAX;
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Simulates close-quarters combat
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkMelee_Begin() {
+	m_bUpdateFlags = false;
+	m_curCmd.buttons |= IN_FORWARD;
+	m_flNextStrafeTime = gpGlobals->curtime + RandomFloat(0.5f, 1.0f);
+	if (CanFire()) {
+		float random = RandomFloat();
+		if (m_pPlayer->GetHealth() < 70)
+			random += 0.2;
+		if (random > 0.5) {
+			m_flNextFireTime = gpGlobals->curtime + RandomFloat(0.5f, 1.2f);
+		}
+	}
+	return true;
+}
+
+bool CSDKBot::ThinkMelee_Check() {
+	return ThinkCheckDeath() && ThinkCheckExitMelee() && ThinkCheckExitCombat();
+}
+
+bool CSDKBot::ThinkMelee() {
+	CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
+	if (pEnemy) {
+		LookAt(pEnemy->Weapon_ShootPosition() + downToChest, m_pDifficult->m_flMeleeTurnLerp, m_pDifficult->m_flRandomAim);
+	}
+	if (m_flNextFireTime < gpGlobals->curtime && !IsAimingAtTeammate(m_PlayerSearchInfo.CloseEnemyDist())) {
+		m_curCmd.buttons |= IN_ATTACK;
+	}
+	DoMelee();
+	if (gpGlobals->curtime > m_flNextStrafeTime) {
+		float randomStrafe = bot_randfloat();
+		if (randomStrafe < 0.4f) {
+			m_curCmd.buttons |= IN_LEFT;
+			m_curCmd.buttons &= ~IN_RIGHT;
+		} else if (randomStrafe < 0.8f) {
+			m_curCmd.buttons &= ~IN_LEFT;
+			m_curCmd.buttons |= IN_RIGHT;
+		} else {
+			m_curCmd.buttons &= ~IN_LEFT;
+			m_curCmd.buttons &= ~IN_RIGHT;
+		}
+
+		float randomForward = bot_randfloat();
+		//don't move forward if we're too close
+		if (randomForward < 0.3f && m_PlayerSearchInfo.CloseEnemyDist() < 50) {
+			m_curCmd.buttons |= IN_FORWARD;
+			m_curCmd.buttons &= ~IN_BACK;
+		} else if (randomForward < 0.5f){
+			m_curCmd.buttons &= ~IN_FORWARD;
+			m_curCmd.buttons |= IN_BACK;
+		} else {
+			m_curCmd.buttons &= ~IN_FORWARD;
+			m_curCmd.buttons &= ~IN_BACK;
+		}
+
+		m_flNextStrafeTime += RandomFloat(0.05f, 0.3f);
+	}
+	return true;
+}
+
+bool CSDKBot::ThinkMelee_End() {
+	m_curCmd.buttons &= ~IN_ATTACK2;
+	m_flNextFireTime = FLT_MAX;
+	m_flNextStrafeTime = FLT_MAX;
+	m_curCmd.buttons = 0;
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: 
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkRetreat_Begin() {
+	m_bUpdateFlags = true;
+	m_flNextFireTime = FLT_MAX;
+	m_flEndRetreatTime = RandomFloat(0.5, 5.0) * (1 - m_pDifficult->m_flBravery);
+	return true;
+}
+
+bool CSDKBot::ThinkRetreat_Check() {
+	return ThinkCheckDeath() && ThinkCheckRetreatEnd()
+		&& ThinkCheckMelee() && ThinkCheckExitCombat();
+}
+
+bool CSDKBot::ThinkRetreat() {
+	CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
+	CBasePlayer* pFriend = m_PlayerSearchInfo.CloseFriend();
+
+	//Prefer to move towards friend while looking at friend,
+	//otherwise look backwards from enemy
+	if (pEnemy || pFriend) {
+		Vector lookTarget;
+		if (pFriend) {
+			lookTarget = pFriend->Weapon_ShootPosition();
+			m_curCmd.buttons |= IN_FORWARD;
+			m_curCmd.buttons &= ~IN_BACK;
+		} else if (pEnemy){
+			lookTarget = pEnemy->Weapon_ShootPosition();
+			m_curCmd.buttons |= IN_BACK;
+			m_curCmd.buttons &= ~IN_FORWARD;
+		}
+		LookAt(lookTarget, 0.8f, 4.f);
+	}
+	return true;
+}
+
+bool CSDKBot::ThinkRetreat_End() {
+	m_curCmd.buttons = 0;
+	m_flEndRetreatTime = FLT_MAX;
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Aims from hip at enemy and shoots with proper timing. Will last no longer than ~.5s
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkPointBlank_Begin() {
+	m_bUpdateFlags = false;
+	m_curCmd.buttons = 0;
+	//random crouching
+	if (RandomFloat() < 0.3f)
+		m_curCmd.buttons |= IN_DUCK;
+
+	if (m_pWeapon && bot_randfloat() < 0.5f && m_PlayerSearchInfo.CloseEnemyDist() > 400)
+		m_pWeapon->EnableIronsights();
+
+	m_flNextFireTime = gpGlobals->curtime + RandomFloat(0.4f, 1.2f);
+
+	return true;
+}
+
+bool CSDKBot::ThinkPointBlank_Check() {
+	if (!(ThinkCheckDeath() && ThinkCheckMelee() && ThinkCheckExitCombat()))
+		return false;
+	//check if we've been sitting too long because the enemy died or something
+	if (m_flNextFireTime + 0.5f < gpGlobals->curtime) {
+		ScheduleThinker(&BotThinkers::LongRange, 0.15f);
+		return false;
+	}
+	return true;
+}
+
+bool CSDKBot::ThinkPointBlank() {
+	CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
+	if (pEnemy) {
+		LookAt(pEnemy->Weapon_ShootPosition() + downToChest, 0.8f, m_pDifficult->m_flRandomAim);
+	}
+	if (CanFire() && m_flNextFireTime < gpGlobals->curtime && !IsAimingAtTeammate(m_PlayerSearchInfo.CloseEnemyDist())) {
+		m_curCmd.buttons |= IN_ATTACK;
+		//ScheduleThinker(m_pPrevThinker, 0);
+		//return false;
+	}
+
+	return true;
+}
+
+bool CSDKBot::ThinkPointBlank_End() {
+	m_curCmd.buttons &= ~IN_ATTACK;
+	m_curCmd.buttons &= ~IN_DUCK;
+	m_flNextFireTime = FLT_MAX;
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Manages death/spawn switches, otherwise idles
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkDeath_Begin() {
+	m_bUpdateFlags = false;
+	m_flNextFireTime = FLT_MAX;
+	m_curCmd.buttons = 0;
+	return true;
+}
+
+bool CSDKBot::ThinkDeath_Check() {
+	if (m_pPlayer->IsAlive()) {
+		ScheduleThinker(&BotThinkers::Waypoint, 0.1f);
+		return false;
+	}
+	return true;
+}
+
+bool CSDKBot::ThinkDeath() { return true; }
+
+bool CSDKBot::ThinkDeath_End() {
+	m_curCmd.buttons = 0;
+	m_bUpdateFlags = true;
+	m_flNextFireTime = FLT_MAX;
+	m_pWeapon = dynamic_cast<CBaseBG2Weapon*>(m_pPlayer->GetActiveWeapon());
+	if (m_pWeapon)
+		m_flMeleeRange = m_pWeapon->m_Attackinfos[1].m_flRange;
+	m_flNextVoice = gpGlobals->curtime + RandomFloat(3.0f, 30.0f);
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Function group for navigating between waypoints when no other objectives can be found
+//-------------------------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+// Purpose: Run through all the Bots in the game and let them think.
+//-----------------------------------------------------------------------------
+void Bot_RunAll(void)
+{
+	if (bot_pause.GetBool()) //If we're true, just don't run the thinking cycle. Effectively "pausing" the bots.
+		return;
+
+	if (m_iWaitingAmount && m_bServerReady) //Kind of a shitty hack. But this will allow people to spawn a certain amount of bots in 
+	{										  //the server.cfg. Anyway, the server is ready, so do it.
+		BotPutInServer(m_iWaitingAmount, false);
+		m_iWaitingAmount = 0; //Make sure we've reset the waiting count.
+	}
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPlayer = UTIL_PlayerByIndex(i);// );
+		
+		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
+		{
+			CSDKBot *pBot = &gBots[pPlayer->GetClientIndex()];
+			if (pBot) //Do most of the "filtering" here.
+				pBot->Think();
+		}
+	}
+}
+
+//returns whether entity B is in sight of entity A
+bool IsInSight(CBaseEntity *pA, CBaseEntity *pB)
+{
+	trace_t tr;
+	UTIL_TraceLine(pA->GetLocalOrigin() + Vector(0, 0, 36),
+		pB->GetLocalOrigin() + Vector(0, 0, 36),
+		MASK_SOLID, pA, COLLISION_GROUP_DEBRIS_TRIGGER, &tr);
+
+	return !tr.DidHitWorld();
+}
+
+bool Bot_RunMimicCommand(CUserCmd& cmd)
+{
+	if (bot_mimic.GetInt() <= 0)
+		return false;
+
+	if (bot_mimic.GetInt() > gpGlobals->maxClients)
+		return false;
+
+
+	CBasePlayer *pPlayer = UTIL_PlayerByIndex(bot_mimic.GetInt());
+	if (!pPlayer)
+		return false;
+
+	if (!pPlayer->GetLastUserCommand())
+		return false;
+
+	cmd = *pPlayer->GetLastUserCommand();
+	cmd.viewangles[YAW] += bot_mimic_yaw_offset.GetFloat();
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Simulates a single frame of movement for a player
+// Input  : *fakeclient - 
+//			*viewangles - 
+//			forwardmove - 
+//			m_flSideMove - 
+//			upmove - 
+//			buttons - 
+//			impulse - 
+//			msec - 
+// Output : 	virtual void
+//-----------------------------------------------------------------------------
+static void RunPlayerMove(CSDKPlayer *fakeclient, CUserCmd &cmd, float frametime)
+{
+	//if ( !fakeclient )
+	//	return;
+
+	// Store off the globals.. they're gonna get whacked
+	float flOldFrametime = gpGlobals->frametime;
+	float flOldCurtime = gpGlobals->curtime;
+
+	float flTimeBase = gpGlobals->curtime + gpGlobals->frametime - frametime;
+	fakeclient->SetTimeBase(flTimeBase);
+
+	MoveHelperServer()->SetHost(fakeclient);
+	fakeclient->PlayerRunCommand(&cmd, MoveHelperServer());
+
+	// save off the last good usercmd
+	fakeclient->SetLastUserCommand(cmd);
+
+	// Clear out any fixangle that has been set
+	fakeclient->pl.fixangle = FIXANGLE_NONE;
+
+	// Restore the globals..
+	gpGlobals->frametime = flOldFrametime;
+	gpGlobals->curtime = flOldCurtime;
+	MoveHelperServer()->SetHost(NULL);
+}
+
+/*void Bot_FlipOut(CSDKBot *pBot, CUserCmd &cmd, bool mayAttack, bool mayReload)
+{
+	if (bot_flipout.GetInt() > 0 /*&& pBot->m_pPlayer->IsAlive()*/ /*)
+	{
+		if (pBot->attack++ >= 20)//(RandomFloat(0.0,1.0) > 0.5) )
+		{
+			//cmd.buttons |= bot_forceattack2.GetBool() ? IN_ATTACK2 : IN_ATTACK;
+			if (mayAttack)
+				cmd.buttons |= IN_ATTACK;
+
+			pBot->attack = 0;
+		}
+
+		if (pBot->attack2++ >= 13)
+		{
+			if (mayAttack)
+				cmd.buttons |= IN_ATTACK2;
+
+			pBot->attack2 = 0;
+		}
+
+		/*if( RandomFloat( 0, 1 ) > 0.9 )
+		cmd.buttons |= IN_RELOAD;*/
+		/*if (pBot->reload++ >= 40)
+		{
+			if (mayReload)
+				cmd.buttons |= IN_RELOAD;
+
+			pBot->reload = 0;
+		}
+
+		if (bot_flipout.GetInt() >= 2)
+		{
+			QAngle angOffset = RandomAngle(-1, 1);
+
+			pBot->m_LastAngles += angOffset;
+
+			for (int i = 0; i < 2; i++)
+			{
+				if (fabs(pBot->m_LastAngles[i] - pBot->m_ForwardAngle[i]) > 15.0f)
+				{
+					if (pBot->m_LastAngles[i] > pBot->m_ForwardAngle[i])
+					{
+						pBot->m_LastAngles[i] = pBot->m_ForwardAngle[i] + 15;
+					}
+					else
+					{
+						pBot->m_LastAngles[i] = pBot->m_ForwardAngle[i] - 15;
+					}
+				}
+			}
+
+			pBot->m_LastAngles[2] = 0;
+
+			pBot->m_pPlayer->SetLocalAngles(pBot->m_LastAngles);
+		}
+	}
+}*/
+
+/**
+* A simple lagged Fibonacchi generator.
+* We need this because something's wrong with Valve's PRNG.
+* Both RandomInt() and random->RandomInt() seem to eventually "run of out randomness".
+* Also, Valve decided to replace rand() with a call to random->RandomInt() for some reason.
+*/
+int bot_rand()
+{
+	static int a = 9158152, b = 14257153;
+
+	a += b + (a >> 5);
+	b += a + (b >> 11);
+
+	return b;
+}
+
+float bot_randfloat() {
+	float result = (1.0f * bot_rand()) / INT_MAX;
+	if (result > 0)
+		return result;
+	else
+		return -result;
+}
+
+/*void Bot_UpdateStrafing(CSDKBot *pBot, CUserCmd &cmd)
+{
+	if (gpGlobals->curtime >= pBot->m_flNextStrafeTime)
+	{
+		pBot->m_flNextStrafeTime = gpGlobals->curtime + RandomFloat(0.7f, 1.5f);
+
+		if (bot_rand() % 5 == 0)
+		{
+			pBot->m_flSideMove = -600.0f + (bot_rand() % 1200);
+		}
+		else
+		{
+			pBot->m_flSideMove = 0;
+		}
+
+		if (bot_rand() % 20 == 0)
+		{
+			pBot->m_bBackwards = true;
+		}
+		else
+		{
+			pBot->m_bBackwards = false;
+		}
+	}
+	else
+		pBot->m_flSideMove *= 0.9f;
+
+	cmd.sidemove = pBot->m_flSideMove;
+}*/
+
+/**
+* Traces in front of the bot to see if something's in the way.
+* Used for basic obstacle avoidance.
+*/
+bool Bot_TraceAhead(CSDKBot *pBot, CUserCmd &cmd)
+{
+	trace_t tr;
+	Vector forward;
+
+	AngleVectors(pBot->m_curCmd.viewangles, &forward);
+
+	for (int ofs = -40; ofs < 56; ofs += 8)
+	{
+		UTIL_TraceLine(pBot->m_pPlayer->Weapon_ShootPosition() + Vector(0, 0, ofs),
+			pBot->m_pPlayer->Weapon_ShootPosition() + Vector(0, 0, ofs) + forward * 56,
+			MASK_SOLID, pBot->m_pPlayer, COLLISION_GROUP_NONE, &tr);
+
+		if (tr.fraction < 1.0)
+			return true;
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Run this Bot's AI for one frame.
+//-----------------------------------------------------------------------------
+/*char vcmd[512];
+void Bot_Think(CSDKBot *pBot)
+{
+
+	/*if( !pBot ) //These are figured out by bot_runall anyway.
+	return;
+	if( !pBot->m_bInuse || !pBot->m_pPlayer )
+	return;*/
+
+	// Make sure we stay being a bot
+	//pBot->m_pPlayer->AddFlag( FL_FAKECLIENT );
+
+	/*CUserCmd cmd;
+	Q_memset(&cmd, 0, sizeof(cmd));
+
+
+	//For testing Voicecomms -HairyPotter
+	if (bot_voicecomms.GetInt() && pBot->m_flNextVoice < gpGlobals->curtime)
+	{
+		Q_snprintf(vcmd, 512, "voicecomm %i\n", RandomInt(1, 7));
+		CBaseEntity *ent = dynamic_cast< CBaseEntity * >(pBot->m_pPlayer);
+		engine->ClientCommand(ent->edict(), vcmd);
+		//engine->ClientCommand( pBot->m_pPlayer->edict(), UTIL_VarArgs( "voicecomm %i\n", RandomInt(1,7) ) );
+		Msg(vcmd);
+		pBot->m_flNextVoice = gpGlobals->curtime + 20.0f;
+	}
+
+	// Finally, override all this stuff if the bot is being forced to mimic a player.
+	if (!Bot_RunMimicCommand(cmd))
+	{
+		Bot_UpdateDirectionAndSpeed(pBot, cmd);
+
+		// Handle console settings.
+		Bot_ForceFireWeapon(pBot, cmd);
+		//Bot_HandleSendCmd( pBot );
+
+		// Fix up the m_fEffects flags
+		//pBot->m_pPlayer->PostClientMessagesSent();
+	}
+	//cmd.upmove = 0;
+	//cmd.impulse = 0;
+
+	pBot->m_LastCmd = cmd;
+
+	RunPlayerMove(pBot->m_pPlayer, cmd, gpGlobals->frametime);
+}*/
+
+

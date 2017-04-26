@@ -39,7 +39,7 @@
 	#include "../../server/bg2/ctfflag.h"
 	#include "../../server/bg2/mapfilter.h" 
 //BG2 - Tjoppen - #includes
-#include "sdk/sdk_bot_temp.h"
+#include "sdk/bg3_bot.h"
 
 #ifdef DEBUG	
 	#include "hl2mp_bot_temp.h"

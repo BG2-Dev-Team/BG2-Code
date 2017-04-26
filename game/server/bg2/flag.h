@@ -38,7 +38,9 @@
 #ifdef CLIENT_DLL
 #error DO NOT USE ON CLIENT! c_flag.cpp/.h is for that
 #endif
-
+#ifdef WIN32
+#pragma once
+#endif
 const int CFlag_START_DISABLED = 1;		// spawnflag definition
 
 //BG2 - Tjoppen - TODO: replace the use of ClientPrintAll with custom usermessages

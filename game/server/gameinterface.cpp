@@ -93,7 +93,7 @@
 //BG2 - Tjoppen - #includes
 #ifndef CLIENT_DLL
 #include "hl2mp_gamerules.h"
-#include "sdk/sdk_bot_temp.h"
+#include "sdk/bg3_bot.h"
 #ifndef USE_ENTITY_BULLET
 #include "bg2/bullet.h"
 #endif

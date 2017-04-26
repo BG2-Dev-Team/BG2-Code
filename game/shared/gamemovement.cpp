@@ -4318,7 +4318,7 @@ void CGameMovement::FinishDuck( void )
 
 	//BG3 - Awesome - if we're already aiming with a rifle, then check the FOV zoom again!
 	CBaseCombatWeapon * pWeapon = pHL2Player->GetActiveWeapon();
-	if (pWeapon && pWeapon->weaponType == CBaseCombatWeapon::WeaponType::RIFLE && pWeapon->m_bIsIronsighted) {
+	if (pWeapon && pWeapon->m_eWeaponType == CBaseCombatWeapon::WeaponType::RIFLE && pWeapon->m_bIsIronsighted) {
 		pHL2Player->SetFOV(pWeapon, pHL2Player->GetDefaultFOV() + pWeapon->GetIronsightFOVOffset(), IRONSIGHTS_FOV_IN_TIME);
 	}
 #endif
@@ -4487,6 +4487,22 @@ void CGameMovement::Duck( void )
 	// Handle death.
 	if ( IsDead() )
 		return;
+
+	//CHL2MP_Player * pPlayer = ToHL2MPPlayer(player);
+
+	//FIXME - now we can't crouch at all with this?
+	//Handle allowing only one duck per jump
+	/*if (pPlayer) {
+		if (bInAir && pPlayer->m_bRecentlyCrouchedInAir) {
+			return;
+		}
+		else if (pPlayer->m_bRecentlyCrouchedInAir) {
+			pPlayer->m_bRecentlyCrouchedInAir = false; //Okay we're on the ground, so reset it
+		}
+		else if (bInAir) {
+			pPlayer->m_bRecentlyCrouchedInAir = true; //for our first crouch in a jump
+		}
+	}*/
 
 	// Slow down ducked players.
 	HandleDuckingSpeedCrop();

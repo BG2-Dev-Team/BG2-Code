@@ -81,6 +81,7 @@ public:
 
 	//BG2 - Tjoppen - vars in C_HL2MP_Player
 	int		m_iStamina;		//yeah it's a public integer, big woop, wanna fight about it?
+	bool	m_bRecentlyCrouchedInAir = false;
 	float m_DeathTime; //BG2 - Used for "death cam". -HairyPotter
 
 	int		GetClass(void)	const		{ return m_iClass; }

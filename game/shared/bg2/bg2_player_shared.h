@@ -92,14 +92,23 @@ HITGROUP MODIFIERS - used player.cpp - don't change these unless you have a real
 #endif
 
 /*
-GRENADIER LOW-DAMAGE TOLERANCE SETTINGS
+GRENADE INFORMATION - used in basegrenade_shared.h and other places - I tried to put these definitions in weapon_bg2base.cpp but it wouldn't resolve the externals - Awesome
+*/
+#define DMG_GRENADE 150.0f
+#define GRENADE_FUSE_LENGTH 5.0f
+
+/*
+CLASS-BASED DAMAGE MODIFIERS
 */
 #define DMG_MOD_GRENADIER		0.8f //low-damage attacks while be multiplied by this amount
 #define DMG_MOD_GRENADIER_CAP	70	//damage amounts below this will have the multiplier applied to them
 
+#define DMG_MOD_NATIVE			1.15f //multiplier
+#define DMG_MOD_NATIVE_CAP		65
+
 /*
 RAW RALLY TYPES - DON"T CHANGE THESE UNLESS YOU' KNOW WHAT YOU'RE DOING
-m_iRallyField is a bit field so that a player can have multiple rallies at once!
+m_iCurrentRallies is a bit field so that a player can have multiple rallies at once!
 */
 #if 1
 #define RALLY_DURATION			10.0f	//default until you change the derived macros
@@ -131,6 +140,23 @@ m_iRallyField is a bit field so that a player can have multiple rallies at once!
 //used in linebattle
 #define RALLY_RADIUS_LINEBATTLE	2048.0f
 #define RALLY_DURATION_LB_MOD	2.0f /*Duration of rally effects is multiplied by this*/
+#endif
+
+/*
+FOV OFFSETS FOR RALLYING EFFECTS - used by CHL2MP_Player
+Positive values increase FOV and make player feel faster, lower FOV tightens aim and feels slower
+*/
+#if 1
+#define FOV_ADJUST_ADVANCE			14.0
+#define FOV_ADJUST_ADVANCE_INTIME	8.0 //players will feel like they're getting faster and faster
+#define FOV_ADJUST_ADVANCE_OUTTIME	3.0 //let's not give them a headache
+
+#define FOV_ADJUST_FIRE				-2.0 //zoom in!
+#define FOV_ADJUST_FIRE_LB			-7.0 //zoom in MORE
+
+#define FOV_ADJUST_DEFAULT			4.0 //these are used if a rally-specific isn't specified
+#define FOV_ADJUST_DEFAULT_INTIME	1.0
+#define FOV_ADJUST_DEFAULT_OUTTIME	1.0
 #endif
 
 /*

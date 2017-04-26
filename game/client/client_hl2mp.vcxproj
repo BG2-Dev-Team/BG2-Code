@@ -389,6 +389,7 @@ exit 1
     <ClInclude Include="..\..\game\shared\weapon_proficiency.h" />
     <ClInclude Include="..\server\bg2\weapon_bg2base.h" />
     <ClInclude Include="..\shared\bg2\bg2_player_shared.h" />
+    <ClInclude Include="..\shared\bg2\bg3_weapon_shared.h" />
     <ClInclude Include="..\shared\bg2\ironsights.h" />
     <ClInclude Include="bg2\bg2smokeemitter.h" />
     <ClInclude Include="bg2\bg2_hud_main.h" />

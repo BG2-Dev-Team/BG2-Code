@@ -267,6 +267,7 @@ exit 1
     <ClInclude Include="..\..\game\shared\ammodef.h" />
     <ClInclude Include="..\..\game\shared\base_playeranimstate.h" />
     <ClInclude Include="..\shared\bg2\bg2_player_shared.h" />
+    <ClInclude Include="..\shared\bg2\bg3_weapon_shared.h" />
     <ClInclude Include="..\shared\bg2\ironsights.h" />
     <ClInclude Include="base_transmit_proxy.h" />
     <ClInclude Include="..\..\public\basehandle.h" />
@@ -300,6 +301,7 @@ exit 1
     <ClInclude Include="bg2\spawnpoint.h" />
     <ClInclude Include="bg2\vcomm.h" />
     <ClInclude Include="bg2\weapon_bg2base.h" />
+    <ClInclude Include="bg3_player_search.h" />
     <ClInclude Include="cplane.h" />
     <ClInclude Include="damagemodifier.h" />
     <ClInclude Include="..\..\public\datamap.h" />
@@ -421,7 +423,7 @@ exit 1
     <ClInclude Include="..\..\public\scratchpad3d.h" />
     <ClInclude Include="scratchpad_gamedll_helpers.h" />
     <ClInclude Include="..\..\public\ScratchPadUtils.h" />
-    <ClInclude Include="sdk\sdk_bot_temp.h" />
+    <ClInclude Include="sdk\bg3_bot.h" />
     <ClInclude Include="sendproxy.h" />
     <ClInclude Include="..\..\public\shake.h" />
     <ClInclude Include="..\..\game\shared\shared_classnames.h" />
@@ -826,6 +828,7 @@ exit 1
     <ClCompile Include="bg2\vcomm.cpp" />
     <ClCompile Include="bg2\weapon_bg2base.cpp" />
     <ClCompile Include="bg2\weapon_bg2weapons.cpp" />
+    <ClCompile Include="bg3_player_search.cpp" />
     <ClCompile Include="gamedll_replay.cpp" />
     <ClCompile Include="..\..\game\shared\achievement_saverestore.cpp" />
     <ClCompile Include="..\..\game\shared\achievementmgr.cpp" />
@@ -1192,7 +1195,7 @@ exit 1
     </ClCompile>
     <ClCompile Include="scripted.cpp" />
     <ClCompile Include="scriptedtarget.cpp" />
-    <ClCompile Include="sdk\sdk_bot_temp.cpp" />
+    <ClCompile Include="sdk\bg3_bot.cpp" />
     <ClCompile Include="sendproxy.cpp" />
     <ClCompile Include="..\..\game\shared\sequence_Transitioner.cpp" />
     <ClCompile Include="..\..\public\server_class.cpp">

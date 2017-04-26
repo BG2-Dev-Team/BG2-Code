@@ -241,11 +241,11 @@ void CBaseViewport::OnScreenSizeChanged(int iOldWide, int iOldTall)
 
 void CBaseViewport::CreateDefaultPanels( void )
 {
+	Msg("Creating default panels");
 #ifndef _XBOX
 	AddNewPanel( CreatePanelByName( PANEL_SCOREBOARD ), "PANEL_SCOREBOARD" );
 	AddNewPanel( CreatePanelByName( PANEL_INFO ), "PANEL_INFO" );
 	AddNewPanel( CreatePanelByName( PANEL_SPECGUI ), "PANEL_SPECGUI" );
-#if !defined( TF_CLIENT_DLL )
 	//AddNewPanel( CreatePanelByName( PANEL_SPECMENU ), "PANEL_SPECMENU" );
 	AddNewPanel( CreatePanelByName( PANEL_NAV_PROGRESS ), "PANEL_NAV_PROGRESS" );
 	//BG2 - Tjoppen - class selection menu
@@ -253,7 +253,6 @@ void CBaseViewport::CreateDefaultPanels( void )
 	AddNewPanel(CreatePanelByName(PANEL_COMM), "PANEL_COMM");
 	AddNewPanel(CreatePanelByName(PANEL_COMM2), "PANEL_COMM2");
 	//
-#endif // !TF_CLIENT_DLL
 #endif // !_XBOX
 }
 
@@ -265,7 +264,7 @@ void CBaseViewport::UpdateAllPanels( void )
 	{
 		IViewPortPanel *p = m_Panels[i];
 
-		if ( p->IsVisible() )
+		if (p->IsVisible() )
 		{
 			p->Update();
 		}
@@ -335,6 +334,9 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	}
 	//
 
+	if (!newpanel) {
+		Msg("Failed to create IViewPortPanel named "); Msg(szPanelName);
+	}
 
 	return newpanel; 
 }

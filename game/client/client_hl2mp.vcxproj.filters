@@ -1988,6 +1988,9 @@
     <ClInclude Include="..\shared\bg2\bg2_player_shared.h">
       <Filter>Source Files\BG2</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\bg2\bg3_weapon_shared.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">

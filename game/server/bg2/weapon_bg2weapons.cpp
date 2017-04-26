@@ -100,7 +100,7 @@ const float BAYONET_RETRACE_DURATION = 0.1;
 ConVar sv_bayonet_angle_tolerance("sv_bayonet_angle_tolerance", "5", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "How many angles the sights are allowed to move before retracing stops");
 ConVar sv_bayonet_retrace_duration("sv_bayonet_retrace_duration", "0.1", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "How long bayonet melee traces happen for");
 
-const float KNIFE_COS_TOLERANCE				= 0.940f;		//+-20 degrees
+const float KNIFE_COS_TOLERANCE				= 0.866f;		//+-30 degrees
 const float KNIFE_RETRACE_DURATION			= 0.15f;
 
 const float SHORTSWORD_COS_TOLERANCE		= 0.966;		//+-15 degrees
@@ -261,7 +261,7 @@ MUSKET_ACTTABLE( charleville )
 DECLARE_BG2_WEAPON( jaeger )
 {
 	m_bCantAbortReload	= true;
-	weaponType = RIFLE;
+	m_eWeaponType = RIFLE;
 
 	m_fHolsterTime = 0.75f;
 
@@ -314,7 +314,7 @@ RIFLE_ACTTABLE( jaeger )
 DECLARE_BG2_WEAPON( pennsylvania )
 {
 	m_bCantAbortReload	= true;
-	weaponType = RIFLE;
+	m_eWeaponType = RIFLE;
 
 	m_fHolsterTime = 0.75f;
 
@@ -368,7 +368,7 @@ DECLARE_BG2_WEAPON( pistol_a )
 	m_fHolsterTime = 0.50f;
 
 	m_bWeaponHasSights = false; 
-	weaponType = PISTOL;
+	m_eWeaponType = PISTOL;
 
 	//primary
 	m_Attackinfos[0].m_iAttacktype			= ATTACKTYPE_FIREARM;
@@ -408,7 +408,7 @@ DECLARE_BG2_WEAPON( pistol_b )
 	m_fHolsterTime = 0.50f;
 
 	m_bWeaponHasSights = false; 
-	weaponType = PISTOL;
+	m_eWeaponType = PISTOL;
 
 	//primary
 	m_Attackinfos[0].m_iAttacktype			= ATTACKTYPE_FIREARM;
@@ -514,7 +514,7 @@ DECLARE_BG2_WEAPON( knife )
 	//primary
 	m_Attackinfos[0].m_iAttacktype			= ATTACKTYPE_SLASH;
 	m_Attackinfos[0].m_iDamage				= KNIFE_DAMAGE;//60;
-	m_Attackinfos[0].m_flAttackrate			= 1.1;//-0.7f;
+	m_Attackinfos[0].m_flAttackrate			= 0.7f;//-0.7f;
 	m_Attackinfos[0].m_flRange				= KNIFE_RANGE;
 	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
@@ -1169,7 +1169,7 @@ DECLARE_BG2_WEAPON( brownbess_carbine )
 	//secondary
 	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_STAB;
 	m_Attackinfos[1].m_iDamage				= CARBINE_BAYONET_DAMAGE;//60;
-	m_Attackinfos[1].m_flAttackrate			= 1.0f;//-0.7f;
+	m_Attackinfos[1].m_flAttackrate			= 0.95f;//1.0f;//-0.7f;
 	m_Attackinfos[1].m_flRange				= CARBINE_BAYONET_RANGE;
 	//m_Attackinfos[1].m_flCosAngleTolerance	= 0.95f;
 	m_Attackinfos[1].m_iAttackActivity		= ACT_VM_SECONDARYATTACK;

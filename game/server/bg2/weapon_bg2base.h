@@ -30,6 +30,9 @@
 
 	//BG2 - <name of contributer>[ - <small description>]
 */
+#ifdef WIN32
+#pragma once
+#endif
 
 #include "cbase.h"
 #include "npcevent.h"
@@ -354,6 +357,8 @@ public:
 
 		return m_flShotSpread;
 	}
+
+	static float GetGrenadeDamage();
 
 #ifndef CLIENT_DLL
 	int		m_iLastAttackType;	//used for HitVerif stuff

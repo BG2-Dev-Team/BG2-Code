@@ -619,9 +619,10 @@ public:
 		CARBINE, //used for slower officer speed checking, as client can't access m_iGunKit
 		MUSKET,
 		RIFLE, //BG3 - Awesome - This is only used to determine flintlock delay and dynamic FOV adjust
+		GRENADE, //
 		GENERIC,
 	};
-	WeaponType weaponType;
+	WeaponType m_eWeaponType;
 	//
 
 	// Weapon art

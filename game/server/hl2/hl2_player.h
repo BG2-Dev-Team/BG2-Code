@@ -224,7 +224,7 @@ public:
 	virtual bool		IsFollowingPhysics( void ) { return (m_afPhysicsFlags & PFLAG_ONBARNACLE) > 0; }
 	void				InputForceDropPhysObjects( inputdata_t &data );
 
-	virtual void		Event_Killed( const CTakeDamageInfo &info );
+	virtual void		Event_Killed( const CTakeDamageInfo &info ) override;
 	void				NotifyScriptsOfDeath( void );
 
 	// override the test for getting hit
@@ -265,6 +265,8 @@ public:
 	//BG2 - Tjoppen - made m_iStamina a network cvar
 	CNetworkVar(int, m_iStamina);
 	void DrainStamina(int iAmount);
+
+	CNetworkVar(bool, m_bRecentlyCrouchedInAir); //BG3 - Awesome - to prevent multiple crouches in a single jump
 	//int	m_iStamina; //BG2 - Draco - Stamina of player
 	//
 

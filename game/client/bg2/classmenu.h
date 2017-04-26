@@ -296,7 +296,7 @@ class CStatsButton : public vgui::ToggleButton
 		// BG2 - VisualMelon - stolen from CWeaponButton for good reason
 		Q_strncpy( AInf1.img, (const char *)inResourceData->GetString( "AInfImage1", "" ), 80 );
 		Q_strncpy( AInf2.img, (const char *)inResourceData->GetString( "AInfImage2", "" ), 80 );
-		Q_strncpy( AInf3.img, (const char *)inResourceData->GetString( "AInfImage3", "" ), 80 );
+		/*Q_strncpy( AInf3.img, (const char *)inResourceData->GetString( "AInfImage3", "" ), 80 );*/
 		Q_strncpy( BInf1.img, (const char *)inResourceData->GetString( "BInfImage1", "" ), 80 );
 		Q_strncpy( BInf2.img, (const char *)inResourceData->GetString( "BInfImage2", "" ), 80 );
 		Q_strncpy( ASki1.img, (const char *)inResourceData->GetString( "ASkiImage1", "" ), 80 );
@@ -311,7 +311,7 @@ class CStatsButton : public vgui::ToggleButton
 
 		AInf1.count = HL2MPRules()->getDefaultInfantryAmmo();
 		AInf2.count = AInf1.count;
-		AInf3.count = AInf1.count;
+		/*AInf3.count = AInf1.count;*/
 		BInf1.count = AInf1.count;
 		BInf2.count = AInf1.count;
 
@@ -331,7 +331,7 @@ class CStatsButton : public vgui::ToggleButton
 	}
 
 	// BG2 - VisualMelon - these are stolen from CWeaponButton also
-	weaponStat BLight1, BInf1, BInf2, AInf1, AInf2, AInf3, ASki1, ASki2, BSki1, BSki2, AOff1, BOff1;
+	weaponStat BLight1, BInf1, BInf2, AInf1, AInf2, /*AInf3,*/ ASki1, ASki2, BSki1, BSki2, AOff1, BOff1;
 	// BG2 - VisualMelon - additional ones for weapons with shot option
 	weaponStat BLight1_shot, ASki1_shot;
 };
@@ -367,7 +367,8 @@ public:
 					*m_pOfficerButton,
 					*m_pSkirmisherButton,
 					*m_pSniperButton,
-					*m_pLightInfantryButton;
+					*m_pLightInfantryButton,
+					*m_pGrenadierButton;
 
 	CTeamButton		*m_pBritishButton,
 					*m_pAmericanButton,
@@ -396,7 +397,8 @@ public:
 				*m_pOfficerLabel,
 				*m_pRiflemanLabel,
 				*m_pSkirmisherLabel,
-				*m_pLightInfantryLabel;
+				*m_pLightInfantryLabel,
+				*m_pGrenadierLabel;
 
 	vgui::Label *m_pAmmoCount; // BG2 - VisualMelon - Label to display the number of "cartridges" for the weapon
 
@@ -449,6 +451,7 @@ private:
 					m_iSniperKey,
 					m_iSkirmisherKey,
 					m_iLightInfantryKey,
+					m_iGrenadierKey,
 					m_iSlot6Key,
 					m_iOkayKey;
 

@@ -499,6 +499,7 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 				}
 			}
 		}
+
 		// decrease damage for an ent that's farther from the bomb.
 		flAdjustedDamage = ( vecSrc - tr.endpos ).Length() * falloff;
 		flAdjustedDamage = info.GetDamage() - flAdjustedDamage;

@@ -171,9 +171,18 @@ void CClassButton::OnCursorEntered( void )
 			break;
 		case CLASS_LIGHT_INFANTRY:
 			{
-				//only british have light infantry
 				if( pThisMenu->m_iTeamSelection == TEAM_BRITISH )
 					ResolveLocalizedPath( "#BG2_InfoHTML_B_Linf_Path", pANSIPath, sizeof pANSIPath );
+				else
+					ResolveLocalizedPath("#BG2_InfoHTML_A_Linf_Path", pANSIPath, sizeof pANSIPath);
+			}
+			break;
+		case CLASS_GRENADIER:
+			{
+				if (pThisMenu->m_iTeamSelection == TEAM_AMERICANS)
+					ResolveLocalizedPath("#BG2_InfoHTML_A_Gre_Path", pANSIPath, sizeof pANSIPath);
+				else
+					ResolveLocalizedPath("#BG2_InfoHTML_B_Gre_Path", pANSIPath, sizeof pANSIPath);
 			}
 			break;
 		default:
@@ -405,11 +414,13 @@ CClassMenu::CClassMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_CLASSES )
 	m_pSniperButton = new CClassButton( this, "RiflemanButton", "" );
 	m_pSkirmisherButton = new CClassButton( this, "SkirmisherButton", "" );
 	m_pLightInfantryButton = new CClassButton( this, "LightInfantryButton", "" );
+	m_pGrenadierButton = new CClassButton(this, "GrenadierButton", "");
 	m_pInfantryLabel = new vgui::Label( this, "InfantryLabel", "" );
 	m_pOfficerLabel = new vgui::Label( this, "OfficerLabel", "" );
 	m_pRiflemanLabel = new vgui::Label( this, "RiflemanLabel", "" );
 	m_pSkirmisherLabel = new vgui::Label( this, "SkirmisherLabel", "" );
 	m_pLightInfantryLabel = new vgui::Label( this, "LightInfantryLabel", "" );
+	m_pGrenadierLabel = new vgui::Label(this, "GrenadierLabel", "");
 	//
 
 	m_pQuickJoinCheckButton = new vgui::CheckButton( this, "QuickJoinCheckButton", "" );
@@ -448,6 +459,7 @@ CClassMenu::CClassMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_CLASSES )
 	m_pSniperButton->SetCommand( CLASS_SNIPER );
 	m_pSkirmisherButton->SetCommand( CLASS_SKIRMISHER );
 	m_pLightInfantryButton->SetCommand( CLASS_LIGHT_INFANTRY );
+	m_pGrenadierButton->SetCommand(CLASS_GRENADIER);
 
 	char pANSIPath[512];
 	ResolveLocalizedPath( "#BG2_InfoHTML_Blank_Path", pANSIPath, sizeof pANSIPath );
@@ -520,6 +532,7 @@ void CClassMenu::ApplySchemeSettings(IScheme *pScheme)
 	m_pSniperButton->MakeReadyForUse();
 	m_pSkirmisherButton->MakeReadyForUse();
 	m_pLightInfantryButton->MakeReadyForUse();
+	m_pGrenadierButton->MakeReadyForUse();
 
 	// For weapons and ammo selection menu.. -HairyPotter
 	m_pAmmoButton1->MakeReadyForUse();
@@ -635,9 +648,20 @@ void CClassMenu::OnKeyCodePressed(KeyCode code)
 			m_pAmmoButton2->OnMousePressed( code2 );
 		}
 	}
-	/*else if( code == m_iSlot6Key ) //This is used only for
+	else if (code == m_iGrenadierKey)
 	{
-	}*/
+		if (m_pSpectateButton->IsVisible()) //sixth
+			m_pSpectateButton->OnMousePressed(code2);
+
+		else if (m_pGrenadierButton->IsVisible())
+		{
+			m_pGrenadierButton->OnMousePressed(code2);
+		}
+		else if (m_pAmmoButton2->IsVisible())
+		{
+			m_pAmmoButton2->OnMousePressed(code2);
+		}
+	}
 	else if( code == m_iCancelKey )
 	{
 		SetScreen( 1, false );
@@ -785,6 +809,7 @@ void CClassMenu::OnThink()
 	UpdateClassLabelText( m_pRiflemanLabel, CLASS_SNIPER );
 	UpdateClassLabelText( m_pSkirmisherLabel, CLASS_SKIRMISHER );
 	UpdateClassLabelText( m_pLightInfantryLabel, CLASS_LIGHT_INFANTRY );
+	UpdateClassLabelText( m_pGrenadierLabel, CLASS_GRENADIER );
 
 	UpdateAmmoButtons();
 	UpdateSkinButtons();
@@ -806,8 +831,10 @@ void CClassMenu::UpdateClassLabelText( vgui::Label *pLabel, int iClass )
 	if( !pCurrentTeam )
 		return;
 
-	if( limit >= 0 )
-		Q_snprintf( temp, sizeof temp, "(%i/%i)", pCurrentTeam->GetNumOfClass(iClass), limit );
+	if (limit > 0)
+		Q_snprintf(temp, sizeof temp, "(%i/%i)", pCurrentTeam->GetNumOfClass(iClass), limit);
+	else if (limit == 0)
+		Q_snprintf(temp, sizeof temp, " "); //BG3 - Awesome - hide text for disabled classes
 	else
 		Q_snprintf( temp, sizeof temp, "(%i)", pCurrentTeam->GetNumOfClass(iClass) );
 
@@ -1020,7 +1047,7 @@ bool CClassMenu::SetScreen( int m_iScreen, bool m_bVisible, bool m_bUpdate )
 					m_iClassSelection = iClass;
 				}
 
-				if ( /*m_iClassSelection == CLASS_OFFICER ||*/ m_iClassSelection == CLASS_SNIPER )
+				if ( m_iClassSelection == CLASS_GRENADIER || m_iClassSelection == CLASS_SNIPER || (m_iClassSelection == CLASS_LIGHT_INFANTRY && m_iTeamSelection == TEAM_AMERICANS))
 						return false;
 
 				UpdateDefaultWeaponKit( m_iTeamSelection, m_iClassSelection ); //Make sure we're updated.
@@ -1053,12 +1080,14 @@ void CClassMenu::ToggleButtons(int iShowScreen)
 			m_pSniperButton->SetVisible(false);
 			m_pSkirmisherButton->SetVisible(false);
 			m_pLightInfantryButton->SetVisible(false);
+			m_pGrenadierButton->SetVisible(false);
 			m_pQuickJoinCheckButton->SetVisible( false );
 			m_pInfantryLabel->SetVisible( false );
 			m_pOfficerLabel->SetVisible( false );
 			m_pRiflemanLabel->SetVisible( false );
 			m_pSkirmisherLabel->SetVisible( false );
 			m_pLightInfantryLabel->SetVisible( false );
+			m_pGrenadierLabel->SetVisible(false);
 			//
 			//Invis the weapon seleection screen...
 			m_pWeaponButton1->SetVisible(false);
@@ -1092,14 +1121,16 @@ void CClassMenu::ToggleButtons(int iShowScreen)
 			m_pInfantryButton->SetVisible(true);
 			m_pSniperButton->SetVisible(true);
 			m_pSkirmisherButton->SetVisible(true);
-			m_pLightInfantryButton->SetVisible(m_iTeamSelection == TEAM_BRITISH);
+			m_pLightInfantryButton->SetVisible(true);
+			m_pGrenadierButton->SetVisible(true);
 			m_pQuickJoinCheckButton->SetVisible( true );
 			m_pQuickJoinCheckButton->SetSelected( cl_quickjoin.GetBool() );
 			m_pInfantryLabel->SetVisible( true );
 			m_pOfficerLabel->SetVisible( true );
 			m_pRiflemanLabel->SetVisible( true );
 			m_pSkirmisherLabel->SetVisible( true );
-			m_pLightInfantryLabel->SetVisible(m_iTeamSelection == TEAM_BRITISH);
+			m_pLightInfantryLabel->SetVisible(true);
+			m_pGrenadierLabel->SetVisible(true);
 			//
 			//Invis the weapon selection screen...
 			m_pWeaponButton1->SetVisible(false);
@@ -1134,17 +1165,19 @@ void CClassMenu::ToggleButtons(int iShowScreen)
 			m_pSniperButton->SetVisible(false);
 			m_pSkirmisherButton->SetVisible(false);
 			m_pLightInfantryButton->SetVisible(false);
+			m_pGrenadierButton->SetVisible(false);
 			m_pQuickJoinCheckButton->SetVisible( false );
 			m_pInfantryLabel->SetVisible( false );
 			m_pOfficerLabel->SetVisible( false );
 			m_pRiflemanLabel->SetVisible( false );
 			m_pSkirmisherLabel->SetVisible( false );
 			m_pLightInfantryLabel->SetVisible( false );
+			m_pGrenadierLabel->SetVisible(false);
 			//
 			//Make weapon selection visible
 			m_pWeaponButton1->SetVisible(true);
 			m_pWeaponButton2->SetVisible(true);
-			m_pWeaponButton3->SetVisible(true);
+			m_pWeaponButton3->SetVisible(false); //BG3 - no class has third weapon now
 			m_pStatsButton->SetVisible(true);
 			m_pAmmoCount->SetVisible(true);
 			m_pAmmoButton1->SetVisible(true);
@@ -1380,15 +1413,15 @@ void CStatsButton::Paint ( void )
 						GetWeaponImage( AInf1 );
 					else if (pButton2->m_bMouseOver)
 						GetWeaponImage( AInf2 );
-					else if (pButton3->m_bMouseOver)
-						GetWeaponImage( AInf3 );
+					/*else if (pButton3->m_bMouseOver)
+						GetWeaponImage( AInf3 );*/
 					// nothing moused
 					else if (pButton1->IsSelected())
 						GetWeaponImage( AInf1 );
 					else if (pButton2->IsSelected())
 						GetWeaponImage( AInf2 );
-					else if (pButton3->IsSelected())
-						GetWeaponImage( AInf3 );
+					/*else if (pButton3->IsSelected())
+						GetWeaponImage( AInf3 );*/
 					break;
 				case CLASS_SKIRMISHER:
 					// this one is structured weirdly to save lots of duplicate code for ammo check

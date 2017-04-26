@@ -1703,11 +1703,14 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 	ClearUseEntity();
 	
 	// this client isn't going to be thinking for a while, so reset the sound until they respawn
-	pSound = CSoundEnt::SoundPointerForIndex( CSoundEnt::ClientSoundIndex( edict() ) );
-	{
-		if ( pSound )
+	//BG3 - don't reset sound if we're killed by grenade or else the blast sound will stop!
+	if (info.GetDamageType() != DMG_BLAST) {
+		pSound = CSoundEnt::SoundPointerForIndex(CSoundEnt::ClientSoundIndex(edict()));
 		{
-			pSound->Reset();
+			if (pSound)
+			{
+				pSound->Reset();
+			}
 		}
 	}
 

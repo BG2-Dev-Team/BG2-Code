@@ -9,6 +9,9 @@
 #include "basegrenade_shared.h"
 #include "shake.h"
 #include "engine/IEngineSound.h"
+#include "bg2/bg3_weapon_shared.h"
+
+#include "../server/bg2/weapon_bg2base.h" //BG3 - for referencing grenade damage info
 
 #if !defined( CLIENT_DLL )
 
@@ -20,8 +23,6 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-//BG2 - no grenades - yet! - Awesome
 
 extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
 extern short	g_sModelIndexWExplosion;	// (in combatweapon.cpp) holds the index for the underwater explosion
@@ -52,6 +53,7 @@ BEGIN_DATADESC( CBaseGrenade )
 	DEFINE_THINKFUNC( DangerSoundThink ),
 	DEFINE_THINKFUNC( PreDetonate ),
 	DEFINE_THINKFUNC( Detonate ),
+	//DEFINE_THINKFUNC( PostDetonate ),
 	DEFINE_THINKFUNC( TumbleThink ),
 
 END_DATADESC()
@@ -174,12 +176,14 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 	// Use the thrower's position as the reported position
 	Vector vecReported = m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
 	
-	CTakeDamageInfo info( this, m_hThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
+	//BG3 - Awesome - HACK HACK I tried to set the damage from inside the constructor but for some reason it woulnd't change! Oh well, we'll only have one grenade type anyway
+	CTakeDamageInfo info( this, m_hThrower, GetBlastForce(), GetAbsOrigin(), /*m_flDamage*/ CBaseBG2Weapon::GetGrenadeDamage(), bitsDamageType, 0, &vecReported );
 
 	RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
 
 	UTIL_DecalTrace( pTrace, "Scorch" );
 
+	StopSound(this->entindex(), GRENADE_FUSE_SOUND); //BG3 - stop fuse sound!
 	EmitSound( "BaseGrenade.Explode" );
 
 	SetThink( &CBaseGrenade::SUB_Remove );
@@ -189,17 +193,7 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 	AddEffects( EF_NODRAW );
 	SetAbsVelocity( vec3_origin );
 
-#if HL2_EPISODIC
-	// Because the grenade is zipped out of the world instantly, the EXPLOSION sound that it makes for
-	// the AI is also immediately destroyed. For this reason, we now make the grenade entity inert and
-	// throw it away in 1/10th of a second instead of right away. Removing the grenade instantly causes
-	// intermittent bugs with env_microphones who are listening for explosions. They will 'randomly' not
-	// hear explosion sounds when the grenade is removed and the SoundEnt thinks (and removes the sound)
-	// before the env_microphone thinks and hears the sound.
-	SetNextThink( gpGlobals->curtime + 0.1 );
-#else
 	SetNextThink( gpGlobals->curtime );
-#endif//HL2_EPISODIC
 
 #if defined( HL2_DLL )
 	CBasePlayer *pPlayer = ToBasePlayer( m_hThrower.Get() );
@@ -210,6 +204,7 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 #endif
 
 #endif
+	m_bDidExplode = true;
 }
 
 
@@ -289,6 +284,8 @@ void CBaseGrenade::Detonate( void )
 
 	SetThink( NULL );
 
+	StopSound(this->entindex(), GRENADE_FUSE_SOUND); //BG3 - stop fuse sound!
+
 	vecSpot = GetAbsOrigin() + Vector ( 0 , 0 , 8 );
 	UTIL_TraceLine ( vecSpot, vecSpot + Vector ( 0, 0, -32 ), MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, & tr);
 
@@ -307,6 +304,10 @@ void CBaseGrenade::Detonate( void )
 		UTIL_ScreenShake( GetAbsOrigin(), GetShakeAmplitude(), 150.0, 1.0, GetShakeRadius(), SHAKE_START );
 	}
 }
+
+/*void CBaseGrenade::PostDetonate(void) {
+
+}*/
 
 
 //
@@ -526,6 +527,7 @@ void CBaseGrenade::SetThrower( CBaseCombatCharacter *pThrower )
 //-----------------------------------------------------------------------------
 CBaseGrenade::~CBaseGrenade(void)
 {
+	StopSound(this->entindex(), GRENADE_FUSE_SOUND); //BG3 - stop fuse sound! PLS
 };
 
 //-----------------------------------------------------------------------------
@@ -541,6 +543,7 @@ CBaseGrenade::CBaseGrenade(void)
 	m_DmgRadius			= 100;
 	m_flDetonateTime	= 0;
 	m_bHasWarnedAI		= false;
+	m_bDidExplode		= false;
 
 	SetSimulatedEveryTick( true );
 };

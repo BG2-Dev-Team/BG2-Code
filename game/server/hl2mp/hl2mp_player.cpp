@@ -38,6 +38,7 @@
 #include "bg2/spawnpoint.h"
 #include "bg2/weapon_bg2base.h"
 #include "bg2/ctfflag.h"
+#include "../shared/bg2/weapon_frag.h"
 //
 
 extern ConVar mp_autobalanceteams;
@@ -107,6 +108,7 @@ SendPropExclude("DT_BaseAnimating", "m_flPoseParameter"),
 
 //BG2 - Tjoppen - send stamina via C_HL2MP_Player <=> DT_HL2MP_Player <=> CHL2MP_Player
 SendPropInt(SENDINFO(m_iStamina), 7, SPROP_UNSIGNED),	//0 <= stamina <= 100, 7 bits enough
+SendPropBool(SENDINFO(m_bRecentlyCrouchedInAir)),
 //
 //BG2 - Tjoppen - m_iClass and m_iCurrentAmmoKit are network vars
 SendPropInt(SENDINFO(m_iClass), 3, SPROP_UNSIGNED),			//BG2 - Tjoppen - remember: max eight classes per team or increase this
@@ -263,6 +265,7 @@ void CHL2MP_Player::Precache(void)
 void CHL2MP_Player::GiveAllItems(void)
 {
 	CBasePlayer::GiveAmmo(32, "357");
+	CBasePlayer::GiveAmmo(32, "Grenade");
 
 	//BG2 - Tjoppen - impulse 101
 	GiveNamedItem("weapon_brownbess");
@@ -279,6 +282,7 @@ void CHL2MP_Player::GiveAllItems(void)
 	GiveNamedItem("weapon_sabre_b");
 	GiveNamedItem("weapon_hirschf");
 	GiveNamedItem("weapon_knife");
+	GiveNamedItem("weapon_frag");
 }
 
 void CHL2MP_Player::GiveDefaultItems(void)
@@ -398,6 +402,7 @@ void CHL2MP_Player::GiveDefaultItems(void)
 		case CLASS_LIGHT_INFANTRY:
 			GiveNamedItem("weapon_brownbess_carbine");
 			CBasePlayer::SetAmmoCount(HL2MPRules()->getDefaultLightInfantryAmmo(), GetAmmoDef()->Index("357")); //BG2 - Tjoppen - Default ammo for light infantry
+			break;
 		case CLASS_GRENADIER:
 			GiveNamedItem("weapon_brownbess_nobayo");
 			GiveNamedItem("weapon_frag");
@@ -653,12 +658,15 @@ bool CHL2MP_Player::Weapon_Switch(CBaseCombatWeapon *pWeapon, int viewmodelindex
 //and check against auto-officer protection
 void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator)
 {
+	bool bApplyDamage = true;
+	const CTakeDamageInfo * dmgInfo = &info;
+
 	CHL2MP_Player * pAttacker = ToHL2MPPlayer(info.GetAttacker());
 	CHL2MP_Player * pVictim = ToHL2MPPlayer(ptr->m_pEnt);
 	if (ptr && pAttacker && pVictim) {
 		//Okay, we're good to go, construct a new CTakeDamageInfo and later pass that instead
 		CTakeDamageInfo newInfo = info;
-		
+		dmgInfo = &newInfo;
 
 		//Hitgroup modifiers - do this first
 		switch (ptr->hitgroup)
@@ -695,118 +703,26 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 		if (pAttacker->RallyGetCurrentRallies() & RALLY_DAMAGE) {
 			scale *= RALLY_DAMAGE_MOD;
 		}
-
 		newInfo.ScaleDamage(scale);
 
 		//Do the grenadier damage scale last because it depends on what the damage already is
 		if (pVictim->GetClass() == CLASS_GRENADIER && newInfo.GetDamage() < DMG_MOD_GRENADIER_CAP) {
 			newInfo.ScaleDamage(DMG_MOD_GRENADIER);
 		}
-		
-		BaseClass::TraceAttack(newInfo, vecDir, ptr, pAccumulator);
+		else if (pVictim->GetClass() == CLASS_SKIRMISHER && pVictim->GetTeamNumber() == TEAM_BRITISH) {
+			if (newInfo.GetDamage() < DMG_MOD_NATIVE_CAP) {
+				newInfo.ScaleDamage(DMG_MOD_NATIVE);
+			}
+			else if (newInfo.GetDamage() < DMG_MOD_NATIVE * DMG_MOD_NATIVE) {
+				newInfo.SetDamage((float)(DMG_MOD_NATIVE * DMG_MOD_NATIVE_CAP));
+			}
+		}
 	}
-	else {
-		BaseClass::TraceAttack(info, vecDir, ptr, pAccumulator);
+	if (bApplyDamage){
+		BaseClass::TraceAttack(*dmgInfo, vecDir, ptr, pAccumulator);
 	}
 		
 }
-
-//=============================================================
-//CHL2MP_Player's IncreaseReward
-//increases the points towards a bonus, 1 for class, 2 for team
-//=============================================================
-//BG2 - Tjoppen - rewards put on hold
-/*void CHL2MP_Player::IncreaseReward(int iType)
-{
-/*	switch (iType)
-{
-case 1://class specific
-switch (m_iClass)
-{
-case CLASS_INFANTRY:
-m_iInfantryReward++;
-switch (m_iInfantryReward)
-{
-case 10:
-m_iInfantryLevel = 2;
-break;
-case 20:
-m_iInfantryLevel = 3;
-break;
-case 30:
-m_iInfantryLevel = 4;
-break;
-}
-break;
-case CLASS_OFFICER:
-m_iOfficerReward++;
-switch (m_iOfficerReward)
-{
-case 10:
-m_iOfficerLevel = 2;
-break;
-case 6:
-m_iOfficerLevel = 3;
-break;
-case 9:
-m_iOfficerLevel = 4;
-break;
-}
-break;
-case CLASS_SNIPER:
-m_iSniperReward++;
-switch (m_iSniperReward)
-{
-case 3:
-m_iSniperLevel = 2;
-break;
-case 6:
-m_iSniperLevel = 3;
-break;
-case 9:
-m_iSniperLevel = 4;
-break;
-}
-break;
-}
-break;
-case 2://team specific
-switch (GetTeamNumber())
-{
-case TEAM_AMERICANS:
-m_iAmericanReward++;
-switch (m_iAmericanReward)
-{
-case 3:
-m_iAmericanLevel = 2;
-break;
-case 6:
-m_iAmericanLevel = 3;
-break;
-case 9:
-m_iAmericanLevel = 4;
-break;
-}
-break;
-case TEAM_BRITISH:
-m_iBritishReward++;
-switch (m_iBritishReward)
-{
-case 3:
-m_iBritishLevel = 2;
-break;
-case 6:
-m_iBritishLevel = 3;
-break;
-case 9:
-m_iBritishLevel = 4;
-break;
-}
-break;
-}
-break;
-}*//*
-}*/
 
 void CHL2MP_Player::HandleSpeedChanges(void)
 {
@@ -861,8 +777,11 @@ void CHL2MP_Player::PostThink(void)
 		m_iStamina = 100;	//cap if for some reason it went over 100
 	
 	//check if our rallying time has ended
-	if (m_iCurrentRallies && m_flEndRallyTime < gpGlobals->curtime)
+	if (m_iCurrentRallies && m_flEndRallyTime < gpGlobals->curtime) {
+		RallyEffectDisable();
 		RallyMe(0);
+	}
+		
 
 	if (GetFlags() & FL_DUCKING) {
 		SetCollisionBounds(VEC_CROUCH_TRACE_MIN, VEC_CROUCH_TRACE_MAX);
@@ -1281,7 +1200,6 @@ void CHL2MP_Player::ChangeTeam(int iTeam, bool bKill)
 	if (iTeam == TEAM_SPECTATOR)
 	{
 		RemoveAllItems(true);
-
 		State_Transition(STATE_OBSERVER_MODE);
 	}
 
@@ -1725,7 +1643,10 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 				pClassString = "Rif"; //We'll use infantry sounds for the Militia class.. for now.
 			break;
 		case CLASS_LIGHT_INFANTRY:
-			pClassString = "Rif"; //same thing here..
+			pClassString = "Inf"; //same thing here..
+			break;
+		case CLASS_GRENADIER:
+			pClassString = "Inf";
 			break;
 		default:
 			return;
@@ -1826,6 +1747,11 @@ Checks whether or not this play can rally others at this time
 */
 bool CHL2MP_Player::CanRally(void) const
 {
+	//if we've proven ourselves to be a really bad officer, don't bother to iterate
+	//through the players again because that's expensive
+	if (m_bBadOfficer)
+		return false;
+
 	int iTeam = GetTeamNumber();
 	//First check that we're not a spectator or something, because ClientCommand(...) doesn't check that
 	if (!(iTeam == TEAM_AMERICANS || iTeam == TEAM_BRITISH))
@@ -1882,6 +1808,39 @@ int	CHL2MP_Player::ParseRallyCommand(int vcommCommand)
 			newRallyFlags = -1;
 	}
 	return newRallyFlags;
+}
+
+//visual effects, not functionality. Exact functionality depends on m_iRallyFlags
+void CHL2MP_Player::RallyEffectEnable() {
+	float FOVoffset = FOV_ADJUST_DEFAULT;
+	float FOVfadeTime = FOV_ADJUST_DEFAULT_INTIME;
+
+	switch (m_iCurrentRallies) {
+		case RALLY_ADVANCE:
+			FOVoffset = FOV_ADJUST_ADVANCE;
+			FOVfadeTime = FOV_ADJUST_ADVANCE_INTIME;
+			break;
+		case RALLY_FIRE:
+			if (IsLinebattle())
+				FOVoffset = FOV_ADJUST_FIRE_LB;
+			else
+				FOVoffset = FOV_ADJUST_FIRE;
+			break;
+	}
+	this->SetFOV(this, GetDefaultFOV() + FOVoffset, FOVfadeTime);
+}
+
+void CHL2MP_Player::RallyEffectDisable() {
+	float fadeOutTime = FOV_ADJUST_DEFAULT_OUTTIME;
+
+	//rally flags haven't been cleared yet
+	switch (m_iCurrentRallies) {
+		case RALLY_ADVANCE:
+			fadeOutTime = FOV_ADJUST_ADVANCE_OUTTIME;
+			break;
+	}
+
+	this->SetFOV(this, 0, fadeOutTime);
 }
 
 //Putting these here because we can't initialize its default value from inside the class
@@ -1989,6 +1948,8 @@ void CHL2MP_Player::RallyMe(int rallyFlags)
 	//Okay now actually set the rally flags
 	m_iCurrentRallies = rallyFlags;
 
+	RallyEffectEnable();
+
 	//Set the time for when the rally should end
 	m_flEndRallyTime = gpGlobals->curtime + RallyGetRallyDuration(rallyFlags);
 }
@@ -2046,12 +2007,17 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 	}
 	else if (FStrEq(cmd, "class") && args.ArgC() > 2)
 	{
+		int desiredClass = atoi(args[2]);
+		//don't do anything if we're a bad office and we're trying to join the officer class
+		if (m_bBadOfficer && desiredClass == CLASS_OFFICER)
+			return false;
+
 		//Eh.. it's a little messy, but it seems a bit more efficent to just use a switch here rather than comparing strings over and over.
 		switch (atoi(args[1])) //Team
 		{
 		case TEAM_BRITISH:
 
-			switch (atoi(args[2]))
+			switch (desiredClass)
 			{
 			case CLASS_INFANTRY:
 				AttemptJoin(TEAM_BRITISH, CLASS_INFANTRY, "Royal Infantry");
@@ -2335,6 +2301,16 @@ EmitSound( "Weapon_SLAM.SatchelDetonate" );
 
 void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 {
+	//Take away Rallying effects
+	RallyMe(0);
+	RallyEffectDisable();
+
+	//if we're holding a live grenade, drop it before we die!
+	CWeaponFrag * pGrenade = dynamic_cast<CWeaponFrag*>(GetActiveWeapon());
+	if (pGrenade && pGrenade->IsPrimed()) {
+		pGrenade->LobGrenade(this, 100.0f);
+	}
+
 	//update damage info with our accumulated physics force
 	CTakeDamageInfo subinfo = info;
 	subinfo.SetDamageForce(m_vecTotalBulletForce);
