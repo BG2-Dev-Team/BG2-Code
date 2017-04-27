@@ -301,6 +301,7 @@ exit 1
     <ClInclude Include="bg2\spawnpoint.h" />
     <ClInclude Include="bg2\vcomm.h" />
     <ClInclude Include="bg2\weapon_bg2base.h" />
+    <ClInclude Include="bg3_bot_manager.h" />
     <ClInclude Include="bg3_player_search.h" />
     <ClInclude Include="cplane.h" />
     <ClInclude Include="damagemodifier.h" />
@@ -828,6 +829,7 @@ exit 1
     <ClCompile Include="bg2\vcomm.cpp" />
     <ClCompile Include="bg2\weapon_bg2base.cpp" />
     <ClCompile Include="bg2\weapon_bg2weapons.cpp" />
+    <ClCompile Include="bg3_bot_manager.cpp" />
     <ClCompile Include="bg3_player_search.cpp" />
     <ClCompile Include="gamedll_replay.cpp" />
     <ClCompile Include="..\..\game\shared\achievement_saverestore.cpp" />

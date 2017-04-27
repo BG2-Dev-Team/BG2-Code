@@ -1,13 +1,13 @@
 /*
-The Battle Grounds 2 - A Source modification
-Copyright (C) 2005, The Battle Grounds 2 Team and Contributors
+The Battle Grounds 3 - A Source modification
+Copyright (C) 2017, The Battle Grounds 2 Team and Contributors
 
 The Battle Grounds 2 free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
 version 2.1 of the License, or (at your option) any later version.
 
-The Battle Grounds 2 is distributed in the hope that it will be useful,
+The Battle Grounds 3 is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 Lesser General Public License for more details.
@@ -17,10 +17,10 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 Contact information:
-Tomas "Tjoppen" Härdin		mail, in reverse: se . gamedev @ tjoppen
+Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
 
 You may also contact the (future) team via the Battle Grounds website and/or forum at:
-www.bgmod.com
+www.bg2mod.com
 
 Note that because of the sheer volume of files in the Source SDK this
 notice cannot be put in all of them, but merely the ones that have any
@@ -114,10 +114,10 @@ const char* g_ppszBotRareNames[] = {
 };
 
 //Bot difficulties - the meanings of these numbers are
-//						 (aimAngle,	reload,	earlyFire,	meleeTurn,	brave,	meleeRangeOffset)
-BotDifficulty BotDiffEasy(6.f,		0.4f,	0.4f,		0.6f,		0.5f,	-12.f);
-BotDifficulty BotDiffNorm(4.f,		0.1f,	0.25f,		0.75f,		0.5f,	-6.f);
-BotDifficulty BotDiffHard(2.f,		0.03f,	0.05f,		0.9f,		0.6f,	-1.f);
+//						 (aimAngle,	reload,	earlyFire,	meleeTurn,	brave,	meleeRangeOffset,	meleeReaction)
+BotDifficulty BotDiffEasy(6.f,		0.4f,	0.8f,		0.3f,		0.3f,	30.f,				0.35f);
+BotDifficulty BotDiffNorm(4.f,		0.1f,	0.55f,		0.55f,		0.5f,	15.f,				0.4f);
+BotDifficulty BotDiffHard(2.f,		0.03f,	0.25f,		0.7f,		0.8f,	8.f,				0.45f);
 
 //Bot Thinkers - artificial BRAINS these are
 //the floats are the times between thinks
@@ -265,6 +265,7 @@ CON_COMMAND_F(bot_add, "Creates bot(s)in the server. <Bot Count>", FCVAR_GAMEDLL
 }
 
 CSDKBot::CSDKBot() {
+	m_ccIronsights.Tokenize("ironsights");
 	m_bLastThinkWasStateChange = false;
 	m_bUpdateFlags = false;
 	m_bTowardFlag = false;
@@ -301,39 +302,47 @@ void CSDKBot::ScheduleThinker(BotThinker* pNextThinker, float delay) {
 }
 
 //-------------------------------------------------------------------------------------------------
+// Purpose: Returns the bot controller the given player, if there is one.
+//-------------------------------------------------------------------------------------------------
+CSDKBot* ToBot(CBasePlayer* pPlayer) {
+	return &gBots[pPlayer->GetClientIndex()];
+}
+
+//-------------------------------------------------------------------------------------------------
 // Purpose: Checks enemy position, current weapon, a little randomness etc. to decide to stab
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::DoMelee() {
 	bool shouldMelee = false;
-	bool didMelee = false;
-	static const Vector downToStomach(0, 0, -25);
+	if (bot_randfloat() < m_pDifficult->m_flMeleeReaction) {
+		bool didMelee = false;
+		static const Vector downToStomach(0, 0, -15);
 
-	if (!IsAimingAtTeammate(m_flMeleeRange)) {
-		if (m_pWeapon) {
-			//add a little randomness
-			float detectedRange = m_PlayerSearchInfo.CloseEnemyDist() + RandomFloat(-2.f, 2.f);
+		if (!IsAimingAtTeammate(m_flMeleeRange)) {
+			if (m_pWeapon) {
+				//add a little randomness
+				float detectedRange = m_PlayerSearchInfo.CloseEnemyDist() + RandomFloat(-2.f, 2.f);
 
-			//for some reason our bots are too short-sighted so let's decrease this
-			detectedRange -= 10;
+				//for some reason our bots are too short-sighted so let's decrease this
+				detectedRange -= 10;
 
-			//take into consideration the melee range of the current bayonet
-			shouldMelee = (m_flMeleeRange + m_pDifficult->m_flMeleeRangeOffset > detectedRange);
-		}
+				//take into consideration the melee range of the current bayonet
+				shouldMelee = (m_flMeleeRange + bot_randfloat(-m_pDifficult->m_flMeleeRangeOffset, m_pDifficult->m_flMeleeRangeOffset) > detectedRange);
+			}
 
-		if (shouldMelee && bot_randfloat() < 0.45f) {
-			CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
-			if (pEnemy) {
-				LookAt(pEnemy->Weapon_ShootPosition() + (downToStomach * bot_randfloat()), m_pDifficult->m_flMeleeTurnLerp, m_pDifficult->m_flRandomAim);
-				didMelee = true;
+			if (shouldMelee) {
+				CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
+				if (pEnemy) {
+					LookAt(pEnemy->Weapon_ShootPosition() + (downToStomach * bot_randfloat()), m_pDifficult->m_flMeleeTurnLerp, m_pDifficult->m_flRandomAim);
+					didMelee = true;
+				}
 			}
 		}
+		if (didMelee) {
+			m_curCmd.buttons |= IN_ATTACK2;
+		} else {
+			m_curCmd.buttons &= ~IN_ATTACK2;
+		}
 	}
-	if (didMelee) {
-		m_curCmd.buttons |= IN_ATTACK2;
-	} else {
-		m_curCmd.buttons &= ~IN_ATTACK2;
-	}
-
 	return shouldMelee;
 }
 
@@ -447,8 +456,14 @@ bool CSDKBot::ThinkCheckMelee() {
 // Purpose: Returns us to the last thinker if melee is over
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkCheckExitMelee() {
+	BotThinker* prevThinker = m_pPrevThinker;
+
+	//Retreat also returns us to last thinker and we don't want infinite state change loops!
+	if (prevThinker == &BotThinkers::Retreat)
+		prevThinker = &BotThinkers::MedRange;
+
 	if (m_PlayerSearchInfo.CloseEnemyDist() > MELEE_RANGE_START) {
-		ScheduleThinker(m_pPrevThinker, m_pPrevThinker->m_flThinkDelay);
+		ScheduleThinker(prevThinker, prevThinker->m_flThinkDelay);
 		return false;
 	}
 	return true;
@@ -460,7 +475,8 @@ bool CSDKBot::ThinkCheckExitMelee() {
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkCheckRetreat() {
 	//check for emergency close-quarters combat
-	if (m_PlayerSearchInfo.OutNumbered() > 0.55 && m_PlayerSearchInfo.CloseFriendDist() < 600) {
+	if (m_PlayerSearchInfo.CloseEnemy() && m_PlayerSearchInfo.OutNumbered() > 0.55 && m_PlayerSearchInfo.CloseFriendDist() < 800
+		&& m_PlayerSearchInfo.CloseFriendDist() > RETREAT_STOP_RANGE) {
 		ScheduleThinker(&BotThinkers::Retreat, BotThinkers::Retreat.m_flThinkDelay);
 		return false;
 	}
@@ -472,7 +488,7 @@ bool CSDKBot::ThinkCheckRetreat() {
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkCheckRetreatEnd() {
 	bool nearFriend = false;
-	if (m_PlayerSearchInfo.CloseFriend() && m_PlayerSearchInfo.CloseFriendDist() < 300)
+	if (m_PlayerSearchInfo.CloseFriend() && m_PlayerSearchInfo.CloseFriendDist() < RETREAT_STOP_RANGE)
 		nearFriend = true;
 	
 	CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
@@ -529,7 +545,7 @@ bool CSDKBot::ThinkCheckEnterLongRangeCombat() {
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkCheckEnterMedRangeCombat() {
 	if (m_PlayerSearchInfo.CloseEnemyDist() < MED_RANGE_START && m_PlayerSearchInfo.CloseEnemyDist() > MELEE_RANGE_START
-		&& !IsCapturingEnemyFlag() && !m_bTowardFlag) {
+		&& !IsCapturingEnemyFlag() && !m_bTowardFlag && !WantsToRetreat()) {
 		ScheduleThinker(&BotThinkers::MedRange, 0.3f);
 		return false;
 	}
@@ -572,14 +588,14 @@ void CSDKBot::Think() {
 			//Msg("%s...", m_pCurThinker->m_ppszThinkerName);
 			(this->*(m_pCurThinker->m_pThink))();
 			m_flNextThink = gpGlobals->curtime + m_pCurThinker->m_flThinkDelay;
-		} 	
-		//else
+		} else {
+			m_bLastThinkWasStateChange = true;
 			//Msg("Change...");
+		}
+			
 		m_LastCmd = m_curCmd;
 		//Msg("Buttons...");
 		ButtonThink();
-	} else {
-		m_bLastThinkWasStateChange = true;
 	}
 	//if (didThink)
 		//Msg("Move...");
@@ -612,8 +628,10 @@ void CSDKBot::ButtonThink() {
 // Purpose: Provides common functionalities and changes for 1 think after any state change
 //-------------------------------------------------------------------------------------------------
 void CSDKBot::PostStateChangeThink() {
-	if (m_pWeapon)
-		m_pWeapon->DisableIronsights();
+	if (m_pWeapon && m_pWeapon->IsIronsighted() && m_pCurThinker != &BotThinkers::PointBlank) {
+		m_curCmd.buttons &= ~IN_ZOOM; //disable ironsights
+	}
+	Msg("%s\tchanged state from \"%s\" to \"%s\"\n", m_pPlayer->GetPlayerName(), m_pPrevThinker->m_ppszThinkerName, m_pCurThinker->m_ppszThinkerName);
 }
 
 
@@ -680,7 +698,7 @@ bool CSDKBot::ThinkFlag_End() {
 bool CSDKBot::ThinkLongRange_Begin() {
 	m_bUpdateFlags = true;
 	if (CanFire()) {
-		float random = RandomFloat();
+		float random = bot_randfloat();
 		if (random < m_pDifficult->m_flLongRangeFire) {
 			m_flNextFireTime = gpGlobals->curtime + RandomFloat(0.5f, 4.2f);
 		}
@@ -755,6 +773,13 @@ bool CSDKBot::ThinkMedRange() {
 		Vector lookTarget;
 		lookTarget = pEnemy->Weapon_ShootPosition();
 		LookAt(lookTarget, m_pDifficult->m_flMeleeTurnLerp - 0.1, 5.f);
+
+		CBasePlayer* pFriend = m_PlayerSearchInfo.CloseFriend();
+		if (pFriend) {
+			vec_t friendCombatRange = (pFriend->GetAbsOrigin() - pEnemy->GetAbsOrigin()).Length();
+			if (friendCombatRange < HELP_START_RANGE)
+				bForceForward = true;
+		}
 	}
 	
 	if (gpGlobals->curtime > m_flNextStrafeTime) {
@@ -769,8 +794,8 @@ bool CSDKBot::ThinkMedRange() {
 			m_curCmd.buttons &= ~IN_LEFT;
 			m_curCmd.buttons &= ~IN_RIGHT;
 		}
-
-		if (bot_randfloat() < 0.4f) {
+		//we're more likely to go forward if we're being forced to
+		if (bot_randfloat() < 0.4f || (bForceForward && bot_randfloat() < 0.8f)) {
 			m_curCmd.buttons |= IN_FORWARD;
 		} else if (!bForceForward) {
 			m_curCmd.buttons &= ~IN_FORWARD;
@@ -834,7 +859,7 @@ bool CSDKBot::ThinkMelee() {
 
 		float randomForward = bot_randfloat();
 		//don't move forward if we're too close
-		if (randomForward < 0.3f && m_PlayerSearchInfo.CloseEnemyDist() < 50) {
+		if (randomForward < 0.3f && m_PlayerSearchInfo.CloseEnemyDist() < 70) {
 			m_curCmd.buttons |= IN_FORWARD;
 			m_curCmd.buttons &= ~IN_BACK;
 		} else if (randomForward < 0.5f){
@@ -864,7 +889,7 @@ bool CSDKBot::ThinkMelee_End() {
 bool CSDKBot::ThinkRetreat_Begin() {
 	m_bUpdateFlags = true;
 	m_flNextFireTime = FLT_MAX;
-	m_flEndRetreatTime = RandomFloat(0.5, 5.0) * (1 - m_pDifficult->m_flBravery);
+	m_flEndRetreatTime = gpGlobals->curtime + RandomFloat(1.5, 5.0) * (1 - m_pDifficult->m_flBravery);
 	return true;
 }
 
@@ -911,8 +936,14 @@ bool CSDKBot::ThinkPointBlank_Begin() {
 	if (RandomFloat() < 0.3f)
 		m_curCmd.buttons |= IN_DUCK;
 
-	if (m_pWeapon && bot_randfloat() < 0.5f && m_PlayerSearchInfo.CloseEnemyDist() > 400)
-		m_pWeapon->EnableIronsights();
+	bool bZoom = m_PlayerSearchInfo.CloseEnemyDist() > 400 && bot_randfloat() < 0.5f;
+	if (!bZoom)
+		bZoom = m_PlayerSearchInfo.CloseEnemyDist() > 1100 && bot_randfloat() < 0.8f;
+
+	if (bZoom) {
+		m_curCmd.buttons |= IN_ZOOM;
+	}
+		
 
 	m_flNextFireTime = gpGlobals->curtime + RandomFloat(0.4f, 1.2f);
 
@@ -933,7 +964,7 @@ bool CSDKBot::ThinkPointBlank_Check() {
 bool CSDKBot::ThinkPointBlank() {
 	CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
 	if (pEnemy) {
-		LookAt(pEnemy->Weapon_ShootPosition() + downToChest, 0.8f, m_pDifficult->m_flRandomAim);
+		LookAt(pEnemy->Weapon_ShootPosition() + downToChest, 0.8f, m_pDifficult->m_flRandomAim / 3);
 	}
 	if (CanFire() && m_flNextFireTime < gpGlobals->curtime && !IsAimingAtTeammate(m_PlayerSearchInfo.CloseEnemyDist())) {
 		m_curCmd.buttons |= IN_ATTACK;
@@ -947,6 +978,8 @@ bool CSDKBot::ThinkPointBlank() {
 bool CSDKBot::ThinkPointBlank_End() {
 	m_curCmd.buttons &= ~IN_ATTACK;
 	m_curCmd.buttons &= ~IN_DUCK;
+	m_curCmd.buttons &= ~IN_ZOOM;
+	
 	m_flNextFireTime = FLT_MAX;
 	return true;
 }
@@ -975,6 +1008,7 @@ bool CSDKBot::ThinkDeath_End() {
 	m_curCmd.buttons = 0;
 	m_bUpdateFlags = true;
 	m_flNextFireTime = FLT_MAX;
+	m_flEndRetreatTime;
 	m_pWeapon = dynamic_cast<CBaseBG2Weapon*>(m_pPlayer->GetActiveWeapon());
 	if (m_pWeapon)
 		m_flMeleeRange = m_pWeapon->m_Attackinfos[1].m_flRange;
@@ -1166,6 +1200,14 @@ float bot_randfloat() {
 		return result;
 	else
 		return -result;
+}
+
+float bot_randfloat(float min, float max) {
+	float result = (1.0f * bot_rand()) / INT_MAX;
+	if (result < 0)
+		result = -result;
+	result = min + result*(max-min);
+	return result;
 }
 
 /*void Bot_UpdateStrafing(CSDKBot *pBot, CUserCmd &cmd)

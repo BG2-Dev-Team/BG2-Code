@@ -1,3 +1,36 @@
+/*
+The Battle Grounds 3 - A Source modification
+Copyright (C) 2017, The Battle Grounds 2 Team and Contributors
+
+The Battle Grounds 2 free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+The Battle Grounds 3 is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+Contact information:
+Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
+
+You may also contact the (future) team via the Battle Grounds website and/or forum at:
+www.bg2mod.com
+
+Note that because of the sheer volume of files in the Source SDK this
+notice cannot be put in all of them, but merely the ones that have any
+changes from the original SDK.
+In order to facilitate easy searching, all changes are and must be
+commented on the following form:
+
+//BG2 - <name of contributer>[ - <small description>]
+*/
+
 #ifdef WIN32
 #pragma once
 #endif
@@ -92,6 +125,9 @@ void CPlayerSearch::UpdatePlayers() {
 	float nearestEnemySecondDist = FLT_MAX;
 	float nearestFriendDist = FLT_MAX;
 
+	int iNumFriendly = 0;
+	int iNumEnemy = 0;
+
 	float totalEnemyDist = 0;
 	float totalFriendDist = 0;
 
@@ -103,6 +139,7 @@ void CPlayerSearch::UpdatePlayers() {
 			curDistance = (m_vOwnerLocation - curPlayer->GetAbsOrigin()).Length();
 			//friendlies
 			if (curPlayer->GetTeamNumber() == m_iOwnerTeam) {
+				iNumFriendly++;
 				totalFriendDist += curDistance;
 				if (curDistance < nearestFriendDist) {
 					nearestFriend = curPlayer;
@@ -110,6 +147,7 @@ void CPlayerSearch::UpdatePlayers() {
 				}
 			}//enemies
 			else if (curPlayer->GetTeamNumber() == m_iEnemyTeam){
+				iNumEnemy++;
 				totalEnemyDist += curDistance;
 				if (curDistance < nearestEnemyDist) {
 					nearestEnemy = curPlayer;
@@ -136,7 +174,12 @@ void CPlayerSearch::UpdatePlayers() {
 	m_flCloseFriendDist			= nearestFriendDist;
 
 	//calculated outnumberedness - as friends get closer the value decreases
-	m_flOutnumbered = totalFriendDist / (totalFriendDist + totalEnemyDist);
+	if (iNumEnemy != 0 && iNumFriendly != 0) {
+		totalFriendDist /= iNumFriendly;
+		totalEnemyDist /= iNumEnemy;
+		m_flOutnumbered = totalFriendDist / (totalFriendDist + totalEnemyDist);
+	} else
+		m_flOutnumbered = 0.5f;
 }
 
 void CPlayerSearch::UpdateFlags() {

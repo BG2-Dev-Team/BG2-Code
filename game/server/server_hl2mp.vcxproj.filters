@@ -1745,6 +1745,9 @@
     <ClInclude Include="bg3_player_search.h">
       <Filter>Source Files\BG2\Bots</Filter>
     </ClInclude>
+    <ClInclude Include="bg3_bot_manager.h">
+      <Filter>Source Files\BG2\Bots</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gamedll_replay.cpp">
@@ -3248,6 +3251,9 @@
       <Filter>Source Files\BG2\Bots</Filter>
     </ClCompile>
     <ClCompile Include="bg3_player_search.cpp">
+      <Filter>Source Files\BG2\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3_bot_manager.cpp">
       <Filter>Source Files\BG2\Bots</Filter>
     </ClCompile>
   </ItemGroup>

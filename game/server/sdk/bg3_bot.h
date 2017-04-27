@@ -1,10 +1,35 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
-//
-// Purpose: 
-//
-// $NoKeywords: $
-//=============================================================================//
+/*
+The Battle Grounds 3 - A Source modification
+Copyright (C) 2017, The Battle Grounds 2 Team and Contributors
 
+The Battle Grounds 2 free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+The Battle Grounds 3 is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+Contact information:
+Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
+
+You may also contact the (future) team via the Battle Grounds website and/or forum at:
+www.bg2mod.com
+
+Note that because of the sheer volume of files in the Source SDK this
+notice cannot be put in all of them, but merely the ones that have any
+changes from the original SDK.
+In order to facilitate easy searching, all changes are and must be
+commented on the following form:
+
+//BG2 - <name of contributer>[ - <small description>]
+*/
 #ifndef SDK_BOT_TEMP_H
 #define SDK_BOT_TEMP_H
 #ifdef _WIN32
@@ -50,20 +75,22 @@ extern BotDifficulty BotDiffNorm;
 extern BotDifficulty BotDiffHard;
 
 struct BotDifficulty {
-	vec_t m_flRandomAim; //magninute of random vector away from melee target, in world space
+	vec_t m_flRandomAim; //magninute of random angle from target, in degrees
 	float m_flMidRangeReload; //chance of reloading after firing in mid-range combat
 	float m_flLongRangeFire; //chance of firing early in long-range
 	float m_flMeleeTurnLerp; //higher value allow for faster turning in melee
 	float m_flBravery; //0.0-1.0, tendency to run away when outnumbered
 	float m_flMeleeRangeOffset; //reduction of melee range
+	float m_flMeleeReaction;
 
-	BotDifficulty(vec_t aimInnaccuracy, float midRangeReload, float longRangeFire, float meleeTurnLerp, float bravery, float meleeRangeOffset) {
+	BotDifficulty(vec_t aimInnaccuracy, float midRangeReload, float longRangeFire, float meleeTurnLerp, float bravery, float meleeRangeOffset, float meleeReaction) {
 		m_flRandomAim = aimInnaccuracy;
 		m_flMidRangeReload = midRangeReload;
 		m_flLongRangeFire = longRangeFire;
 		m_flMeleeTurnLerp = meleeTurnLerp;
 		m_flBravery = bravery;
 		m_flMeleeRangeOffset = meleeRangeOffset;
+		m_flMeleeReaction = meleeReaction;
 	}
 
 	static BotDifficulty* Random() {
@@ -91,7 +118,9 @@ public:
 	float			m_flNextThink;
 	BotDifficulty*	m_pDifficult;
 
-	bool m_bLastThinkWasStateChange;
+	CCommand		m_ccIronsights;
+
+	bool			m_bLastThinkWasStateChange;
 
 	bool			m_bUpdateFlags; //we can save a little performance by not updating the flags if we don't need to
 	bool			m_bTowardFlag; //Whether or not to ignore enemies and move to the nearest flag
@@ -129,10 +158,12 @@ public:
 	*/
 	void ScheduleThinker(BotThinker* pNextThinker, float delay);
 
+	CSDKBot*	ToBot(CBasePlayer* pPlayer);
 	bool		DoMelee(); //based on difficulty, range, current weapon, a little randomness
 	inline bool CanFire() const; //whether or not the bot's current weapon is capable of firing
 	bool		IsAimingAtTeammate(vec_t range) const; //whether or not we're aiming at a teammate
 	bool		IsCapturingEnemyFlag() const;
+	inline bool WantsToRetreat() const { return m_flEndRetreatTime < FLT_MAX - 1; }
 
 	void		LookAt(Vector location, float lerp, vec_t randomOffset = 0.0f); //Modifies the angles of m_curCmd to look at given target
 
@@ -155,6 +186,8 @@ public:
 	static const int LONG_RANGE_START = 1680;
 	static const int MED_RANGE_START = 850;
 	static const int MELEE_RANGE_START = 140;
+	static const int RETREAT_STOP_RANGE = 150; //retreat stops when we are this close to friend
+	static const int HELP_START_RANGE = 200; //teammates will rush forward to other teammates who are this close to the enemy
 
 	/*
 	Master think functions
@@ -222,4 +255,5 @@ extern bool m_bServerReady;
 void Bot_RunAll();
 static void RunPlayerMove(CSDKPlayer *fakeclient, CUserCmd &cmd, float frametime);
 float bot_randfloat();
+float bot_randfloat(float min, float max);
 #endif // SDK_BOT_TEMP_H
