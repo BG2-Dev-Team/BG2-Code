@@ -37,6 +37,8 @@ commented on the following form:
 #endif
 
 #include "../bg3_player_search.h"
+#include "../bg3_bot_navpoint.h"
+#include "bg2/weapon_bg2base.h"
 
 //BG2 - Tjoppen - HACKHACK
 #define CSDKPlayer CBasePlayer
@@ -46,13 +48,34 @@ inline Vector LerpVector(const Vector& v0, const Vector& v1, float lerp);
 
 class CSDKBot;
 
+/*
+BotThinker contexts are used for bot's vcomms
+These are dispatched to the vcomm manager by thinks and state changes
+*/
+enum BotContext {
+	CONTEXT_NONE = 0,
+	ADVANCE,
+	RETREAT,
+	OBJECTIVE,
+	CLEAR,
+	FIRE,
+	AFFIRM, //yes
+	NEGATE, //no
+	DEFAULT, //battlecry
+	NUM_CONTEXTS //useful, don't change ordering
+};
+
+
+
 struct BotThinker {
 	bool (CSDKBot::* m_pPreThink)(); //called when this think is first scheduled
 	bool (CSDKBot::* m_pThinkCheck)(); //checks if a different thinker should be scheduled
 	bool (CSDKBot::* m_pThink)(); //called after every m_flThinkDelay
 	bool (CSDKBot::* m_pPostThink)(); //called when another event is scheduled
 	float m_flThinkDelay; //delay between each think
+	BotContext m_eContext;
 	const char * m_ppszThinkerName;
+	
 
 	BotThinker(bool (CSDKBot::* preThinker)(),
 			   bool (CSDKBot::* thinkChecker)(), 
@@ -68,6 +91,9 @@ struct BotThinker {
 		m_ppszThinkerName = thinkerName;
 	}
 };
+
+
+
 
 struct BotDifficulty;
 extern BotDifficulty BotDiffEasy;
@@ -118,8 +144,6 @@ public:
 	float			m_flNextThink;
 	BotDifficulty*	m_pDifficult;
 
-	CCommand		m_ccIronsights;
-
 	bool			m_bLastThinkWasStateChange;
 
 	bool			m_bUpdateFlags; //we can save a little performance by not updating the flags if we don't need to
@@ -130,11 +154,11 @@ public:
 
 	bool			m_bBackwards, m_bLastTurnToRight;
 
-	float	m_flNextStrafeTime,
-			m_flNextVoice;
+	float			m_flNextStrafeTime,
+					m_flNextVoice;
 
 	QAngle			m_ForwardAngle;
-	Quaternion			m_LastAngles;
+	Quaternion		m_LastAngles;
 
 	
 
@@ -149,7 +173,8 @@ public:
 	/*
 	Constructors and Initializers
 	*/
-	CSDKBot();
+	CSDKBot(); //called when game server is created
+	static void Init(CBasePlayer* pPlayer, BotDifficulty* pDifficulty); //called when a bot is put in the server
 
 	static BotDifficulty* GetDifficulty();
 
@@ -163,9 +188,14 @@ public:
 	inline bool CanFire() const; //whether or not the bot's current weapon is capable of firing
 	bool		IsAimingAtTeammate(vec_t range) const; //whether or not we're aiming at a teammate
 	bool		IsCapturingEnemyFlag() const;
+	bool		IsCapturingEnemyFlagAttempt() const;
 	inline bool WantsToRetreat() const { return m_flEndRetreatTime < FLT_MAX - 1; }
+	
+	ENavPointRange EnemyNoticeRange() const;
 
 	void		LookAt(Vector location, float lerp, vec_t randomOffset = 0.0f); //Modifies the angles of m_curCmd to look at given target
+
+	void		SendBotVcommContext(BotContext context); //sends context to vcomm manager
 
 	/*
 	These thinks checks return false if they scheduled a new BotThinker, true otherwise
@@ -178,6 +208,7 @@ public:
 	bool ThinkCheckRetreat(); //Checks if we're outnumbered
 	bool ThinkCheckRetreatEnd(); //Checks if we've retreated long enough or that friends are close
 	bool ThinkCheckFlag(); //Looks for a flag, if an enemy is not too close
+	bool ThinkCheckFlagExit(); //exits to waypoint or med-range if there are no flags visible
 	bool ThinkCheckFlagOrFight(); //In mid-range combat, checks if we should fight or run to flag
 	bool ThinkCheckEnterLongRangeCombat();
 	bool ThinkCheckEnterMedRangeCombat();
@@ -195,6 +226,7 @@ public:
 	void Think();
 	void ButtonThink(); //translate movement button presses into the movement floats
 	void PostStateChangeThink(); //called one think after any state change
+	static void ResetAllBots();
 
 	/*
 	BotThinker Function groups
@@ -246,14 +278,16 @@ public:
 
 };
 
-extern int		g_CurBotNumber;
 extern CSDKBot	gBots[MAX_PLAYERS];
-extern bool m_bServerReady;
+extern bool g_bServerReady;
 
 // If iTeam or iClass is -1, then a team or class is randomly chosen.
 //CBasePlayer *BotPutInServer( bool bFrozen, int iTeam, int iClass );
 void Bot_RunAll();
 static void RunPlayerMove(CSDKPlayer *fakeclient, CUserCmd &cmd, float frametime);
+
+int	  bot_rand();
+int   bot_rand(int min, int max);
 float bot_randfloat();
 float bot_randfloat(float min, float max);
-#endif // SDK_BOT_TEMP_H
+#endif // SDK_BOT_TEMP_Hd

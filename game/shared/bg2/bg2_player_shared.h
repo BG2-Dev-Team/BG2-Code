@@ -203,6 +203,8 @@ chat messages, sounds, and rallying binds
 #define VCOMM2_PRESENT		15
 #define VCOMM2_FIRE			16
 #define VCOMM2_CEASE_FIRE	17
+
+#define VCOMM_BATTLECRY		18
 #endif
 
 /*

@@ -1232,6 +1232,8 @@ void CGameMovement::DecayPunchAngle( void )
 		QAngle newpunch = player->m_Local.m_vecPunchAngle +
 			player->m_Local.m_vecPunchAngleVel * gpGlobals->frametime;
 
+
+
 		player->SetPunchAngle(QAngle(clamp(newpunch.x, -89, 89),
 			clamp(newpunch.y, -179, 179),
 			clamp(newpunch.z, -89, 89)));

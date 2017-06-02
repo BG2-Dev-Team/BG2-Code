@@ -956,6 +956,7 @@ BEGIN_DATADESC( CFlag )
 	DEFINE_KEYFIELD( m_iAmericanFlagSkin, FIELD_INTEGER, "AmericanFlagSkin" ), //
 	DEFINE_KEYFIELD( m_iFullCap, FIELD_INTEGER, "FullCap" ), //This is used in the CheckFullcap function in hl2mp_gamerules.cpp -HairyPotter
 	DEFINE_KEYFIELD( m_bInvisible, FIELD_BOOLEAN, "Invisible" ), //This is used in the CheckFullcap function in hl2mp_gamerules.cpp -HairyPotter
+	DEFINE_KEYFIELD( m_flBotNoticeRange, FIELD_FLOAT, "BotNoticeRange" ),
 
 #ifndef CLIENT_DLL
 	DEFINE_THINKFUNC( Think ),

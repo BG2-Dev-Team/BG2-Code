@@ -39,6 +39,7 @@
 #include "bg2/weapon_bg2base.h"
 #include "bg2/ctfflag.h"
 #include "../shared/bg2/weapon_frag.h"
+#include "bg3_bot_vcomms.h"
 //
 
 extern ConVar mp_autobalanceteams;
@@ -1682,6 +1683,11 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 		MessageEnd();
 		//
 
+		//Inform the vcomm managers that a player has emitted a vcomm
+		CBotComManager* pComms = CBotComManager::GetBotCommsOfPlayer(this);
+		BotContext eContext = CBotComManager::ParseIntToContext(comm);
+		pComms->ReceiveContext(this, eContext, true);
+
 		//done. possibly also tell clients to draw text and stuff if sv_voicecomm_text is true
 		m_flNextVoicecomm = gpGlobals->curtime + 2.0f;
 
@@ -1723,6 +1729,13 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 		}
 	}
 }
+
+/*CBotComManager* CHL2MP_Player::GetComManager() const {
+	if (GetTeamNumber() == TEAM_AMERICANS)
+		return &g_BotAmerComms;
+	else
+		return &g_BotBritComms;
+}*/
 
 //BG2 - handle stamina change
 void CHL2MP_Player::DrainStamina(int iAmount)

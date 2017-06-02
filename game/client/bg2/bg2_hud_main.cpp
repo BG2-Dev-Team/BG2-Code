@@ -538,25 +538,33 @@ void CHudBG2::Paint()
 		m_pLabelAmmo->SetVisible( false );
 
 	int wavetime = ceilf(HL2MPRules()->m_fLastRespawnWave + mp_respawntime.GetFloat() - gpGlobals->curtime);
-	if(	wavetime < 0 )
-		wavetime = 0;
-
-	Q_snprintf( msg2, 512, "%i:%02i ", wavetime / 60, wavetime % 60 );
-	m_pLabelWaveTime->SetText(msg2);
+	if (wavetime < 1800) {
+		if (wavetime < 0)
+			wavetime = 0;
+		Q_snprintf(msg2, 512, "%i:%02i ", wavetime / 60, wavetime % 60);
+		m_pLabelWaveTime->SetText(msg2);
+	} else {
+		m_pLabelWaveTime->SetText(" ");
+	}
 	m_pLabelWaveTime->SizeToContents();
 	m_pLabelWaveTime->SetFgColor( ColourWhite );
 
-	if( HL2MPRules()->UsingTickets() )
-	{
-		int roundtime = ceilf(HL2MPRules()->m_fLastRoundRestart + mp_tickets_roundtime.GetFloat() - gpGlobals->curtime);
-		if(	roundtime < 0 )
-			roundtime = 0;
-
-		Q_snprintf( msg2, 512, "%i:%02i ", roundtime / 60, roundtime % 60 );
-		m_pLabelRoundTime->SetText(msg2);
-		m_pLabelRoundTime->SizeToContents();
-		m_pLabelRoundTime->SetFgColor( ColourWhite );
+	int roundtime;
+	if (HL2MPRules()->UsingTickets()) {
+		roundtime = ceilf(HL2MPRules()->m_fLastRoundRestart + mp_tickets_roundtime.GetFloat() - gpGlobals->curtime);
+	} else {
+		roundtime = ceilf(HL2MPRules()->GetMapRemainingTime() - gpGlobals->curtime);
 	}
+	if (roundtime < 3600) {
+		if (roundtime < 0)
+			roundtime = 0;
+		Q_snprintf(msg2, 32, "%i:%02i ", roundtime / 60, roundtime % 60);
+		m_pLabelRoundTime->SetText(msg2);
+	} else {
+		m_pLabelRoundTime->SetText(" ");
+	}
+	m_pLabelRoundTime->SizeToContents();
+	m_pLabelRoundTime->SetFgColor( ColourWhite );
 
 	m_pLabelLMS->SetText( g_pVGuiLocalize->Find("#LMS") );
 	m_pLabelLMS->SizeToContents();
@@ -603,8 +611,8 @@ void CHudBG2::HideShowAll( bool visible )
 	m_pLabelBTickets->SetVisible(visible);
 	m_pLabelATickets->SetVisible(visible);
 	m_pLabelCurrentRound->SetVisible(visible && HL2MPRules()->UsingTickets());
-	m_pLabelWaveTime->SetVisible(visible);
-	m_pLabelRoundTime->SetVisible(visible && HL2MPRules()->UsingTickets());
+	m_pLabelWaveTime->SetVisible(visible && !IsLMS());
+	m_pLabelRoundTime->SetVisible(visible);
 	m_pLabelAmmo->SetVisible(visible);
 	//m_pLabelBGVersion->SetVisible(false);	// BP: not used yet as its not subtle enough, m_pLabelBGVersion->SetVisible(ShouldDraw());
 	m_pLabelDamageGiven->SetVisible(m_flGivenExpireTime > gpGlobals->curtime);	//always show damage indicator (unless expired)

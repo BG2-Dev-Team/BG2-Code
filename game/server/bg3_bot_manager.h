@@ -2,7 +2,7 @@
 The Battle Grounds 3 - A Source modification
 Copyright (C) 2017, The Battle Grounds 2 Team and Contributors
 
-The Battle Grounds 2 free software; you can redistribute it and/or
+The Battle Grounds 3 free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
 version 2.1 of the License, or (at your option) any later version.
@@ -35,19 +35,6 @@ commented on the following form:
 #pragma once
 #endif
 
-#include "cbase.h"
-#include "player.h"
-//#include "sdk_player.h"
-#include "in_buttons.h"
-#include "movehelper_server.h"
-#include "gameinterface.h"
-#include "team.h"
-#include "hl2mp_gamerules.h"
-#include "hl2mp_player.h"
-#include "../bg2/flag.h"
-#include "../bg2/weapon_bg2base.h"
-
-#include "bg3_bot_manager.h"
 
 /*
 Manages the bot population of the server.
@@ -58,8 +45,33 @@ class CBotManager;
 Console Variables
 */
 extern ConVar bot_minplayers;
-extern ConVar bot_maxperteam; //Kicks bots to ensure that bots will not fill up a team to be larger than this
+extern ConVar bot_maxplayers; //Kicks bots to ensure that bots will not fill up a team to be larger than this
 extern ConVar bot_minplayers_map; //potential override for bot_minplayers
 extern ConVar bot_minplayers_mode; //0 bots disabled, 1 use bot_minplayers, 2 let bot_minplayers_map override, 3 use only bot_minplayers_map
 
+class CBotManager {
+private:
+	/*
+	Private helper variables
+	*/
+	static float s_flNextThink; //so that we don't have to the calculations every frame
+	static float s_flThinkInterval; //amount of time between thinks
 
+	/*
+	Private helper functions
+	*/
+	static int	GetMinPlayers(); //looks at the svars to see minimum num players required
+	static int	CountPlayersOfTeam(int iTeam);
+
+	static int	CountBotsOfTeam(int iTeam);
+	static void AddBotOfTeam(int iTeam);
+	static void RemoveBotOfTeam(int iTeam);
+
+public:
+	/*
+	Public procedures for manipulating the bot population
+	*/
+	static void Think(); //wraps this class's functionality into one function
+	static void SetNextThink(float thinkTime) { s_flNextThink = thinkTime; }
+	static void KickAllBots(); //removes all bots from the server
+};

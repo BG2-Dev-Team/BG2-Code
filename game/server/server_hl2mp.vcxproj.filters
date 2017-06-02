@@ -1748,6 +1748,15 @@
     <ClInclude Include="bg3_bot_manager.h">
       <Filter>Source Files\BG2\Bots</Filter>
     </ClInclude>
+    <ClInclude Include="bg3_bot_vcomms.h">
+      <Filter>Source Files\BG2\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3_bot_navpoint.h">
+      <Filter>Source Files\BG2\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\bg2\bg3_math_shared.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gamedll_replay.cpp">
@@ -3255,6 +3264,15 @@
     </ClCompile>
     <ClCompile Include="bg3_bot_manager.cpp">
       <Filter>Source Files\BG2\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3_bot_vcomm.cpp">
+      <Filter>Source Files\BG2\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3_bot_navpoint.cpp">
+      <Filter>Source Files\BG2\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\bg2\bg3_math_shared.cpp">
+      <Filter>Source Files\BG2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

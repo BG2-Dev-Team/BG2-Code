@@ -65,7 +65,10 @@ public:
 
 	bool	Deploy(void);
 	bool	Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
-	void	FuseSound() { EmitSound(GRENADE_FUSE_SOUND); }
+	void	FuseSound() { 
+		EmitSound(GRENADE_FUSE_SOUND);
+		Msg("Played grenade fuse sound!\n");
+	}
 
 	bool	Reload(void);
 

@@ -122,6 +122,8 @@ class CFlag : public CBaseAnimating
 
 	float	m_flNextTeamBonus;
 
+	vec_t	m_flBotNoticeRange; //Range at which bots will notice this flag
+
 	char *SoundFile;
 
 	string_t	m_sNeutralFlagModelName, //BG2 - These strings exist only for backwards compatibility and serve no other purpose. -HairyPotter

@@ -389,6 +389,7 @@ exit 1
     <ClInclude Include="..\..\game\shared\weapon_proficiency.h" />
     <ClInclude Include="..\server\bg2\weapon_bg2base.h" />
     <ClInclude Include="..\shared\bg2\bg2_player_shared.h" />
+    <ClInclude Include="..\shared\bg2\bg3_math_shared.h" />
     <ClInclude Include="..\shared\bg2\bg3_weapon_shared.h" />
     <ClInclude Include="..\shared\bg2\ironsights.h" />
     <ClInclude Include="bg2\bg2smokeemitter.h" />
@@ -903,6 +904,7 @@ exit 1
   <ItemGroup>
     <ClCompile Include="..\server\bg2\weapon_bg2base.cpp" />
     <ClCompile Include="..\server\bg2\weapon_bg2weapons.cpp" />
+    <ClCompile Include="..\shared\bg2\bg3_math_shared.cpp" />
     <ClCompile Include="bg2\bg2_hud_ctf.cpp" />
     <ClCompile Include="bg2\bg2_hud_flags.cpp" />
     <ClCompile Include="bg2\bg2_hud_ironsights.cpp" />

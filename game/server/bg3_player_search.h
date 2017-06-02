@@ -38,17 +38,14 @@ commented on the following form:
 #include "cbase.h"
 #include "player.h"
 //#include "sdk_player.h"
-#include "in_buttons.h"
-#include "movehelper_server.h"
-#include "gameinterface.h"
-#include "team.h"
-#include "hl2mp_gamerules.h"
-#include "hl2mp_player.h"
 #include "../bg2/flag.h"
-#include "../bg2/weapon_bg2base.h"
+#include "bg3_bot_navpoint.h"
+#include "../shared/bg2/bg3_math_shared.h"
 
-
-
+/*
+CPlayerSearch gathers information about nearby friends, enemies, and flags, from the perspective
+	of an owning player.
+*/
 struct CPlayerSearch {
 	
 private:
@@ -70,20 +67,23 @@ private:
 	CFlag* m_pCloseEnemyFlagVisible;
 
 	//Waypoints are map-placed entities used for bot pathing before reaching enemy or flag
-	//CBaseEntity*	m_pNextWaypoint;
+	CBotNavpoint*	m_pCurNavpoint;
 
 	//weighted ratio for how close teammates are relative to enemies.
 	//1.0 is enemies are close, 0.0 is friends are close
 	//those extreme values would never happen but you get the idea
 	float m_flOutnumbered;
 
+public:
 	//returns whether entity B is in sight of entity A
 	static bool IsInSight(CBaseEntity *pA, CBaseEntity*pb);
 
+	//returns whether these two world locations can see each other
+	static bool IsInSight(Vector v1, Vector v2, CBaseEntity* pIgnore = nullptr);
+
 	static CFlag* FindClosestFlagToSpot(CBasePlayer* pPlayer, bool insight, bool checkTeam, Vector vSpot);
 
-	//Finds our first waypoint, called on construction
-	void UpdateWaypointFirst();
+	
 
 public:
 	/*
@@ -113,15 +113,21 @@ public:
 
 	inline Vector OwnerOrigin() const { return m_vOwnerLocation; }
 
-	//inline CBaseEntity* m_pNextWaypoint() const { return m_pNextWaypoint; }
+	static CBasePlayer* FriendlyBotNearestTo(CBasePlayer* pOtherPlayer);
+
+	inline CBotNavpoint* CurNavpoint() const { return m_pCurNavpoint; }
+
+
 
 	/*
 	Updaters
 	*/
 	void UpdateOwnerLocation();
+	void UpdateOwnerTeamInfo();
 	void UpdatePlayers();
 	void UpdateFlags();
-	void UpdateWaypoint();
 
+	void UpdateNavpoint(); //checks if we need to move to the next navpoint
+	void UpdateNavpointFirst(); //updates our navpoint when we first enter navpoint mode
 };
 

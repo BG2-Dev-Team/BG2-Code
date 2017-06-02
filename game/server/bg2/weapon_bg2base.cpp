@@ -45,7 +45,7 @@
 	//#include "cbase.h"
 	#include "model_types.h"
 	//#include "clienteffectprecachesystem.h"
-	//#include "fx.h"
+	#include "fx.h"
 #else
 	#include "hl2mp_player.h"
 	#include "te_effect_dispatch.h"
@@ -356,6 +356,15 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 		numActualShot = 30;
 
 	muzzleVelocity = sv_muzzle_velocity_override.GetFloat() > 0 ? sv_muzzle_velocity_override.GetFloat() : muzzleVelocity;
+
+#ifndef CLIENT_DLL
+	//BG3 - Build the bullet whiz sound effect and dispatch it to client
+	CEffectData whizData;
+	whizData.m_vOrigin = vecSrc; //trace start position
+	whizData.m_vStart = m_vLastForward; //forward vector
+	whizData.m_nEntIndex = pPlayer->entindex(); //shooting player shouldn't hear their own bullets
+	DispatchEffect("MusketWhiz", whizData);
+#endif
 
 	if( sv_simulatedbullets.GetBool() )
 	{
@@ -730,9 +739,9 @@ void CBaseBG2Weapon::ItemPostFrame( void )
 
 			//BG2 - Tjoppen - HACKHACK: weapon attacks get called multiple times on client. until we figure out
 			//							why, multiple recoils must be supressed.
-			if( m_flLastRecoil + 0.1f < gpGlobals->curtime )
-				pOwner->ViewPunch( QAngle( -8, random->RandomFloat( -2, 2 ), 0 ) * GetRecoil(m_iLastAttack) );
-
+			if (m_flLastRecoil + 0.1f < gpGlobals->curtime) {
+				pOwner->ViewPunch(QAngle(-8, random->RandomFloat(-2, 2), 0) * GetRecoil(m_iLastAttack));
+			}
 			m_flLastRecoil = gpGlobals->curtime;
 		}
 	}

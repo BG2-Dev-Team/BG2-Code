@@ -40,6 +40,8 @@
 	#include "../../server/bg2/mapfilter.h" 
 //BG2 - Tjoppen - #includes
 #include "sdk/bg3_bot.h"
+#include "bg3_bot_manager.h"
+#include "bg3_bot_vcomms.h"
 
 #ifdef DEBUG	
 	#include "hl2mp_bot_temp.h"
@@ -62,7 +64,7 @@ ConVar mp_americanscore("mp_americanscore", "0", FCVAR_GAMEDLL /*| FCVAR_NOTIFY*
 ConVar mp_britishscore("mp_britishscore", "0", FCVAR_GAMEDLL /*| FCVAR_NOTIFY*/ | FCVAR_CHEAT);
 ConVar mp_autobalanceteams("mp_autobalanceteams", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 ConVar mp_autobalancetolerance("mp_autobalancetolerance", "3", FCVAR_GAMEDLL | FCVAR_NOTIFY);
-ConVar mp_timeleft("mp_timeleft", "0", FCVAR_GAMEDLL, "");
+ConVar mp_timeleft("mp_timeleft", "0", FCVAR_GAMEDLL | FCVAR_REPLICATED, "");
 
 //BG2 - Draco - End
 //BG2 - Tjoppen - mp_winbonus
@@ -112,6 +114,9 @@ extern CBaseEntity	 *g_pLastRebelSpawn;*/
 									"Max number of Light infantry on " sizename " maps" );\
 	ConVar mp_limit_gre_b_##size("mp_limit_gre_b_"#size, "-1", CVAR_FLAGS,\
 									"Max number of Royal Grenadiers on " sizename " maps" );
+
+//BG3 - expose mp_timeleft to client
+
 
 //as you can see, the macro is a shorthand and should also help avoid misspellings and such that are
 //usually common with repetitive stuff like this
@@ -308,6 +313,9 @@ CHL2MPRules::CHL2MPRules()
 		g_Teams.AddToTail( pTeam );
 	}
 
+	//reset the bot manager's think time
+	CBotManager::SetNextThink(gpGlobals->curtime + 10);
+
 	m_bTeamPlayEnabled = teamplay.GetBool();
 	m_flIntermissionEndTime = 0.0f;
 	m_flGameStartTime = 0;
@@ -320,9 +328,7 @@ CHL2MPRules::CHL2MPRules()
 	m_bAwaitingReadyRestart = false;
 	m_bChangelevelDone = false;
 
-	//BG2 - Tjoppen - ClientPrintAll()- and bot initialization
-	g_CurBotNumber = 1;
-
+	//BG2 - Tjoppen - ClientPrintAll()-
 	extern float flNextClientPrintAll;
 	extern bool bNextClientPrintAllForce;
 
@@ -353,7 +359,7 @@ CHL2MPRules::CHL2MPRules()
 	m_iAmericanDmg = 0;
 	m_iBritishDmg = 0;
 	m_fNextWinSong = gpGlobals->curtime;
-	m_bServerReady = false; //Do this too, this will make it so map changes with bots work.
+	g_bServerReady = false; //Do this too, this will make it so map changes with bots work.
 	m_iCurrentRound = 1;
 	//BG2 - Skillet
 #else
@@ -1243,8 +1249,17 @@ void CHL2MPRules::ClientDisconnected( edict_t *pClient )
 
 	//BG2 - Tjoppen - disconnecting. remove from flags
 	CHL2MP_Player *pPlayer2 = dynamic_cast<CHL2MP_Player*>(pPlayer);
-	if (pPlayer2)
+	if (pPlayer2) {
 		pPlayer2->RemoveSelfFromFlags();
+
+		//BG3 - remove self from vcomm manager
+		CBotComManager* pComms = CBotComManager::GetBotCommsOfPlayer(pPlayer2);
+		if (pComms->m_pContextPlayer == pPlayer2) {
+			pComms->m_pContextPlayer = nullptr;
+			pComms->ResetThinkTime(bot_randfloat(4.0f, 16.0f));
+		}
+	}
+		
 	//
 
 	BaseClass::ClientDisconnected( pClient );
@@ -1854,9 +1869,11 @@ const char *CHL2MPRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 
 void CHL2MPRules::RestartRound(bool swapTeams)
 {
+	Msg("Beginning Round Restart...");
 	//restart current round. immediately.
 	ResetMap();
 	ResetFlags();
+	CSDKBot::ResetAllBots();
 
 	if (swapTeams)
 		SwapTeams();
@@ -1879,6 +1896,7 @@ void CHL2MPRules::RestartRound(bool swapTeams)
 
 	if (mp_respawntime.GetInt() > 0)
 		m_fLastRoundRestart = m_fLastRespawnWave = gpGlobals->curtime;
+	Msg("Finished!\n");
 }
 
 void CHL2MPRules::RespawnAll()

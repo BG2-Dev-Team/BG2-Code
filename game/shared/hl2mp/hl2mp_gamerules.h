@@ -220,10 +220,11 @@ public:
 
 	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );
 	
+	CNetworkVar( float, m_flGameStartTime );
 private:
 	
 	CNetworkVar( bool, m_bTeamPlayEnabled );
-	CNetworkVar( float, m_flGameStartTime );
+	
 	CUtlVector<EHANDLE> m_hRespawnableItemsAndWeapons;
 	float m_tmNextPeriodicThink;
 	float m_flRestartGameTime;

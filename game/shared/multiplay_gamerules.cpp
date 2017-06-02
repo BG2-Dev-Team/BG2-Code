@@ -41,6 +41,8 @@
 	#include "triggers.h"
 	#include "../bg2/flag.h"
 	//
+	//BG3 - bot population manager
+	#include "bg3_bot_manager.h"
 
 #ifdef NEXT_BOT
 	#include "NextBotManager.h"
@@ -1528,6 +1530,10 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 	void CMultiplayRules::ChangeLevelToMap( const char *pszMap )
 	{
+		//remove all bots from server
+#if !defined(CLIENT_DLL)
+		CBotManager::KickAllBots();
+#endif
 		g_fGameOver = true;
 		m_flTimeLastMapChangeOrPlayerWasConnected = 0.0f;
 		Msg( "CHANGE LEVEL: %s\n", pszMap );

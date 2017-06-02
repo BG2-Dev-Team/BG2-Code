@@ -1991,6 +1991,9 @@
     <ClInclude Include="..\shared\bg2\bg3_weapon_shared.h">
       <Filter>Source Files\BG2</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\bg2\bg3_math_shared.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3599,6 +3602,9 @@
       <Filter>Source Files\BG2</Filter>
     </ClCompile>
     <ClCompile Include="..\server\bg2\weapon_bg2weapons.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\bg2\bg3_math_shared.cpp">
       <Filter>Source Files\BG2</Filter>
     </ClCompile>
   </ItemGroup>

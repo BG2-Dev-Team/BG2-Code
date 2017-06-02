@@ -46,9 +46,14 @@ commented on the following form:
 #include "hl2mp_player.h"
 #include "../bg2/flag.h"
 #include "../bg2/weapon_bg2base.h"
+#include "../shared/bg2/bg3_math_shared.h"
 
 //BG3 - player search class and associated global functions
 #include "bg3_player_search.h"
+
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 
 CPlayerSearch::CPlayerSearch() {
 	m_pOwner = nullptr;
@@ -60,7 +65,7 @@ void CPlayerSearch::Init(CBasePlayer* pOwner) {
 	m_iEnemyTeam = m_iOwnerTeam == TEAM_AMERICANS ? TEAM_BRITISH : TEAM_AMERICANS;
 	UpdatePlayers();
 	UpdateFlags();
-	UpdateWaypointFirst();
+	//UpdateWaypointFirst();
 }
 
 //returns whether entity B is in sight of entity A
@@ -70,6 +75,16 @@ bool CPlayerSearch::IsInSight(CBaseEntity *pA, CBaseEntity *pB)
 	UTIL_TraceLine(pA->GetLocalOrigin() + Vector(0, 0, 36),
 		pB->GetLocalOrigin() + Vector(0, 0, 36),
 		MASK_SOLID, pA, COLLISION_GROUP_DEBRIS_TRIGGER, &tr);
+
+	return !tr.DidHitWorld();
+}
+
+//returns whether these two world locations can see each other
+bool CPlayerSearch::IsInSight(Vector v1, Vector v2, CBaseEntity* pIgnore) {
+	trace_t tr;
+	UTIL_TraceLine(v1,
+				   v2,
+				   MASK_SOLID, pIgnore, COLLISION_GROUP_NPC, &tr);
 
 	return !tr.DidHitWorld();
 }
@@ -107,12 +122,35 @@ CFlag* CPlayerSearch::FindClosestFlagToSpot(CBasePlayer* pPlayer, bool insight, 
 	return pClosest;
 }
 
-void CPlayerSearch::UpdateWaypointFirst() {
+CBasePlayer* CPlayerSearch::FriendlyBotNearestTo(CBasePlayer* pOtherPlayer) {
+	CBasePlayer* pFriendlyBot = nullptr;
+	CBasePlayer* pCurPlayer = nullptr;
+	vec_t		 flMinDist = FLT_MAX;
+	int			 iTeam = pOtherPlayer->GetTeamNumber();
 
+	//iterate through all players to find closest fake client
+	for (int i = 0; i <= gpGlobals->maxClients; i++) {
+		pCurPlayer = UTIL_PlayerByIndex(i);
+		if (pCurPlayer && pCurPlayer->IsFakeClient() && pCurPlayer->GetTeamNumber() == iTeam
+			&& pCurPlayer->IsAlive()) {
+			vec_t flDist = EntDist(*pCurPlayer, *pOtherPlayer);
+			if (flDist < flMinDist) {
+				flMinDist = flDist;
+				pFriendlyBot = pCurPlayer;
+			}
+		}
+	}
+	return pFriendlyBot;
 }
+
 
 void CPlayerSearch::UpdateOwnerLocation() {
 	this->m_vOwnerLocation = m_pOwner->GetAbsOrigin();
+}
+
+void CPlayerSearch::UpdateOwnerTeamInfo() {
+	m_iOwnerTeam = m_pOwner->GetTeamNumber();
+	m_iEnemyTeam = m_iOwnerTeam == TEAM_AMERICANS ? TEAM_BRITISH : TEAM_AMERICANS;
 }
 
 void CPlayerSearch::UpdatePlayers() {
@@ -192,17 +230,22 @@ void CPlayerSearch::UpdateFlags() {
 		CFlag *curFlag = dynamic_cast<CFlag*>(pEntity);
 		if (curFlag) {
 			vec_t curDist = (m_vOwnerLocation - curFlag->GetAbsOrigin()).Length();
-			if (curFlag->GetTeamNumber() == m_iOwnerTeam && (!pClosestEnemy || curDist < flClosestFriend)) {
-				flClosestFriend = curDist;
-				pClosestFriend = curFlag;
-			}
-			else if (curDist < flClosestEnemyVisible && IsInSight(m_pOwner, curFlag)) {
-				flClosestEnemyVisible = curDist;
-				pClosestEnemyVisible = curFlag;
-			}
-			else if (curDist < flClosestEnemy) {
-				flClosestEnemy = curDist;
-				pClosestEnemy = curFlag;
+			if (curFlag->GetTeamNumber() == m_iOwnerTeam) {
+				if (curDist < flClosestFriend) {
+					flClosestFriend = curDist;
+					pClosestFriend = curFlag;
+				} else {
+					continue;
+				}
+			} 
+			else if (curDist < curFlag->m_flBotNoticeRange){
+				if (curDist < flClosestEnemyVisible && IsInSight(m_pOwner, curFlag)) {
+					flClosestEnemyVisible = curDist;
+					pClosestEnemyVisible = curFlag;
+				} else if (curDist < flClosestEnemy) {
+					flClosestEnemy = curDist;
+					pClosestEnemy = curFlag;
+				}
 			}
 		}
 	}
@@ -213,6 +256,19 @@ void CPlayerSearch::UpdateFlags() {
 	m_pCloseFriendFlag = pClosestFriend;
 }
 
-void CPlayerSearch::UpdateWaypoint() {
+void CPlayerSearch::UpdateNavpoint() {
+	if (m_pCurNavpoint->PlayerWithinRadius(m_pOwner)) {
+		m_pCurNavpoint = m_pCurNavpoint->NextPointForPlayer(m_pOwner);
+	}
+}
 
+void CPlayerSearch::UpdateNavpointFirst() {
+	//first look for visible waypoint, then invisible one
+	m_pCurNavpoint = CBotNavpoint::ClosestPointToPlayer(m_pOwner, true);
+
+	//give a warning to the mapper if the bot couldn't find one
+	if (!m_pCurNavpoint) {
+		Warning("\"%s\" couldn't find a visible bot_navpoint! Tell the mapper!\n", m_pOwner->GetPlayerName());
+		m_pCurNavpoint = CBotNavpoint::ClosestPointToPlayer(m_pOwner, false);
+	}
 }

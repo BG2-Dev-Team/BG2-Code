@@ -18,6 +18,9 @@
 #include "tier0/vprof.h"
 #include "collisionutils.h"
 #include "clienteffectprecachesystem.h"
+#include "c_te_effect_dispatch.h"
+
+#include "../shared/bg2/bg3_math_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -177,7 +180,7 @@ FX_Tracer
 ==================================================
 */
 // Tracer must be this close to be considered for hearing
-#define	TRACER_MAX_HEAR_DIST	(6*12)
+#define	TRACER_MAX_HEAR_DIST	110.f //BG3 - was 6*12
 #define TRACER_SOUND_TIME_MIN	0.1f
 #define TRACER_SOUND_TIME_MAX	0.1f
 
@@ -211,7 +214,6 @@ CBulletWhizTimer g_BulletWhiz( "CBulletWhizTimer" );
 void FX_TracerSound( const Vector &start, const Vector &end, int iTracerType )
 {
 	const char *pszSoundName = NULL;
-	float flWhizDist = TRACER_MAX_HEAR_DIST;
 	float flMinWhizTime = TRACER_SOUND_TIME_MIN;
 	float flMaxWhizTime = TRACER_SOUND_TIME_MAX;
 	Vector vecListenOrigin = MainViewOrigin();
@@ -220,7 +222,7 @@ void FX_TracerSound( const Vector &start, const Vector &end, int iTracerType )
 	case TRACER_TYPE_DEFAULT:
 		{
 			pszSoundName = "Bullets.DefaultNearmiss";
-			flWhizDist = 24;
+			//flWhizDist = 24;
 
 			Ray_t bullet, listener;
 			bullet.Init( start, end );
@@ -246,7 +248,7 @@ void FX_TracerSound( const Vector &start, const Vector &end, int iTracerType )
 
 	case TRACER_TYPE_WATERBULLET:
 		pszSoundName = "Underwater.BulletImpact";
-		flWhizDist = 48;
+		//flWhizDist = 48;
 		flMinWhizTime = 0.3f;
 		flMaxWhizTime = 0.6f;
 		break;
@@ -265,8 +267,11 @@ void FX_TracerSound( const Vector &start, const Vector &end, int iTracerType )
 
 	// Did the thing pass close enough to our head?
 	float vDist = CalcDistanceSqrToLineSegment( vecListenOrigin, start, end );
-	if ( vDist >= (flWhizDist * flWhizDist) )
+	vDist = sqrtf(vDist);
+	if (vDist >= TRACER_MAX_HEAR_DIST) {
 		return;
+	}
+		
 
 	CSoundParameters params;
 	if( C_BaseEntity::GetParametersForSound( pszSoundName, params, NULL ) )
@@ -288,6 +293,35 @@ void FX_TracerSound( const Vector &start, const Vector &end, int iTracerType )
 	g_BulletWhiz.m_nextWhizTime = gpGlobals->curtime + random->RandomFloat( flMinWhizTime, flMaxWhizTime );
 }
 
+void MusketWhizCallback( const CEffectData& data) {
+
+	//interpret data
+	C_BasePlayer* pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+	C_BasePlayer* pShootingPlayer = ToBasePlayer(data.GetEntity());
+
+	if (!pLocalPlayer || !pShootingPlayer)
+		return;
+
+	//don't let teammates hear their own bullets
+	//also don't play the sound if we're close to the shooting player
+	if (pLocalPlayer->GetTeamNumber() != pShootingPlayer->GetTeamNumber()
+		&& EntDist(*pLocalPlayer, *pShootingPlayer) > 512) 
+	{
+		const Vector& vecSrc = data.m_vOrigin;
+		const Vector& vForward = data.m_vStart;
+
+		trace_t tr;
+
+		//perform an approximating trace of the bullet's path
+		Vector vTracerEnd = vecSrc + (vForward / vForward.Length()) * 8096.0f;
+		UTIL_TraceLine(vecSrc, vTracerEnd, MASK_SHOT, pLocalPlayer, COLLISION_GROUP_PROJECTILE, &tr);
+
+		//this gives us the actual start and end point, so call the FX sound function
+		FX_TracerSound(vecSrc, tr.endpos, TRACER_TYPE_DEFAULT);
+	}
+}
+
+DECLARE_CLIENT_EFFECT( "MusketWhiz", MusketWhizCallback )
 
 void FX_Tracer( Vector& start, Vector& end, int velocity, bool makeWhiz )
 {

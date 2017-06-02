@@ -2,7 +2,7 @@
 The Battle Grounds 3 - A Source modification
 Copyright (C) 2017, The Battle Grounds 2 Team and Contributors
 
-The Battle Grounds 2 free software; you can redistribute it and/or
+The Battle Grounds 3 free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
 version 2.1 of the License, or (at your option) any later version.
@@ -35,19 +35,6 @@ Contrib by HairyPotter: These bots could do soo much more, and also be soo much 
 Maybe I'll remove some code and do a few teaks here and there. Then again it's not like these will be used much anyway.
 */
 
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
-//
-// Purpose: Basic BOT handling.
-//
-// $Workfile:     $
-// $Date:         $
-//
-//-----------------------------------------------------------------------------
-// $Log: $
-//
-// $NoKeywords: $
-//=============================================================================//
-
 #include "cbase.h"
 #include "player.h"
 //#include "sdk_player.h"
@@ -60,6 +47,14 @@ Maybe I'll remove some code and do a few teaks here and there. Then again it's n
 #include "hl2mp_player.h"
 #include "../bg2/flag.h"
 #include "../bg2/weapon_bg2base.h"
+
+//bot manager manages bot population
+#include "bg3_bot_manager.h"
+#include "bg3_bot_navpoint.h"
+#include "bg3_bot_vcomms.h"
+
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
 
 Vector LerpVector(const Vector& v0, const Vector& v1, float lerp) {
 	return (v1 * lerp) + (v0 * (1 - lerp));
@@ -78,16 +73,15 @@ ConVar bot_forceclass("bot_forceclass", "0", FCVAR_GAMEDLL | FCVAR_HIDDEN, "Forc
 static ConVar bot_mimic("bot_mimic", "0", 0, "Bot uses usercmd of player by index.");
 static ConVar bot_mimic_yaw_offset("bot_mimic_yaw_offset", "0", 0, "Offsets the bot yaw.");
 ConVar bot_pause("bot_pause", "0", 0, "Stops the bot thinking cycle entirely.");
-ConVar bot_voicecomms("bot_voicecomms", "0", 0, "Allows bots to use voicecomm commands.");
 ConVar bot_difficulty("bot_difficulty", "3", FCVAR_GAMEDLL, "Bot skill level. 0,1,2,3 are easy, norm, hard, and random, respectively.", true, 0.f, true, 1.f);
 
 //ConVar bot_sendcmd( "bot_sendcmd", "", 0, "Forces bots to send the specified command." );
 
 //So what if these are global? Want to fight about it?
-int g_CurBotNumber = 1; //This int here is pretty much used for the bot names only.
 CSDKBot	gBots[MAX_PLAYERS];
-bool m_bServerReady = false; //Are we ready to use the temp int below?
-int m_iWaitingAmount = 0; //This is just a temp int really.
+bool g_bServerReady = false; //Are we ready to use the temp int below?
+int  g_iWaitingAmount = 0; //This is just a temp int really.
+int  g_iNextBotTeam = TEAM_BRITISH;
 
 static const Vector downToChest(0.f, 0.f, -10.f);
 
@@ -122,7 +116,7 @@ BotDifficulty BotDiffHard(2.f,		0.03f,	0.25f,		0.7f,		0.8f,	8.f,				0.45f);
 //Bot Thinkers - artificial BRAINS these are
 //the floats are the times between thinks
 namespace BotThinkers{
-	BotThinker Waypoint	(&CSDKBot::ThinkWaypoint_Begin,		&CSDKBot::ThinkWaypoint_Check,	&CSDKBot::ThinkWaypoint,	&CSDKBot::ThinkWaypoint_End,	1.0f, "Waypoint Think");
+	BotThinker Waypoint	(&CSDKBot::ThinkWaypoint_Begin,		&CSDKBot::ThinkWaypoint_Check,	&CSDKBot::ThinkWaypoint,	&CSDKBot::ThinkWaypoint_End,	0.3f, "Waypoint Think");
 	BotThinker Flag		(&CSDKBot::ThinkFlag_Begin,			&CSDKBot::ThinkFlag_Check,		&CSDKBot::ThinkFlag,		&CSDKBot::ThinkFlag_End,		0.4f, "Flag Think");
 	BotThinker LongRange(&CSDKBot::ThinkLongRange_Begin,	&CSDKBot::ThinkLongRange_Check, &CSDKBot::ThinkLongRange,	&CSDKBot::ThinkLongRange_End,	0.4f, "Long Range Think");
 	BotThinker MedRange	(&CSDKBot::ThinkMedRange_Begin,		&CSDKBot::ThinkMedRange_Check,	&CSDKBot::ThinkMedRange,	&CSDKBot::ThinkMedRange_End,	0.18f, "Med Range Think");
@@ -191,63 +185,14 @@ CBasePlayer *BotPutInServer(int iAmount, bool bFrozen)
 			return NULL;
 		}
 
-		//gBots[pPlayer->GetClientIndex()].m_bInuse = true;
-		CSDKBot& curBot = gBots[pPlayer->GetClientIndex()];
-		curBot.m_pPlayer = pPlayer;
-		curBot.m_flNextStrafeTime = 0;
-		
-		curBot.m_pDifficult = pDifficulty;
-		curBot.m_flNextThink = gpGlobals->curtime + 0.1f;
-		pPlayer->ClearFlags();
-
-		//new team/class picking code. it works.
-		static int lastTeam = 0;
-
-		//lastClass = (lastClass + 1) % 4; //4 classes now.
-		int lastClass = RandomInt(0, 3);
-
-		int iTeam = TEAM_AMERICANS + lastTeam;
-		pPlayer->ChangeTeam(iTeam);
-
-		//BG2 - Obey Class Limits now. -HairyPotter
-		if (bot_forceclass.GetInt() > -1) //Force the bot to spawn as the given class.
-			((CHL2MP_Player*)pPlayer)->SetNextClass(bot_forceclass.GetInt());
-
-		else if (bot_limitclass.GetBool() && bot_forceclass.GetInt() < 0) //Just make sure we're not trying to force a class that has a limit.
-		{
-			int limit = HL2MPRules()->GetLimitTeamClass(iTeam, lastClass);
-			if (limit >= 0 && g_Teams[iTeam]->GetNumOfNextClass(lastClass) >= limit)
-			{
-				Msg("Tried to spawn too much of class %i. Spawning as infantry. \n", lastClass);
-				((CHL2MP_Player*)pPlayer)->SetNextClass(0); //Infantry by default
-			}
-			else
-				((CHL2MP_Player*)pPlayer)->SetNextClass(lastClass);
-		}
-		else //Otherwise just spawn as whatever RandomInt() turns up.
-			((CHL2MP_Player*)pPlayer)->SetNextClass(lastClass);
-
-		lastTeam = !lastTeam; //Alternate after we've aready set the other bot's team.
-
-		pPlayer->AddFlag(FL_CLIENT | FL_FAKECLIENT);
-		pPlayer->Spawn();
-		curBot.m_PlayerSearchInfo.Init(pPlayer);
-		g_CurBotNumber++;
+		//initialize the bot's AI, class, and team
+		CSDKBot::Init(pPlayer, pDifficulty);
 
 		i++;
 		//return pPlayer;
 	}
 	return NULL;
 }
-
-// Handler for the "bot" command.
-/*void BotAdd_f()
-{
-if ( args.ArgC()> 1 )
-BotPutInServer( args[1], false );//bFrozen ); //Spawn given number of bots.
-else
-BotPutInServer( 1, false );//bFrozen ); //Just spawn 1 bot.
-}*/
 
 //ConCommand  cc_Bot( "bot_add", BotAdd_f, "Add a bot", FCVAR_CHEAT );
 CON_COMMAND_F(bot_add, "Creates bot(s)in the server. <Bot Count>", FCVAR_GAMEDLL)
@@ -257,15 +202,16 @@ CON_COMMAND_F(bot_add, "Creates bot(s)in the server. <Bot Count>", FCVAR_GAMEDLL
 		m_iCount = atoi(args[1]); //Spawn given number of bots.
 	else
 		m_iCount = 1; //Just spawn 1 bot.
+	g_iNextBotTeam = g_iNextBotTeam == TEAM_AMERICANS ? TEAM_BRITISH : TEAM_AMERICANS;
 
-	if (m_bServerReady) //Server is already loaded, just do it.
+	if (g_bServerReady) //Server is already loaded, just do it.
 		BotPutInServer(m_iCount, false);
 	else				  //Server just exec'd the server.cfg, but isn't ready to handle players. Just wait a while.
-		m_iWaitingAmount = m_iCount;
+		g_iWaitingAmount = m_iCount;
 }
 
+//called when game server is created
 CSDKBot::CSDKBot() {
-	m_ccIronsights.Tokenize("ironsights");
 	m_bLastThinkWasStateChange = false;
 	m_bUpdateFlags = false;
 	m_bTowardFlag = false;
@@ -276,6 +222,46 @@ CSDKBot::CSDKBot() {
 
 	m_pCurThinker = m_pPrevThinker = s_pDefaultThinker;
 
+}
+
+//called when a bot is put in the server
+void CSDKBot::Init(CBasePlayer* pPlayer, BotDifficulty* pDifficulty) {
+	CSDKBot& curBot = gBots[pPlayer->GetClientIndex()];
+	curBot.m_pPlayer = pPlayer;
+	curBot.m_flNextStrafeTime = 0;
+
+	//default to death thinker or else bad things happen!
+	curBot.m_pPrevThinker = &BotThinkers::Death;
+	curBot.m_pCurThinker = &BotThinkers::Death;
+
+	curBot.m_pDifficult = pDifficulty;
+	curBot.m_flNextThink = gpGlobals->curtime + 0.1f;
+	pPlayer->ClearFlags();
+
+	//lastClass = (lastClass + 1) % 4; //4 classes now.
+	int lastClass = RandomInt(0, 3);
+
+	pPlayer->ChangeTeam(g_iNextBotTeam);
+
+	//BG2 - Obey Class Limits now. -HairyPotter
+	if (bot_forceclass.GetInt() > -1) //Force the bot to spawn as the given class.
+		((CHL2MP_Player*)pPlayer)->SetNextClass(bot_forceclass.GetInt());
+
+	else if (bot_limitclass.GetBool() && bot_forceclass.GetInt() < 0) //Just make sure we're not trying to force a class that has a limit.
+	{
+		int limit = HL2MPRules()->GetLimitTeamClass(g_iNextBotTeam, lastClass);
+		if (limit >= 0 && g_Teams[g_iNextBotTeam]->GetNumOfNextClass(lastClass) >= limit)
+		{
+			Msg("Tried to spawn too much of class %i. Spawning as infantry. \n", lastClass);
+			((CHL2MP_Player*)pPlayer)->SetNextClass(0); //Infantry by default
+		} else
+			((CHL2MP_Player*)pPlayer)->SetNextClass(lastClass);
+	} else //Otherwise just spawn as whatever RandomInt() turns up.
+		((CHL2MP_Player*)pPlayer)->SetNextClass(lastClass);
+
+	pPlayer->AddFlag(FL_CLIENT | FL_FAKECLIENT);
+	pPlayer->Spawn();
+	curBot.m_PlayerSearchInfo.Init(pPlayer);
 }
 
 BotDifficulty* CSDKBot::GetDifficulty() {
@@ -316,7 +302,6 @@ bool CSDKBot::DoMelee() {
 	if (bot_randfloat() < m_pDifficult->m_flMeleeReaction) {
 		bool didMelee = false;
 		static const Vector downToStomach(0, 0, -15);
-
 		if (!IsAimingAtTeammate(m_flMeleeRange)) {
 			if (m_pWeapon) {
 				//add a little randomness
@@ -369,13 +354,13 @@ bool CSDKBot::IsAimingAtTeammate(vec_t range) const {
 	AngleVectors(m_curCmd.viewangles, &forward);
 
 	UTIL_TraceLine(m_pPlayer->Weapon_ShootPosition(),
-				m_pPlayer->Weapon_ShootPosition() + forward * range,
-				MASK_SOLID, m_pPlayer, COLLISION_GROUP_NONE, &tr);
-
-	CBasePlayer* pPlayer = dynamic_cast<CBasePlayer*>(tr.m_pEnt);
-	if (pPlayer && pPlayer->GetTeamNumber() == m_pPlayer->GetTeamNumber())
-		return true;
-
+				   m_pPlayer->Weapon_ShootPosition() + forward * range,
+				   MASK_SOLID, m_pPlayer, COLLISION_GROUP_NONE, &tr);
+	if (tr.m_pEnt) {
+		CBasePlayer* pPlayer = dynamic_cast<CBasePlayer*>(tr.m_pEnt);
+		if (pPlayer && pPlayer->GetTeamNumber() == m_pPlayer->GetTeamNumber())
+			return true;
+	}
 	return false;
 }
 
@@ -383,11 +368,45 @@ bool CSDKBot::IsAimingAtTeammate(vec_t range) const {
 // Purpose: Checks if the player is capturing or attempting to capture an enemy flag
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::IsCapturingEnemyFlag() const {
+	bool nearFlag = IsCapturingEnemyFlagAttempt();
+
+	//this extra check if necessary, or else you could have two bots
+	//on opposite teams trying to capture a flag while stareing at
+	//each other.
+	if (nearFlag) {
+		CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
+		CFlag*		 pFlag = m_PlayerSearchInfo.CloseEnemyFlag();
+		if (pEnemy && pFlag) {
+			vec_t enemyDistance = (pEnemy->GetAbsOrigin() - pFlag->GetAbsOrigin()).Length();
+			if (enemyDistance < pFlag->m_flCaptureRadius)
+				nearFlag = false;
+		}
+	}
+
+	return nearFlag;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if a player is within a enemy's flag's radius, regardless of enemy presence
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::IsCapturingEnemyFlagAttempt() const {
 	CFlag* pFlag = m_PlayerSearchInfo.CloseEnemyFlagVisible();
-	if (pFlag && (m_pPlayer->GetAbsOrigin() - pFlag->GetAbsOrigin()).Length() < pFlag->m_flCaptureRadius)
+
+	if (pFlag && m_pPlayer && (m_pPlayer->GetAbsOrigin() - pFlag->GetAbsOrigin()).Length() < pFlag->m_flCaptureRadius)
 		return true;
 
 	return false;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Retrieves the enumerated distance a bot using navpoints should start noticing enemies
+//-------------------------------------------------------------------------------------------------
+ENavPointRange CSDKBot::EnemyNoticeRange() const {
+	ENavPointRange eRange = ENavPointRange::LONG_RANGE;
+	if (m_pCurThinker == &BotThinkers::Waypoint && m_PlayerSearchInfo.CurNavpoint()) {
+		eRange = m_PlayerSearchInfo.CurNavpoint()->GetEnemyNoticeRange();
+	}
+	return eRange;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -417,6 +436,15 @@ void CSDKBot::LookAt(Vector location, float lerp, vec_t randomOffset) {
 }
 
 //-------------------------------------------------------------------------------------------------
+// Purpose: Sends a context to our vcomm manager for interpretation
+//-------------------------------------------------------------------------------------------------
+void CSDKBot::SendBotVcommContext(BotContext context) {
+	CBotComManager* pComms = CBotComManager::GetBotCommsOfPlayer(m_pPlayer);
+	pComms->ReceiveContext(m_pPlayer, context);
+}
+
+
+//-------------------------------------------------------------------------------------------------
 // Purpose: Checks if we're dead, and if so, schedules the Death BotThinker
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkCheckDeath() {
@@ -431,10 +459,12 @@ bool CSDKBot::ThinkCheckDeath() {
 // Purpose: Checks if we our m_flNextFireTime tells us to start point-blanking
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkCheckPointBlank() {
-	if (CanFire() && m_flNextFireTime < gpGlobals->curtime) {
-		ScheduleThinker(&BotThinkers::PointBlank, 0.0f);
+	if (CanFire() && m_flNextFireTime < gpGlobals->curtime
+		&& m_PlayerSearchInfo.CloseEnemy()) {
+		ScheduleThinker(&BotThinkers::PointBlank, 0.05f);
 		return false;
-	}
+	} else if (m_flNextFireTime < gpGlobals->curtime)
+		m_flNextFireTime = FLT_MAX;
 
 	return true;
 }
@@ -475,7 +505,7 @@ bool CSDKBot::ThinkCheckExitMelee() {
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkCheckRetreat() {
 	//check for emergency close-quarters combat
-	if (m_PlayerSearchInfo.CloseEnemy() && m_PlayerSearchInfo.OutNumbered() > 0.55 && m_PlayerSearchInfo.CloseFriendDist() < 800
+	if (m_PlayerSearchInfo.CloseEnemyDist() < 800 && m_PlayerSearchInfo.OutNumbered() > 0.57 && m_PlayerSearchInfo.CloseFriendDist() < 800
 		&& m_PlayerSearchInfo.CloseFriendDist() > RETREAT_STOP_RANGE) {
 		ScheduleThinker(&BotThinkers::Retreat, BotThinkers::Retreat.m_flThinkDelay);
 		return false;
@@ -511,6 +541,22 @@ bool CSDKBot::ThinkCheckFlag() {
 }
 
 //-------------------------------------------------------------------------------------------------
+// Purpose: Enters waypoint or combat if no enemy flags are visible
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkCheckFlagExit() {
+	if (!m_PlayerSearchInfo.CloseEnemyFlagVisible()) {
+		if (m_PlayerSearchInfo.CloseEnemyDist() < MED_RANGE_START)
+			ScheduleThinker(&BotThinkers::MedRange, 0.05f);
+		else
+			ScheduleThinker(&BotThinkers::Waypoint, 0.2f);
+
+		return false;
+	}
+	return true;
+}
+
+
+//-------------------------------------------------------------------------------------------------
 // Purpose: Checks if we should fight nearest enemy or run to flag, if we're already in a mid-range engagement
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkCheckFlagOrFight() {
@@ -519,9 +565,17 @@ bool CSDKBot::ThinkCheckFlagOrFight() {
 	if (pFlag && pEnemy) {
 		float enemyDistanceToFlag = (pEnemy->GetAbsOrigin() - pFlag->GetAbsOrigin()).Length();
 		float ourDistanceToFlag = (m_PlayerSearchInfo.OwnerOrigin() - pFlag->GetAbsOrigin()).Length();
-		if (enemyDistanceToFlag < ourDistanceToFlag && m_PlayerSearchInfo.CloseEnemyDist() > MELEE_RANGE_START) {
+		if (m_pCurThinker != &BotThinkers::Flag /*No self-scheduling!*/ 
+			&& enemyDistanceToFlag > 100 //don't bother if they're on the flag
+			&& enemyDistanceToFlag > ourDistanceToFlag && m_PlayerSearchInfo.CloseEnemyDist() > MELEE_RANGE_START) {
 			m_bTowardFlag = true;
 			ScheduleThinker(&BotThinkers::Flag, 0.1f);
+			return false;
+		}
+
+		//also check if we should exit flag to med-range
+		if (m_pCurThinker == &BotThinkers::Flag && m_PlayerSearchInfo.CloseEnemyDist() < ourDistanceToFlag) {
+			ScheduleThinker(&BotThinkers::MedRange, 0.1f);
 			return false;
 		}
 	}
@@ -533,6 +587,7 @@ bool CSDKBot::ThinkCheckFlagOrFight() {
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkCheckEnterLongRangeCombat() {
 	if (m_PlayerSearchInfo.CloseEnemyDist() < LONG_RANGE_START && m_PlayerSearchInfo.CloseEnemyDist() > MED_RANGE_START
+		&& EnemyNoticeRange() >= LONG_RANGE
 		&& !IsCapturingEnemyFlag() && !m_bTowardFlag) {
 		ScheduleThinker(&BotThinkers::LongRange, 0.2f);
 		return false;
@@ -545,8 +600,9 @@ bool CSDKBot::ThinkCheckEnterLongRangeCombat() {
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkCheckEnterMedRangeCombat() {
 	if (m_PlayerSearchInfo.CloseEnemyDist() < MED_RANGE_START && m_PlayerSearchInfo.CloseEnemyDist() > MELEE_RANGE_START
+		&& EnemyNoticeRange() >= MED_RANGE
 		&& !IsCapturingEnemyFlag() && !m_bTowardFlag && !WantsToRetreat()) {
-		ScheduleThinker(&BotThinkers::MedRange, 0.3f);
+		ScheduleThinker(&BotThinkers::MedRange, 0.1f);
 		return false;
 	}
 	return true;
@@ -566,42 +622,53 @@ bool CSDKBot::ThinkCheckExitCombat() {
 //-------------------------------------------------------------------------------------------------
 // Purpose: Master think function - uses the current thinker to check for state changes or otherwise think
 //-------------------------------------------------------------------------------------------------
+#if 0
+#define ThinkMsg(a) Msg(a)
+#define ThinkMsgF(a,b) Msg((a),(b))
+#else
+#define ThinkMsgF(a,b)
+#define ThinkMsg(a)
+#endif
 void CSDKBot::Think() {
 	bool didThink = false;
 	if (gpGlobals->curtime > m_flNextThink) {
 		didThink = true;
-		//Msg(m_pPlayer->GetPlayerName());
-		//Msg(" Updating Players...");
+		ThinkMsg(m_pPlayer->GetPlayerName());
+		//ThinkMsg(" Updating Players...");
 		m_PlayerSearchInfo.UpdateOwnerLocation();
 		m_PlayerSearchInfo.UpdatePlayers();
+
 		
 		if (m_bLastThinkWasStateChange) {
 			m_bLastThinkWasStateChange = false;
 			PostStateChangeThink();
 		}
 
-		//Msg("Flags...");
+		//ThinkMsg("Flags...");
 		if (m_bUpdateFlags)
 			m_PlayerSearchInfo.UpdateFlags();
-		//Msg("Check...");
+		ThinkMsgF("%s ", m_pCurThinker->m_ppszThinkerName);
+		ThinkMsg("Check...\n");
 		if ((this->*(m_pCurThinker->m_pThinkCheck))()) {
-			//Msg("%s...", m_pCurThinker->m_ppszThinkerName);
+			ThinkMsgF("Think...", m_pCurThinker->m_ppszThinkerName);
 			(this->*(m_pCurThinker->m_pThink))();
 			m_flNextThink = gpGlobals->curtime + m_pCurThinker->m_flThinkDelay;
 		} else {
 			m_bLastThinkWasStateChange = true;
-			//Msg("Change...");
+			ThinkMsg("Change...");
 		}
 			
 		m_LastCmd = m_curCmd;
-		//Msg("Buttons...");
+		//ThinkMsg("Buttons...");
 		ButtonThink();
 	}
-	//if (didThink)
-		//Msg("Move...");
+	if (didThink) {
+		//ThinkMsg("Move...");
+	}
 	RunPlayerMove(m_pPlayer, m_curCmd, gpGlobals->frametime);
-	//if (didThink)
-		//Msg("Finished!\n");
+	if (didThink) {
+		ThinkMsg("Finished!\n");
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -631,7 +698,7 @@ void CSDKBot::PostStateChangeThink() {
 	if (m_pWeapon && m_pWeapon->IsIronsighted() && m_pCurThinker != &BotThinkers::PointBlank) {
 		m_curCmd.buttons &= ~IN_ZOOM; //disable ironsights
 	}
-	Msg("%s\tchanged state from \"%s\" to \"%s\"\n", m_pPlayer->GetPlayerName(), m_pPrevThinker->m_ppszThinkerName, m_pCurThinker->m_ppszThinkerName);
+	//Msg("%s\tchanged state from \"%s\" to \"%s\"\n", m_pPlayer->GetPlayerName(), m_pPrevThinker->m_ppszThinkerName, m_pCurThinker->m_ppszThinkerName);
 }
 
 
@@ -639,6 +706,9 @@ void CSDKBot::PostStateChangeThink() {
 // Purpose: 
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkWaypoint_Begin() {
+	SendBotVcommContext(CLEAR);
+	m_curCmd.buttons = IN_FORWARD;
+	m_PlayerSearchInfo.UpdateNavpointFirst();
 	return true;
 }
 
@@ -649,6 +719,16 @@ bool CSDKBot::ThinkWaypoint_Check() {
 }
 
 bool CSDKBot::ThinkWaypoint() {
+	CBotNavpoint* pPoint = m_PlayerSearchInfo.CurNavpoint();
+	if (pPoint) {
+		m_PlayerSearchInfo.UpdateNavpoint();
+		pPoint = m_PlayerSearchInfo.CurNavpoint();
+		//a navpoint will always return a reference to a navpoint, so we don't have to check it again
+		LookAt(pPoint->GetLookTarget(), 0.6f, 5);
+
+	} else {
+		m_PlayerSearchInfo.UpdateNavpointFirst();
+	}
 	return true;
 }
 
@@ -657,31 +737,42 @@ bool CSDKBot::ThinkWaypoint_End() {
 }
 
 //-------------------------------------------------------------------------------------------------
-// Purpose: 
+// Purpose: Flag think sets the bot to move towards enemy flag until flag is captured or enemy gets too close
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkFlag_Begin() {
+	if (bot_randfloat() < 0.4f)
+		m_flNextFireTime = gpGlobals->curtime + bot_randfloat(2.0f, 8.0f);
+	SendBotVcommContext(OBJECTIVE);
 	m_bUpdateFlags = true;
+	m_bTowardFlag = true;
 	return true;
 }
 
 bool CSDKBot::ThinkFlag_Check() {
-	return ThinkCheckDeath() && ThinkCheckRetreat() && ThinkCheckEnterLongRangeCombat() && ThinkCheckEnterMedRangeCombat()
-		&& ThinkCheckMelee();
+	return ThinkCheckDeath() && ThinkCheckRetreat() && ThinkCheckFlagOrFight()
+		&& ThinkCheckMelee() && ThinkCheckPointBlank() && ThinkCheckFlagExit();
 }
 
 bool CSDKBot::ThinkFlag() {
-	if (IsCapturingEnemyFlag()) {
+	if (IsCapturingEnemyFlagAttempt()) {
 		m_curCmd.buttons = 0;
 		CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
 		if (pEnemy) {
 			LookAt(pEnemy->Weapon_ShootPosition(), 0.5f, 3);
+			if (bot_randfloat() < 0.3f)
+				m_flNextFireTime = gpGlobals->curtime;
 		}
 	} else {
 		CFlag* pFlag = m_PlayerSearchInfo.CloseEnemyFlagVisible();
+		/*if (!pFlag) {
+			pFlag = m_PlayerSearchInfo.CloseEnemyFlag();
+		}*/
+
 		if (pFlag) {
 			m_curCmd.buttons |= IN_FORWARD;
 			LookAt(pFlag->GetAbsOrigin() + Vector(0, 0, 40), 0.8f, 5);
 		}
+
 	}
 	return true;
 }
@@ -696,6 +787,7 @@ bool CSDKBot::ThinkFlag_End() {
 // Purpose: Long-range combat
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkLongRange_Begin() {
+	SendBotVcommContext(ADVANCE);
 	m_bUpdateFlags = true;
 	if (CanFire()) {
 		float random = bot_randfloat();
@@ -736,17 +828,30 @@ bool CSDKBot::ThinkLongRange_End() {
 // Purpose: Medium-range combat
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkMedRange_Begin() {
+	SendBotVcommContext(DEFAULT);
 	m_bUpdateFlags = true;
 	if (CanFire()) {
 		float random = bot_randfloat();
+		//if we're already hurt, we're more desperate
 		if (m_pPlayer->GetHealth() < 70)
-			random += 0.1;
-		if (random > 0.3) {
-			m_flNextFireTime = gpGlobals->curtime + RandomFloat(0.5f, 3.2f);
+			random -= 0.1;
+
+		//if our enemy is at a flag, it's more important to stop him!
+		CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
+		if (pEnemy) {
+			CFlag* pOurFlag = m_PlayerSearchInfo.CloseFriendFlag();
+			CFlag* pTheirFlag = m_PlayerSearchInfo.CloseEnemyFlag();
+			if (pOurFlag && EntDist(*pOurFlag, *pEnemy) < pOurFlag->m_flCaptureRadius)
+				random -= 0.1;
+			else if (pTheirFlag && EntDist(*pTheirFlag, *pEnemy) < pTheirFlag->m_flCaptureRadius)
+				random -= 0.2;
+		}
+		if (random < 0.7) {
+			m_flNextFireTime = gpGlobals->curtime + bot_randfloat(0.1f, 3.2f);
 		}
 	}
 	m_curCmd.buttons |= IN_FORWARD;
-	m_flNextStrafeTime = gpGlobals->curtime + RandomFloat(0.5f, 1.0f);
+	m_flNextStrafeTime = gpGlobals->curtime + bot_randfloat(0.5f, 1.0f);
 	return true;
 }
 
@@ -817,6 +922,7 @@ bool CSDKBot::ThinkMedRange_End() {
 // Purpose: Simulates close-quarters combat
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkMelee_Begin() {
+	SendBotVcommContext(DEFAULT);
 	m_bUpdateFlags = false;
 	m_curCmd.buttons |= IN_FORWARD;
 	m_flNextStrafeTime = gpGlobals->curtime + RandomFloat(0.5f, 1.0f);
@@ -887,6 +993,7 @@ bool CSDKBot::ThinkMelee_End() {
 // Purpose: 
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkRetreat_Begin() {
+	SendBotVcommContext(RETREAT);
 	m_bUpdateFlags = true;
 	m_flNextFireTime = FLT_MAX;
 	m_flEndRetreatTime = gpGlobals->curtime + RandomFloat(1.5, 5.0) * (1 - m_pDifficult->m_flBravery);
@@ -930,11 +1037,11 @@ bool CSDKBot::ThinkRetreat_End() {
 // Purpose: Aims from hip at enemy and shoots with proper timing. Will last no longer than ~.5s
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkPointBlank_Begin() {
+	SendBotVcommContext(FIRE);
 	m_bUpdateFlags = false;
 	m_curCmd.buttons = 0;
 	//random crouching
-	if (RandomFloat() < 0.3f)
-		m_curCmd.buttons |= IN_DUCK;
+	
 
 	bool bZoom = m_PlayerSearchInfo.CloseEnemyDist() > 400 && bot_randfloat() < 0.5f;
 	if (!bZoom)
@@ -943,10 +1050,14 @@ bool CSDKBot::ThinkPointBlank_Begin() {
 	if (bZoom) {
 		m_curCmd.buttons |= IN_ZOOM;
 	}
-		
 
-	m_flNextFireTime = gpGlobals->curtime + RandomFloat(0.4f, 1.2f);
+	m_flNextFireTime = gpGlobals->curtime + bot_randfloat(0.3f, 0.6f);
 
+	if (bot_randfloat() < 0.3f) {
+		m_curCmd.buttons |= IN_DUCK;
+		//give them a little bit of extra time to crouch
+		m_flNextFireTime += 0.2f;
+	}
 	return true;
 }
 
@@ -1013,6 +1124,10 @@ bool CSDKBot::ThinkDeath_End() {
 	if (m_pWeapon)
 		m_flMeleeRange = m_pWeapon->m_Attackinfos[1].m_flRange;
 	m_flNextVoice = gpGlobals->curtime + RandomFloat(3.0f, 30.0f);
+
+	//update our searcher's team info in case we switched teams
+	m_PlayerSearchInfo.UpdateOwnerTeamInfo();
+
 	return true;
 }
 
@@ -1025,14 +1140,21 @@ bool CSDKBot::ThinkDeath_End() {
 //-----------------------------------------------------------------------------
 void Bot_RunAll(void)
 {
+	if (g_iWaitingAmount && g_bServerReady) //Kind of a shitty hack. But this will allow people to spawn a certain amount of bots in 
+	{										  //the server.cfg. Anyway, the server is ready, so do it.
+		BotPutInServer(g_iWaitingAmount, false);
+		g_iWaitingAmount = 0; //Make sure we've reset the waiting count.
+	}
+
+	//bot manager handles bot population via the svars
+	CBotManager::Think();
+
+	//let the vcomm managers do their thing
+	g_BotAmerComms.Think();
+	g_BotBritComms.Think();
+
 	if (bot_pause.GetBool()) //If we're true, just don't run the thinking cycle. Effectively "pausing" the bots.
 		return;
-
-	if (m_iWaitingAmount && m_bServerReady) //Kind of a shitty hack. But this will allow people to spawn a certain amount of bots in 
-	{										  //the server.cfg. Anyway, the server is ready, so do it.
-		BotPutInServer(m_iWaitingAmount, false);
-		m_iWaitingAmount = 0; //Make sure we've reset the waiting count.
-	}
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -1043,6 +1165,20 @@ void Bot_RunAll(void)
 			CSDKBot *pBot = &gBots[pPlayer->GetClientIndex()];
 			if (pBot) //Do most of the "filtering" here.
 				pBot->Think();
+		}
+	}
+}
+
+void CSDKBot::ResetAllBots() {
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPlayer = UTIL_PlayerByIndex(i);// );
+
+		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
+		{
+			CSDKBot *pBot = &gBots[pPlayer->GetClientIndex()];
+			if (pBot) //Do most of the "filtering" here.
+				pBot->ScheduleThinker(&BotThinkers::Death, 1.0f);
 		}
 	}
 }
@@ -1192,6 +1328,10 @@ int bot_rand()
 	b += a + (b >> 11);
 
 	return b;
+}
+
+int bot_rand(int min, int max) {
+	return RoundFloatToInt(bot_randfloat(min, max));
 }
 
 float bot_randfloat() {

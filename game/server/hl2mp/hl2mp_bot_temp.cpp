@@ -81,7 +81,8 @@ CBasePlayer *BotPutInServer( bool bFrozen, int iTeam )
 	char botname[ 64 ];
 	Q_snprintf( botname, sizeof( botname ), "Bot%02i", BotNumber );
 
-	// This is an evil hack, but we use it to prevent sv_autojointeam from kicking in.
+	// This is an evil hack, but we use it to prevent sv_autojointeam from 
+	ing in.
 
 	edict_t *pEdict = engine->CreateFakeClient( botname );
 

@@ -1441,8 +1441,10 @@ void CBasePlayer::ViewPunchReset( float tolerance )
 		//float check = m_Local.m_vecPunchAngleVel->LengthSqr() + m_Local.m_vecPunchAngle->LengthSqr();
 		float check = m_Local.m_vecPunchAngleVel.LengthSqr() + m_Local.m_vecPunchAngle.LengthSqr();
 		//
-		if ( check > tolerance )
+		if (check > tolerance) {
 			return;
+		}
+			
 	}
 	m_Local.m_vecPunchAngle = vec3_angle;
 	m_Local.m_vecPunchAngleVel = vec3_angle;

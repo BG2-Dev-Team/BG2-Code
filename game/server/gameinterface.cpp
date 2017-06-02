@@ -1168,7 +1168,7 @@ void CServerGameDLL::ServerActivate( edict_t *pEdictList, int edictCount, int cl
 #endif
 #endif
 
-	m_bServerReady = true;
+	g_bServerReady = true;
 }
 
 //-----------------------------------------------------------------------------
