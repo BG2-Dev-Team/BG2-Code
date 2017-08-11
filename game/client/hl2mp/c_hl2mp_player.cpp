@@ -163,7 +163,7 @@ void C_HL2MP_Player::TraceAttack( const CTakeDamageInfo &info, const Vector &vec
 		if ( pAttacker )
 		{
 			//if ( HL2MPRules()->IsTeamplay() && pAttacker->InSameTeam( this ) == true )
-			if (pAttacker->InSameTeam(this) == true) //BG2 - found this change while porting to 2016 - change in team-attack procedures? - Awesome
+			if (pAttacker->InSameTeam(this)) //BG2 - found this change while porting to 2016 - change in team-attack procedures? - Awesome
 				return;
 		}
 
@@ -367,6 +367,11 @@ void C_HL2MP_Player::PreThink( void )
 	SetLocalAngles( vTempAngles );
 
 	BaseClass::PreThink();
+
+	if (m_iPrevClass != m_iClass) {
+		OnClassNumberChanged();
+		m_iPrevClass = m_iClass;
+	}
 
 	HandleSpeedChanges();
 
@@ -584,6 +589,10 @@ float C_HL2MP_Player::GetFOV( void )
 	flFOVOffset = MAX( min_fov, flFOVOffset );
 
 	return flFOVOffset;
+}
+
+void C_HL2MP_Player::OnClassNumberChanged(void) {
+	UpdatePlayerClass();
 }
 
 //=========================================================

@@ -37,7 +37,7 @@
 #include "cbase.h"
 #include "npcevent.h"
 #include "in_buttons.h"
-#include "../shared/bg2/bg2_player_shared.h"
+#include "../shared/bg2/bg3_player_shared.h"
 
 #ifdef CLIENT_DLL
 	#include "c_hl2mp_player.h"

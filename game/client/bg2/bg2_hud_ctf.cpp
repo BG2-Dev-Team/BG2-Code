@@ -20,14 +20,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-enum
-{
-	TEAM_AMERICANS = 2,
-	TEAM_BRITISH,
-	//BG2 - Tjoppen - NUM_TEAMS is useful
-	NUM_TEAMS,	//!! must be last !!
-};
-
 #define MAX_FLAGS	8
 
 //==============================================

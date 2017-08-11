@@ -1,6 +1,6 @@
 /*
 The Battle Grounds 3 - A Source modification
-Copyright (C) 2017, The Battle Grounds 2 Team and Contributors
+Copyright (C) 2017, The Battle Grounds 3 Team and Contributors
 
 The Battle Grounds 2 free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,7 @@ changes from the original SDK.
 In order to facilitate easy searching, all changes are and must be
 commented on the following form:
 
-//BG2 - <name of contributer>[ - <small description>]
+//BG3 - <name of contributer>[ - <small description>]
 */
 #ifndef SDK_BOT_TEMP_H
 #define SDK_BOT_TEMP_H
@@ -183,9 +183,9 @@ public:
 	*/
 	void ScheduleThinker(BotThinker* pNextThinker, float delay);
 
-	CSDKBot*	ToBot(CBasePlayer* pPlayer);
+	static CSDKBot*	ToBot(CBasePlayer* pPlayer);
 	bool		DoMelee(); //based on difficulty, range, current weapon, a little randomness
-	inline bool CanFire() const; //whether or not the bot's current weapon is capable of firing
+	inline bool CanFire(); //whether or not the bot's current weapon is capable of firing
 	bool		IsAimingAtTeammate(vec_t range) const; //whether or not we're aiming at a teammate
 	bool		IsCapturingEnemyFlag() const;
 	bool		IsCapturingEnemyFlagAttempt() const;

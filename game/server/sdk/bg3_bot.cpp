@@ -73,7 +73,7 @@ ConVar bot_forceclass("bot_forceclass", "0", FCVAR_GAMEDLL | FCVAR_HIDDEN, "Forc
 static ConVar bot_mimic("bot_mimic", "0", 0, "Bot uses usercmd of player by index.");
 static ConVar bot_mimic_yaw_offset("bot_mimic_yaw_offset", "0", 0, "Offsets the bot yaw.");
 ConVar bot_pause("bot_pause", "0", 0, "Stops the bot thinking cycle entirely.");
-ConVar bot_difficulty("bot_difficulty", "3", FCVAR_GAMEDLL, "Bot skill level. 0,1,2,3 are easy, norm, hard, and random, respectively.", true, 0.f, true, 1.f);
+ConVar bot_difficulty("bot_difficulty", "3", FCVAR_GAMEDLL, "Bot skill level. 0,1,2,3 are easy, norm, hard, and random, respectively.");
 
 //ConVar bot_sendcmd( "bot_sendcmd", "", 0, "Forces bots to send the specified command." );
 
@@ -98,12 +98,18 @@ const char* g_ppszBotNames[] = {
 	"Hall", "Nelson", "Campbell", "Cox", "Cook", "Washington", "Cooper", "Harris", "Rogers",
 	"Torres", "Ward", "Murphy", "Long", "Alexander", "Thomas", "Wright", "Bell", "Richardson",
 	"Evans", "Butler", "Kelly", "Lee", "Rivera", "Miller", "Davis", "Garcia", "Griffin",
-	"Bailey", "Powell", "Ross", "Wood", "Reed", "Lewis", "Taylor", "Perry", "Young",
+	"Bailey", "Powell", "Ross", "Wood", "Reed", "Lewis", "Taylor", "Perry", "Young", "Brewster",
+	"Loomis",
+
+	"Atkey", "Brown", "Cogswell", "Dutton", "Eplett", "Francis", "Glanville", "Hurst",
+	"Jackson", "Kent", "Lloyd", "Macey", "Noyes", "Olivey", "Perry", "Rosser",
+	"Sanders", "Tuck", "Unsworth", "Varley", "Whitworth", "Yeo",
 };
 
 const char* g_ppszBotRareNames[] = { 
-	"Karpinsky", "Allen", "Hale", "Revere", "Tallmadge", "Gates", "Morgan", "Ziegler",
-	"Arnold", "Greene", "Howe", "Prescott",
+	"Karpinsky", "Allen", "Hale", "Revere", "Tallmadge", "Gates", "Morgan",
+	"Arnold", "Greene", "Howe", "Prescott", "Tarleton", "Klif", "Hawke", "Roob",
+	"Chris", "Esomewa"
 
 };
 
@@ -226,7 +232,7 @@ CSDKBot::CSDKBot() {
 
 //called when a bot is put in the server
 void CSDKBot::Init(CBasePlayer* pPlayer, BotDifficulty* pDifficulty) {
-	CSDKBot& curBot = gBots[pPlayer->GetClientIndex()];
+	CSDKBot& curBot = *ToBot(pPlayer);
 	curBot.m_pPlayer = pPlayer;
 	curBot.m_flNextStrafeTime = 0;
 
@@ -290,7 +296,7 @@ void CSDKBot::ScheduleThinker(BotThinker* pNextThinker, float delay) {
 //-------------------------------------------------------------------------------------------------
 // Purpose: Returns the bot controller the given player, if there is one.
 //-------------------------------------------------------------------------------------------------
-CSDKBot* ToBot(CBasePlayer* pPlayer) {
+CSDKBot* CSDKBot::ToBot(CBasePlayer* pPlayer) {
 	return &gBots[pPlayer->GetClientIndex()];
 }
 
@@ -334,9 +340,9 @@ bool CSDKBot::DoMelee() {
 //-------------------------------------------------------------------------------------------------
 // Purpose: Checks whether or not the musket is capable of firing at this moment. Does not look for FF
 //-------------------------------------------------------------------------------------------------
-bool CSDKBot::CanFire() const {
+bool CSDKBot::CanFire() {
 	bool canFire = false;
-
+	m_pWeapon = static_cast<CBaseBG2Weapon*>(m_pPlayer->GetActiveWeapon());
 	if (m_pWeapon) {
 		canFire = m_pWeapon->Clip1() > 0;
 	}
@@ -1162,7 +1168,7 @@ void Bot_RunAll(void)
 		
 		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
 		{
-			CSDKBot *pBot = &gBots[pPlayer->GetClientIndex()];
+			CSDKBot *pBot = CSDKBot::ToBot(pPlayer);
 			if (pBot) //Do most of the "filtering" here.
 				pBot->Think();
 		}
@@ -1176,7 +1182,7 @@ void CSDKBot::ResetAllBots() {
 
 		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
 		{
-			CSDKBot *pBot = &gBots[pPlayer->GetClientIndex()];
+			CSDKBot *pBot = ToBot(pPlayer);
 			if (pBot) //Do most of the "filtering" here.
 				pBot->ScheduleThinker(&BotThinkers::Death, 1.0f);
 		}
@@ -1320,10 +1326,9 @@ static void RunPlayerMove(CSDKPlayer *fakeclient, CUserCmd &cmd, float frametime
 * Both RandomInt() and random->RandomInt() seem to eventually "run of out randomness".
 * Also, Valve decided to replace rand() with a call to random->RandomInt() for some reason.
 */
+int a = 9158152, b = 14257153;
 int bot_rand()
 {
-	static int a = 9158152, b = 14257153;
-
 	a += b + (a >> 5);
 	b += a + (b >> 11);
 

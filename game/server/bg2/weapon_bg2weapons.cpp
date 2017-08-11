@@ -572,6 +572,8 @@ DECLARE_BG2_WEAPON(shortsword)
 
 	m_bWeaponHasSights = false;
 
+	SetModelScale(0.8f);
+
 	//primary
 	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
 	m_Attackinfos[0].m_iDamage = SHORTSWORD_DAMAGE;//60;

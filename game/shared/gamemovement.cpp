@@ -27,7 +27,7 @@
 #include "c_hl2mp_player.h"
 #include "cdll_int.h"
 #endif
-#include "../shared/bg2/bg2_player_shared.h"
+#include "../shared/bg2/bg3_player_shared.h"
 
 
 // memdbgon must be the last include file in a .cpp file!!!

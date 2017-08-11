@@ -128,7 +128,7 @@ END_SEND_TABLE()
 BEGIN_DATADESC(CHL2MP_Player)
 END_DATADESC()
 
-const char *g_ppszRandomCitizenModels[] =
+/*const char *g_ppszBritishPlayerModels[] =
 {
 	//BG2 - Tjoppen - models
 	"models/player/british/jager/jager.mdl",
@@ -138,7 +138,7 @@ const char *g_ppszRandomCitizenModels[] =
 	"models/player/british/loyalist/loyalist.mdl",
 };
 
-const char *g_ppszRandomCombineModels[] =
+const char *g_ppszAmericanPlayerModels[] =
 {
 	//BG2 - Tjoppen - models
 	"models/player/american_new/INF/am_infantry.mdl",
@@ -146,7 +146,7 @@ const char *g_ppszRandomCombineModels[] =
 	"models/player/american/light_a/light_a.mdl",
 	"models/player/american/militia/militia.mdl",
 	"models/player/american/french/french_infantry.mdl"
-};
+};*/
 
 #define MAX_COMBINE_MODELS 6 // BG2 - VisualMelon - Looks like this should be 6 (formerly 4)
 #define MODEL_CHANGE_INTERVAL 5.0f
@@ -214,17 +214,17 @@ void CHL2MP_Player::Precache(void)
 	PrecacheModel("sprites/glow01.vmt");
 
 	//Precache Citizen models
-	int nHeads = ARRAYSIZE(g_ppszRandomCitizenModels);
+	int nHeads = CPlayerClass::numModelsForTeam(TEAM_BRITISH);
 	int i;
 
 	for (i = 0; i < nHeads; ++i)
-		PrecacheModel(g_ppszRandomCitizenModels[i]);
+		PrecacheModel(g_ppszBritishPlayerModels[i]);
 
 	//Precache Combine Models
-	nHeads = ARRAYSIZE(g_ppszRandomCombineModels);
+	nHeads = CPlayerClass::numModelsForTeam(TEAM_AMERICANS);
 
 	for (i = 0; i < nHeads; ++i)
-		PrecacheModel(g_ppszRandomCombineModels[i]);
+		PrecacheModel(g_ppszAmericanPlayerModels[i]);
 
 	PrecacheFootStepSounds();
 
@@ -300,7 +300,37 @@ void CHL2MP_Player::GiveDefaultItems(void)
 	//remember which ammo kit we spawned with
 	m_iCurrentAmmoKit = m_iAmmoKit;
 
-	if (GetTeam()->GetTeamNumber() == TEAM_AMERICANS)	//Americans
+	//check for forced weapon change
+	if (m_iClass == CLASS_INFANTRY) {
+		ConVar* m_pWeaponKitEnforcer = GetTeamNumber() == TEAM_AMERICANS ? &lb_enforce_weapon_amer : &lb_enforce_weapon_brit;
+		int forcedKit = m_pWeaponKitEnforcer->GetInt();
+		Clamp(forcedKit, 0, 2);
+
+		if (forcedKit)
+			m_iGunKit = forcedKit;
+
+	}
+
+	//Clamp kit number to number of available clips
+	Clamp(m_iGunKit, 1, m_pCurClass->numChooseableWeapons());
+
+	//give the chosen weapon
+	GiveNamedItem(m_pCurClass->m_aWeapons[m_iGunKit - 1].m_pszWeaponName);
+
+	//now search for weapons to always give
+	for (int i = 0; i < NUM_POSSIBLE_WEAPON_KITS; i++) {
+		if (i != m_iGunKit - 1 && m_pCurClass->m_aWeapons[i].m_bAlwaysGive) {
+			GiveNamedItem(m_pCurClass->m_aWeapons[i].m_pszWeaponName);
+		}
+	}
+
+	//Give primary and secondary ammo
+	CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultPrimaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
+	if (m_pCurClass->m_pszSecondaryAmmo)
+		CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
+
+
+	/*if (GetTeam()->GetTeamNumber() == TEAM_AMERICANS)	//Americans
 	{
 		switch (m_iClass)
 		{
@@ -317,7 +347,7 @@ void CHL2MP_Player::GiveDefaultItems(void)
 		case CLASS_OFFICER:
 			if (m_iGunKit == 1)
 				GiveNamedItem("weapon_pistol_a");
-			//else
+			else
 				GiveNamedItem("weapon_brownbess_carbine_nobayo");
 			GiveNamedItem("weapon_sabre_a");
 			CBasePlayer::SetAmmoCount(HL2MPRules()->getDefaultOfficerAmmo(), GetAmmoDef()->Index("357")); //Default ammo for Officers. -HairyPotter
@@ -412,7 +442,7 @@ void CHL2MP_Player::GiveDefaultItems(void)
 			CBasePlayer::SetAmmoCount(1, GetAmmoDef()->Index("Grenade"));
 			break;
 		}
-	}
+	}*/
 }
 
 //BG2 - Tjoppen - g_pLastIntermission
@@ -486,11 +516,12 @@ void CHL2MP_Player::Spawn(void)
 	//reset speed modifier
 	SetSpeedModifier(0);
 
-	//fpr c;ass enforcement in linebattle
+	//fpr class enforcement in linebattle
 	CheckForForcedClassChange();
 
 	//BG2 - Tjoppen - pick correct model
 	m_iClass = m_iNextClass;				//BG2 - Tjoppen - sometimes these may not match
+	UpdatePlayerClass();
 
 	PlayermodelTeamClass(); //BG2 - Just set the player models on spawn. We have the technology. -HairyPotter
 
@@ -577,22 +608,22 @@ void CHL2MP_Player::PickupObject(CBaseEntity *pObject, bool bLimitMassAndSize)
 
 bool CHL2MP_Player::ValidatePlayerModel(const char *pModel)
 {
-	int iModels = ARRAYSIZE(g_ppszRandomCitizenModels);
+	int iModels = CPlayerClass::numModelsForTeam(TEAM_BRITISH);
 	int i;
 
 	for (i = 0; i < iModels; ++i)
 	{
-		if (!Q_stricmp(g_ppszRandomCitizenModels[i], pModel))
+		if (!Q_stricmp(g_ppszBritishPlayerModels[i], pModel))
 		{
 			return true;
 		}
 	}
 
-	iModels = ARRAYSIZE(g_ppszRandomCombineModels);
+	iModels = CPlayerClass::numModelsForTeam(TEAM_AMERICANS);
 
 	for (i = 0; i < iModels; ++i)
 	{
-		if (!Q_stricmp(g_ppszRandomCombineModels[i], pModel))
+		if (!Q_stricmp(g_ppszAmericanPlayerModels[i], pModel))
 		{
 			return true;
 		}
@@ -1299,7 +1330,8 @@ void ClientPrinttTalkAll(char *str, int type)
 // TODO: Obsolve the term "skin" where it is used inappropriatley
 void CHL2MP_Player::PlayermodelTeamClass()
 {
-	int team = GetTeamNumber();
+	SetModel(m_pCurClass->m_pszPlayerModel);
+	/*int team = GetTeamNumber();
 	int classid = m_iClass;
 	switch (team)
 	{
@@ -1354,7 +1386,7 @@ void CHL2MP_Player::PlayermodelTeamClass()
 	default: //default model
 		SetModel("models/player/british/jager/jager.mdl");
 		break;
-	}
+	}*/
 	//Handle skins separately pls - Awesome
 	m_nSkin = GetAppropriateSkin();
 

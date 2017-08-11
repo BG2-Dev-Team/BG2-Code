@@ -221,7 +221,7 @@ void CBotManager::Think() {
 
 void CBotManager::KickAllBots() {
 	CBasePlayer* pPlayer = nullptr;
-	for (int i = 0; i <= gpGlobals->maxClients; i++) {
+	for (int i = 1; i <= gpGlobals->maxClients; i++) {
 		pPlayer = UTIL_PlayerByIndex(i);
 		if (pPlayer && pPlayer->GetFlags() & FL_FAKECLIENT) {
 			char kickCommand[40];
@@ -236,4 +236,14 @@ void CBotManager::KickAllBots() {
 CON_COMMAND_F(bot_kick_all, "Removes all bots from the server and sets bot_minplayers_mode to 0", FCVAR_GAMEDLL) {
 	CBotManager::KickAllBots();
 	bot_minplayers_mode.SetValue("0");
+}
+
+CON_COMMAND_F(bot_debug_report, "Gives status information on all bots, useful for debugging.", FCVAR_GAMEDLL) {
+	CHL2MP_Player* pPlayer = nullptr;
+	for (int i = 1; i <= gpGlobals->maxClients; i++) {
+		pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+		if (pPlayer && pPlayer->IsFakeClient()) {
+			Msg("%i. %20s : %s\n", i, pPlayer->GetPlayerName(), gBots[i].m_pCurThinker->m_ppszThinkerName);
+		}
+	}
 }

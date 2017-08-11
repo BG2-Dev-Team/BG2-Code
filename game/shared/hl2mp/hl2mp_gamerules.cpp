@@ -11,6 +11,8 @@
 #include <KeyValues.h>
 #include "ammodef.h"
 
+#include "../../server/bg3/bg3_class.h"
+
 #ifdef CLIENT_DLL
 	#include "c_hl2mp_player.h"
 #else
@@ -42,7 +44,6 @@
 #include "sdk/bg3_bot.h"
 #include "bg3_bot_manager.h"
 #include "bg3_bot_vcomms.h"
-
 #ifdef DEBUG	
 	#include "hl2mp_bot_temp.h"
 #endif
@@ -89,6 +90,7 @@ extern CBaseEntity	 *g_pLastRebelSpawn;*/
 #define CVAR_FLAGS	(FCVAR_GAMEDLL | FCVAR_REPLICATED | FCVAR_NOTIFY)
 #define CVAR_FLAGS_HIDDEN (FCVAR_GAMEDLL | FCVAR_REPLICATED)
 #endif
+
 #define LIMIT_DEFINES( size, sizename )\
 	ConVar mp_limit_inf_a_##size( "mp_limit_inf_a_"#size, "-1", CVAR_FLAGS,\
 									"Max number of Continental Soldiers on " sizename " maps" );\
@@ -114,18 +116,15 @@ extern CBaseEntity	 *g_pLastRebelSpawn;*/
 									"Max number of Light infantry on " sizename " maps" );\
 	ConVar mp_limit_gre_b_##size("mp_limit_gre_b_"#size, "-1", CVAR_FLAGS,\
 									"Max number of Royal Grenadiers on " sizename " maps" );
-
-//BG3 - expose mp_timeleft to client
-
-
 //as you can see, the macro is a shorthand and should also help avoid misspellings and such that are
 //usually common with repetitive stuff like this
-LIMIT_DEFINES(sml, "small")
-LIMIT_DEFINES(med, "medium")
-LIMIT_DEFINES(lrg, "large")
+//BG3 - moved these definitions to the bg3_class files
+//LIMIT_DEFINES(sml, "small")
+//LIMIT_DEFINES(med, "medium")
+//LIMIT_DEFINES(lrg, "large")
 
-ConVar mp_limit_mapsize_low("mp_limit_mapsize_low", "16", CVAR_FLAGS, "Servers with player counts <= this number are small, above it are medium or large");
-ConVar mp_limit_mapsize_high("mp_limit_mapsize_high", "32", CVAR_FLAGS, "Servers with player counts <= this number are small or medium, above it are large");
+extern ConVar mp_limit_mapsize_low;
+extern ConVar mp_limit_mapsize_high;
 
 ConVar mp_respawnstyle("mp_respawnstyle", "1", CVAR_FLAGS, "0 = regular dm, 1 = waves, 2 = rounds (LMS), 3 = rounds with tickets, 4 = LMS with linebattle extensions");
 ConVar mp_respawntime("mp_respawntime", "14", CVAR_FLAGS, "Time between waves, or the maximum length of the round with mp_respawnstyle 2");
@@ -466,6 +465,14 @@ bool CHL2MPRules::IsIntermission( void )
 #endif
 
 	return false;
+}
+
+int CHL2MPRules::NumConnectedClients() {
+	int num = 0;
+	for (int x = 1; x <= gpGlobals->maxClients; x++)
+		if (UTIL_PlayerByIndex(x))
+			num++;
+	return num;
 }
 
 void CHL2MPRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info )
@@ -1456,7 +1463,7 @@ int CHL2MPRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget 
 const char *CHL2MPRules::GetGameDescription( void )
 { 
 	//BG2 - Tjoppen - our game descriptions - putting the current version number in these might be a good idea
-	return "Battle Grounds 2 3.0";
+	return "Battle Grounds 3";
 	// 
 } 
 
@@ -2241,10 +2248,14 @@ void CHL2MPRules::CheckTicketDrain(void)
 
 int CHL2MPRules::GetLimitTeamClass(int iTeam, int iClass)
 {
+	//just get it from the class itself!
+	const CPlayerClass* pClass = CPlayerClass::fromNums(iTeam, iClass);
+	return CPlayerClass::getClassLimit(pClass);
+
 	//mp_limit_<inf/off/rif>_<a/b>_<sml/med/lrg> - mp_limit_inf_a_sml
 
 	//count players - is there a better way? this looks stupid
-	int num = 0;
+	/*int num = 0;
 	for (int x = 1; x <= gpGlobals->maxClients; x++)
 		if (UTIL_PlayerByIndex(x))
 			num++;
@@ -2286,7 +2297,7 @@ int CHL2MPRules::GetLimitTeamClass(int iTeam, int iClass)
 	{
 		//large
 		LIMIT_SWITCH(lrg)
-	}
+	}*/
 }
 
 bool CHL2MPRules::UsingTickets()

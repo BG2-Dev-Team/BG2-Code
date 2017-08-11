@@ -12,7 +12,8 @@
 class C_HL2MP_Player;
 #include "c_basehlplayer.h"
 #include "hl2mp_player_shared.h"
-#include "../shared/bg2/bg2_player_shared.h"
+#include "../shared/bg2/bg3_player_shared.h"
+#include "../server/bg3/bg3_class.h"
 #include "beamdraw.h"
 
 //=============================================================================
@@ -85,15 +86,21 @@ public:
 	float m_DeathTime; //BG2 - Used for "death cam". -HairyPotter
 
 	int		GetClass(void)	const		{ return m_iClass; }
+	const CPlayerClass* GetPlayerClass() const { return m_pCurClass; }
 	int		GetCurrentAmmoKit(void)const{ return m_iCurrentAmmoKit; }
 
 	//return the player's speed based on whether which class we are, which weapon kit we're using etc.
 	int		GetCurrentSpeed(void) const;
+	void	UpdatePlayerClass(void); //BG3- updates the player class reference to match m_iClass and team number
 private:
+	int		m_iPrevClass = 0;
 	int		m_iClass;
+	const CPlayerClass* m_pCurClass;
 	int		m_iClassSkin;
 	int		m_iCurrentAmmoKit;
 	int		m_iSpeedModifier;
+
+	void	OnClassNumberChanged(void);
 	
 	//BG2 - rallying stuff
 	int		m_iCurrentRallies = 0;	//BG3 - Awesome - bitfield of rallies which are currently affecting this player - controlled by the server

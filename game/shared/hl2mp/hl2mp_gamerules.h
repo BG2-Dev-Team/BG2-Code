@@ -18,7 +18,7 @@
 #include "gamerules.h"
 #include "teamplay_gamerules.h"
 #include "gamevars_shared.h"
-#include "../shared/bg2/bg2_player_shared.h"
+#include "../shared/bg2/bg3_player_shared.h"
 
 //BG2 - Skillet - For ragdoll removal stuff
 #ifdef CLIENT_DLL
@@ -28,6 +28,8 @@
 #ifndef CLIENT_DLL
 #include "hl2mp_player.h"
 #endif
+
+
 
 #define VEC_CROUCH_TRACE_MIN	HL2MPRules()->GetHL2MPViewVectors()->m_vCrouchTraceMin
 #define VEC_CROUCH_TRACE_MAX	HL2MPRules()->GetHL2MPViewVectors()->m_vCrouchTraceMax
@@ -46,13 +48,15 @@ inline bool IsLinebattle()	{ return mp_respawnstyle.GetInt() == 4; }
 inline bool IsLMS()			{ return mp_respawnstyle.GetInt() == 2 || IsLinebattle(); }
 inline bool IsLMSstrict()	{ return mp_respawnstyle.GetInt() == 2; }
 
-enum
+/*enum
 {
 	TEAM_AMERICANS = 2,
 	TEAM_BRITISH,
 	//BG2 - Tjoppen - NUM_TEAMS is useful
 	NUM_TEAMS,	//!! must be last !!
-};
+};*/
+
+inline char charForTeam(int iTeam) { return iTeam == TEAM_AMERICANS ? 'a' : 'b'; }
 
 enum
 {
@@ -188,7 +192,7 @@ public:
 
 	bool CheckGameOver( void );
 	bool IsIntermission( void );
-
+	int NumConnectedClients(); //includes bots
 	void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
 
 	

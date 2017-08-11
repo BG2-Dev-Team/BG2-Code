@@ -18,7 +18,7 @@
 #include <vgui_controls/ComboBox.h>
 
 #include <game/client/iviewport.h>
-#include <../../shared/bg2/bg2_player_shared.h>
+#include <../../shared/bg2/bg3_player_shared.h>
 
 class KeyValues;
 

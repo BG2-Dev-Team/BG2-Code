@@ -58,6 +58,9 @@
     <Filter Include="Source Files\BG2">
       <UniqueIdentifier>{6ba20fe8-0682-41f8-a92c-24fad3fcff80}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\BG3">
+      <UniqueIdentifier>{77a43279-9346-4b87-bf2c-901b254b8847}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\bitmap.lib">
@@ -1994,6 +1997,9 @@
     <ClInclude Include="..\shared\bg2\bg3_math_shared.h">
       <Filter>Source Files\BG2</Filter>
     </ClInclude>
+    <ClInclude Include="..\server\bg3\bg3_class.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3606,6 +3612,9 @@
     </ClCompile>
     <ClCompile Include="..\shared\bg2\bg3_math_shared.cpp">
       <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\server\bg3\bg3_class.cpp">
+      <Filter>Source Files\BG3</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

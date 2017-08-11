@@ -52,14 +52,6 @@
 ConVar cl_flagstatus( "cl_flagstatus", "1", FCVAR_ARCHIVE, "0 - Off, 1 - Text, 2 - Icons" );
 ConVar cl_flagstatusdetail( "cl_flagstatusdetail", "2", FCVAR_ARCHIVE, "0 - No Details, 1 - Compact Details, 2 - Full Details" );
 
-enum
-{
-	TEAM_AMERICANS = 2,
-	TEAM_BRITISH,
-	//BG2 - Tjoppen - NUM_TEAMS is useful
-	NUM_TEAMS,	//!! must be last !!
-};
-
 #define MAX_FLAGS	12
 
 //==============================================

@@ -72,7 +72,7 @@
 //BG2 - Tjoppen - health fix
 #include "player_resource.h"
 //
-#include "../shared/bg2/bg2_player_shared.h"
+#include "../shared/bg2/bg3_player_shared.h"
 
 #if defined USES_ECON_ITEMS
 #include "econ_wearable.h"
@@ -182,7 +182,7 @@ extern void AddMultiDamage( const CTakeDamageInfo &info, CBaseEntity *pEntity );
 
 // player damage adjusters
 //BG2 - Tjoppen - hitgroup modifiers. these are taken from BG 1.0F
-//BG3 - Awesome - moved these definitions to bg2_player_shared.h
+//BG3 - Awesome - moved these definitions to bg3_player_shared.h
 const float HIT_HEAD_DMG	= DMG_MOD_HEAD;		//3.4 / 1.85
 const float HIT_CHEST_DMG	= DMG_MOD_CHEST;		//used to be 1.85
 const float HIT_STOMACH_DMG = DMG_MOD_STOMACH;	//1.825 / 1.85

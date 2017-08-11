@@ -14,7 +14,8 @@ class CHL2MP_Player;
 #include "basemultiplayerplayer.h"
 #include "hl2_playerlocaldata.h"
 #include "hl2_player.h"
-#include "../shared/bg2/bg2_player_shared.h"
+#include "../shared/bg2/bg3_player_shared.h"
+#include "../bg3/bg3_class.h"
 #include "simtimer.h"
 #include "soundenvelope.h"
 #include "hl2mp_player_shared.h"
@@ -77,6 +78,7 @@ public:
 	//BG2 - Like ChangeTeam() except with the ability to manually set whether the player should be killed or not.
 	void ChangeTeam(int iTeam, bool bKill);
 	void CheckForForcedClassChange(); //for class enforce in linebattle
+	void	UpdatePlayerClass(void); //BG3- updates the player class reference to match m_iClass and team number
 	//
 	virtual void PickupObject ( CBaseEntity *pObject, bool bLimitMassAndSize );
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
@@ -189,6 +191,7 @@ public:
 	//BG2 - Tjoppen - made m_iStamina a network cvar
 	CNetworkVar(int, m_iStamina);
 
+	const CPlayerClass* m_pCurClass;
 private:
 	CNetworkVar(int, m_iClass);
 	CNetworkVar(int, m_iCurrentAmmoKit);	//BG2 - Tjoppen - we need to copy m_iAmmoKit when spawned so players can't change current load by typing "kit ..."

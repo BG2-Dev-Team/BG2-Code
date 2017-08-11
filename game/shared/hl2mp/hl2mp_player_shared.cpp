@@ -14,7 +14,7 @@
 #else
 #include "hl2mp_player.h"
 #endif
-#include "../shared/bg2/bg2_player_shared.h"
+#include "../shared/bg2/bg3_player_shared.h"
 
 #include "engine/IEngineSound.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
@@ -180,38 +180,26 @@ int CHL2MP_Player::GetCurrentSpeed(void) const
 	}
 	else
 	{
-		switch (m_iClass)
-		{
-		case CLASS_INFANTRY:
-			base = SPEED_INFANTRY;
-			break;
-		case CLASS_OFFICER:
-#ifndef CLIENT_DLL
-			if (m_iGunKit == 2 /*pWeapon && pWeapon->weaponType == CBaseCombatWeapon::WeaponType::CARBINE*/)
-				base = SPEED_OFFICER_HEAVY;
-			else
-#endif
-				base = SPEED_OFFICER;
-			break;
-		case CLASS_SNIPER:
-			base = SPEED_SNIPER;
-			break;
-		case CLASS_SKIRMISHER:
-			base = SPEED_SKIRMISHER;
-			break;
-		case CLASS_LIGHT_INFANTRY:
-			base = SPEED_LIGHT_INF;
-			break;
-		case CLASS_GRENADIER:
-			base = SPEED_GRENADIER;
-			break;
-		}
+		base = m_pCurClass->m_flBaseSpeed;
 	}
 	//Check for speed buff, but don't stack the effects
 	if ((m_iCurrentRallies & RALLY_SPEED) && !(GetActiveWeapon() && GetActiveWeapon()->m_bInReload))
 		scale *= RALLY_SPEED_MOD;
 
 	return (base + m_iSpeedModifier) * scale;
+}
+
+void CHL2MP_Player::UpdatePlayerClass(void) {
+	//we don't want array index out of bounds stuff so we have to check the numbers!
+	int iTeam = GetTeamNumber();
+	int iClass = m_iClass;
+
+	bool bValidTeam = iTeam == TEAM_AMERICANS || iTeam == TEAM_BRITISH;
+	bool bValidClass = iClass >= 0 && iClass < CPlayerClass::numClassesForTeam(iTeam);
+
+
+	if (bValidTeam && bValidClass)
+		m_pCurClass = CPlayerClass::fromNums(GetTeamNumber(), m_iClass);
 }
 
 //==========================
