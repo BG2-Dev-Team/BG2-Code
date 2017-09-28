@@ -217,7 +217,7 @@ enum CastVote
 #if defined( CSTRIKE_DLL )
 	#define MAX_PLAYERS				65  // Absolute max players supported
 #else
-#define MAX_PLAYERS					65  // Absolute max players supported //BG2 - Upped this from 33. -HairyPotter
+#define MAX_PLAYERS					129  // Absolute max players supported //BG2 - Upped this from 33. -HairyPotter
 #endif
 
 #define MAX_PLACE_NAME_LENGTH		18

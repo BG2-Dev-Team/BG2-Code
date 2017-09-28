@@ -266,9 +266,6 @@ public:
 	CNetworkVar(int, m_iStamina);
 	void DrainStamina(int iAmount);
 
-	CNetworkVar(bool, m_bRecentlyCrouchedInAir); //BG3 - Awesome - to prevent multiple crouches in a single jump
-	//int	m_iStamina; //BG2 - Draco - Stamina of player
-	//
 
 protected:
 	virtual void		PreThink( void );

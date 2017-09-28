@@ -74,7 +74,7 @@ bool CPlayerSearch::IsInSight(CBaseEntity *pA, CBaseEntity *pB)
 	trace_t tr;
 	UTIL_TraceLine(pA->GetLocalOrigin() + Vector(0, 0, 36),
 		pB->GetLocalOrigin() + Vector(0, 0, 36),
-		MASK_SOLID, pA, COLLISION_GROUP_DEBRIS_TRIGGER, &tr);
+		MASK_BLOCKLOS, pA, COLLISION_GROUP_DEBRIS_TRIGGER, &tr);
 
 	return !tr.DidHitWorld();
 }
@@ -84,7 +84,7 @@ bool CPlayerSearch::IsInSight(Vector v1, Vector v2, CBaseEntity* pIgnore) {
 	trace_t tr;
 	UTIL_TraceLine(v1,
 				   v2,
-				   MASK_SOLID, pIgnore, COLLISION_GROUP_NPC, &tr);
+				   MASK_BLOCKLOS, pIgnore, COLLISION_GROUP_NPC, &tr);
 
 	return !tr.DidHitWorld();
 }

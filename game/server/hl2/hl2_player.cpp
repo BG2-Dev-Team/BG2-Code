@@ -400,8 +400,6 @@ CHL2_Player::CHL2_Player()
 
 	m_flArmorReductionTime = 0.0f;
 	m_iArmorReductionFrom = 0;
-
-	m_bRecentlyCrouchedInAir = false;
 }
 
 //BG2 - no hev please - Awesome

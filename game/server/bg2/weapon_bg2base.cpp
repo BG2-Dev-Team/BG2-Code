@@ -133,14 +133,14 @@ END_PREDICTION_DATA()
 CBaseBG2Weapon::CBaseBG2Weapon( void )
 {
 	m_bReloadsSingly	= false;
-	m_bFiresUnderwater	= true;
-	m_bDontAutoreload	= true;
+	//m_bFiresUnderwater	= true; //BG3 - moved these to def
+	//m_bDontAutoreload	= true;
 
 	m_bShouldSampleForward = false;
 	m_bShouldFireDelayed = false;
 
-	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_NONE;
-	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_NONE;
+	//m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_NONE;
+	//m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_NONE; //BG3 - Awesome - moved these to def
 
 	//m_nViewModelIndex	= random->RandomInt( 0, 1 );	//test..
 }
@@ -299,7 +299,7 @@ void CBaseBG2Weapon::Fire( int iAttack )
 
 	//flintlock delay is based on our weapon type
 	float flintlockDelay;
-	if (m_eWeaponType == RIFLE)
+	if (Def()->m_eWeaponType == RIFLE)
 		flintlockDelay = sv_flintlock_delay_rifle.GetFloat();
 	else 
 		flintlockDelay = sv_flintlock_delay.GetFloat();
@@ -324,7 +324,7 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 	//figure out how many balls we should fire based on the player's current ammo kit
 	int numActualShot = 1;
 	int iDamage = 0;
-	float muzzleVelocity = m_flMuzzleVelocity;
+	float muzzleVelocity = Def()->m_flMuzzleVelocity;
 	
 	switch( pPlayer->GetCurrentAmmoKit() )
 	{
@@ -334,11 +334,11 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 		iDamage = GetDamage( iAttack );
 		break;
 	case AMMO_KIT_BUCKSHOT:
-		if( m_iNumShot > 0 )
+		if( Def()->m_iNumShot > 0 )
 		{
-			numActualShot = m_iNumShot;
-			iDamage = m_iDamagePerShot;
-			muzzleVelocity = m_flShotMuzzleVelocity;
+			numActualShot = Def()->m_iNumShot;
+			iDamage = Def()->m_iDamagePerShot;
+			muzzleVelocity = Def()->m_flShotMuzzleVelocity;
 		}
 		else
 		{
@@ -389,8 +389,8 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 									pPlayer, pPlayer->GetActiveWeapon() );
 #else
 			SpawnServerBullet( vecSrc, angDir, iDamage,
-									m_Attackinfos[iAttack].m_flConstantDamageRange,
-									m_Attackinfos[iAttack].m_flRelativeDrag,
+									Def()->m_Attackinfos[iAttack].m_flConstantDamageRange,
+									Def()->m_Attackinfos[iAttack].m_flRelativeDrag,
 									muzzleVelocity, pPlayer );
 #endif
 		}
@@ -407,8 +407,8 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 		//arcscan bullet
 		info.m_bArc = sv_arcscanbullets.GetBool();
 		info.m_flMuzzleVelocity = muzzleVelocity;
-		info.m_flRelativeDrag = m_Attackinfos[iAttack].m_flRelativeDrag;
-		info.m_flConstantDamageRange = m_Attackinfos[iAttack].m_flConstantDamageRange;
+		info.m_flRelativeDrag = Def()->m_Attackinfos[iAttack].m_flRelativeDrag;
+		info.m_flConstantDamageRange = Def()->m_Attackinfos[iAttack].m_flConstantDamageRange;
 
 		// Fire the bullets, and force the first shot to be perfectly accurate
 		pPlayer->FireBullets( info );
@@ -678,7 +678,7 @@ void CBaseBG2Weapon::Think( void )
 
 	//hide bayonet if we don't have a secondary attack
 	if ( (group = pViewModel->FindBodygroupByName( "musket_bayonet" )) >= 0)
-		pViewModel->SetBodygroup( group, m_Attackinfos[1].m_iAttacktype == ATTACKTYPE_STAB );
+		pViewModel->SetBodygroup( group, Def()->m_Attackinfos[1].m_iAttacktype == ATTACKTYPE_STAB );
 
 	//pick the correct metal
 	if ( (group = pViewModel->FindBodygroupByName( "musket_metal" )) >= 0)
@@ -723,7 +723,7 @@ void CBaseBG2Weapon::ItemPostFrame( void )
 		QAngle angles = EyeAngles() + pOwner->m_Local.m_vecPunchAngle;
 
 		//angle the barrel up slightly to account for bullet drop
-		angles.x -= AngleForZeroedRange( m_flMuzzleVelocity, m_flZeroRange );
+		angles.x -= AngleForZeroedRange( Def()->m_flMuzzleVelocity, Def()->m_flZeroRange );
 
 		AngleVectors( angles, &vecAiming );
 		CShotManipulator manipulator( vecAiming );
@@ -770,13 +770,15 @@ bool CBaseBG2Weapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 	if ( gpGlobals->curtime < m_fNextHolster)
 		return false;
 
-	m_fNextHolster = gpGlobals->curtime + m_fHolsterTime;
+	m_fNextHolster = gpGlobals->curtime + Def()->m_fHolsterTime;
 	//
 
 	//stop reload
-	StopWeaponSound( RELOAD );
+	bool bSuccessful = BaseClass::Holster( pSwitchingTo );
+	
+	if (bSuccessful) StopWeaponSound( RELOAD );
 
-	return BaseClass::Holster( pSwitchingTo );
+	return bSuccessful;
 }
 
 bool CBaseBG2Weapon::Reload( void )

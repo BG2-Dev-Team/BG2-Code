@@ -1862,7 +1862,7 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 				}
 				else if ( GetActiveWeapon() )
 				{
-					flRange = MAX( GetActiveWeapon()->m_fMaxRange1, GetActiveWeapon()->m_fMaxRange2 );
+					//flRange = MAX( GetActiveWeapon()->m_fMaxRange1, GetActiveWeapon()->m_fMaxRange2 ); //BG3 - don't need these
 				}
 				else
 				{
@@ -1905,8 +1905,8 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 			
 			if ( GetActiveWeapon() )
 			{
-				flMaxRange = MAX( GetActiveWeapon()->m_fMaxRange1, GetActiveWeapon()->m_fMaxRange2 );
-				flMinRange = MIN( GetActiveWeapon()->m_fMinRange1, GetActiveWeapon()->m_fMinRange2 );
+				//flMaxRange = MAX( GetActiveWeapon()->m_fMaxRange1, GetActiveWeapon()->m_fMaxRange2 ); //BG3 - don't need these
+				//flMinRange = MIN( GetActiveWeapon()->m_fMinRange1, GetActiveWeapon()->m_fMinRange2 );
 			}
 			else if ( CapabilitiesGet() & bits_CAP_INNATE_RANGE_ATTACK1 )
 			{
@@ -2073,8 +2073,8 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 
 					if ( GetActiveWeapon() )
 					{
-						flMaxRange = MAX( GetActiveWeapon()->m_fMaxRange1, GetActiveWeapon()->m_fMaxRange2 );
-						flMinRange = MIN( GetActiveWeapon()->m_fMinRange1, GetActiveWeapon()->m_fMinRange2 );
+						//flMaxRange = MAX( GetActiveWeapon()->m_fMaxRange1, GetActiveWeapon()->m_fMaxRange2 ); //BG3 - Awesome - don't need these
+						//flMinRange = MIN( GetActiveWeapon()->m_fMinRange1, GetActiveWeapon()->m_fMinRange2 );
 					}
 					else if ( CapabilitiesGet() & bits_CAP_INNATE_RANGE_ATTACK1 )
 					{
@@ -2229,8 +2229,8 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 		float flMinRange = 0;
 		if ( GetActiveWeapon() )
 		{
-			flMaxRange = MAX(GetActiveWeapon()->m_fMaxRange1,GetActiveWeapon()->m_fMaxRange2);
-			flMinRange = MIN(GetActiveWeapon()->m_fMinRange1,GetActiveWeapon()->m_fMinRange2);
+			//flMaxRange = MAX(GetActiveWeapon()->m_fMaxRange1,GetActiveWeapon()->m_fMaxRange2); //BG3 - don't need these - Awesome
+			//flMinRange = MIN(GetActiveWeapon()->m_fMinRange1,GetActiveWeapon()->m_fMinRange2);
 		}
 		else if ( CapabilitiesGet() & bits_CAP_INNATE_RANGE_ATTACK1 )
 		{

@@ -40,6 +40,7 @@
 	#include "../../server/bg2/flag.h"
 	#include "../../server/bg2/ctfflag.h"
 	#include "../../server/bg2/mapfilter.h" 
+	#include "../../shared/bg3/bg3_buffs.h"
 //BG2 - Tjoppen - #includes
 #include "sdk/bg3_bot.h"
 #include "bg3_bot_manager.h"
@@ -1888,8 +1889,8 @@ void CHL2MPRules::RestartRound(bool swapTeams)
 	RespawnAll();
 
 	//reset next officer rallying times
-	CHL2MP_Player::s_flNextRallyTimeAmerican = gpGlobals->curtime;
-	CHL2MP_Player::s_flNextRallyTimeBritish = gpGlobals->curtime;
+	BG3Buffs::SetNextRallyTime(TEAM_BRITISH, gpGlobals->curtime);
+	BG3Buffs::SetNextRallyTime(TEAM_AMERICANS, gpGlobals->curtime);
 
 	//BG2 - Tjoppen - tickets
 	if (UsingTickets())

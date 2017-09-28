@@ -37,7 +37,8 @@
 #include "cbase.h"
 #include "npcevent.h"
 #include "in_buttons.h"
-#include "../shared/bg2/bg3_player_shared.h"
+#include "../shared/bg3/bg3_player_shared.h"
+#include "../shared/bg3/bg3_weapon_def.h"
 
 #ifdef CLIENT_DLL
 	#include "c_hl2mp_player.h"
@@ -58,22 +59,24 @@ static const Vector g_bludgeonMaxs(BLUDGEON_HULL_DIM,BLUDGEON_HULL_DIM,BLUDGEON_
 #define CBaseBG2Weapon C_BaseBG2Weapon
 #endif
 
+enum
+{
+	ATTACKTYPE_NONE = 0,
+	ATTACKTYPE_STAB,
+	ATTACKTYPE_SLASH,
+	ATTACKTYPE_FIREARM,
+	/*
+	other attacktypes might be
+	ATTACKTYPE_THROW,
+
+	*/
+};
+
 class CBaseBG2Weapon : public CBaseHL2MPCombatWeapon
 {
 	DECLARE_CLASS( CBaseBG2Weapon, CBaseHL2MPCombatWeapon );
 public:
-	enum
-	{
-		ATTACKTYPE_NONE = 0,
-		ATTACKTYPE_STAB,
-		ATTACKTYPE_SLASH,
-		ATTACKTYPE_FIREARM,
-		/*
-		other attacktypes might be
-		ATTACKTYPE_THROW,
-
-		*/
-	};
+	
 
 	enum
 	{
@@ -81,44 +84,6 @@ public:
 		ATTACK_PRIMARY = 0,
 		ATTACK_SECONDARY = 1,
 	};
-
-	struct attackinfo
-	{
-		int		m_iAttacktype;
-		Activity	m_iAttackActivity,
-					m_iAttackActivityEmpty;
-
-		float	m_flRange;
-		int		m_iDamage;
-		float	m_flRecoil,				//factor of 357 standard recoil - firearm only
-				m_flCosAngleTolerance,	//tolerance of melee hits(sqrt(0.5) for crowbar, or 45 degrees)
-										// - melee only
-				m_flRetraceDuration,
-				m_flAttackrate;
-
-		/*Vector	m_vDuckSpread,			//firearm only
-				m_vStandSpread;			//firearm only*/
-		
-		//cone values.. firearms only
-		float	m_flStandMoving,
-				m_flStandStill,
-				m_flCrouchMoving,
-				m_flCrouchStill,
-				// For iron sights. -HairyPotter
-				m_flStandAimStill,
-				m_flStandAimMoving,
-				m_flCrouchAimStill,
-				m_flCrouchAimMoving,
-				//
-				m_flConstantDamageRange,	//how long until we start losing damage?
-				m_flRelativeDrag;			//how does the drag on this bullet compare to a musket's?
-
-		int		m_iStaminaDrain;			//stamina drained by attack
-	};
-
-	attackinfo	m_Attackinfos[2];
-
-	const char	*m_pBayonetDeathNotice;
 
 	CBaseBG2Weapon( void );
 
@@ -139,12 +104,12 @@ public:
 
 	int		GetAttackType( int iAttack )
 	{
-		return iAttack != ATTACK_NONE ? m_Attackinfos[iAttack].m_iAttacktype : ATTACK_NONE;
+		return iAttack != ATTACK_NONE ? Def()->m_Attackinfos[iAttack].m_iAttacktype : ATTACK_NONE;
 	}
 
 	float	GetRange( int iAttack )
 	{
-		return iAttack != ATTACK_NONE ? m_Attackinfos[iAttack].m_flRange : 0;
+		return iAttack != ATTACK_NONE ? Def()->m_Attackinfos[iAttack].m_flRange : 0;
 	}
 
 	float	GetAttackRate( int iAttack )
@@ -152,10 +117,10 @@ public:
 		if( iAttack == ATTACK_NONE )
 			return 0;
 
-		if( m_Attackinfos[iAttack].m_flAttackrate < 0 )
+		if( Def()->m_Attackinfos[iAttack].m_flAttackrate < 0 )
 			return SequenceDuration();
 
-		return m_Attackinfos[iAttack].m_flAttackrate;
+		return Def()->m_Attackinfos[iAttack].m_flAttackrate;
 	}
 
 	float	GetRecoil( int iAttack )
@@ -163,7 +128,7 @@ public:
 		if( iAttack == ATTACK_NONE )
 			return 0;
 
-		return m_Attackinfos[iAttack].m_flRecoil;
+		return Def()->m_Attackinfos[iAttack].m_flRecoil;
 	}
 
 	int		GetDamage( int iAttack )
@@ -171,7 +136,7 @@ public:
 		if( iAttack == ATTACK_NONE )
 			return 0;
 
-		int damage = m_Attackinfos[iAttack].m_iDamage;
+		int damage = Def()->m_Attackinfos[iAttack].m_iDamage;
 
 		return damage;
 	}
@@ -180,12 +145,15 @@ public:
 
 	float	GetAccuracy( int iAttack )
 	{
-		if( iAttack == ATTACK_NONE )
+		CHL2MP_Player *pPlayer = ToHL2MPPlayer( GetOwner() );
+		if( iAttack == ATTACK_NONE || !pPlayer)
 			return 0.0f;
 
+		
+
 		bool moving = false;
-		if( GetOwner() && GetOwner()->GetLocalVelocity().Length() > 10.0f ||
-			!(GetOwner()->GetFlags() & FL_ONGROUND) )
+		if( pPlayer->GetLocalVelocity().Length() > 10.0f ||
+			!(pPlayer->GetFlags() & FL_ONGROUND) )
 			moving = true;	//moving fast enough or jumping increases spread..
 
 		/*if( GetOwner() && (GetOwner()->GetFlags() & FL_DUCKING) )
@@ -196,58 +164,56 @@ public:
 		float modifier = 0;
 		float multiplier = 1.0f;
 
-		CHL2MP_Player *pPlayer = ToHL2MPPlayer( GetOwner() );
-
-		if (pPlayer) {
-			if (m_iNumShot > 0 && pPlayer->GetCurrentAmmoKit() == AMMO_KIT_BUCKSHOT)
-				modifier = m_flShotAimModifier;
-			if ((pPlayer->RallyGetCurrentRallies() & RALLY_ACCURACY) && (m_bIsIronsighted || (pPlayer->GetFlags() & FL_DUCKING)))
-				multiplier = RALLY_ACCURACY_MOD;
-		}
+		//Check for other accuracy modifications
+		if (Def()->m_iNumShot > 0 && pPlayer->GetCurrentAmmoKit() == AMMO_KIT_BUCKSHOT)
+			modifier = Def()->m_flShotAimModifier;
+		if ((pPlayer->RallyGetCurrentRallies() & RALLY_ACCURACY) && (m_bIsIronsighted || (pPlayer->GetFlags() & FL_DUCKING)))
+			multiplier = RALLY_ACCURACY_MOD;
+		
 
 		float base;
 
-		if( GetOwner() && (GetOwner()->GetFlags() & FL_DUCKING) ) //we're crouching
+		if( (pPlayer->GetFlags() & FL_DUCKING) ) //we're crouching
 		{
 			if( moving ) //we're moving.
 			{
 				if ( m_bIsIronsighted ) //So we're aiming... yet moving...
-					base = m_Attackinfos[iAttack].m_flCrouchAimMoving + modifier;
+					base = Def()->m_Attackinfos[iAttack].m_flCrouchAimMoving;
 				else //Hip shot.
-					base = m_Attackinfos[iAttack].m_flCrouchMoving + modifier;
+					base = Def()->m_Attackinfos[iAttack].m_flCrouchMoving;
 			}
 			else	//we're not moving.
 			{
 				if ( m_bIsIronsighted ) //So we're aiming...
-					base = m_Attackinfos[iAttack].m_flCrouchAimStill + modifier;
+					base = Def()->m_Attackinfos[iAttack].m_flCrouchAimStill;
 				else //Hip shot.
-					base = m_Attackinfos[iAttack].m_flCrouchStill + modifier;
+					base = Def()->m_Attackinfos[iAttack].m_flCrouchStill;
 			}
 		}
 		else if (moving && pPlayer && pPlayer->m_nButtons & IN_WALK){
 			if (m_bIsIronsighted) //So we're aiming...
-				base = FLerp(m_Attackinfos[iAttack].m_flStandAimMoving, m_Attackinfos[iAttack].m_flStandAimStill, 0, 1, ACCURACY_WALK_LERP) + modifier;
+				base = FLerp(Def()->m_Attackinfos[iAttack].m_flStandAimMoving, Def()->m_Attackinfos[iAttack].m_flStandAimStill, 0, 1, ACCURACY_WALK_LERP);
 			else //Hip shot.
-				base = FLerp(m_Attackinfos[iAttack].m_flStandMoving, m_Attackinfos[iAttack].m_flStandStill, 0, 1, ACCURACY_WALK_LERP) + modifier;
+				base = FLerp(Def()->m_Attackinfos[iAttack].m_flStandMoving, Def()->m_Attackinfos[iAttack].m_flStandStill, 0, 1, ACCURACY_WALK_LERP);
 		}
 		else //We're not crouching.
 		{
 			if( moving ) //We're standing and moving.
 			{
 				if ( m_bIsIronsighted ) //So we're aiming...
-					base = m_Attackinfos[iAttack].m_flStandAimMoving + modifier;
+					base = Def()->m_Attackinfos[iAttack].m_flStandAimMoving;
 				else //Hip shot.
-					base = m_Attackinfos[iAttack].m_flStandMoving + modifier;
+					base = Def()->m_Attackinfos[iAttack].m_flStandMoving;
 			}
 			else // We're not moving.
 			{
 				if ( m_bIsIronsighted ) //So we're aiming...
-					base = m_Attackinfos[iAttack].m_flStandAimStill + modifier;
+					base = Def()->m_Attackinfos[iAttack].m_flStandAimStill;
 				else //Hip shot.
-					base = m_Attackinfos[iAttack].m_flStandStill + modifier;
+					base = Def()->m_Attackinfos[iAttack].m_flStandStill;
 			}
 		}
-		return base * multiplier;
+		return (base + modifier) * multiplier;
 	}
 
 	Activity	GetActivity( int iAttack )
@@ -255,10 +221,10 @@ public:
 		if( iAttack == ATTACK_NONE )
 			return (Activity)0;
 
-		if( m_iClip1 == 0 && m_Attackinfos[iAttack].m_iAttacktype == ATTACKTYPE_STAB )
-			return m_Attackinfos[iAttack].m_iAttackActivityEmpty;
+		if (m_iClip1 == 0 && Def()->m_Attackinfos[iAttack].m_iAttacktype == ATTACKTYPE_STAB)
+			return Def()->m_Attackinfos[iAttack].m_iAttackActivityEmpty;
 
-		return m_Attackinfos[iAttack].m_iAttackActivity;
+		return Def()->m_Attackinfos[iAttack].m_iAttackActivity;
 	}
 
 	float GetRetraceDuration( int iAttack )
@@ -267,15 +233,15 @@ public:
 
 		if (iAttack == ATTACK_NONE)
 			return 0;
-		else if (m_Attackinfos[iAttack].m_iAttacktype == ATTACKTYPE_STAB)
+		else if (Def()->m_Attackinfos[iAttack].m_iAttacktype == ATTACKTYPE_STAB)
 			return sv_bayonet_retrace_duration.GetFloat();
 		else
-			return m_Attackinfos[iAttack].m_flRetraceDuration;
+			return Def()->m_Attackinfos[iAttack].m_flRetraceDuration;
 	}
 
 	int GetStaminaDrain( int iAttack )
 	{
-		return iAttack == ATTACK_NONE ? 0 : m_Attackinfos[iAttack].m_iStaminaDrain;
+		return iAttack == ATTACK_NONE ? 0 : Def()->m_Attackinfos[iAttack].m_iStaminaDrain;
 	}
 
 	float GetCosAngleTolerance( void )
@@ -285,18 +251,18 @@ public:
 		//return tolerance of last attack
 		if (m_iLastAttack == ATTACK_NONE)
 			return 1.0f;
-		else if (m_Attackinfos[m_iLastAttack].m_iAttacktype == ATTACKTYPE_STAB)
+		else if (Def()->m_Attackinfos[m_iLastAttack].m_iAttacktype == ATTACKTYPE_STAB)
 			return cosf(sv_bayonet_angle_tolerance.GetFloat() * M_PI / 180.f);
 		else
-			return m_Attackinfos[m_iLastAttack].m_flCosAngleTolerance;
+			return Def()->m_Attackinfos[m_iLastAttack].m_flCosAngleTolerance;
 	}
 
 	//minor hack to get bayonet deathnotice
 	bool m_bLastAttackStab;
 	char *GetDeathNoticeName( void )
 	{
-		if( m_bLastAttackStab && m_pBayonetDeathNotice )
-			return (char*)m_pBayonetDeathNotice;
+		if( m_bLastAttackStab && Def()->m_pBayonetDeathNotice )
+			return (char*)Def()->m_pBayonetDeathNotice;
 		else
 			return (char*)GetClassname();
 	}
@@ -336,26 +302,16 @@ public:
 
 	//BG2 - For the holster delay. -HairyPotter
 	float m_fNextHolster;
-	float m_fHolsterTime;
 	//
-
-	//values related to internal ballistics
-	float	m_flShotAimModifier;//applies to aim cone. afterwards m_flShotSpread applies. should be negative
-	float	m_flShotSpread;		//used when firing shot, if the current gun is capable of that
-	float	m_flMuzzleVelocity;
-	float	m_flShotMuzzleVelocity;	//muzzle velocity when firing buckshot
-	float	m_flZeroRange;		//range to zero the gun in at
-	int		m_iNumShot;
-	float	m_iDamagePerShot;
 
 	float GetCurrentAmmoSpread( void )
 	{
 		CHL2MP_Player *pPlayer = ToHL2MPPlayer( GetOwner() );
 
-		if ( !pPlayer || m_iNumShot <= 0 || pPlayer->GetCurrentAmmoKit() != AMMO_KIT_BUCKSHOT )
+		if ( !pPlayer || Def()->m_iNumShot <= 0 || pPlayer->GetCurrentAmmoKit() != AMMO_KIT_BUCKSHOT )
 			return 0;
 
-		return m_flShotSpread;
+		return Def()->m_flShotSpread;
 	}
 
 	static float GetGrenadeDamage();
@@ -399,7 +355,13 @@ BEGIN_PREDICTION_DATA( CWeapon##name )							\
 END_PREDICTION_DATA()											\
 LINK_ENTITY_TO_CLASS( weapon_##name, CWeapon##name );			\
 PRECACHE_WEAPON_REGISTER( weapon_##name );						\
-CWeapon##name::CWeapon##name( void ) : CBaseBG2Weapon()			//constructor follows
+DEC_BG3_WEAPON_DEF(weapon_##name);								\
+CWeapon##name::CWeapon##name( void ) : CBaseBG2Weapon()			\
+{ m_pWeaponDef = &g_Def_weapon_##name; }						\
+DEF_BG3_WEAPON_DEF(weapon_##name)
+	
+
+//constructor follows
 
 //acttable def for bayonet firearms, only muskets so far. could a rifle use a bayonet? it's just a name anyway
 #define MUSKET_ACTTABLE( name )\

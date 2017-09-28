@@ -64,13 +64,14 @@ private:
 	static int	CountPlayersOfTeam(int iTeam);
 
 	static int	CountBotsOfTeam(int iTeam);
-	static void AddBotOfTeam(int iTeam);
+	
 	static void RemoveBotOfTeam(int iTeam);
 
 public:
 	/*
 	Public procedures for manipulating the bot population
 	*/
+	static void AddBotOfTeam(int iTeam, int count = 1);
 	static void Think(); //wraps this class's functionality into one function
 	static void SetNextThink(float thinkTime) { s_flNextThink = thinkTime; }
 	static void KickAllBots(); //removes all bots from the server

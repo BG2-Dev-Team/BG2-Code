@@ -14,7 +14,7 @@ class CHL2MP_Player;
 #include "basemultiplayerplayer.h"
 #include "hl2_playerlocaldata.h"
 #include "hl2_player.h"
-#include "../shared/bg2/bg3_player_shared.h"
+#include "../shared/bg3/bg3_player_shared.h"
 #include "../bg3/bg3_class.h"
 #include "simtimer.h"
 #include "soundenvelope.h"
@@ -192,16 +192,15 @@ public:
 	CNetworkVar(int, m_iStamina);
 
 	const CPlayerClass* m_pCurClass;
+	inline const CPlayerClass* GetPlayerClass() const { return m_pCurClass; }
 private:
 	CNetworkVar(int, m_iClass);
 	CNetworkVar(int, m_iCurrentAmmoKit);	//BG2 - Tjoppen - we need to copy m_iAmmoKit when spawned so players can't change current load by typing "kit ..."
 	CNetworkVar(int, m_iSpeedModifier);
-	CNetworkVar(int, m_iCurrentRallies); //BG3 - Awesome - bitfield of rallies which are currently affecting this player - controlled by the server
-	CNetworkVar(float, m_flEndRallyTime);
-	CNetworkVar(float, m_flNextRallyTime); //this member doesn't actually determine anything, it's just to let the clients know
+
 public:
-	static float s_flNextRallyTimeAmerican; //This is what's used to actually determine if anyone on the player's team can rally
-	static float s_flNextRallyTimeBritish;
+	CNetworkVar(int, m_iCurrentRallies); //BG3 - Awesome - bitfield of rallies which are currently affecting this player - controlled by the server
+	inline int RallyGetCurrentRallies() { return m_iCurrentRallies; }
 private:
 	//int		m_iClass;					//BG2 - Tjoppen - class system
 	int		m_iNextClass;					//BG2 - Tjoppen - which class will we become on our next respawn?
@@ -212,28 +211,13 @@ private:
 	//BG2 - Tjoppen - tickets. sometimes we don't want to remove tickets on spawn, such as when first joining a team
 	bool	m_bDontRemoveTicket;	
 
-	//BG3 - for autoswitching bad officers off of the class
-	bool	m_bBadOfficer = false;
-
 	//return the player's speed based on whether which class we are, which weapon kit we're using etc.
 	int		GetCurrentSpeed(void) const;
 
 public:
-	
-	//Officer rallying functions
-	bool	RallyRequest(int vcommCommand); //Checks if rally is available, then iterates through nearby players to rally them
-	void	RallyMe(int rallyFlags); //Applies the rallyFlags to m_iCurrentRallies, also sets rally time
-	int		RallyGetCurrentRallies(void) const { return m_iCurrentRallies; }
-	float	RallyGetEndRallyTime(void) const { return m_flEndRallyTime; }
-	float	RallyGetNextRallyTime(void) const { return m_flNextRallyTime; }
-	void	RallySetNextRallyTime(float nextTime) { m_flNextRallyTime = nextTime; }
-	static float	RallyGetRallyDuration(int rallyFlags);
-	void	RallyEffectEnable(); //visual effects, not functionality. Exact behavior depends on m_iCurrentRallies
-	void	RallyEffectDisable();
-private:
-	bool	CanRally(void) const; //Checks that we're officer and that curtime < m_flEndRallyTime
-	static int		ParseRallyCommand(int vcommCommand); //Given a vcomm command, parses it into rally flags. Returns -1 if its an unusable vcomm
-public:
+	void	OnRallyEffectEnable(); //visual effects, not functionality. Exact behavior depends on m_iCurrentRallies
+	void	OnRallyEffectDisable();
+
 	//used for temporary speed modifiers (carrying flags and such)
 	void	SetSpeedModifier(int iSpeedModifier);
 

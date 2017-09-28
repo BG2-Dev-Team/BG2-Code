@@ -657,8 +657,8 @@ void CHudBG2::MsgFunc_HitVerif( bf_read &msg )
 	if( C_BasePlayer::GetLocalPlayer()->entindex() == attacker )
 	{
 		if ((cl_hitverif.GetInt() == 1) || 
-			((attackType == C_BaseBG2Weapon::ATTACKTYPE_STAB || attackType == C_BaseBG2Weapon::ATTACKTYPE_SLASH) && cl_hitverif.GetInt() == 3) ||
-			((attackType == C_BaseBG2Weapon::ATTACKTYPE_FIREARM && cl_hitverif.GetInt() == 2)))
+			((attackType == ATTACKTYPE_STAB || attackType == ATTACKTYPE_SLASH) && cl_hitverif.GetInt() == 3) ||
+			((attackType == ATTACKTYPE_FIREARM && cl_hitverif.GetInt() == 2)))
 		{
 			hitVerificationLatency = cl_hitveriflatency.GetFloat();
 			hitVerificationHairs = gpGlobals->curtime + hitVerificationLatency;
@@ -671,7 +671,7 @@ void CHudBG2::MsgFunc_HitVerif( bf_read &msg )
 	//play melee hit sound if attacker's last attack was a melee attack
 	//note: hit sound should always be played, regardless of what cl_hitdamageline is set to
 	//in other words: don't mess up the order of these tests
-	if( attackType == C_BaseBG2Weapon::ATTACKTYPE_STAB || attackType == C_BaseBG2Weapon::ATTACKTYPE_SLASH )
+	if( attackType == ATTACKTYPE_STAB || attackType == ATTACKTYPE_SLASH )
 	{
 		//we need play the hit sound like this since WeaponSound() only plays the local player's weapon's sound, not those of the other players
 		const char *sound = pWeapon->GetShootSound( MELEE_HIT );
@@ -688,7 +688,7 @@ void CHudBG2::MsgFunc_HitVerif( bf_read &msg )
 	}
 
 	//cl_hitdamageline 0 -> don't display any hit damage line, while 2 -> don't display shot hit damage lines
-	if( cl_hitdamageline.GetInt() == 0 || (cl_hitdamageline.GetInt() == 2 && attackType == C_BaseBG2Weapon::ATTACKTYPE_FIREARM) )
+	if( cl_hitdamageline.GetInt() == 0 || (cl_hitdamageline.GetInt() == 2 && attackType == ATTACKTYPE_FIREARM) )
 		return;
 
 	//Msg( "MsgFunc_HitVerif: %i %i %i %f\n", attacker, victim, hitgroup, damage );

@@ -126,11 +126,11 @@ int CBotManager::CountBotsOfTeam(int iTeam) {
 
 
 //Adds bot of team to server. Requires that the server be ready.
-void CBotManager::AddBotOfTeam(int iTeam) {
+void CBotManager::AddBotOfTeam(int iTeam, int count) {
 	extern int g_iNextBotTeam;
 	extern CBasePlayer* BotPutInServer(int iAmount, bool bFrozen);
 	g_iNextBotTeam = iTeam;
-	BotPutInServer(1, false);
+	BotPutInServer(count, false);
 
 	//reset the bot's vcomm manager
 	CBotComManager* pComms;

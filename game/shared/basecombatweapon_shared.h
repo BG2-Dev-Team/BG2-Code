@@ -19,6 +19,9 @@
 #include "weapon_proficiency.h"
 #include "utlmap.h"
 
+//BG3 - weapon stats now defined by global weapon definitions
+#include "bg3\bg3_weapon_def.h"
+
 #if defined( CLIENT_DLL )
 #define CBaseCombatWeapon C_BaseCombatWeapon
 #endif
@@ -601,29 +604,14 @@ public:
 	bool					m_bFireOnEmpty;			// True when the gun is empty and the player is still holding down the attack key(s)
 	bool					m_bFiringWholeClip;		// Are we in the middle of firing the whole clip;
 
-	//BG2 - Tjoppen - m_bDontAutoreload
-	bool					m_bDontAutoreload;
-	//
-	//BG2 - Tjoppen - m_bCantAbortReload
-	bool					m_bCantAbortReload;
 	//
 
 	//BG2 -Added for Iron Sights. Credits to z33ky for the code base. -HairyPotter
-	float					flIronsightFOVOffset;
-	bool					m_bWeaponHasSights;
 	float					m_flNextDisableIronsights;	//BG2 - Tjoppen - the soonest time we're allowed to disable the sights
 
-	
-	enum WeaponType {
-		PISTOL,
-		CARBINE, //used for slower officer speed checking, as client can't access m_iGunKit
-		MUSKET,
-		RIFLE, //BG3 - Awesome - This is only used to determine flintlock delay and dynamic FOV adjust
-		GRENADE, //
-		GENERIC,
-	};
-	WeaponType m_eWeaponType;
-	//
+	//BG3 - Awesome - weapon def reference added here, so it's accesible from everywhere
+	const CWeaponDef*		m_pWeaponDef;
+	inline const CWeaponDef* Def() const { return m_pWeaponDef; }
 
 	// Weapon art
 	CNetworkVar( int, m_iViewModelIndex );
@@ -663,12 +651,16 @@ public:
 	CNetworkVar( int, m_iSecondaryAmmoType );	// "secondary" ammo index into the ammo info array
 	CNetworkVar( int, m_iClip1 );				// number of shots left in the primary weapon clip, -1 it not used
 	CNetworkVar( int, m_iClip2 );				// number of shots left in the secondary weapon clip, -1 it not used
-	bool					m_bFiresUnderwater;		// true if this weapon can fire underwater
-	bool					m_bAltFiresUnderwater;		// true if this weapon can fire underwater
-	float					m_fMinRange1;			// What's the closest this weapon can be used?
-	float					m_fMinRange2;			// What's the closest this weapon can be used?
-	float					m_fMaxRange1;			// What's the furthest this weapon can be used?
-	float					m_fMaxRange2;			// What's the furthest this weapon can be used?
+	
+	//BG3 - Awesome - moved these to m_pWeaponDef
+	//bool					m_bFiresUnderwater;		// true if this weapon can fire underwater
+	//bool					m_bAltFiresUnderwater;		// true if this weapon can fire underwater
+
+	//BG3 - only deprecated HL2 NPC ai uses these, we don't need them
+	//float					m_fMinRange1;			// What's the closest this weapon can be used?
+	//float					m_fMinRange2;			// What's the closest this weapon can be used?
+	//float					m_fMaxRange1;			// What's the furthest this weapon can be used?
+	//float					m_fMaxRange2;			// What's the furthest this weapon can be used?
 	bool					m_bReloadsSingly;		// True if this weapon reloads 1 round at a time
 	float					m_fFireDuration;		// The amount of time that the weapon has sustained firing
 	int						m_iSubType;

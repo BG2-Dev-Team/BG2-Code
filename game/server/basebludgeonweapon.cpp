@@ -38,7 +38,7 @@ static const Vector g_bludgeonMaxs(BLUDGEON_HULL_DIM,BLUDGEON_HULL_DIM,BLUDGEON_
 //-----------------------------------------------------------------------------
 CBaseHLBludgeonWeapon::CBaseHLBludgeonWeapon()
 {
-	m_bFiresUnderwater = true;
+	//m_bFiresUnderwater = true; //BG3 - Awesome - don't need this
 }
 
 //-----------------------------------------------------------------------------
@@ -46,10 +46,10 @@ CBaseHLBludgeonWeapon::CBaseHLBludgeonWeapon()
 //-----------------------------------------------------------------------------
 void CBaseHLBludgeonWeapon::Spawn( void )
 {
-	m_fMinRange1	= 0;
+	/*m_fMinRange1	= 0;	//BG3 - Awesome - don't need this
 	m_fMinRange2	= 0;
 	m_fMaxRange1	= 64;
-	m_fMaxRange2	= 64;
+	m_fMaxRange2	= 64;*/
 	//Call base class first
 	BaseClass::Spawn();
 }

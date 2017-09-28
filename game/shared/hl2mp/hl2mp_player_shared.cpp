@@ -14,7 +14,7 @@
 #else
 #include "hl2mp_player.h"
 #endif
-#include "../shared/bg2/bg3_player_shared.h"
+#include "../shared/bg3/bg3_player_shared.h"
 
 #include "engine/IEngineSound.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
@@ -182,9 +182,11 @@ int CHL2MP_Player::GetCurrentSpeed(void) const
 	{
 		base = m_pCurClass->m_flBaseSpeed;
 	}
+	
 	//Check for speed buff, but don't stack the effects
-	if ((m_iCurrentRallies & RALLY_SPEED) && !(GetActiveWeapon() && GetActiveWeapon()->m_bInReload))
+	if ((m_iCurrentRallies & RALLY_SPEED) && !(GetActiveWeapon() && GetActiveWeapon()->m_bInReload)) {
 		scale *= RALLY_SPEED_MOD;
+	}
 
 	return (base + m_iSpeedModifier) * scale;
 }

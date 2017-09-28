@@ -373,14 +373,14 @@ int CBaseCombatWeapon::WeaponRangeAttack1Condition( float flDot, float flDist )
  	{
  		return COND_NO_PRIMARY_AMMO;
  	}
- 	else if ( flDist < m_fMinRange1) 
+ 	/*else if ( flDist < m_fMinRange1) //BG3 - removed range variables
  	{
  		return COND_TOO_CLOSE_TO_ATTACK;
  	}
  	else if (flDist > m_fMaxRange1) 
  	{
  		return COND_TOO_FAR_TO_ATTACK;
- 	}
+ 	}*/
  	else if (flDot < 0.5) 	// UNDONE: Why check this here? Isn't the AI checking this already?
  	{
  		return COND_NOT_FACING_ATTACK;
@@ -403,14 +403,14 @@ int CBaseCombatWeapon::WeaponRangeAttack2Condition( float flDot, float flDist )
 		{
 			return COND_NO_SECONDARY_AMMO;
 		}
-		else if ( flDist < m_fMinRange2) 
+		/*else if ( flDist < m_fMinRange2) //BG3 - removed range variables
 		{
 			return COND_TOO_CLOSE_TO_ATTACK;
 		}
 		else if (flDist > m_fMaxRange2) 
 		{
 			return COND_TOO_FAR_TO_ATTACK;
-		}
+		}*/
 		else if (flDot < 0.5) 
 		{
 			return COND_NOT_FACING_ATTACK;

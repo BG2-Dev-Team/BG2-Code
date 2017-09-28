@@ -136,14 +136,14 @@ int CHLMachineGun::WeaponRangeAttack1Condition( float flDot, float flDist )
 	{
 		return COND_NO_PRIMARY_AMMO;
 	}
-	else if ( flDist < m_fMinRange1 ) 
+	/*else if ( flDist < m_fMinRange1 ) 
 	{
 		return COND_TOO_CLOSE_TO_ATTACK;
 	}
 	else if ( flDist > m_fMaxRange1 )
 	{
 		return COND_TOO_FAR_TO_ATTACK;
-	}
+	}*/
 	else if ( flDot < 0.5f )	// UNDONE: Why check this here? Isn't the AI checking this already?
 	{
 		return COND_NOT_FACING_ATTACK;
@@ -465,14 +465,14 @@ int CHLSelectFireMachineGun::WeaponRangeAttack1Condition( float flDot, float flD
 	{
 		return COND_NO_PRIMARY_AMMO;
 	}
-	else if ( flDist < m_fMinRange1) 
+	/*else if ( flDist < m_fMinRange1) 
 	{
 		return COND_TOO_CLOSE_TO_ATTACK;
 	}
 	else if (flDist > m_fMaxRange1) 
 	{
 		return COND_TOO_FAR_TO_ATTACK;
-	}
+	}*/
 	else if (flDot < 0.5)	// UNDONE: Why check this here? Isn't the AI checking this already?
 	{
 		return COND_NOT_FACING_ATTACK;
@@ -491,7 +491,7 @@ int CHLSelectFireMachineGun::WeaponRangeAttack2Condition( float flDot, float flD
 	{
 		return COND_NO_SECONDARY_AMMO;
 	}
-	else if ( flDist < m_fMinRange2 )
+	/*else if ( flDist < m_fMinRange2 )
 	{
 		// Don't return	COND_TOO_CLOSE_TO_ATTACK only for primary attack
 		return COND_NONE;
@@ -500,7 +500,7 @@ int CHLSelectFireMachineGun::WeaponRangeAttack2Condition( float flDot, float flD
 	{
 		// Don't return COND_TOO_FAR_TO_ATTACK only for primary attack
 		return COND_NONE;
-	}
+	}*/
 	else if ( flDot < 0.5 ) // UNDONE: Why check this here? Isn't the AI checking this already?
 	{
 		return COND_NOT_FACING_ATTACK;
@@ -514,9 +514,9 @@ int CHLSelectFireMachineGun::WeaponRangeAttack2Condition( float flDot, float flD
 //-----------------------------------------------------------------------------
 CHLSelectFireMachineGun::CHLSelectFireMachineGun( void )
 {
-	m_fMinRange1	= 65;
-	m_fMinRange2	= 65;
-	m_fMaxRange1	= 1024;
-	m_fMaxRange2	= 1024;
+	//m_fMinRange1	= 65;
+	//m_fMinRange2	= 65;
+	//m_fMaxRange1	= 1024;
+	//m_fMaxRange2	= 1024;
 	m_iFireMode		= FIREMODE_FULLAUTO;
 }

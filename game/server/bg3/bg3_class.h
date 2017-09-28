@@ -2,7 +2,7 @@
 The Battle Grounds 3 - A Source modification
 Copyright (C) 2017, The Battle Grounds 3 Team and Contributors
 
-The Battle Grounds 2 free software; you can redistribute it and/or
+The Battle Grounds 3 free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
 version 2.1 of the License, or (at your option) any later version.
@@ -34,7 +34,7 @@ commented on the following form:
 #ifndef BG3_PLAYER_CLASS
 #define BG3_PLAYER_CLASS
 
-#include "../../shared/bg2/bg3_player_shared.h"
+#include "../../shared/bg3/bg3_player_shared.h"
 
 /*
 PLAYER-MODELS LIST

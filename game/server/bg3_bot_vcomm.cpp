@@ -166,7 +166,7 @@ void CBotComManager::DispatchVCommToBot() {
 void CBotComManager::Think() {
 	if (bot_vcomms.GetBool() && m_flNextComm < gpGlobals->curtime && !IsLinebattle()) {
 		DispatchVCommToBot();
-		m_flNextComm = gpGlobals->curtime + bot_randfloat(4.0, 10.0);
+		m_flNextComm = gpGlobals->curtime + bot_randfloat(3.0, 8.0);
 	}
 }
 

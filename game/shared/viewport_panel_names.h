@@ -30,6 +30,9 @@
 #define PANEL_COMM2			"commmenu2"
 //
 
+//BG3 - new team and kits menus
+#define PANEL_TEAMS "teammenu"
+
 
 #define PANEL_COMMENTARY_MODELVIEWER	"commentary_modelviewer"
 

@@ -1760,7 +1760,13 @@
     <ClInclude Include="bg3\bg3_class.h">
       <Filter>Source Files\BG3</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\bg2\bg3_player_shared.h">
+    <ClInclude Include="..\shared\bg3\bg3_player_shared.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\bg3\bg3_buffs.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\bg3\bg3_weapon_def.h">
       <Filter>Source Files\BG3</Filter>
     </ClInclude>
   </ItemGroup>
@@ -3282,6 +3288,18 @@
     </ClCompile>
     <ClCompile Include="bg3\bg3_class.cpp">
       <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\bg3\bg3_buffs.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\bg3\bg3_weapon_def.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_bot_helpers.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_bot_adder.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

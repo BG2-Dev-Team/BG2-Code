@@ -179,6 +179,8 @@ public:
 		Q_strncpy( BLight1, (const char *)inResourceData->GetString( "BLightImage1", "" ), 80 );
 		Q_strncpy( AOff1, (const char *)inResourceData->GetString( "AOffImage1", "" ), 80 );
 		Q_strncpy( BOff1, (const char *)inResourceData->GetString( "BOffImage1", "" ), 80 );
+		Q_strncpy( AOff2, (const char *)inResourceData->GetString( "AOffImage2", ""), 80);
+		Q_strncpy( BOff2, (const char *)inResourceData->GetString( "BOffImage2", ""), 80);
 
 		//Mouse Overs
 		Q_strncpy( AInf1M, (const char *)inResourceData->GetString( "AInfMouseImage1", "" ), 80 );
@@ -193,6 +195,8 @@ public:
 		Q_strncpy( BLight1M, (const char *)inResourceData->GetString( "BLightMouseImage1", "" ), 80 );
 		Q_strncpy( AOff1M, (const char *)inResourceData->GetString( "AOffMouseImage1", "" ), 80 );
 		Q_strncpy( BOff1M, (const char *)inResourceData->GetString( "BOffMouseImage1", "" ), 80 );
+		Q_strncpy( AOff2M, (const char *)inResourceData->GetString( "AOffMouseImage2", ""), 80);
+		Q_strncpy( BOff2M, (const char *)inResourceData->GetString( "BOffMouseImage2", ""), 80);
 		//
 
 		BaseClass::ApplySettings( inResourceData );
@@ -200,7 +204,7 @@ public:
 
 	char BLight1[80], BInf1[80], BInf2[80], AInf1[80], AInf2[80], AInf3[80], ASki1[80], ASki2[80],
 		 BSki1[80], BSki2[80], BLight1M[80], BInf1M[80], BInf2M[80], AInf1M[80], AInf2M[80], AInf3M[80], ASki1M[80], ASki2M[80],
-		 BSki1M[80], BSki2M[80], AOff1[80], BOff1[80], AOff1M[80], BOff1M[80];
+		 BSki1M[80], BSki2M[80], AOff1[80], BOff1[80], AOff1M[80], BOff1M[80], AOff2[80], BOff2[80], AOff2M[80], BOff2M[80];;
 
 	bool m_bMouseOver;
 };
@@ -308,6 +312,8 @@ class CStatsButton : public vgui::ToggleButton
 		Q_strncpy( BLight1_shot.img, (const char *)inResourceData->GetString( "BLightImage1_shot", "" ), 80 );
 		Q_strncpy( AOff1.img, (const char *)inResourceData->GetString( "AOffImage1", "" ), 80 );
 		Q_strncpy( BOff1.img, (const char *)inResourceData->GetString( "BOffImage1", "" ), 80 );
+		Q_strncpy( AOff2.img, (const char *)inResourceData->GetString( "AOffImage2", ""), 80);
+		Q_strncpy( BOff2.img, (const char *)inResourceData->GetString( "BOffImage2", ""), 80);
 
 		AInf1.count = HL2MPRules()->getDefaultInfantryAmmo();
 		AInf2.count = AInf1.count;
@@ -331,7 +337,7 @@ class CStatsButton : public vgui::ToggleButton
 	}
 
 	// BG2 - VisualMelon - these are stolen from CWeaponButton also
-	weaponStat BLight1, BInf1, BInf2, AInf1, AInf2, /*AInf3,*/ ASki1, ASki2, BSki1, BSki2, AOff1, BOff1;
+	weaponStat BLight1, BInf1, BInf2, AInf1, AInf2, /*AInf3,*/ ASki1, ASki2, BSki1, BSki2, AOff1, BOff1, AOff2, BOff2;
 	// BG2 - VisualMelon - additional ones for weapons with shot option
 	weaponStat BLight1_shot, ASki1_shot;
 };

@@ -51,7 +51,7 @@
 extern IGameUIFuncs *gameuifuncs; // for key binding details
 
 ConVar cl_quickjoin( "cl_quickjoin", "0", FCVAR_ARCHIVE, "Automatically join the game after choosing a class, spawing with the default weapon kit.");
-ConVar cl_classmenu_sounds( "cl_classmenu_sounds", "1", FCVAR_ARCHIVE, "Enable sounds in the team/class/weapon selection menu.");
+extern ConVar cl_classmenu_sounds;
 
 #define CVAR_FLAGS	( FCVAR_ARCHIVE | FCVAR_USERINFO )
 
@@ -1444,7 +1444,15 @@ void CStatsButton::Paint ( void )
 						GetWeaponImage( ASki2 );
 					break;
 					case CLASS_OFFICER:
-					GetWeaponImage( AOff1 ); // only 1 choice
+						if (pButton1->m_bMouseOver)
+							GetWeaponImage(AOff1);
+						else if (pButton2->m_bMouseOver)
+							GetWeaponImage(AOff2);
+						// nothing moused
+						else if (pButton1->IsSelected())
+							GetWeaponImage(AOff1);
+						else if (pButton2->IsSelected())
+							GetWeaponImage(AOff2);
 					break;
 				default:
 					// whaaaat?!
@@ -1488,7 +1496,15 @@ void CStatsButton::Paint ( void )
 						GetWeaponImage( BLight1_shot );
 					break;
 				case CLASS_OFFICER:
-					GetWeaponImage( BOff1 ); // only 1 choice
+					if (pButton1->m_bMouseOver)
+						GetWeaponImage(BOff1);
+					else if (pButton2->m_bMouseOver)
+						GetWeaponImage(BOff2);
+					// nothing moused
+					else if (pButton1->IsSelected())
+						GetWeaponImage(BOff1);
+					else if (pButton2->IsSelected())
+						GetWeaponImage(BOff2);
 					break;
 				default:
 					// whaaaat?!
@@ -1581,7 +1597,7 @@ void CWeaponButton::Paint ( void )
 					break;
 				case CLASS_OFFICER:
 					pButton1->GetWeaponImages( AOff1M, AOff1 );
-					pButton2->SetVisible( false );
+					pButton2->GetWeaponImages( AOff2M, AOff2);
 					pButton3->SetVisible( false );
 					break;
 				default:
@@ -1612,7 +1628,7 @@ void CWeaponButton::Paint ( void )
 					break;
 				case CLASS_OFFICER:
 					pButton1->GetWeaponImages( BOff1M, BOff1 );
-					pButton2->SetVisible( false );
+					pButton2->GetWeaponImages( BOff2M, BOff2);
 					pButton3->SetVisible( false );
 					break;
 				default:

@@ -18,7 +18,7 @@
 #include "gamerules.h"
 #include "teamplay_gamerules.h"
 #include "gamevars_shared.h"
-#include "../shared/bg2/bg3_player_shared.h"
+#include "../shared/bg3/bg3_player_shared.h"
 
 //BG2 - Skillet - For ragdoll removal stuff
 #ifdef CLIENT_DLL

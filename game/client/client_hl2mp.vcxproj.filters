@@ -61,6 +61,9 @@
     <Filter Include="Source Files\BG3">
       <UniqueIdentifier>{77a43279-9346-4b87-bf2c-901b254b8847}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\BG3\Math">
+      <UniqueIdentifier>{1de8cd29-c5fe-48b3-95d2-2b0d1313734f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\bitmap.lib">
@@ -1988,13 +1991,34 @@
     <ClInclude Include="..\server\bg2\weapon_bg2base.h">
       <Filter>Source Files\BG2</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\bg2\bg3_weapon_shared.h">
-      <Filter>Source Files\BG2</Filter>
+    <ClInclude Include="..\server\bg3\bg3_class.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\bg3\bg3_buffs.h">
+      <Filter>Source Files\BG3</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\bg2\bg3_math_shared.h">
-      <Filter>Source Files\BG2</Filter>
+      <Filter>Source Files\BG3</Filter>
     </ClInclude>
-    <ClInclude Include="..\server\bg3\bg3_class.h">
+    <ClInclude Include="..\shared\bg2\bg3_weapon_shared.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\bg3\bg3_player_shared.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3_hint.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\bg3\Math\bg3_rand.h">
+      <Filter>Source Files\BG3\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\bg3\bg3_weapon_def.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bg3_teammenu.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bg3_localkit.h">
       <Filter>Source Files\BG3</Filter>
     </ClInclude>
   </ItemGroup>
@@ -3607,10 +3631,28 @@
     <ClCompile Include="..\server\bg2\weapon_bg2weapons.cpp">
       <Filter>Source Files\BG2</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\bg2\bg3_math_shared.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
     <ClCompile Include="..\server\bg3\bg3_class.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_hud_buffs.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\bg2\bg3_math_shared.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\bg3\bg3_buffs.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3_hint.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\bg3\Math\bg3_rand.cpp">
+      <Filter>Source Files\BG3\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\bg3\bg3_weapon_def.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_teammenu.cpp">
       <Filter>Source Files\BG3</Filter>
     </ClCompile>
   </ItemGroup>

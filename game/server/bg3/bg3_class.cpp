@@ -2,7 +2,7 @@
 The Battle Grounds 3 - A Source modification
 Copyright (C) 2017, The Battle Grounds 3 Team and Contributors
 
-The Battle Grounds 2 free software; you can redistribute it and/or
+The Battle Grounds 3 free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
 version 2.1 of the License, or (at your option) any later version.
@@ -420,7 +420,7 @@ DEC_BG3_PLAYER_CLASS(AStateMilitia, linf, a) {
 
 	m_aWeapons[0].m_pszWeaponName = "weapon_longpattern_nobayo";
 	m_aWeapons[0].m_bAlwaysGive = true;
-	m_aWeapons[1].m_pszWeaponName = "weapon_shortsword";
+	m_aWeapons[1].m_pszWeaponName = "weapon_smallsword";
 	m_aWeapons[1].m_bAlwaysGive = true;
 
 	addSelfToGlobalLists(this);

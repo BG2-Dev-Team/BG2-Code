@@ -12,7 +12,7 @@
 class C_HL2MP_Player;
 #include "c_basehlplayer.h"
 #include "hl2mp_player_shared.h"
-#include "../shared/bg2/bg3_player_shared.h"
+#include "../shared/bg3/bg3_player_shared.h"
 #include "../server/bg3/bg3_class.h"
 #include "beamdraw.h"
 
@@ -86,7 +86,6 @@ public:
 	float m_DeathTime; //BG2 - Used for "death cam". -HairyPotter
 
 	int		GetClass(void)	const		{ return m_iClass; }
-	const CPlayerClass* GetPlayerClass() const { return m_pCurClass; }
 	int		GetCurrentAmmoKit(void)const{ return m_iCurrentAmmoKit; }
 
 	//return the player's speed based on whether which class we are, which weapon kit we're using etc.
@@ -104,15 +103,12 @@ private:
 	
 	//BG2 - rallying stuff
 	int		m_iCurrentRallies = 0;	//BG3 - Awesome - bitfield of rallies which are currently affecting this player - controlled by the server
-	float	m_flEndRallyTime = 0; //controlled by the server
-	float	m_flNextRallyTime = 0;
 
 public:
+	inline const CPlayerClass* GetPlayerClass() const { return m_pCurClass; }
 	int				RallyGetCurrentRallies(void) const { return m_iCurrentRallies; }
-	float			RallyGetEndRallyTime(void) const { return m_flEndRallyTime; }
-	float			RallyGetNextRallyTime(void) const { return m_flNextRallyTime; }
-	void			RallyEffectEnable(); //FOV change, any sounds, etc.
-	void			RallyEffectDisable();
+	void			OnRallyEffectEnable(); //FOV change, any sounds, etc.
+	void			OnRallyEffectDisable();
 
 public: //BG2 had these private, Valve had them public? - Awesome
 	HL2MPPlayerState State_Get() const;

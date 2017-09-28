@@ -131,7 +131,7 @@ m_iCurrentRallies is a bit field so that a player can have multiple rallies at o
 */
 #if 1
 #define RALLY_DURATION			10.0f	//default until you change the derived macros
-#define RALLY_INTERVAL			200.0f //time an officer must wait before doing another rally
+#define RALLY_INTERVAL			100.0f //time an officer must wait before doing another rally
 
 #define	RALLY_SPEED				(1 << 0)
 #define RALLY_SPEED_MOD			1.1f //Speed multiplier for affected players

@@ -90,7 +90,7 @@ float CBaseCombatWeapon::GetIronsightFOVOffset(void) const
 	if (viewmodel_adjust_enabled.GetBool()) //Out of the way, you!
 		return viewmodel_adjust_fov.GetFloat();
 #endif
-	float offset = flIronsightFOVOffset;
+	float offset = Def()->m_flIronsightFOVOffset;
 
 	//BG3 - Awesome - make rifle's FOV zoom dependent on crouching!
 #ifdef CLIENT_DLL
@@ -98,7 +98,7 @@ float CBaseCombatWeapon::GetIronsightFOVOffset(void) const
 #else
 	CHL2MP_Player * pOwner = ToHL2MPPlayer(GetOwner());
 #endif
-	if (m_eWeaponType == RIFLE && pOwner && (pOwner->m_nButtons & IN_DUCK)) {
+	if (Def()->m_eWeaponType == RIFLE && pOwner && (pOwner->m_nButtons & IN_DUCK)) {
 		offset *= 1.5;
 	}
 		
@@ -110,22 +110,24 @@ extern bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPla
 
 CBaseCombatWeapon::CBaseCombatWeapon()
 {
+	//BG3 - get default weapon def
+	m_pWeaponDef = CWeaponDef::GetDefault();
+
 	// Constructor must call this
 	// CONSTRUCT_PREDICTABLE( CBaseCombatWeapon );
 
 	// Some default values.  There should be set in the particular weapon classes
-	m_fMinRange1		= 65;
-	m_fMinRange2		= 65;
-	m_fMaxRange1		= 1024;
-	m_fMaxRange2		= 1024;
+	//m_fMinRange1		= 65;
+	//m_fMinRange2		= 65;
+	//m_fMaxRange1		= 1024;
+	//m_fMaxRange2		= 1024;
 	//BG2 - Tjoppen - default to no automatic reload
-	m_bDontAutoreload = false;
+	//m_bDontAutoreload = false;
 
 	//BG2 -Added for Iron Sights Testing. Credits to z33ky for the code. -HairyPotter
 	m_bIsIronsighted = false;
 	m_flIronsightedTime = 0.0f;
 	m_flNextDisableIronsights = 0;
-	m_eWeaponType = GENERIC; //BG3 - default value - Awesome
 	//
 
 	m_bReloadsSingly	= false;
@@ -723,13 +725,14 @@ void CBaseCombatWeapon::EnableIronsights(void)
 	if (m_bIsIronsighted)
 		return;
 
-	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	CHL2MP_Player *pOwner = ToHL2MPPlayer(GetOwner());
 
 	if (!pOwner)
 		return;
 
 #ifndef CLIENT_DLL
-	if (!pOwner->SetFOV(this, pOwner->GetDefaultFOV() + GetIronsightFOVOffset(), IRONSIGHTS_FOV_IN_TIME)) //modify these values to adjust how fast the fov is applied
+	if (!pOwner->SetFOV(this, pOwner->GetDefaultFOV() + GetIronsightFOVOffset(), IRONSIGHTS_FOV_IN_TIME)
+		&& !pOwner->RallyGetCurrentRallies()) //modify these values to adjust how fast the fov is applied
 		return;
 
 	if (!m_iClip1)
@@ -752,13 +755,14 @@ void CBaseCombatWeapon::DisableIronsights(void)
 	if (!m_bIsIronsighted)
 		return;
 
-	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	CHL2MP_Player *pOwner = ToHL2MPPlayer(GetOwner());
 
 	if (!pOwner)
 		return;
 
 #ifndef CLIENT_DLL
-	if (!pOwner->SetFOV(this, 0, IRONSIGHTS_FOV_OUT_TIME)) //modify these values to adjust how fast the fov is applied
+	if (!pOwner->SetFOV(this, 0, IRONSIGHTS_FOV_OUT_TIME)
+		&& !pOwner->RallyGetCurrentRallies()) //modify these values to adjust how fast the fov is applied
 		return;
 
 	m_bIsIronsighted = false;
@@ -1477,17 +1481,13 @@ bool CBaseCombatWeapon::ReloadOrSwitchWeapons( void )
 	{
 		// Weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
 		//BG2 - Tjoppen - don't automatically reload
-		/*if ( UsesClipsForAmmo1() &&
-		(m_iClip1 == 0) &&
-		(GetWeaponFlags() & ITEM_FLAG_NOAUTORELOAD) == false &&
-		m_flNextPrimaryAttack < gpGlobals->curtime &&
-		m_flNextSecondaryAttack < gpGlobals->curtime )*/
+		//BG3 - modified m_bDontAutoReload to be member of global weapon def - Awesome
 		if (UsesClipsForAmmo1() &&
 			(m_iClip1 == 0) &&
 			(GetWeaponFlags() & ITEM_FLAG_NOAUTORELOAD) == false &&
 			m_flNextPrimaryAttack < gpGlobals->curtime &&
 			m_flNextSecondaryAttack < gpGlobals->curtime &&
-			!m_bDontAutoreload)
+			!Def()->m_bDontAutoreload)
 		{
 			// if we're successfully reloading, we're done
 			if (Reload())
@@ -1608,7 +1608,7 @@ bool CBaseCombatWeapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 	CBaseCombatCharacter *pOwner = GetOwner();
 
 	//BG2 - Tjoppen - m_bCantAbortReload
-	if (m_bCantAbortReload && m_bInReload)
+	if (Def()->m_bCantAbortReload && m_bInReload)
 		return false;
 	else if (pOwner && m_bInReload)
 		pOwner->RemoveAmmo(1, m_iPrimaryAmmoType); //Let's just remove that shot from our ammo box. -HairyPotter
@@ -1804,7 +1804,7 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 				m_flNextSecondaryAttack = m_flNextEmptySoundTime = gpGlobals->curtime + 0.5;
 			}
 		}
-		else if (pOwner->GetWaterLevel() == 3 && m_bAltFiresUnderwater == false)
+		else if (pOwner->GetWaterLevel() == 3 && Def()->m_bAltFiresUnderwater == false) //BG3 - moved m_bAltFireUnderwater to m_pWeaponDef
 		{
 			// This weapon doesn't fire underwater
 			WeaponSound(EMPTY);
@@ -1851,7 +1851,7 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 		{
 			HandleFireOnEmpty();
 		}
-		else if (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
+		else if (pOwner->GetWaterLevel() == 3 && Def()->m_bFiresUnderwater == false) //BG3 - moved static stats to def
 		{
 			// This weapon doesn't fire underwater
 			WeaponSound(EMPTY);
@@ -1899,7 +1899,7 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	}
 
 	//BG2 - only toggling ironsights only if we have them, we're not in a reload and we're not too soon after the last attack
-	if (m_bWeaponHasSights && !m_bInReload)
+	if (Def()->m_bWeaponHasSights && !m_bInReload) //BG3 - Awesome - moved static stats to def
 	{
 		if ((pOwner->m_nButtons & IN_ZOOM) && gpGlobals->curtime > m_flNextPrimaryAttack && gpGlobals->curtime > m_flNextSecondaryAttack)
 		{
@@ -2716,12 +2716,12 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 	DEFINE_FIELD( m_Activity, FIELD_INTEGER ),
 	DEFINE_FIELD( m_fFireDuration, FIELD_FLOAT ),
 	DEFINE_FIELD( m_iszName, FIELD_INTEGER ),		
-	DEFINE_FIELD( m_bFiresUnderwater, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bAltFiresUnderwater, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_fMinRange1, FIELD_FLOAT ),		
-	DEFINE_FIELD( m_fMinRange2, FIELD_FLOAT ),		
-	DEFINE_FIELD( m_fMaxRange1, FIELD_FLOAT ),		
-	DEFINE_FIELD( m_fMaxRange2, FIELD_FLOAT ),		
+	//DEFINE_FIELD( m_bFiresUnderwater, FIELD_BOOLEAN ),
+	//DEFINE_FIELD( m_bAltFiresUnderwater, FIELD_BOOLEAN ),
+	//DEFINE_FIELD( m_fMinRange1, FIELD_FLOAT ),		
+	//DEFINE_FIELD( m_fMinRange2, FIELD_FLOAT ),		
+	//DEFINE_FIELD( m_fMaxRange1, FIELD_FLOAT ),		
+	//DEFINE_FIELD( m_fMaxRange2, FIELD_FLOAT ),		
 	DEFINE_FIELD( m_bReloadsSingly, FIELD_BOOLEAN ),	
 	DEFINE_FIELD( m_bRemoveable, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_iPrimaryAmmoCount, FIELD_INTEGER ),
@@ -2762,12 +2762,12 @@ BEGIN_DATADESC( CBaseCombatWeapon )
 	DEFINE_FIELD( m_iSecondaryAmmoType, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iClip1, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iClip2, FIELD_INTEGER ),
-	DEFINE_FIELD( m_bFiresUnderwater, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bAltFiresUnderwater, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_fMinRange1, FIELD_FLOAT ),
-	DEFINE_FIELD( m_fMinRange2, FIELD_FLOAT ),
-	DEFINE_FIELD( m_fMaxRange1, FIELD_FLOAT ),
-	DEFINE_FIELD( m_fMaxRange2, FIELD_FLOAT ),
+	//DEFINE_FIELD( m_bFiresUnderwater, FIELD_BOOLEAN ),	//BG3 - don't save/care about these
+	//DEFINE_FIELD( m_bAltFiresUnderwater, FIELD_BOOLEAN ),
+	//DEFINE_FIELD( m_fMinRange1, FIELD_FLOAT ),
+	//DEFINE_FIELD( m_fMinRange2, FIELD_FLOAT ),
+	//DEFINE_FIELD( m_fMaxRange1, FIELD_FLOAT ),
+	//DEFINE_FIELD( m_fMaxRange2, FIELD_FLOAT ),
 
 	DEFINE_FIELD( m_iPrimaryAmmoCount, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iSecondaryAmmoCount, FIELD_INTEGER ),

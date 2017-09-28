@@ -16,6 +16,8 @@
 #include "iclientmode.h"
 #include "baseviewport.h"
 #include "game_controls/vguitextwindow.h"
+#include "../bg3_hint.h"
+#include "../../shared/bg3/Math/bg3_rand.h"
 
 using namespace vgui;
 // memdbgon must be the last include file in a .cpp file!!!
@@ -146,13 +148,13 @@ public:
 	{
 		// In-game, everything will be in different places than at the root menu!
 		if (InGame() && !InGameLayout) {
-			m_pButtonCreateDisconnect->SetCommand( "Disconnect" );
+			m_pButtonCreateDisconnect->SetCommand("Disconnect");
 			PerformDefaultLayout();
 			m_pCommunity->SetVisible(false);
 		}
 		if (!InGame() && InGameLayout)
 		{
-			m_pButtonCreateDisconnect->SetCommand( "OpenCreateMultiplayerGameDialog" );
+			m_pButtonCreateDisconnect->SetCommand("OpenCreateMultiplayerGameDialog");
 			PerformDefaultLayout();
 			m_pCommunity->SetVisible(true);
 		}
@@ -453,6 +455,7 @@ void CMainMenu::OnCommand(const char *command)
 	}
 	else if ( !Q_stricmp( command, "OpenCreateMultiplayerGameDialog" ) )
 	{
+		BG3Hint::UpdateLoadingDialogueHintDisplay();
 		engine->ClientCmd("gamemenucommand OpenCreateMultiplayerGameDialog");
 	}
 	else if ( !Q_stricmp( command, "ResumeGame" ) )
@@ -461,6 +464,7 @@ void CMainMenu::OnCommand(const char *command)
 	}
 	else if ( !Q_stricmp( command, "OpenServerBrowser" ) )
 	{
+		BG3Hint::UpdateLoadingDialogueHintDisplay();
 		engine->ClientCmd("gamemenucommand OpenServerBrowser");
 	}
 	else if ( !Q_stricmp( command, "OpenBG2OptionsDialog" ) )

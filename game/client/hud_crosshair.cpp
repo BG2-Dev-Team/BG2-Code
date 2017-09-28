@@ -529,7 +529,7 @@ void CHudCrosshair::Paint( void )
 		//when no, the circle will fade out. once holding a loaded firearm again, it will fade back in
 		bool drawCircle = false;
 
-		if (weapon->GetAttackType(C_BaseBG2Weapon::ATTACK_PRIMARY) == C_BaseBG2Weapon::ATTACKTYPE_FIREARM)
+		if (weapon->GetAttackType(C_BaseBG2Weapon::ATTACK_PRIMARY) == ATTACKTYPE_FIREARM)
 		{
 			drawCircle = weapon->m_iClip1;
 

@@ -27,7 +27,7 @@
 #include "c_hl2mp_player.h"
 #include "cdll_int.h"
 #endif
-#include "../shared/bg2/bg3_player_shared.h"
+#include "../shared/bg3/bg3_player_shared.h"
 
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -4320,7 +4320,7 @@ void CGameMovement::FinishDuck( void )
 
 	//BG3 - Awesome - if we're already aiming with a rifle, then check the FOV zoom again!
 	CBaseCombatWeapon * pWeapon = pHL2Player->GetActiveWeapon();
-	if (pWeapon && pWeapon->m_eWeaponType == CBaseCombatWeapon::WeaponType::RIFLE && pWeapon->m_bIsIronsighted) {
+	if (pWeapon && pWeapon->Def()->m_eWeaponType == WeaponType::RIFLE && pWeapon->m_bIsIronsighted) {
 		pHL2Player->SetFOV(pWeapon, pHL2Player->GetDefaultFOV() + pWeapon->GetIronsightFOVOffset(), IRONSIGHTS_FOV_IN_TIME);
 	}
 #endif

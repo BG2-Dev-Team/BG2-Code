@@ -35,7 +35,7 @@ commented on the following form:
 #endif
 #include "cbase.h"
 #include "player.h"
-#include "../shared/bg2/bg3_player_shared.h"
+#include "../shared/bg3/bg3_player_shared.h"
 //#include "sdk_player.h"
 #include "sdk/bg3_bot.h"
 #include "bg3_bot_manager.h"

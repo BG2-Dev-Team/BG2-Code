@@ -134,7 +134,7 @@ DECLARE_BG2_WEAPON( brownbess )
 	m_fHolsterTime = 0.75f;
 
 	//Iron sights viewmodel settings.
-	flIronsightFOVOffset		= -2.5;
+	m_flIronsightFOVOffset		= -2.5;
 
 	m_bWeaponHasSights = true; 
 	//
@@ -160,9 +160,6 @@ DECLARE_BG2_WEAPON( brownbess )
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
 
-	m_fMinRange1	= 0;
-	m_fMaxRange1	= MUSKET_RANGE;
-
 	//secondary
 	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_STAB;
 	m_Attackinfos[1].m_iDamage				= BESS_BAYONET_DAMAGE;//60;
@@ -176,9 +173,6 @@ DECLARE_BG2_WEAPON( brownbess )
 	m_Attackinfos[1].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
 
 	m_pBayonetDeathNotice = "brownbess_bayonet";
-
-	m_fMinRange2	= 0;
-	m_fMaxRange2	= BESS_BAYONET_RANGE;
 
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flZeroRange = ZERO_RANGE_MUSKET;
@@ -199,7 +193,7 @@ DECLARE_BG2_WEAPON( charleville )
 	m_fHolsterTime = 0.75f;
 
 	//Iron sights viewmodel settings.
-	flIronsightFOVOffset		= -2.5;
+	m_flIronsightFOVOffset		= -2.5;
 
 	m_bWeaponHasSights = true; 
 	//
@@ -225,9 +219,6 @@ DECLARE_BG2_WEAPON( charleville )
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
 
-	m_fMinRange1	= 0;
-	m_fMaxRange1	= MUSKET_RANGE;
-
 	//secondary
 	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_STAB;
 	m_Attackinfos[1].m_iDamage				= CHARLE_BAYONET_DAMAGE;//60;
@@ -241,9 +232,6 @@ DECLARE_BG2_WEAPON( charleville )
 	m_Attackinfos[1].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
 
 	m_pBayonetDeathNotice = "charleville_bayonet";
-
-	m_fMinRange2	= 0;
-	m_fMaxRange2	= CHARLE_BAYONET_RANGE;
 
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flZeroRange = ZERO_RANGE_MUSKET;
@@ -266,7 +254,7 @@ DECLARE_BG2_WEAPON( jaeger )
 	m_fHolsterTime = 0.75f;
 
 	//Iron sights viewmodel settings.
-	flIronsightFOVOffset		= -15;
+	m_flIronsightFOVOffset		= -15;
 
 	m_bWeaponHasSights = true; 
 	//
@@ -292,9 +280,6 @@ DECLARE_BG2_WEAPON( jaeger )
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
 
-	m_fMinRange1	= 0;
-	m_fMaxRange1	= RIFLE_RANGE;
-
 	//secondary
 	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_NONE;
 
@@ -319,7 +304,7 @@ DECLARE_BG2_WEAPON( pennsylvania )
 	m_fHolsterTime = 0.75f;
 
 	//Iron sights viewmodel settings.
-	flIronsightFOVOffset		= -20;
+	m_flIronsightFOVOffset		= -20;
 
 	m_bWeaponHasSights = true; 
 	//
@@ -344,9 +329,6 @@ DECLARE_BG2_WEAPON( pennsylvania )
 	m_Attackinfos[0].m_flRelativeDrag		= 0.75;			//rifle
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
-
-	m_fMinRange1	= 0;
-	m_fMaxRange1	= RIFLE_RANGE;
 
 	//secondary
 	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_NONE;
@@ -385,9 +367,6 @@ DECLARE_BG2_WEAPON( pistol_a )
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= PISTOL_STAMINA_DRAIN;
 
-	m_fMinRange1	= 0;
-	m_fMaxRange1	= PISTOL_RANGE;
-
 	//secondary
 	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_NONE;
 
@@ -425,9 +404,6 @@ DECLARE_BG2_WEAPON( pistol_b )
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= PISTOL_STAMINA_DRAIN;
 
-	m_fMinRange1	= 0;
-	m_fMaxRange1	= PISTOL_RANGE;
-
 	//secondary
 	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_NONE;
 
@@ -460,9 +436,6 @@ DECLARE_BG2_WEAPON( sabre_a )
 	m_Attackinfos[0].m_flRetraceDuration    = SABRE_RETRACE_DURATION;
 	m_Attackinfos[0].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
 
-	m_fMinRange1 = m_fMinRange2	= 0;
-	m_fMaxRange1 = m_fMaxRange2 = SABRE_RANGE;
-
 	//secondary
 	m_Attackinfos[1] = m_Attackinfos[0];
 }
@@ -490,9 +463,6 @@ DECLARE_BG2_WEAPON( sabre_b )
 	m_Attackinfos[0].m_flCosAngleTolerance  = SABRE_COS_TOLERANCE;
 	m_Attackinfos[0].m_flRetraceDuration    = SABRE_RETRACE_DURATION;
 	m_Attackinfos[0].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
-
-	m_fMinRange1 = m_fMinRange2	= 0;
-	m_fMaxRange1 = m_fMaxRange2 = SABRE_RANGE;
 
 	//secondary
 	m_Attackinfos[1] = m_Attackinfos[0];
@@ -522,9 +492,6 @@ DECLARE_BG2_WEAPON( knife )
 	m_Attackinfos[0].m_flRetraceDuration    = KNIFE_RETRACE_DURATION;
 	m_Attackinfos[0].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
 
-	m_fMinRange1 = m_fMinRange2	= 0;
-	m_fMaxRange1 = m_fMaxRange2 = KNIFE_RANGE;
-
 	//secondary
 	m_Attackinfos[1] = m_Attackinfos[0];
 }
@@ -553,9 +520,6 @@ DECLARE_BG2_WEAPON( hirschf )
 	m_Attackinfos[0].m_flRetraceDuration    = HIRSCHFAENGER_RETRACE_DURATION;
 	m_Attackinfos[0].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
 
-	m_fMinRange1 = m_fMinRange2	= 0;
-	m_fMaxRange1 = m_fMaxRange2 = HIRSCHFAENGER_RANGE;
-
 	//secondary
 	m_Attackinfos[1] = m_Attackinfos[0];
 }
@@ -572,8 +536,6 @@ DECLARE_BG2_WEAPON(shortsword)
 
 	m_bWeaponHasSights = false;
 
-	SetModelScale(0.8f);
-
 	//primary
 	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
 	m_Attackinfos[0].m_iDamage = SHORTSWORD_DAMAGE;//60;
@@ -584,9 +546,6 @@ DECLARE_BG2_WEAPON(shortsword)
 	m_Attackinfos[0].m_flCosAngleTolerance = SHORTSWORD_COS_TOLERANCE;
 	m_Attackinfos[0].m_flRetraceDuration = SHORTSWORD_RETRACE_DURATION;
 	m_Attackinfos[0].m_iStaminaDrain = MELEE_STAMINA_DRAIN;
-
-	m_fMinRange1 = m_fMinRange2 = 0;
-	m_fMaxRange1 = m_fMaxRange2 = HIRSCHFAENGER_RANGE;
 
 	//secondary
 	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_SLASH;
@@ -601,6 +560,41 @@ DECLARE_BG2_WEAPON(shortsword)
 }
 #ifndef CLIENT_DLL
 MELEE_ACTTABLE(shortsword)
+#endif
+
+#ifdef CLIENT_DLL
+#define CWeaponsmallsword C_Weaponsmallsword
+#endif
+DECLARE_BG2_WEAPON(smallsword)
+{
+	m_fHolsterTime = 0.75f;
+
+	m_bWeaponHasSights = false;
+
+	//primary
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
+	m_Attackinfos[0].m_iDamage = SHORTSWORD_DAMAGE;//60;
+	m_Attackinfos[0].m_flAttackrate = 1.2;//-0.7f;
+	m_Attackinfos[0].m_flRange = SHORTSWORD_RANGE;
+	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
+	m_Attackinfos[0].m_flCosAngleTolerance = SHORTSWORD_COS_TOLERANCE;
+	m_Attackinfos[0].m_flRetraceDuration = SHORTSWORD_RETRACE_DURATION;
+	m_Attackinfos[0].m_iStaminaDrain = MELEE_STAMINA_DRAIN;
+
+	//secondary
+	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_SLASH;
+	m_Attackinfos[1].m_iDamage = SHORTSWORD_DAMAGE / 1.5;//60;
+	m_Attackinfos[1].m_flAttackrate = 1.2 / 1.5;//-0.7f;
+	m_Attackinfos[1].m_flRange = SHORTSWORD_RANGE;
+	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
+	m_Attackinfos[1].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
+	m_Attackinfos[1].m_flCosAngleTolerance = SHORTSWORD_COS_TOLERANCE;
+	m_Attackinfos[1].m_flRetraceDuration = SHORTSWORD_RETRACE_DURATION;
+	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 1.2;
+}
+#ifndef CLIENT_DLL
+MELEE_ACTTABLE(smallsword)
 #endif
 
 #ifdef CLIENT_DLL
@@ -623,9 +617,6 @@ DECLARE_BG2_WEAPON( tomahawk )
 	m_Attackinfos[0].m_flRetraceDuration    = TOMAHAWK_RETRACE_DURATION;
 	m_Attackinfos[0].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
 
-	m_fMinRange1 = m_fMinRange2	= 0;
-	m_fMaxRange1 = m_fMaxRange2 = TOMAHAWK_RANGE;
-
 	//secondary
 	m_Attackinfos[1] = m_Attackinfos[0];
 }
@@ -644,7 +635,7 @@ DECLARE_BG2_WEAPON( revolutionnaire )
 	m_fHolsterTime = 0.75f;
 
 	//Iron sights viewmodel settings.
-	flIronsightFOVOffset		= -2.5;
+	m_flIronsightFOVOffset		= -2.5;
 
 	m_bWeaponHasSights = true; 
 	//
@@ -682,9 +673,6 @@ DECLARE_BG2_WEAPON( revolutionnaire )
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
 
-	m_fMinRange1	= 0;
-	m_fMaxRange1	= MUSKET_RANGE;
-
 	//secondary
 	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_STAB;
 	m_Attackinfos[1].m_iDamage				= REVOL_BAYONET_DAMAGE;
@@ -698,9 +686,6 @@ DECLARE_BG2_WEAPON( revolutionnaire )
 	m_Attackinfos[1].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
 
 	m_pBayonetDeathNotice = "revolutionnaire_bayonet";
-
-	m_fMinRange2	= 0;
-	m_fMaxRange2	= REVOL_BAYONET_RANGE;
 
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flZeroRange = ZERO_RANGE_MUSKET;
@@ -721,7 +706,7 @@ DECLARE_BG2_WEAPON(revolutionnaire_nobayo)
 	m_fHolsterTime = 0.75f;
 
 	//Iron sights viewmodel settings.
-	flIronsightFOVOffset = -2.5;
+	m_flIronsightFOVOffset = -2.5;
 
 	m_bWeaponHasSights = true;
 	//
@@ -759,9 +744,6 @@ DECLARE_BG2_WEAPON(revolutionnaire_nobayo)
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
 
-	m_fMinRange1 = 0;
-	m_fMaxRange1 = MUSKET_RANGE;
-
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flZeroRange = ZERO_RANGE_MUSKET;
 	m_iNumShot = 0;
@@ -781,7 +763,7 @@ DECLARE_BG2_WEAPON( brownbess_nobayo )
 	m_fHolsterTime = 0.75f;
 
 	//Iron sights viewmodel settings.
-	flIronsightFOVOffset		= -2.5;
+	m_flIronsightFOVOffset		= -2.5;
 
 	m_bWeaponHasSights = true; 
 	//
@@ -806,9 +788,6 @@ DECLARE_BG2_WEAPON( brownbess_nobayo )
 	m_Attackinfos[0].m_flRelativeDrag		= 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
-
-	m_fMinRange1	= 0;
-	m_fMaxRange1	= MUSKET_RANGE;
 
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flZeroRange = ZERO_RANGE_MUSKET;
@@ -840,9 +819,6 @@ DECLARE_BG2_WEAPON( beltaxe )
 	m_Attackinfos[0].m_flRetraceDuration    = TOMAHAWK_RETRACE_DURATION;
 	m_Attackinfos[0].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
 
-	m_fMinRange1 = m_fMinRange2	= 0;
-	m_fMaxRange1 = m_fMaxRange2 = TOMAHAWK_RANGE;
-
 	//secondary
 	m_Attackinfos[1] = m_Attackinfos[0];
 }
@@ -860,7 +836,7 @@ DECLARE_BG2_WEAPON( fowler )
 	m_fHolsterTime = 0.75f;
 
 	//Iron sights viewmodel settings.
-	flIronsightFOVOffset		= -2.5;
+	m_flIronsightFOVOffset		= -2.5;
 
 	m_bWeaponHasSights = true; 
 	//
@@ -886,9 +862,6 @@ DECLARE_BG2_WEAPON( fowler )
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
 
-	m_fMinRange1	= 0;
-	m_fMaxRange1	= MUSKET_RANGE;
-
 	m_flShotAimModifier = -1.0f;
 	m_flShotSpread = 6.95f * 0.75f;		//4 m spread at 33 m -> (4 / 2) / 33 / sin(0.5)
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
@@ -912,7 +885,7 @@ DECLARE_BG2_WEAPON( longpattern )
 	m_fHolsterTime = 0.75f;
 
 	//Iron sights viewmodel settings.
-	flIronsightFOVOffset		= -2.5;
+	m_flIronsightFOVOffset		= -2.5;
 
 	m_bWeaponHasSights = true; 
 	//
@@ -938,9 +911,6 @@ DECLARE_BG2_WEAPON( longpattern )
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
 
-	m_fMinRange1	= 0;
-	m_fMaxRange1	= MUSKET_RANGE;
-
 	//secondary
 	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_STAB;
 	m_Attackinfos[1].m_iDamage				= LONGPATTERN_BAYONET_DAMAGE;//60;
@@ -954,9 +924,6 @@ DECLARE_BG2_WEAPON( longpattern )
 	m_Attackinfos[1].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
 
 	m_pBayonetDeathNotice = "longpattern_bayonet";
-
-	m_fMinRange2	= 0;
-	m_fMaxRange2	= LONGPATTERN_BAYONET_RANGE;
 
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flZeroRange = ZERO_RANGE_MUSKET;
@@ -977,7 +944,7 @@ DECLARE_BG2_WEAPON( longpattern_nobayo )
 	m_fHolsterTime = 0.75f;
 
 	//Iron sights viewmodel settings.
-	flIronsightFOVOffset		= -2.5;
+	m_flIronsightFOVOffset		= -2.5;
 
 	m_bWeaponHasSights = true; 
 	//
@@ -1002,9 +969,6 @@ DECLARE_BG2_WEAPON( longpattern_nobayo )
 	m_Attackinfos[0].m_flRelativeDrag		= 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
-
-	m_fMinRange1	= 0;
-	m_fMaxRange1	= MUSKET_RANGE;
 
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flZeroRange = ZERO_RANGE_MUSKET;
@@ -1026,7 +990,7 @@ DECLARE_BG2_WEAPON( american_brownbess )
 	m_fHolsterTime = 0.75f;
 
 	//Iron sights viewmodel settings.
-	flIronsightFOVOffset		= -2.5;
+	m_flIronsightFOVOffset		= -2.5;
 
 	m_bWeaponHasSights = true; 
 	//
@@ -1052,9 +1016,6 @@ DECLARE_BG2_WEAPON( american_brownbess )
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
 
-	m_fMinRange1	= 0;
-	m_fMaxRange1	= MUSKET_RANGE;
-
 	//secondary
 	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_STAB;
 	m_Attackinfos[1].m_iDamage				= BESS_BAYONET_DAMAGE;//60;
@@ -1068,9 +1029,6 @@ DECLARE_BG2_WEAPON( american_brownbess )
 	m_Attackinfos[1].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
 
 	m_pBayonetDeathNotice = "brownbess_bayonet";
-
-	m_fMinRange2	= 0;
-	m_fMaxRange2	= BESS_BAYONET_RANGE;
 
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flZeroRange = ZERO_RANGE_MUSKET;
@@ -1091,7 +1049,7 @@ DECLARE_BG2_WEAPON( american_brownbess_nobayo )
 	m_fHolsterTime = 0.75f;
 
 	//Iron sights viewmodel settings.
-	flIronsightFOVOffset		= -2.5;
+	m_flIronsightFOVOffset		= -2.5;
 
 	m_bWeaponHasSights = true; 
 	//
@@ -1117,9 +1075,6 @@ DECLARE_BG2_WEAPON( american_brownbess_nobayo )
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
 
-	m_fMinRange1	= 0;
-	m_fMaxRange1	= MUSKET_RANGE;
-
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flZeroRange = ZERO_RANGE_MUSKET;
 	m_iNumShot = 0;
@@ -1139,7 +1094,7 @@ DECLARE_BG2_WEAPON( brownbess_carbine )
 	m_fHolsterTime = 0.75f;
 
 	//Iron sights viewmodel settings.
-	flIronsightFOVOffset		= -2.5;
+	m_flIronsightFOVOffset = -2.5;
 
 	m_bWeaponHasSights = true; 
 	//
@@ -1165,9 +1120,6 @@ DECLARE_BG2_WEAPON( brownbess_carbine )
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
 
-	m_fMinRange1	= 0;
-	m_fMaxRange1	= MUSKET_RANGE;
-
 	//secondary
 	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_STAB;
 	m_Attackinfos[1].m_iDamage				= CARBINE_BAYONET_DAMAGE;//60;
@@ -1181,9 +1133,6 @@ DECLARE_BG2_WEAPON( brownbess_carbine )
 	m_Attackinfos[1].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
 
 	m_pBayonetDeathNotice = "brownbess_bayonet";
-
-	m_fMinRange2	= 0;
-	m_fMaxRange2	= CARBINE_BAYONET_RANGE;
 
 	m_flShotAimModifier = -1.0f;
 	m_flShotSpread = 7.64f * 0.75f;		//4 m spread at 30 m -> (4 / 2) / 30 / sin(0.5)
@@ -1210,7 +1159,7 @@ DECLARE_BG2_WEAPON(brownbess_carbine_nobayo)
 	m_fHolsterTime = 0.75f;
 
 	//Iron sights viewmodel settings.
-	flIronsightFOVOffset = -2.5;
+	m_flIronsightFOVOffset = -2.5;
 
 	m_bWeaponHasSights = true;
 	//
@@ -1235,9 +1184,6 @@ DECLARE_BG2_WEAPON(brownbess_carbine_nobayo)
 	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
-
-	m_fMinRange1 = 0;
-	m_fMaxRange1 = MUSKET_RANGE;
 
 	m_flShotAimModifier = -1.0f;
 	m_flShotSpread = 7.64f * 0.75f;		//4 m spread at 30 m -> (4 / 2) / 30 / sin(0.5)

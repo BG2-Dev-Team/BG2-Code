@@ -80,6 +80,8 @@ public:
 	CBotNavpoint*		NextPointForPlayer(const CBasePlayer* pPlayer);
 	bool				PlayerWithinRadius(const CBasePlayer* pPlayer) const;
 
+	inline float		GetRadius() const { return m_flRadius; }
+
 	Vector				GetLookTarget() const;
 	ENavPointRange		GetEnemyNoticeRange() const { return m_eRange; }
 };

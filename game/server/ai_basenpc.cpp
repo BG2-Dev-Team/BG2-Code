@@ -5672,7 +5672,7 @@ void CAI_BaseNPC::GatherEnemyConditions( CBaseEntity *pEnemy )
 	float tooFar = m_flDistTooFar;
 	if ( GetActiveWeapon() && HasCondition(COND_SEE_ENEMY) )
 	{
-		tooFar = MAX( m_flDistTooFar, GetActiveWeapon()->m_fMaxRange1 );
+		//tooFar = MAX( m_flDistTooFar, GetActiveWeapon()->m_fMaxRange1 );
 	}
 
 	if ( flDistToEnemy >= tooFar )

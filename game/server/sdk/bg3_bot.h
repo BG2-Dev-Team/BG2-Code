@@ -92,7 +92,11 @@ struct BotThinker {
 	}
 };
 
-
+//Forward declerations of BotThinkers
+namespace BotThinkers {
+	extern BotThinker Death;
+	extern BotThinker Waypoint;
+}
 
 
 struct BotDifficulty;
@@ -152,7 +156,8 @@ public:
 	float			m_flNextFireTime;
 	float			m_flFireEndTime; //it takes .135s for the bullet to come out, so don't mess up accuracy beforehand
 
-	bool			m_bBackwards, m_bLastTurnToRight;
+	bool			m_bLastThinkWasInFlag; //used by flag think to do one-time events on entering flag
+	//bool			m_bBackwards, m_bLastTurnToRight;
 
 	float			m_flNextStrafeTime,
 					m_flNextVoice;
@@ -163,12 +168,13 @@ public:
 	
 
 	CSDKPlayer		*m_pPlayer;
-	CBaseBG2Weapon	*m_pWeapon;
-	float			m_flMeleeRange;
+	CBaseCombatWeapon	*m_pWeapon;
+	float			m_flMeleeRange; //calculated whenever spawned
+	float			m_flAdjustedMeleeRange; //calculated whenever spawned
 
 	CUserCmd		m_curCmd;
 	CUserCmd		m_LastCmd;
-
+	inline void		ToggleButton(int button) { m_curCmd.buttons ^= button; }
 
 	/*
 	Constructors and Initializers
@@ -186,6 +192,7 @@ public:
 	static CSDKBot*	ToBot(CBasePlayer* pPlayer);
 	bool		DoMelee(); //based on difficulty, range, current weapon, a little randomness
 	inline bool CanFire(); //whether or not the bot's current weapon is capable of firing
+	inline bool ShouldReload(); //whether or not we can and could reload
 	bool		IsAimingAtTeammate(vec_t range) const; //whether or not we're aiming at a teammate
 	bool		IsCapturingEnemyFlag() const;
 	bool		IsCapturingEnemyFlagAttempt() const;
@@ -196,6 +203,11 @@ public:
 	void		LookAt(Vector location, float lerp, vec_t randomOffset = 0.0f); //Modifies the angles of m_curCmd to look at given target
 
 	void		SendBotVcommContext(BotContext context); //sends context to vcomm manager
+
+	void MoveToNearestTeammate();
+	void MoveToWaypoint();
+	void MoveAwayFromEnemy();
+	void StopMoving();
 
 	/*
 	These thinks checks return false if they scheduled a new BotThinker, true otherwise
@@ -271,6 +283,11 @@ public:
 	bool ThinkPointBlank(); //aim and fire, but don't shoot teammate!
 	bool ThinkPointBlank_End();
 
+	bool ThinkReload_Begin(); //Press reload button
+	bool ThinkReload_Check(); //Finished reloading? -> waypoint or shoot?
+	bool ThinkReload(); //stand still, spin, retreat, or move to waypoint?
+	bool ThinkReload_End(); //Un-press reload button
+
 	bool ThinkDeath_Begin(); //WE DEAD OH NOES
 	bool ThinkDeath_Check(); //Back to life?!
 	bool ThinkDeath(); //do nothing
@@ -280,9 +297,10 @@ public:
 
 extern CSDKBot	gBots[MAX_PLAYERS];
 extern bool g_bServerReady;
+extern int g_iWaitingAmount;
 
 // If iTeam or iClass is -1, then a team or class is randomly chosen.
-//CBasePlayer *BotPutInServer( bool bFrozen, int iTeam, int iClass );
+CBasePlayer *BotPutInServer(int iAmount, bool bFrozen);
 void Bot_RunAll();
 static void RunPlayerMove(CSDKPlayer *fakeclient, CUserCmd &cmd, float frametime);
 

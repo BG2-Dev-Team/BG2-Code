@@ -72,7 +72,7 @@
 //BG2 - Tjoppen - health fix
 #include "player_resource.h"
 //
-#include "../shared/bg2/bg3_player_shared.h"
+#include "../shared/bg3/bg3_player_shared.h"
 
 #if defined USES_ECON_ITEMS
 #include "econ_wearable.h"
@@ -7352,6 +7352,12 @@ void CBasePlayer::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Checks if the active weapon is in reload
+//-----------------------------------------------------------------------------
+bool CBasePlayer::Weapon_InReload() const { 
+	return GetActiveWeapon() && GetActiveWeapon()->m_bInReload;
+}
 
 //=========================================================
 // HasNamedPlayerItem Does the player already have this item?

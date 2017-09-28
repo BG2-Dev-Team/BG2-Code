@@ -52,12 +52,18 @@ END_PREDICTION_DATA()
 LINK_ENTITY_TO_CLASS( weapon_frag, CWeaponFrag );
 PRECACHE_WEAPON_REGISTER(weapon_frag);
 
+DEC_BG3_WEAPON_DEF(weapon_frag);
+DEF_BG3_WEAPON_DEF(weapon_frag) {
+	m_eWeaponType = GRENADE;
+	m_bWeaponHasSights = false;
+}
+
 CWeaponFrag::CWeaponFrag( void ) :
 	CBaseHL2MPCombatWeapon()
 {
 	m_bRedraw = false;
 	m_flFuseEndTime = FLT_MAX;
-	m_eWeaponType = GRENADE;
+	m_pWeaponDef = &g_Def_weapon_frag;
 }
 
 //-----------------------------------------------------------------------------

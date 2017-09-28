@@ -40,6 +40,7 @@
 #include "bg2/ctfflag.h"
 #include "../shared/bg2/weapon_frag.h"
 #include "bg3_bot_vcomms.h"
+#include "../shared/bg3/bg3_buffs.h"
 //
 
 extern ConVar mp_autobalanceteams;
@@ -109,7 +110,6 @@ SendPropExclude("DT_BaseAnimating", "m_flPoseParameter"),
 
 //BG2 - Tjoppen - send stamina via C_HL2MP_Player <=> DT_HL2MP_Player <=> CHL2MP_Player
 SendPropInt(SENDINFO(m_iStamina), 7, SPROP_UNSIGNED),	//0 <= stamina <= 100, 7 bits enough
-SendPropBool(SENDINFO(m_bRecentlyCrouchedInAir)),
 //
 //BG2 - Tjoppen - m_iClass and m_iCurrentAmmoKit are network vars
 SendPropInt(SENDINFO(m_iClass), 3, SPROP_UNSIGNED),			//BG2 - Tjoppen - remember: max eight classes per team or increase this
@@ -117,8 +117,6 @@ SendPropInt(SENDINFO(m_iCurrentAmmoKit), 2, SPROP_UNSIGNED),//BG2 - Tjoppen - re
 SendPropInt(SENDINFO(m_iSpeedModifier), 9, 0),
 //Rallying info
 SendPropInt(SENDINFO(m_iCurrentRallies), 9, 0),
-SendPropFloat(SENDINFO(m_flEndRallyTime)),
-SendPropFloat(SENDINFO(m_flNextRallyTime)),
 
 //	SendPropExclude( "DT_ServerAnimationData" , "m_flCycle" ),	
 //	SendPropExclude( "DT_AnimTimeMustBeFirst" , "m_flAnimTime" ),
@@ -128,25 +126,6 @@ END_SEND_TABLE()
 BEGIN_DATADESC(CHL2MP_Player)
 END_DATADESC()
 
-/*const char *g_ppszBritishPlayerModels[] =
-{
-	//BG2 - Tjoppen - models
-	"models/player/british/jager/jager.mdl",
-	"models/player/british_new/INF/br_infantry.mdl",
-	"models/player/british/light_b/light_b.mdl",
-	"models/player/british/mohawk/mohawk.mdl",
-	"models/player/british/loyalist/loyalist.mdl",
-};
-
-const char *g_ppszAmericanPlayerModels[] =
-{
-	//BG2 - Tjoppen - models
-	"models/player/american_new/INF/am_infantry.mdl",
-	"models/player/american_new/FRONT/am_frontiersman.mdl",
-	"models/player/american/light_a/light_a.mdl",
-	"models/player/american/militia/militia.mdl",
-	"models/player/american/french/french_infantry.mdl"
-};*/
 
 #define MAX_COMBINE_MODELS 6 // BG2 - VisualMelon - Looks like this should be 6 (formerly 4)
 #define MODEL_CHANGE_INTERVAL 5.0f
@@ -177,7 +156,6 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 	//
 	//BG3 - Awesome - default rallying info
 	m_iCurrentRallies = 0;
-	m_flEndRallyTime = m_flNextRallyTime = gpGlobals->curtime;
 
 	BaseClass::ChangeTeam(0);
 
@@ -185,6 +163,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 
 	//BG2 - Tjoppen - don't pick a class..
 	m_iClass = m_iNextClass = -1;//RandomInt( 0, 2 );
+	m_pCurClass = PlayerClasses::g_pAInfantry; //this default class just avoids errors until we spawn
 	//
 
 	//BG2 - Tjoppen - tickets
@@ -300,6 +279,11 @@ void CHL2MP_Player::GiveDefaultItems(void)
 	//remember which ammo kit we spawned with
 	m_iCurrentAmmoKit = m_iAmmoKit;
 
+	//if we're a bot, randomize our gun kit
+	if (IsFakeClient()) {
+		m_iGunKit = RandomInt(1, m_pCurClass->numChooseableWeapons());;
+	}
+
 	//check for forced weapon change
 	if (m_iClass == CLASS_INFANTRY) {
 		ConVar* m_pWeaponKitEnforcer = GetTeamNumber() == TEAM_AMERICANS ? &lb_enforce_weapon_amer : &lb_enforce_weapon_brit;
@@ -328,121 +312,6 @@ void CHL2MP_Player::GiveDefaultItems(void)
 	CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultPrimaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
 	if (m_pCurClass->m_pszSecondaryAmmo)
 		CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
-
-
-	/*if (GetTeam()->GetTeamNumber() == TEAM_AMERICANS)	//Americans
-	{
-		switch (m_iClass)
-		{
-		default:
-		case CLASS_INFANTRY:
-			if ((m_iGunKit == 1
-				|| (IsLinebattle() && lb_enforce_weapon_amer.GetInt() == 1))
-				&& !(IsLinebattle() && lb_enforce_weapon_amer.GetInt() == 2))
-				GiveNamedItem("weapon_charleville");
-			else
-				GiveNamedItem("weapon_longpattern");
-			CBasePlayer::SetAmmoCount(HL2MPRules()->getDefaultInfantryAmmo(), GetAmmoDef()->Index("357")); //Default ammo for Infantry. -HairyPotter
-			break;
-		case CLASS_OFFICER:
-			if (m_iGunKit == 1)
-				GiveNamedItem("weapon_pistol_a");
-			else
-				GiveNamedItem("weapon_brownbess_carbine_nobayo");
-			GiveNamedItem("weapon_sabre_a");
-			CBasePlayer::SetAmmoCount(HL2MPRules()->getDefaultOfficerAmmo(), GetAmmoDef()->Index("357")); //Default ammo for Officers. -HairyPotter
-			break;
-		case CLASS_SNIPER:
-			GiveNamedItem("weapon_pennsylvania");
-			GiveNamedItem("weapon_knife");
-			CBasePlayer::SetAmmoCount(HL2MPRules()->getDefaultSniperAmmo(), GetAmmoDef()->Index("357")); //Default ammo for Snipers. -HairyPotter
-			break;
-		case CLASS_SKIRMISHER:
-			//GiveNamedItem( "weapon_tomahawk" );
-			switch (m_iGunKit)
-			{
-			default: //In case we get the wrong number or something...
-			case 1:
-				GiveNamedItem("weapon_fowler");
-				break;
-			case 2:
-				GiveNamedItem("weapon_american_brownbess_nobayo");
-				break;
-			}
-			GiveNamedItem("weapon_beltaxe");
-			CBasePlayer::SetAmmoCount(HL2MPRules()->getDefaultSkirmisherAmmo(), GetAmmoDef()->Index("357")); //Default ammo for Skirmishers. -HairyPotter
-			break;
-		case CLASS_LIGHT_INFANTRY: //state militia
-			GiveNamedItem("weapon_longpattern_nobayo");
-			GiveNamedItem("weapon_shortsword");
-			CBasePlayer::SetAmmoCount(HL2MPRules()->getDefaultLightInfantryAmmo(), GetAmmoDef()->Index("357"));
-			break;
-		case CLASS_GRENADIER:
-			GiveNamedItem("weapon_revolutionnaire_nobayo");
-			GiveNamedItem("weapon_frag");
-			GiveNamedItem("weapon_shortsword");
-			CBasePlayer::SetAmmoCount(HL2MPRules()->getDefaultGrenadierAmmo(), GetAmmoDef()->Index("357"));
-			CBasePlayer::SetAmmoCount(1, GetAmmoDef()->Index("Grenade"));
-			break;
-		}
-
-		//Weapon_Switch( Weapon_OwnsThisType( "weapon_revolutionnaire" ) );
-	}
-	else if (GetTeam()->GetTeamNumber() == TEAM_BRITISH)	//british
-	{
-		switch (m_iClass)
-		{
-		default:
-		case CLASS_INFANTRY:
-			if ((m_iGunKit == 1
-				|| (IsLinebattle() && lb_enforce_weapon_brit.GetInt() == 1))
-				&& !(IsLinebattle() && lb_enforce_weapon_brit.GetInt() == 2))
-				GiveNamedItem("weapon_brownbess");
-			else
-				GiveNamedItem("weapon_longpattern");
-			CBasePlayer::SetAmmoCount(HL2MPRules()->getDefaultInfantryAmmo(), GetAmmoDef()->Index("357")); //Default ammo for Infantry. -HairyPotter
-			break;
-		case CLASS_OFFICER:
-			if (m_iGunKit == 1)
-				GiveNamedItem("weapon_pistol_b");
-			else
-				GiveNamedItem("weapon_brownbess_carbine_nobayo");
-			GiveNamedItem("weapon_sabre_b");
-			CBasePlayer::SetAmmoCount(HL2MPRules()->getDefaultOfficerAmmo(), GetAmmoDef()->Index("357")); //Default ammo for Officers. -HairyPotter
-			break;
-		case CLASS_SNIPER:
-			GiveNamedItem("weapon_jaeger");
-			GiveNamedItem("weapon_hirschf");
-			CBasePlayer::SetAmmoCount(HL2MPRules()->getDefaultSniperAmmo(), GetAmmoDef()->Index("357")); //Default ammo for Snipers. -HairyPotter
-			break;
-		case CLASS_SKIRMISHER:
-			//GiveNamedItem( "weapon_brownbess_nobayo", 1 ); //So the native skin is set to 1 (2 in HLMV since 0 is default in the code)
-			switch (m_iGunKit)
-			{
-			default: //In case we get the wrong number or something...
-			case 1:
-				GiveNamedItem("weapon_brownbess_nobayo");
-				break;
-			case 2:
-				GiveNamedItem("weapon_longpattern_nobayo");
-				break;
-			}
-			GiveNamedItem("weapon_tomahawk");
-			CBasePlayer::SetAmmoCount(HL2MPRules()->getDefaultSkirmisherAmmo(), GetAmmoDef()->Index("357")); //Default ammo for Skirmishers. -HairyPotter
-			break;
-		case CLASS_LIGHT_INFANTRY:
-			GiveNamedItem("weapon_brownbess_carbine");
-			CBasePlayer::SetAmmoCount(HL2MPRules()->getDefaultLightInfantryAmmo(), GetAmmoDef()->Index("357")); //BG2 - Tjoppen - Default ammo for light infantry
-			break;
-		case CLASS_GRENADIER:
-			GiveNamedItem("weapon_brownbess_nobayo");
-			GiveNamedItem("weapon_frag");
-			GiveNamedItem("weapon_shortsword");
-			CBasePlayer::SetAmmoCount(HL2MPRules()->getDefaultGrenadierAmmo(), GetAmmoDef()->Index("357"));
-			CBasePlayer::SetAmmoCount(1, GetAmmoDef()->Index("Grenade"));
-			break;
-		}
-	}*/
 }
 
 //BG2 - Tjoppen - g_pLastIntermission
@@ -592,13 +461,7 @@ void CHL2MP_Player::Spawn(void)
 	m_fLastRespawn = gpGlobals->curtime + sv_saferespawntime.GetFloat();
 
 	//Remove rallying buffs!
-	RallyMe(0);
-	
-	//Make sure the new client's next rally time matches the static one
-	if (GetTeamNumber() == TEAM_BRITISH)
-		m_flNextRallyTime = s_flNextRallyTimeBritish;
-	else
-		m_flNextRallyTime = s_flNextRallyTimeAmerican;
+	BG3Buffs::RallyPlayer(0, this);
 }
 
 void CHL2MP_Player::PickupObject(CBaseEntity *pObject, bool bLimitMassAndSize)
@@ -639,23 +502,6 @@ void CHL2MP_Player::SetPlayerTeamModel(void)
 void CHL2MP_Player::SetPlayerModel(void)
 {
 }
-
-//BG2 - Tjoppen - don't need this
-/*void CHL2MP_Player::SetupPlayerSoundsByModel( const char *pModelName )
-{
-if ( Q_stristr( pModelName, "models/human") )
-{
-m_iPlayerSoundType = (int)PLAYER_SOUNDS_CITIZEN;
-}
-else if ( Q_stristr(pModelName, "police" ) )
-{
-m_iPlayerSoundType = (int)PLAYER_SOUNDS_METROPOLICE;
-}
-else if ( Q_stristr(pModelName, "combine" ) )
-{
-m_iPlayerSoundType = (int)PLAYER_SOUNDS_COMBINESOLDIER;
-}
-}*/
 
 void CHL2MP_Player::ResetAnimation(void)
 {
@@ -809,9 +655,10 @@ void CHL2MP_Player::PostThink(void)
 		m_iStamina = 100;	//cap if for some reason it went over 100
 	
 	//check if our rallying time has ended
-	if (m_iCurrentRallies && m_flEndRallyTime < gpGlobals->curtime) {
-		RallyEffectDisable();
-		RallyMe(0);
+	if (m_iCurrentRallies && BG3Buffs::GetEndRallyTime(GetTeamNumber()) < gpGlobals->curtime) {
+		BG3Buffs::RallyPlayer(0, this);
+		OnRallyEffectDisable();
+		
 	}
 		
 
@@ -943,8 +790,6 @@ Activity CHL2MP_Player::TranslateTeamActivity(Activity ActToTranslate)
 
 	return ActToTranslate;
 }
-
-//extern ConVar hl2_normspeed; // BG2 - VisualMelon - Formerly uncommented comment
 
 // Set the activity based on an event or current state
 void CHL2MP_Player::SetAnimation(PLAYER_ANIM playerAnim)
@@ -1262,16 +1107,6 @@ void CHL2MP_Player::CheckForForcedClassChange()
 		classCopy = Clamp(classCopy, 0, CLASS_GRENADIER);
 		m_iNextClass = classCopy;
 	}
-
-	//check if we were a bad officer in our last life
-	if (m_bBadOfficer && m_iClass == CLASS_OFFICER) {
-		int nextClass = mp_punish_bad_officer_nextclass.GetInt() - 1;
-		nextClass = Clamp(nextClass, 0, CLASS_GRENADIER);
-		m_iNextClass = nextClass;
-	}
-	else if (m_bBadOfficer) {
-		m_bBadOfficer = false;
-	}
 }
 
 bool CHL2MP_Player::HandleCommand_JoinTeam(int team)
@@ -1331,62 +1166,7 @@ void ClientPrinttTalkAll(char *str, int type)
 void CHL2MP_Player::PlayermodelTeamClass()
 {
 	SetModel(m_pCurClass->m_pszPlayerModel);
-	/*int team = GetTeamNumber();
-	int classid = m_iClass;
-	switch (team)
-	{
-	case TEAM_AMERICANS:
-		switch (classid)
-		{
-		default:
-		case CLASS_INFANTRY:
-			SetModel("models/player/american_new/INF/am_infantry.mdl");
-			break;
-		case CLASS_OFFICER:
-			SetModel("models/player/american/light_a/light_a.mdl");
-			break;
-		case CLASS_SNIPER:
-			SetModel("models/player/american_new/FRONT/am_frontiersman.mdl");
-			break;
-		case CLASS_SKIRMISHER:
-			SetModel("models/player/american/militia/militia.mdl");
-			break;
-		case CLASS_LIGHT_INFANTRY: //state militia
-			SetModel("models/player/american_new/INF/am_infantry.mdl"); //placeholder model
-			break;
-		case CLASS_GRENADIER:
-			SetModel("models/player/american/french/french_infantry.mdl"); 
-			break;
-		}
-		break;
-	case TEAM_BRITISH:
-		switch (classid)
-		{
-		default:
-		case CLASS_INFANTRY:
-			SetModel("models/player/british_new/INF/br_infantry.mdl");
-			break;
-		case CLASS_OFFICER:
-			SetModel("models/player/british/light_b/light_b.mdl");
-			break;
-		case CLASS_SNIPER:
-			SetModel("models/player/british/jager/jager.mdl");
-			break;
-		case CLASS_SKIRMISHER:
-			SetModel("models/player/british/mohawk/mohawk.mdl"); //CAN WE PLEASE ORGANIZE THE PLAYER MODELS?
-			break;
-		case CLASS_LIGHT_INFANTRY:
-			SetModel("models/player/british/loyalist/loyalist.mdl");
-			break;
-		case CLASS_GRENADIER:
-			SetModel("models/player/british_new/INF/br_infantry.mdl"); //placeholder model
-			break;
-		}
-		break;
-	default: //default model
-		SetModel("models/player/british/jager/jager.mdl");
-		break;
-	}*/
+
 	//Handle skins separately pls - Awesome
 	m_nSkin = GetAppropriateSkin();
 
@@ -1787,76 +1567,8 @@ void CHL2MP_Player::DrainStamina(int iAmount)
 		m_iStamina = 0;
 }
 
-/*
-Checks whether or not this play can rally others at this time
-*/
-bool CHL2MP_Player::CanRally(void) const
-{
-	//if we've proven ourselves to be a really bad officer, don't bother to iterate
-	//through the players again because that's expensive
-	if (m_bBadOfficer)
-		return false;
-
-	int iTeam = GetTeamNumber();
-	//First check that we're not a spectator or something, because ClientCommand(...) doesn't check that
-	if (!(iTeam == TEAM_AMERICANS || iTeam == TEAM_BRITISH))
-		return false;
-
-	//Dead players can be inspiring, but not this time
-	if (this->IsDead())
-		return false;
-
-	ConVar * officerClass;
-	if (iTeam == TEAM_AMERICANS)
-		officerClass = &lb_officer_classoverride_a;
-	else
-		officerClass = &lb_officer_classoverride_b;
-
-	Assert(officerClass);
-
-	
-	//Make sure we're an officer and that weren't not already being rallied
-	if (!((m_iClass == CLASS_OFFICER || (IsLinebattle() && m_iClass == officerClass->GetInt() - 1)) && m_iCurrentRallies == 0))
-		return false;
-
-	//finally check that we're not before our team's next rally time
-	if (iTeam == TEAM_AMERICANS && gpGlobals->curtime < s_flNextRallyTimeAmerican) return false;
-	if (iTeam == TEAM_BRITISH && gpGlobals->curtime < s_flNextRallyTimeBritish) return false;
-
-	//Okay, we've passed all the checks, so return true
-	return true;
-}
-/*
-Given a vcomm command, parses it into rally flags. 
-Returns -1 if its an unusable vcomm
-@param vcommCommand
-			the vcomm to check
-*/
-int	CHL2MP_Player::ParseRallyCommand(int vcommCommand)
-{
-	int newRallyFlags;
-	switch (vcommCommand)
-	{
-		case VCOMM2_ADVANCE:
-			newRallyFlags = RALLY_ADVANCE;
-			break;
-		case VCOMM2_RALLY_ROUND:
-			newRallyFlags = RALLY_RALLY_ROUND;
-			break;
-		case VCOMM2_FIRE:
-			newRallyFlags = RALLY_FIRE;
-			break;
-		case VCOMM2_RETREAT:
-			newRallyFlags = RALLY_RETREAT;
-			break;
-		default:
-			newRallyFlags = -1;
-	}
-	return newRallyFlags;
-}
-
 //visual effects, not functionality. Exact functionality depends on m_iRallyFlags
-void CHL2MP_Player::RallyEffectEnable() {
+void CHL2MP_Player::OnRallyEffectEnable() {
 	float FOVoffset = FOV_ADJUST_DEFAULT;
 	float FOVfadeTime = FOV_ADJUST_DEFAULT_INTIME;
 
@@ -1875,7 +1587,7 @@ void CHL2MP_Player::RallyEffectEnable() {
 	this->SetFOV(this, GetDefaultFOV() + FOVoffset, FOVfadeTime);
 }
 
-void CHL2MP_Player::RallyEffectDisable() {
+void CHL2MP_Player::OnRallyEffectDisable() {
 	float fadeOutTime = FOV_ADJUST_DEFAULT_OUTTIME;
 
 	//rally flags haven't been cleared yet
@@ -1886,147 +1598,6 @@ void CHL2MP_Player::RallyEffectDisable() {
 	}
 
 	this->SetFOV(this, 0, fadeOutTime);
-}
-
-//Putting these here because we can't initialize its default value from inside the class
-float CHL2MP_Player::s_flNextRallyTimeAmerican = 0;
-float CHL2MP_Player::s_flNextRallyTimeBritish = 0;
-
-/*
-Called whenever a player does a vcomm. First checks that it's a vcomm associated
-with an available rally, determines rally radius, and then iterates through nearby
-players to rally them
-*/
-bool CHL2MP_Player::RallyRequest(int vcommCommand)
-{
-	//first check whether or not we're currently allowed to rally
-	if (!CanRally()){
-		return false;
-	}
-
-	//then check that the vcomm is registered with a rallying bonus
-	int newRallyFlags = ParseRallyCommand(vcommCommand);
-	if (newRallyFlags == -1)
-		return false;
-
-	//Okay, so we can rally our fellow players now...
-	//First determine our buff radius
-	extern ConVar mp_respawnstyle;
-	float buffRadius;
-	if (IsLinebattle())
-		buffRadius = RALLY_RADIUS_LINEBATTLE;
-	else
-		buffRadius = RALLY_RADIUS_SKIRM;
-
-	//Set the next time anyone on our team can rally
-	m_flNextRallyTime = gpGlobals->curtime + RALLY_INTERVAL;
-	int iTeam = GetTeamNumber();
-	float * pRallyTime;
-	if (iTeam == TEAM_AMERICANS)
-		pRallyTime = &s_flNextRallyTimeAmerican;
-	else
-		pRallyTime = &s_flNextRallyTimeBritish;
-	*pRallyTime = m_flNextRallyTime;
-
-	//Soon we're going to iterate through other players. Let's count how many are affected.
-	int affectedCount = 0;
-
-	//Iterate through them and rally them if they're close enough
-	CHL2MP_Player * curPlayer = nullptr;
-	Vector ourLocation = this->GetAbsOrigin();
-	for (int i = 1; i <= gpGlobals->maxClients; i++) {
-		curPlayer = dynamic_cast<CHL2MP_Player*>(UTIL_PlayerByIndex(i));
-		if (curPlayer && curPlayer->GetTeamNumber() == iTeam) {
-			Vector theirLocation = curPlayer->GetAbsOrigin();
-			if ((ourLocation - theirLocation).Length() < buffRadius){
-				curPlayer->RallyMe(newRallyFlags);
-				affectedCount++;
-			}
-			//let all the clients on our team know when the next rally time is
-			curPlayer->RallySetNextRallyTime(m_flNextRallyTime);
-		}
-	}
-	
-	CHL2MPRules * pRules = HL2MPRules();
-	//check if we affected anyones besides ourself... if so, we're a bad officer
-	if (affectedCount < 2 && pRules && pRules->CountAlivePlayersAndTickets(iTeam) > 1) {
-		float minDistanceToTeammate;
-		GetNearestPlayerOfTeam(iTeam, minDistanceToTeammate); //this loads the distance by reference
-		if (minDistanceToTeammate < 4096) {
-			//okay, so we've verified that the officer wasted a buff. Now let's punish...
-			m_bBadOfficer = true;
-			this->RallyMe(0);
-
-			//let other players no they can still rally
-			*pRallyTime = gpGlobals->curtime;
-
-			//I hate iterating through the players again but it is what it is
-			for (int i = 1; i <= gpGlobals->maxClients; i++) {
-				curPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-				if (curPlayer && curPlayer->GetTeamNumber() == iTeam) {
-					curPlayer->RallySetNextRallyTime(m_flNextRallyTime);
-				}
-			}
-		}
-	}
-
-	//return true to indicate request as succesful
-	return true;
-}
-
-/*
-Given a bitfield of rally flags, either clears the flags, sets the rally flags, or does nothing
-if already being rallied. If being rallied, sets the time for the rally to end
-*/
-void CHL2MP_Player::RallyMe(int rallyFlags)
-{
-	//First see if we're just clearing out rally flags
-	if (rallyFlags == 0){
-		m_iCurrentRallies = 0;
-		return;
-	}
-
-	//Don't let us be rallied again if we're already being rallied
-	if (m_iCurrentRallies)
-		return;
-
-	//Okay now actually set the rally flags
-	m_iCurrentRallies = rallyFlags;
-
-	RallyEffectEnable();
-
-	//Set the time for when the rally should end
-	m_flEndRallyTime = gpGlobals->curtime + RallyGetRallyDuration(rallyFlags);
-}
-
-float CHL2MP_Player::RallyGetRallyDuration(int rallyFlags)
-{
-	Assert(rallyFlags);
-	float duration = 0.0f;
-
-	switch (rallyFlags){
-		case RALLY_ADVANCE:
-			duration = RALLY_ADVANCE_DURATION;
-			break;
-		case RALLY_RALLY_ROUND:
-			duration = RALLY_RALLY_ROUND_DURATION;
-			break;
-		case RALLY_FIRE:
-			duration = RALLY_FIRE_DURATION;
-			break;
-		case RALLY_RETREAT:
-			duration = RALLY_RETREAT_DURATION;
-		default:
-			Assert("Failed to get duration of a rally flag!" && 0);
-			break;
-	}
-	
-	//Lengthen the time if we're in linebattle mode
-	extern ConVar mp_respawnstyle;
-	if (IsLinebattle())
-		duration *= RALLY_DURATION_LB_MOD;
-
-	return duration;
 }
 
 bool CHL2MP_Player::ClientCommand(const CCommand &args)
@@ -2053,9 +1624,6 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 	else if (FStrEq(cmd, "class") && args.ArgC() > 2)
 	{
 		int desiredClass = atoi(args[2]);
-		//don't do anything if we're a bad office and we're trying to join the officer class
-		if (m_bBadOfficer && desiredClass == CLASS_OFFICER)
-			return false;
 
 		//Eh.. it's a little messy, but it seems a bit more efficent to just use a switch here rather than comparing strings over and over.
 		switch (atoi(args[1])) //Team
@@ -2124,7 +1692,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 	{
 		int comm = atoi(args[1]);
 		HandleVoicecomm(comm);
-		RallyRequest(comm);//BG3 - rallying ability
+		BG3Buffs::RallyRequest(comm, this);//BG3 - rallying ability
 
 		return true;
 	}
@@ -2347,8 +1915,8 @@ EmitSound( "Weapon_SLAM.SatchelDetonate" );
 void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 {
 	//Take away Rallying effects
-	RallyMe(0);
-	RallyEffectDisable();
+	BG3Buffs::RallyPlayer(0, this);
+	OnRallyEffectDisable();
 
 	//if we're holding a live grenade, drop it before we die!
 	CWeaponFrag * pGrenade = dynamic_cast<CWeaponFrag*>(GetActiveWeapon());

@@ -266,10 +266,12 @@ exit 1
     <ClInclude Include="..\..\public\mathlib\amd3dx.h" />
     <ClInclude Include="..\..\game\shared\ammodef.h" />
     <ClInclude Include="..\..\game\shared\base_playeranimstate.h" />
-    <ClInclude Include="..\shared\bg2\bg3_player_shared.h" />
     <ClInclude Include="..\shared\bg2\bg3_math_shared.h" />
     <ClInclude Include="..\shared\bg2\bg3_weapon_shared.h" />
     <ClInclude Include="..\shared\bg2\ironsights.h" />
+    <ClInclude Include="..\shared\bg3\bg3_buffs.h" />
+    <ClInclude Include="..\shared\bg3\bg3_player_shared.h" />
+    <ClInclude Include="..\shared\bg3\bg3_weapon_def.h" />
     <ClInclude Include="base_transmit_proxy.h" />
     <ClInclude Include="..\..\public\basehandle.h" />
     <ClInclude Include="basetempentity.h" />
@@ -826,6 +828,8 @@ exit 1
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\bg2\bg3_math_shared.cpp" />
+    <ClCompile Include="..\shared\bg3\bg3_buffs.cpp" />
+    <ClCompile Include="..\shared\bg3\bg3_weapon_def.cpp" />
     <ClCompile Include="bg2\bg2_maptriggers.cpp" />
     <ClCompile Include="bg2\bullet.cpp" />
     <ClCompile Include="bg2\ctfflag.cpp" />
@@ -834,6 +838,8 @@ exit 1
     <ClCompile Include="bg2\vcomm.cpp" />
     <ClCompile Include="bg2\weapon_bg2base.cpp" />
     <ClCompile Include="bg2\weapon_bg2weapons.cpp" />
+    <ClCompile Include="bg3\bg3_bot_adder.cpp" />
+    <ClCompile Include="bg3\bg3_bot_helpers.cpp" />
     <ClCompile Include="bg3\bg3_class.cpp" />
     <ClCompile Include="bg3_bot_manager.cpp" />
     <ClCompile Include="bg3_bot_navpoint.cpp" />

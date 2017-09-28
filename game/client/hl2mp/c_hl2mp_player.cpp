@@ -28,7 +28,7 @@
 
 LINK_ENTITY_TO_CLASS( player, C_HL2MP_Player );
 
-	IMPLEMENT_CLIENTCLASS_DT(C_HL2MP_Player, DT_HL2MP_Player, CHL2MP_Player)
+IMPLEMENT_CLIENTCLASS_DT(C_HL2MP_Player, DT_HL2MP_Player, CHL2MP_Player)
 	RecvPropFloat(RECVINFO(m_angEyeAngles[0])),
 	RecvPropFloat(RECVINFO(m_angEyeAngles[1])),
 	RecvPropEHandle(RECVINFO(m_hRagdoll)),
@@ -39,7 +39,6 @@ LINK_ENTITY_TO_CLASS( player, C_HL2MP_Player );
 
 	//BG2 - Tjoppen - send stamina via C_HL2MP_Player <=> DT_HL2MP_Player <=> CHL2MP_Player
 	RecvPropInt(RECVINFO(m_iStamina)),
-	RecvPropBool(RECVINFO(m_bRecentlyCrouchedInAir)),
 	//
 	//BG2 - Tjoppen - m_iClass, m_iCurrentAmmoKit and m_iSpeedModifier are network vars
 	// BG2 - VisualMelon - m_iClassSkin is also network var
@@ -48,8 +47,6 @@ LINK_ENTITY_TO_CLASS( player, C_HL2MP_Player );
 	RecvPropInt(RECVINFO(m_iCurrentAmmoKit)),
 	RecvPropInt(RECVINFO(m_iSpeedModifier)),
 	RecvPropInt(RECVINFO(m_iCurrentRallies)),
-	RecvPropFloat(RECVINFO(m_flEndRallyTime)),
-	RecvPropFloat(RECVINFO(m_flNextRallyTime)),
 	//
 END_RECV_TABLE()
 
@@ -84,6 +81,8 @@ C_HL2MP_Player::C_HL2MP_Player() : m_PlayerAnimState( this ), m_iv_angEyeAngles(
 	//BG2 - Reset death cam time. -HairyPotter
 	m_DeathTime = gpGlobals->curtime;
 	//
+
+	m_pCurClass = PlayerClasses::g_pAInfantry; //this default class just avoids errors until we spawn
 
 	m_iIDEntIndex = 0;
 	m_iSpawnInterpCounterCache = 0;
