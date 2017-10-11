@@ -210,8 +210,10 @@ private:
 private:
 
 	EHANDLE	m_hPlayer;
+	EHANDLE m_hHat;
 	CNetworkVector( m_vecRagdollVelocity );
 	CNetworkVector( m_vecRagdollOrigin );
+	bool m_bDropHat = false;
 };
 
 #endif //HL2MP_PLAYER_H

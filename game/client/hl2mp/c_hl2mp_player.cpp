@@ -832,10 +832,12 @@ IRagdoll* C_HL2MP_Player::GetRepresentativeRagdoll() const
 IMPLEMENT_CLIENTCLASS_DT_NOBASE( C_HL2MPRagdoll, DT_HL2MPRagdoll, CHL2MPRagdoll )
 	RecvPropVector( RECVINFO(m_vecRagdollOrigin) ),
 	RecvPropEHandle( RECVINFO( m_hPlayer ) ),
+	RecvPropEHandle(RECVINFO(m_hHat)),
 	RecvPropInt( RECVINFO( m_nModelIndex ) ),
 	RecvPropInt( RECVINFO(m_nForceBone) ),
 	RecvPropVector( RECVINFO(m_vecForce) ),
-	RecvPropVector( RECVINFO( m_vecRagdollVelocity ) )
+	RecvPropVector( RECVINFO( m_vecRagdollVelocity ) ),
+	RecvPropBool(RECVINFO(m_bDropHat))
 END_RECV_TABLE()
 
 
@@ -1060,6 +1062,10 @@ void C_HL2MPRagdoll::CreateHL2MPRagdoll( void )
 					Ragdoll->Remove();
 			}
 		}
+	}
+	if (m_bDropHat) {
+		static int iHat = FindBodygroupByName("cont_hat");
+		SetBodygroup(iHat, 1); //remove hat!
 	}
 }
 

@@ -823,6 +823,7 @@ bool CBaseAnimating::BecomeRagdollOnClient( const Vector &force )
 	// If this character has a ragdoll animation, turn it over to the physics system
 	if ( CanBecomeRagdoll() ) 
 	{
+
 		VPhysicsDestroyObject();
 		AddSolidFlags( FSOLID_NOT_SOLID );
 		m_nRenderFX = kRenderFxRagdoll;

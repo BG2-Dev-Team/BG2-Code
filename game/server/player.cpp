@@ -1638,7 +1638,8 @@ int CBasePlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		VectorNormalize( vecDir );
 	}
 
-	if ( info.GetInflictor() && (GetMoveType() == MOVETYPE_WALK) && 
+	//BG3 - Awesome - disabled jerk on taking damage
+	/*if ( info.GetInflictor() && (GetMoveType() == MOVETYPE_WALK) && 
 		( !attacker->IsSolidFlagSet(FSOLID_TRIGGER)) )
 	{
 		Vector force = vecDir * -DamageForce( WorldAlignSize(), info.GetBaseDamage() );
@@ -1647,7 +1648,7 @@ int CBasePlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			force.z = 250.0f;
 		}
 		ApplyAbsVelocityImpulse( force );
-	}
+	}*/
 
 	// fire global game event
 

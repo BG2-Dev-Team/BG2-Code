@@ -154,7 +154,7 @@ PLAYER MODEL PATHS AND NAMES - these are used repeatedly for precacheing the mod
 #define MODEL_BLINF			"models/player/british/loyalist/loyalist.mdl"
 #define MODEL_BGRENADIER	"models/player/british_new/INF/br_infantry.mdl" //TODO change model!
 
-#define MODEL_AINFANTRY		"models/player/american_new/INF/am_infantry.mdl"
+#define MODEL_AINFANTRY		"models/player/american/infantry/american_infantry.mdl"
 #define MODEL_AOFFICER		"models/player/american/light_a/light_a.mdl"
 #define MODEL_AFRONTIERSMAN "models/player/american_new/FRONT/am_frontiersman.mdl"
 #define MODEL_AMILITIA		"models/player/american/militia/militia.mdl"

@@ -31,6 +31,8 @@
 #include "ammodef.h"
 //
 
+#include "bg3/bg3_class.h"
+
 //BG2 - Tjoppen - #includes
 #include "triggers.h"
 #include "bg2/flag.h"
@@ -204,6 +206,8 @@ void CHL2MP_Player::Precache(void)
 
 	for (i = 0; i < nHeads; ++i)
 		PrecacheModel(g_ppszAmericanPlayerModels[i]);
+
+	PrecacheModel("models/player/american/infantry/american_hat.mdl");
 
 	PrecacheFootStepSounds();
 
@@ -1813,8 +1817,10 @@ public:
 	// In case the client doesn't have it, we transmit the player's model index, origin, and angles
 	// so they can create a ragdoll in the right place.
 	CNetworkHandle(CBaseEntity, m_hPlayer);	// networked entity handle 
+	CNetworkHandle(CBaseEntity, m_hHat);
 	CNetworkVector(m_vecRagdollVelocity);
 	CNetworkVector(m_vecRagdollOrigin);
+	CNetworkVar(bool, m_bDropHat);
 };
 
 LINK_ENTITY_TO_CLASS(hl2mp_ragdoll, CHL2MPRagdoll);
@@ -1822,10 +1828,12 @@ LINK_ENTITY_TO_CLASS(hl2mp_ragdoll, CHL2MPRagdoll);
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CHL2MPRagdoll, DT_HL2MPRagdoll)
 SendPropVector(SENDINFO(m_vecRagdollOrigin), -1, SPROP_COORD),
 SendPropEHandle(SENDINFO(m_hPlayer)),
+SendPropEHandle(SENDINFO(m_hHat)),
 SendPropModelIndex(SENDINFO(m_nModelIndex)),
 SendPropInt(SENDINFO(m_nForceBone), 8, 0),
 SendPropVector(SENDINFO(m_vecForce), -1, SPROP_NOSCALE),
-SendPropVector(SENDINFO(m_vecRagdollVelocity))
+SendPropVector(SENDINFO(m_vecRagdollVelocity)),
+SendPropBool(SENDINFO(m_bDropHat))
 END_SEND_TABLE()
 
 
@@ -1834,6 +1842,9 @@ void CHL2MP_Player::CreateRagdollEntity(void)
 	//BG2 - Tjoppen - here's where we put code for multiple ragdolls
 	if (m_hRagdoll) //One already exists.. remove it.
 	{
+		CHL2MPRagdoll* pDoll = static_cast<CHL2MPRagdoll*>(m_hRagdoll.Get());
+		UTIL_RemoveImmediate(pDoll->m_hHat);
+		pDoll->m_hHat = NULL;
 		UTIL_RemoveImmediate(m_hRagdoll);
 		m_hRagdoll = NULL;
 	}
@@ -1856,6 +1867,7 @@ void CHL2MP_Player::CreateRagdollEntity(void)
 		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
 		pRagdoll->m_nModelIndex = m_nModelIndex;
 		pRagdoll->m_nForceBone = m_nForceBone;
+		
 		//BG2 - Tjoppen - clamp bullet force
 		if (m_vecTotalBulletForce.Length() > 512.f)
 		{
@@ -1865,6 +1877,33 @@ void CHL2MP_Player::CreateRagdollEntity(void)
 		//
 		pRagdoll->m_vecForce = m_vecTotalBulletForce;
 		pRagdoll->SetAbsOrigin(GetAbsOrigin());
+
+		//have a chance of having hat fall off
+		if (m_pCurClass == PlayerClasses::g_pAInfantry && bot_randfloat() < 0.1f) {
+			
+			CBaseEntity* pHat = CreateEntityByName("prop_physics_multiplayer");
+
+			if (pHat) {
+				pRagdoll->m_bDropHat = true;
+				pHat->SetModel("models/player/american/infantry/american_hat.mdl");
+				pHat->SetName(MAKE_STRING("hat"));
+
+				Vector pos; QAngle ang;
+				pRagdoll->GetBonePosition(LookupBone("ValveBiped.Bip01_Head1"), pos, ang);
+
+				pHat->SetAbsOrigin(pos);
+				pHat->SetSolidFlags(FSOLID_NOT_SOLID);
+				pHat->SetCollisionGroup(COLLISION_GROUP_DEBRIS);
+
+				IPhysicsObject* pPhys = pHat->VPhysicsInitNormal(SOLID_VPHYSICS, FSOLID_NOT_STANDABLE, false);
+				Vector vel = GetAbsVelocity() * 1.1f;
+				AngularImpulse imp;
+				pPhys->SetVelocity(&vel, &imp);
+				
+				
+				pRagdoll->m_hHat = pHat;
+			}
+		}
 	}
 
 	// ragdolls will be removed on round restart automatically
@@ -1940,10 +1979,8 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 
 	BaseClass::Event_Killed(subinfo);
 
-	if (info.GetDamageType() & DMG_DISSOLVE)
-	{
-		if (m_hRagdoll)
-		{
+	if (m_hRagdoll) {
+		if (info.GetDamageType() & DMG_DISSOLVE) {
 			m_hRagdoll->GetBaseAnimating()->Dissolve(NULL, gpGlobals->curtime, false, ENTITY_DISSOLVE_NORMAL);
 		}
 	}
