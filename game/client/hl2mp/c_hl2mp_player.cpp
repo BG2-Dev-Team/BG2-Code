@@ -1064,8 +1064,8 @@ void C_HL2MPRagdoll::CreateHL2MPRagdoll( void )
 		}
 	}
 	if (m_bDropHat) {
-		static int iHat = FindBodygroupByName("cont_hat");
-		SetBodygroup(iHat, 1); //remove hat!
+		static int iHat = FindBodygroupByName("hat");
+		SetBodygroup(iHat, 0); //remove hat!
 	}
 }
 

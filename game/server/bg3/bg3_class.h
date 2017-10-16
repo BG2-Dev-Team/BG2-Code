@@ -83,6 +83,7 @@ public:
 
 	int			m_iSkinDepth = 1; //how many skin variations per uniform
 	int			m_iNumUniforms = 1; //how many uniforms?
+	const char* m_pszDroppedHat = 0;
 	//bool		m_bAllowUniformSelection = false; //allow uniform selection in the menu?
 
 	bool		m_bCanDoVcommBuffs = false; //this will be true for officer

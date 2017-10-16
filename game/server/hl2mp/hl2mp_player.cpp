@@ -1879,13 +1879,14 @@ void CHL2MP_Player::CreateRagdollEntity(void)
 		pRagdoll->SetAbsOrigin(GetAbsOrigin());
 
 		//have a chance of having hat fall off
-		if (m_pCurClass == PlayerClasses::g_pAInfantry && bot_randfloat() < 0.1f) {
+		if (m_pCurClass->m_pszDroppedHat && bot_randfloat() < 0.1f) {
 			
 			CBaseEntity* pHat = CreateEntityByName("prop_physics_multiplayer");
 
 			if (pHat) {
 				pRagdoll->m_bDropHat = true;
-				pHat->SetModel("models/player/american/infantry/american_hat.mdl");
+				pHat->SetModel(m_pCurClass->m_pszDroppedHat);
+				//pHat->m_nSkin = m_iClassSkin;
 				pHat->SetName(MAKE_STRING("hat"));
 
 				Vector pos; QAngle ang;

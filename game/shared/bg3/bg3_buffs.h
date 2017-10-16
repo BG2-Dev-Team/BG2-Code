@@ -54,6 +54,15 @@ namespace BG3Buffs {
 	void	SetNextRallyTime(int iTeam, float flTime); //For when round restarts etc.
 #else
 	CHudTexture* RallyIconFrom(int rallyFlags);
+	enum RallyAsInt {
+		ADVANCE,
+		FIRE,
+		RALLY_ROUND,
+		RETREAT,
+		NONE,
+	};
+	extern CHudTexture* g_ppIcons[];
+	void InitialIcons();
 
 #endif //CLIENT_DLL
 	float	GetEndRallyTime(int iTeam);

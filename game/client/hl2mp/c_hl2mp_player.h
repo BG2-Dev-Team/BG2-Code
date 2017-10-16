@@ -117,6 +117,7 @@ public: //BG2 had these private, Valve had them public? - Awesome
 	void StartWalking( void );
 	void StopWalking( void );
 	bool IsWalking( void ) { return m_fIsWalking; }
+	bool IsAiming() const { return GetActiveWeapon() && GetActiveWeapon()->m_bIsIronsighted; }
 
 	virtual void PostThink( void );
 

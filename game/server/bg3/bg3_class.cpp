@@ -326,6 +326,7 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 
 	m_iSkinDepth = 8;
 	m_iNumUniforms = 3;
+	m_pszDroppedHat = "models/player/american/infantry/american_hat.mdl";
 	//m_bAllowUniformSelection = true;
 
 	m_aWeapons[0].m_pszWeaponName = "weapon_longpattern";

@@ -472,7 +472,7 @@ void CPlayerAnimState::ComputePoseParam_BodyLookYaw( void )
 	m_angRender[ PITCH ] = m_angRender[ ROLL ] = 0.0f;
 
 	// See if we even have a blender for pitch
-	int upper_body_yaw = GetOuter()->LookupPoseParameter( "aim_yaw" );
+	int upper_body_yaw = GetOuter()->LookupPoseParameter( "spine_yaw" );
 	if ( upper_body_yaw < 0 )
 	{
 		return;
@@ -564,6 +564,7 @@ void CPlayerAnimState::ComputePoseParam_BodyLookYaw( void )
 		// Snap upper body into position since the delta is already smoothed for the feet
 		flGoalTorsoYaw = yawdelta;
 		m_flCurrentTorsoYaw = flGoalTorsoYaw;
+
 	}
 	else
 	{
@@ -594,6 +595,9 @@ void CPlayerAnimState::ComputePoseParam_BodyLookYaw( void )
 	absangles.y = m_flCurrentFeetYaw;
 	m_angRender = absangles;
 	m_angRender[ PITCH ] = m_angRender[ ROLL ] = 0.0f;
+
+	//for some reason things are backwards when we're aiming, so we have to flip it here - BG3 - Awesome
+	//if (!GetOuter()->IsAiming()) m_flCurrentTorsoYaw = -m_flCurrentTorsoYaw;
 
 	GetOuter()->SetPoseParameter( upper_body_yaw, clamp( m_flCurrentTorsoYaw, -60.0f, 60.0f ) );
 

@@ -179,6 +179,8 @@ namespace BG3Buffs {
 	}
 #undef bcase
 
+	CHudTexture* g_ppIcons[5];
+
 #endif //CLIENT_DLL
 
 //-----------------------------------------------------------------------------
