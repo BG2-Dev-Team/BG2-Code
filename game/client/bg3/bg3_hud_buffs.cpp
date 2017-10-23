@@ -96,6 +96,7 @@ void CBuffIcons::Init(void)
 //==============================================
 void CBuffIcons::VidInit(void)
 {
+	BG3Buffs::InitializeIcons();
 	//Get a default icon
 	m_pCurIcon = BG3Buffs::RallyIconFrom(0);
 
@@ -122,7 +123,7 @@ bool CBuffIcons::ShouldDraw(void)
 
 	m_iRallyFlags = m_pPlayer->RallyGetCurrentRallies();
 
-	m_bOfficerView = m_pPlayer->GetClass() == CLASS_OFFICER && !m_iRallyFlags;
+	m_bOfficerView = m_pPlayer->GetClass() == CLASS_OFFICER /*&& !m_iRallyFlags*/;
 
 	//don't draw icons if we don't have a buff
 	//or if we're not an officer
@@ -191,15 +192,20 @@ void CBuffIcons::PaintOfficerView() {
 	int x, y;
 	x = y = GROWTH_SIZE / 2;
 
-	//First draw the background icon
-	m_pCurIcon->DrawSelf(x, y, iBaseSize, iBaseSize, g_ColourWhite);
+	for (int i = 0; i < BG3Buffs::NONE; i++) {
+		m_pCurIcon = BG3Buffs::g_ppIcons[i];
+		//First draw the background icon
+		m_pCurIcon->DrawSelf(x, y, iBaseSize, iBaseSize, g_ColourWhite);
 
-	//now to draw the black bar... it grows from the top and shrinks from the bottom as time passes
-	//get a float ratio of how much of the icon should be "empty"
-	float flRatioEmpty = BG3Buffs::GetTimeUntilNextRally(m_iTeam) / RALLY_INTERVAL;
-	Clamp(flRatioEmpty, 0.0f, 1.0f);
+		//now to draw the black bar... it grows from the top and shrinks from the bottom as time passes
+		//get a float ratio of how much of the icon should be "empty"
+		float flRatioEmpty = BG3Buffs::GetTimeUntilNextRally(m_iTeam) / RALLY_INTERVAL;
+		Clamp(flRatioEmpty, 0.0f, 1.0f);
 
-	g_pEmptyDarkIcon->DrawSelfCropped(x, y, 0, 0, 
-									  g_pEmptyDarkIcon->Width(), g_pEmptyDarkIcon->Height() * flRatioEmpty,
-									  iBaseSize, iBaseSize * flRatioEmpty, g_ColourWhite);
+		g_pEmptyDarkIcon->DrawSelfCropped(x, y, 0, 0,
+			g_pEmptyDarkIcon->Width(), g_pEmptyDarkIcon->Height() * flRatioEmpty,
+			iBaseSize, iBaseSize * flRatioEmpty, g_ColourWhite);
+
+		x += ICON_WIDTH_HEIGHT;
+	}
 }

@@ -164,15 +164,15 @@ namespace BG3Buffs {
 		CHudTexture* pIcon;
 		switch (rallyFlags) {
 		default:
-			pIcon = gHUD.GetIcon("buff_empty");
+			pIcon = g_ppIcons[NONE];
 		bcase RALLY_ADVANCE:
-			pIcon = gHUD.GetIcon("buff_advance");
+			pIcon = g_ppIcons[ADVANCE];
 		bcase RALLY_FIRE:
-			pIcon = gHUD.GetIcon("buff_fire");
+			pIcon = g_ppIcons[FIRE];
 		bcase RALLY_RALLY_ROUND:
-			pIcon = gHUD.GetIcon("buff_rally_round");
+			pIcon = g_ppIcons[RALLY_ROUND];
 		bcase RALLY_RETREAT:
-			pIcon = gHUD.GetIcon("buff_retreat");
+			pIcon = g_ppIcons[RETREAT];
 		}
 		
 		return pIcon;
@@ -180,6 +180,13 @@ namespace BG3Buffs {
 #undef bcase
 
 	CHudTexture* g_ppIcons[5];
+	void InitializeIcons() {
+		g_ppIcons[ADVANCE]		= gHUD.GetIcon("buff_advance");
+		g_ppIcons[FIRE]			= gHUD.GetIcon("buff_fire");
+		g_ppIcons[RALLY_ROUND]	= gHUD.GetIcon("buff_rally_round");
+		g_ppIcons[RETREAT]		= gHUD.GetIcon("buff_retreat");
+		g_ppIcons[NONE]			= gHUD.GetIcon("buff_empty");
+	}
 
 #endif //CLIENT_DLL
 

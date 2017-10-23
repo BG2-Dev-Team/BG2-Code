@@ -62,7 +62,7 @@ namespace BG3Buffs {
 		NONE,
 	};
 	extern CHudTexture* g_ppIcons[];
-	void InitialIcons();
+	void InitializeIcons();
 
 #endif //CLIENT_DLL
 	float	GetEndRallyTime(int iTeam);
