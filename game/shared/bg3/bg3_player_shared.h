@@ -131,7 +131,7 @@ m_iCurrentRallies is a bit field so that a player can have multiple rallies at o
 */
 #if 1
 #define RALLY_DURATION			10.0f	//default until you change the derived macros
-#define RALLY_INTERVAL			100.0f //time an officer must wait before doing another rally
+#define RALLY_INTERVAL			50.0f //time a team must wait before their officer can do another rally
 
 #define	RALLY_SPEED				(1 << 0)
 #define RALLY_SPEED_MOD			1.1f //Speed multiplier for affected players
@@ -154,7 +154,7 @@ m_iCurrentRallies is a bit field so that a player can have multiple rallies at o
 #define RALLY_SPEED_AIM			(1 << 6) //for player movement speed while aiming!
 #define RALLY_SPEED_AIM_MOD		2.5f //A post-multiplier for player movement speed while aiming
 
-#define RALLY_RADIUS_SKIRM		512.0f	//5.12 meters. This is used in skirm/ctf/siege
+#define RALLY_RADIUS_SKIRM		512.0f	//5.12 meters (or are world units inches?). This is used in skirm/ctf/siege
 
 //used in linebattle
 #define RALLY_RADIUS_LINEBATTLE	2048.0f

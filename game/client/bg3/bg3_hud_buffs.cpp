@@ -18,6 +18,7 @@ BG3 - simple icon display of the buff currently applied to the local player
 #include "../../shared/bg3/bg3_buffs.h"
 
 #define ICON_WIDTH_HEIGHT 64
+#define ICON_VIBRATE_DURATION 2
 
 //==============================================
 // CBuffIcons
@@ -157,24 +158,27 @@ void CBuffIcons::Paint() {
 // CBuffIcon's Paint for rallied players
 // includes rallied officers
 //==============================================
-#define GROWTH_SIZE 8
+#define ICON_GROWTH_SIZE 8
+
+//we offset non-vibrating icons such that the vibrating ones can be at 0
+#define ICON_GROWTH_OFFSET ((ICON_GROWTH_SIZE) / 2) 
 void CBuffIcons::PaintDefaultView() {
 
 	int iBaseSize = ICON_WIDTH_HEIGHT;
 	int x, y;
-	x = y = GROWTH_SIZE / 2;
+	x = y = ICON_GROWTH_OFFSET;
 
 	//calculate time for which we've been rallied
 	float flTimeRallied = gpGlobals->curtime - (BG3Buffs::GetEndRallyTime(m_iTeam) - BG3Buffs::GetRallyDuration(m_iRallyFlags));
 
-	if (flTimeRallied < 2) {
+	if (flTimeRallied < ICON_VIBRATE_DURATION) {
 		flTimeRallied *= 20;
 
 		//convert to int then use that to determine whether to grow size
 		int iTimeRallied = flTimeRallied;
 
 		if (iTimeRallied & 1) {
-			iBaseSize += GROWTH_SIZE;
+			iBaseSize += ICON_GROWTH_SIZE;
 			x = y = 0;
 		}
 	}
@@ -190,22 +194,56 @@ void CBuffIcons::PaintOfficerView() {
 
 	int iBaseSize = ICON_WIDTH_HEIGHT;
 	int x, y;
-	x = y = GROWTH_SIZE / 2;
+	x = y = ICON_GROWTH_OFFSET;
+
+	CHudTexture* pExcluded = nullptr;
+	float xExcluded, yExcluded;
+	xExcluded = yExcluded = 0;
 
 	for (int i = 0; i < BG3Buffs::NONE; i++) {
 		m_pCurIcon = BG3Buffs::g_ppIcons[i];
-		//First draw the background icon
-		m_pCurIcon->DrawSelf(x, y, iBaseSize, iBaseSize, g_ColourWhite);
 
-		//now to draw the black bar... it grows from the top and shrinks from the bottom as time passes
-		//get a float ratio of how much of the icon should be "empty"
-		float flRatioEmpty = BG3Buffs::GetTimeUntilNextRally(m_iTeam) / RALLY_INTERVAL;
-		Clamp(flRatioEmpty, 0.0f, 1.0f);
+		//don't draw the active icon, we'll draw it last instead
+		if (m_pCurIcon == BG3Buffs::RallyIconFrom(m_iRallyFlags)) {
+			pExcluded = m_pCurIcon;
+			xExcluded = x; yExcluded = y;
+		}
+		else {
+			//First draw the background icon
+			m_pCurIcon->DrawSelf(x, y, iBaseSize, iBaseSize, g_ColourWhite);
 
-		g_pEmptyDarkIcon->DrawSelfCropped(x, y, 0, 0,
-			g_pEmptyDarkIcon->Width(), g_pEmptyDarkIcon->Height() * flRatioEmpty,
-			iBaseSize, iBaseSize * flRatioEmpty, g_ColourWhite);
+			//now to draw the black bar... it grows from the top and shrinks from the bottom as time passes
+			//get a float ratio of how much of the icon should be "empty"
+			float flRatioEmpty = BG3Buffs::GetTimeUntilNextRally(m_iTeam) / RALLY_INTERVAL;
+			Clamp(flRatioEmpty, 0.0f, 1.0f);
 
+			g_pEmptyDarkIcon->DrawSelfCropped(x, y, 0, 0,
+				g_pEmptyDarkIcon->Width(), g_pEmptyDarkIcon->Height() * flRatioEmpty,
+				iBaseSize, iBaseSize * flRatioEmpty, g_ColourWhite);
+		}
 		x += ICON_WIDTH_HEIGHT;
+	}
+
+	//Finally, draw the icon we missed, if we missed one
+	if (pExcluded) {
+
+		//Get time rallied
+		float flTimeRallied = gpGlobals->curtime - (BG3Buffs::GetEndRallyTime(m_iTeam) - BG3Buffs::GetRallyDuration(m_iRallyFlags));
+		
+		//Vibrate the icon if we were rallied recently
+		if (flTimeRallied < ICON_VIBRATE_DURATION) {
+			flTimeRallied *= 20;
+
+			//convert to int then use that to determine whether to grow size
+			int iTimeRallied = flTimeRallied;
+
+			if (iTimeRallied & 1) {
+				iBaseSize += ICON_GROWTH_SIZE;
+				xExcluded -= ICON_GROWTH_OFFSET;
+				yExcluded -= ICON_GROWTH_OFFSET; //pulled coordinates in so we're still centered
+			}
+		}
+
+		pExcluded->DrawSelf(xExcluded, yExcluded, iBaseSize, iBaseSize, g_ColourWhite);
 	}
 }
