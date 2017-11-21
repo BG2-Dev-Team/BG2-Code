@@ -34,11 +34,15 @@ public:
 	virtual bool ShouldDraw(void);
 	virtual void Paint(void);
 	virtual void ApplySchemeSettings(vgui::IScheme *scheme);
+	virtual void ApplySettings(KeyValues* inResourceData) override;
 	//void MsgFunc_flagstatus( bf_read &msg );
 
 	//Use different paint functions for officer/normal view
-	void PaintOfficerView();
-	void PaintDefaultView();
+	void PaintOfficerView		();
+	void PaintOfficerViewLabels	();
+	void PaintDefaultView		();
+
+	void HideShowLabels(bool bVisible);
 
 private:
 	int				m_iRallyFlags = 0; //local copy so we don't have to access the local player all the time
@@ -46,7 +50,9 @@ private:
 	C_HL2MP_Player* m_pPlayer = nullptr;
 	bool			m_bOfficerView = false;
 	CHudTexture*	m_pCurIcon;
+	float			m_flNextCommandLabelUpdate; //let's not do the expensive look-up too often
 
+	vgui::Label*	m_ppCommandLabels[RALLY_NUM_RALLIES];
 };
 
 CHudTexture* g_pEmptyDarkIcon;
@@ -70,6 +76,16 @@ CHudElement(pElementName), BaseClass(NULL, "BuffIcons")
 	SetSize(ScreenWidth(), ScreenHeight()); //For whatever reason, this has to be set, otherwise the game won't set the dimensions properly. -HairyPotter
 	
 	m_pCurIcon = NULL;
+	m_flNextCommandLabelUpdate = 0.0f;
+
+	//Initialize labels for command menu
+	for (int i = 0; i < RALLY_NUM_RALLIES; i++) {
+		m_ppCommandLabels[i] = new vgui::Label(this, "BuffIcons_labels", "DEFAULT");
+		m_ppCommandLabels[i]->SetPaintBackgroundEnabled(false);
+		m_ppCommandLabels[i]->SizeToContents();
+		m_ppCommandLabels[i]->SetContentAlignment(vgui::Label::a_center);
+		m_ppCommandLabels[i]->SetFgColor(g_ColourWhite);
+	}
 }
 
 //==============================================
@@ -78,9 +94,32 @@ CHudElement(pElementName), BaseClass(NULL, "BuffIcons")
 //==============================================
 void CBuffIcons::ApplySchemeSettings(IScheme *scheme)
 {
+	vgui::HFont font = scheme->GetFont("HudBG2Font");
+
+	for (int i = 0; i < RALLY_NUM_RALLIES; i++) {
+		m_ppCommandLabels[i]->SetFont(font);
+	}
+
 	BaseClass::ApplySchemeSettings(scheme);
 
 	SetPaintBackgroundEnabled(false);
+}
+
+//==============================================
+// CBuffIcons's ApplySchemeSettings
+// sets up label locations
+//==============================================
+void CBuffIcons::ApplySettings(KeyValues *inResourceData)
+{
+	int x = ICON_WIDTH_HEIGHT / 2 - 2;
+	int y = ICON_WIDTH_HEIGHT + 2;
+
+	for (int i = 0; i < RALLY_NUM_RALLIES; i++) {
+		m_ppCommandLabels[i]->SetPos(x, y);
+		x += ICON_WIDTH_HEIGHT;
+	}
+
+	BaseClass::ApplySettings(inResourceData);
 }
 
 //==============================================
@@ -146,10 +185,16 @@ void CBuffIcons::Paint() {
 		m_pCurIcon = BG3Buffs::RallyIconFrom(m_iRallyFlags);
 		m_iTeam = m_pPlayer->GetTeamNumber();
 
-		if (m_bOfficerView)
+		if (m_bOfficerView) {
 			PaintOfficerView();
-		else
+			HideShowLabels(true);
+		}
+			
+		else {
 			PaintDefaultView();
+			HideShowLabels(false);
+		}
+			
 	}
 	
 }
@@ -188,6 +233,7 @@ void CBuffIcons::PaintDefaultView() {
 
 //==============================================
 // CBuffIcon's Paint for officers
+//		shows all icons at once
 //		the icon fills up until another rally is available
 //==============================================
 void CBuffIcons::PaintOfficerView() {
@@ -246,4 +292,35 @@ void CBuffIcons::PaintOfficerView() {
 
 		pExcluded->DrawSelf(xExcluded, yExcluded, iBaseSize, iBaseSize, g_ColourWhite);
 	}
+
+	//Now draw all the labels
+	PaintOfficerViewLabels();
+}
+
+//========================================================================
+// CBuffIcon's Paint for officers
+//		shows the label for the key
+//			the player needs to press for each command
+//========================================================================
+char buff[32];
+void CBuffIcons::PaintOfficerViewLabels() {
+	if (gpGlobals->curtime > m_flNextCommandLabelUpdate) {
+		for (int i = 0; i < RALLY_NUM_RALLIES; i++) {
+			//TODO get proper binds for these!
+			Q_snprintf(buff, 32, "%i\0", i + 1);
+			m_ppCommandLabels[i]->SetText(buff);
+			m_ppCommandLabels[i]->SizeToContents();
+			//Msg("Updated label text\n");
+		}
+
+		m_flNextCommandLabelUpdate = gpGlobals->curtime + 1.0f;
+	}
+}
+
+//========================================================================
+// CBuffIcon's Sets visiblity of labels
+//========================================================================
+void CBuffIcons::HideShowLabels(bool bVisible) {
+	for (int i = 0; i < RALLY_NUM_RALLIES; i++)
+		m_ppCommandLabels[i]->SetVisible(bVisible);
 }

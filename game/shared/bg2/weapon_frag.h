@@ -19,7 +19,7 @@
 #include "grenade_frag.h"
 #endif
 
-#include "../shared/bg2/bg3_weapon_shared.h"
+#include "../shared/bg3/bg3_weapon_shared.h"
 #include "weapon_ar2.h"
 #include "effect_dispatch_data.h"
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
@@ -67,7 +67,6 @@ public:
 	bool	Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
 	void	FuseSound() { 
 		EmitSound(GRENADE_FUSE_SOUND);
-		Msg("Played grenade fuse sound!\n");
 	}
 
 	bool	Reload(void);

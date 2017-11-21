@@ -15,7 +15,7 @@ class CHL2MP_Player;
 #include "hl2_playerlocaldata.h"
 #include "hl2_player.h"
 #include "../shared/bg3/bg3_player_shared.h"
-#include "../bg3/bg3_class.h"
+#include "../shared/bg3/bg3_class.h"
 #include "simtimer.h"
 #include "soundenvelope.h"
 #include "hl2mp_player_shared.h"

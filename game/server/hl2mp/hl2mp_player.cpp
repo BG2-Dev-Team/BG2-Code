@@ -41,7 +41,7 @@
 #include "bg2/weapon_bg2base.h"
 #include "bg2/ctfflag.h"
 #include "../shared/bg2/weapon_frag.h"
-#include "bg3_bot_vcomms.h"
+#include "bg3/Bots/bg3_bot_vcomms.h"
 #include "../shared/bg3/bg3_buffs.h"
 //
 
@@ -313,7 +313,8 @@ void CHL2MP_Player::GiveDefaultItems(void)
 	}
 
 	//Give primary and secondary ammo
-	CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultPrimaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
+	int ammoCount = IsLinebattle() ? m_pCurClass->m_iDefaultPrimaryAmmoCount : m_pCurClass->m_iDefaultPrimaryAmmoCount * 2;
+	CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
 	if (m_pCurClass->m_pszSecondaryAmmo)
 		CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
 }
@@ -385,7 +386,6 @@ void CHL2MP_Player::Spawn(void)
 	if (GetTeamNumber() <= TEAM_SPECTATOR)
 		return;	//we're done
 	//
-
 	//reset speed modifier
 	SetSpeedModifier(0);
 
@@ -1176,7 +1176,7 @@ void CHL2MP_Player::PlayermodelTeamClass()
 
 	//If we're a grenadier, we're big and strong so our model is slightly bigger
 	if (m_iClass == CLASS_GRENADIER)
-		this->SetModelScale(1.05f);
+		this->SetModelScale(1.07f);
 	else
 		this->SetModelScale(1.0f);
 }
@@ -1184,7 +1184,8 @@ void CHL2MP_Player::PlayermodelTeamClass()
 //Looks at our member variables to determine what our player model's skin should be
 int CHL2MP_Player::GetAppropriateSkin() const
 {
-#define check(a) (m_iClassSkin == (a))
+	return m_iClassSkin * m_pCurClass->m_iSkinDepth + RandomInt(0, m_pCurClass->m_iSkinDepth - 1);
+/*#define check(a) (m_iClassSkin == (a))
 	//Assume default, then check other cases
 	int skin = SKIN_DEFAULT;
 	//If we're British
@@ -1238,7 +1239,7 @@ int CHL2MP_Player::GetAppropriateSkin() const
 		}
 	}
 #undef check
-	return skin;
+	return skin;*/
 }
 
 //BG2 - Tjoppen - CHL2MP_Player::MayRespawn()
@@ -1811,7 +1812,6 @@ public:
 	{
 		return SetTransmitState(FL_EDICT_ALWAYS);
 	}
-
 public:
 	// In case the client has the player entity, we transmit the player index.
 	// In case the client doesn't have it, we transmit the player's model index, origin, and angles
@@ -1867,7 +1867,6 @@ void CHL2MP_Player::CreateRagdollEntity(void)
 		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
 		pRagdoll->m_nModelIndex = m_nModelIndex;
 		pRagdoll->m_nForceBone = m_nForceBone;
-		
 		//BG2 - Tjoppen - clamp bullet force
 		if (m_vecTotalBulletForce.Length() > 512.f)
 		{

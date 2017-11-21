@@ -84,8 +84,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-  </ItemGroup>
-  <ItemGroup>
     <CustomBuild Include="stdshader_dx9_20b.txt">
       <Filter>Shader Source</Filter>
     </CustomBuild>
@@ -113,10 +111,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="buildsdkshaders.bat">
-      <Filter></Filter>
+      <Filter>
+      </Filter>
     </None>
     <None Include="buildshaders.bat">
-      <Filter></Filter>
+      <Filter>
+      </Filter>
     </None>
     <None Include="..\..\materialsystem\stdshaders\game_shader_dx9_base.vpc">
       <Filter>VPC Scripts</Filter>
@@ -150,6 +150,9 @@
     </None>
     <None Include="..\..\vpc_scripts\version.vpc">
       <Filter>VPC Scripts</Filter>
+    </None>
+    <None Include="bg3_fov_bokeh_ps20.fxc">
+      <Filter>Shader Source\fxc</Filter>
     </None>
   </ItemGroup>
 </Project>

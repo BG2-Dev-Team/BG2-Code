@@ -28,7 +28,7 @@
 #include "hl2mp_gamerules.h"
 //BG2 - Tjoppen - #includes
 #include "engine/IEngineSound.h"
-#include "../server/bg2/weapon_bg2base.h"
+#include "../shared/bg2/weapon_bg2base.h"
 #include "bg2_hud_main.h"
 //
 

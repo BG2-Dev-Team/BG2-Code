@@ -81,7 +81,8 @@ AMMO AMOUNTS - used in hl2mp_gamerules.h
 #define AMMO_SNIPER			12
 #define AMMO_SKIRMISHER		12
 #define AMMO_LIGHT_INFANTRY	12
-#define AMMO_GRENADIER		10	//grenade count is always 1
+#define AMMO_GRENADIER		10
+#define AMMO_GRENADE		1
 #endif
 
 
@@ -183,6 +184,8 @@ VCOMM RALLYING DEFINITIONS - these are just mergers of the raw rally types defin
 	these are tied to the individual vcomm commands
 */
 #if 1
+#define RALLY_NUM_RALLIES 4
+
 #define RALLY_ADVANCE			(RALLY_SPEED | RALLY_SPEED_RELOAD | RALLY_SPEED_AIM)
 #define RALLY_ADVANCE_DURATION	RALLY_DURATION
 

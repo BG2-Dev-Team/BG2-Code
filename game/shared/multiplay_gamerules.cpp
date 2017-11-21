@@ -42,7 +42,7 @@
 	#include "../bg2/flag.h"
 	//
 	//BG3 - bot population manager
-	#include "bg3_bot_manager.h"
+	#include "bg3/bots/bg3_bot_manager.h"
 
 #ifdef NEXT_BOT
 	#include "NextBotManager.h"

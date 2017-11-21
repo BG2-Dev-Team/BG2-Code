@@ -33,7 +33,7 @@ commented on the following form:
 
 #include "cbase.h"
 #include "bg3_weapon_def.h"
-#include "../../server/bg2/weapon_bg2base.h"
+#include "../../shared/bg2/weapon_bg2base.h"
 
 //Maps weapon names to their weapon defs - for external usage
 CUtlDict<CWeaponDef*> g_dictWeaponDefs;

@@ -101,6 +101,11 @@ void CWeaponFrag::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChar
 			if (m_flFuseEndTime - gpGlobals->curtime > GRENADE_FUSE_LENGTH) {
 				m_flFuseEndTime = gpGlobals->curtime + GRENADE_FUSE_LENGTH;
 				FuseSound();
+
+				//switch spark bodygroup
+				//m_iWorldModelIndex
+				static int BodyGroup_Sparks = FindBodygroupByName("sparks");
+				SetBodygroup(BodyGroup_Sparks, 1);
 			}
 				
 			break;

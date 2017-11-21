@@ -9,9 +9,9 @@
 #include "basegrenade_shared.h"
 #include "shake.h"
 #include "engine/IEngineSound.h"
-#include "bg2/bg3_weapon_shared.h"
+#include "bg3/bg3_weapon_shared.h"
 
-#include "../server/bg2/weapon_bg2base.h" //BG3 - for referencing grenade damage info
+#include "../shared/bg2/weapon_bg2base.h" //BG3 - for referencing grenade damage info
 
 #if !defined( CLIENT_DLL )
 

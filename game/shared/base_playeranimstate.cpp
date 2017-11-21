@@ -550,10 +550,12 @@ void CBasePlayerAnimState::ComputePlaybackRate()
 		// to speed up or slow down the animation.
 		bool bIsMoving;
 		float flRate = CalcMovementPlaybackRate( &bIsMoving );
+
 		if ( bIsMoving )
 			GetOuter()->SetPlaybackRate( flRate );
-		else
+		else {
 			GetOuter()->SetPlaybackRate( 1 );
+		}
 	}
 }
 

@@ -13,6 +13,7 @@
 #include <KeyValues.h>
 #include "filesystem.h"
 #include "iinput.h"
+#include "../shared/bg3/bg3_buffs.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -411,14 +412,21 @@ void CBaseHudWeaponSelection::SelectSlot( int iSlot )
 		return;
 	}
 
+	//BG3 - weapon selection keys replaced with officer command menu
+	//TODO find a better entry point!
+	C_HL2MP_Player* pPlayer = ToHL2MPPlayer(C_HL2MP_Player::GetLocalPlayer());
+	if (iSlot > 0 && iSlot <= RALLY_NUM_RALLIES && BG3Buffs::PlayersClassHasRallyAbility(pPlayer))
+		BG3Buffs::SendRallyRequestFromSlot(iSlot);
+
+	
 	// If we're not allowed to draw, ignore weapon selections
-	if ( !BaseClass::ShouldDraw() )
+	/*if ( !BaseClass::ShouldDraw() )
 	{
 		return;
 	}
 
 	UpdateSelectionTime();
-	SelectWeaponSlot( iSlot );
+	SelectWeaponSlot( iSlot );*/
 }
 
 //-----------------------------------------------------------------------------

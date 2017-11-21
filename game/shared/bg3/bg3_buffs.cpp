@@ -177,7 +177,7 @@ namespace BG3Buffs {
 		
 		return pIcon;
 	}
-#undef bcase
+
 
 	CHudTexture* g_ppIcons[5];
 	void InitializeIcons() {
@@ -187,6 +187,23 @@ namespace BG3Buffs {
 		g_ppIcons[RETREAT]		= gHUD.GetIcon("buff_retreat");
 		g_ppIcons[NONE]			= gHUD.GetIcon("buff_empty");
 	}
+
+	void SendRallyRequestFromSlot(int iSlot) {
+		const char* pszCommand = "";
+		switch (iSlot) {
+		default:
+			bcase 1 :
+				pszCommand = "voicecomm 9"; //advance command
+			bcase 2:
+				pszCommand = "voicecomm 16"; //fire command
+			bcase 3:
+				pszCommand = "voicecomm 11"; //rally round command
+			bcase 4:
+				pszCommand = "voicecomm 10"; //retreat command
+		}
+		engine->ServerCmd(pszCommand);
+	}
+#undef bcase
 
 #endif //CLIENT_DLL
 

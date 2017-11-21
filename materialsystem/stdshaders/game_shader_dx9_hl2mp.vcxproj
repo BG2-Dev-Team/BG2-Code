@@ -324,6 +324,7 @@ echo crc_complete &gt; F:\Users\Awesome\source-sdk-2013\mp\src\materialsystem\st
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <None Include="bg3_fov_bokeh_ps20.fxc" />
     <None Include="buildsdkshaders.bat" />
     <None Include="buildshaders.bat" />
     <None Include="..\..\materialsystem\stdshaders\game_shader_dx9_base.vpc" />

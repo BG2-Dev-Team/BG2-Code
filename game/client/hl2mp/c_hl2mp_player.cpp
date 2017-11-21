@@ -844,13 +844,13 @@ END_RECV_TABLE()
 
 C_HL2MPRagdoll::C_HL2MPRagdoll()
 {
-
+	Msg("Constructed ragdoll on client\n");
 }
 
 C_HL2MPRagdoll::~C_HL2MPRagdoll()
 {
 	PhysCleanupFrictionSounds( this );
-
+	Msg("Destroyed ragdoll on client\n");
 	if ( m_hPlayer )
 	{
 		m_hPlayer->CreateModelInstance();
@@ -1065,7 +1065,8 @@ void C_HL2MPRagdoll::CreateHL2MPRagdoll( void )
 	}
 	if (m_bDropHat) {
 		static int iHat = FindBodygroupByName("hat");
-		SetBodygroup(iHat, 0); //remove hat!
+		//Msg("Hiding bodygroup %i\n", iHat);
+		SetBodygroup(iHat, 1); //remove hat!
 	}
 }
 
@@ -1087,6 +1088,7 @@ IRagdoll* C_HL2MPRagdoll::GetIRagdoll() const
 
 void C_HL2MPRagdoll::UpdateOnRemove( void )
 {
+	HL2MPRules()->m_hRagdollList.FindAndRemove(this); //BG2 - Skillet
 	VPhysicsSetObject( NULL );
 
 	BaseClass::UpdateOnRemove();

@@ -19,7 +19,7 @@
 #include "sourcevr/isourcevirtualreality.h"
 
 //BG2 - Tjoppen - #includes
-#include "../game/server/bg2/weapon_bg2base.h"
+#include "../game/shared/bg2/weapon_bg2base.h"
 #include "./bg2/ironsights.h"
 //
 

@@ -20,7 +20,7 @@
 #include "clienteffectprecachesystem.h"
 #include "c_te_effect_dispatch.h"
 
-#include "../shared/bg2/bg3_math_shared.h"
+#include "../shared/bg3/bg3_math_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

@@ -873,6 +873,10 @@ bool CBasePlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex 
 	return false;
 }
 
+#ifdef CLIENT_DLL
+bool CBasePlayer::Weapon_InReload() const  { return GetActiveWeapon() && GetActiveWeapon()->m_bInReload; }
+#endif
+
 void CBasePlayer::SelectLastItem(void)
 {
 	if ( m_hLastWeapon.Get() == NULL )

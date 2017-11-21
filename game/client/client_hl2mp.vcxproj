@@ -387,14 +387,14 @@ exit 1
     <ClInclude Include="..\..\game\shared\weapon_ifmsteadycam.h" />
     <ClInclude Include="..\..\game\shared\weapon_parse.h" />
     <ClInclude Include="..\..\game\shared\weapon_proficiency.h" />
-    <ClInclude Include="..\server\bg2\weapon_bg2base.h" />
-    <ClInclude Include="..\server\bg3\bg3_class.h" />
-    <ClInclude Include="..\shared\bg2\bg3_math_shared.h" />
-    <ClInclude Include="..\shared\bg2\bg3_weapon_shared.h" />
     <ClInclude Include="..\shared\bg2\ironsights.h" />
+    <ClInclude Include="..\shared\bg2\weapon_bg2base.h" />
     <ClInclude Include="..\shared\bg3\bg3_buffs.h" />
+    <ClInclude Include="..\shared\bg3\bg3_class.h" />
+    <ClInclude Include="..\shared\bg3\bg3_math_shared.h" />
     <ClInclude Include="..\shared\bg3\bg3_player_shared.h" />
     <ClInclude Include="..\shared\bg3\bg3_weapon_def.h" />
+    <ClInclude Include="..\shared\bg3\bg3_weapon_shared.h" />
     <ClInclude Include="..\shared\bg3\Math\bg3_rand.h" />
     <ClInclude Include="bg2\bg2smokeemitter.h" />
     <ClInclude Include="bg2\bg2_hud_main.h" />
@@ -407,9 +407,10 @@ exit 1
     <ClInclude Include="bg2\hintbox.h" />
     <ClInclude Include="bg2\vgui_bg2_options.h" />
     <ClInclude Include="bg2\vgui_Panel_MainMenu.h" />
+    <ClInclude Include="bg3\bg3_hint.h" />
+    <ClInclude Include="bg3\bg3_hud_compass.h" />
     <ClInclude Include="bg3\bg3_localkit.h" />
     <ClInclude Include="bg3\bg3_teammenu.h" />
-    <ClInclude Include="bg3_hint.h" />
     <ClInclude Include="game_controls\baseviewport.h" />
     <ClInclude Include="game_controls\clientscoreboarddialog.h" />
     <ClInclude Include="game_controls\commandmenu.h" />
@@ -909,11 +910,11 @@ exit 1
     <ClInclude Include="toolframework_client.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\server\bg2\weapon_bg2base.cpp" />
-    <ClCompile Include="..\server\bg2\weapon_bg2weapons.cpp" />
-    <ClCompile Include="..\server\bg3\bg3_class.cpp" />
-    <ClCompile Include="..\shared\bg2\bg3_math_shared.cpp" />
+    <ClCompile Include="..\shared\bg2\weapon_bg2base.cpp" />
+    <ClCompile Include="..\shared\bg2\weapon_bg2weapons.cpp" />
     <ClCompile Include="..\shared\bg3\bg3_buffs.cpp" />
+    <ClCompile Include="..\shared\bg3\bg3_class.cpp" />
+    <ClCompile Include="..\shared\bg3\bg3_math_shared.cpp" />
     <ClCompile Include="..\shared\bg3\bg3_weapon_def.cpp" />
     <ClCompile Include="..\shared\bg3\Math\bg3_rand.cpp" />
     <ClCompile Include="bg2\bg2_hud_ctf.cpp" />
@@ -930,9 +931,10 @@ exit 1
     <ClCompile Include="bg2\c_flag.cpp" />
     <ClCompile Include="bg2\hintbox.cpp" />
     <ClCompile Include="bg2\vgui_Panel_MainMenu.cpp" />
+    <ClCompile Include="bg3\bg3_hint.cpp" />
     <ClCompile Include="bg3\bg3_hud_buffs.cpp" />
+    <ClCompile Include="bg3\bg3_hud_compass.cpp" />
     <ClCompile Include="bg3\bg3_teammenu.cpp" />
-    <ClCompile Include="bg3_hint.cpp" />
     <ClCompile Include="mp3player.cpp" />
     <ClCompile Include="replay\cdll_replay.cpp" />
     <ClCompile Include="replay\replaycamera.cpp" />

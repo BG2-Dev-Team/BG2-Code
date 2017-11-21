@@ -269,8 +269,7 @@ void CPlayerAnimState::ComputePlaybackRate()
 
 	float maxspeed = GetOuter()->GetSequenceGroundSpeed( GetOuter()->GetSequence() );
 	
-	if ( isMoving && ( maxspeed > 0.0f ) )
-	{
+	if ( isMoving && ( maxspeed > 0.0f ) ) {
 		float flFactor = 1.0f;
 
 		// Note this gets set back to 1.0 if sequence changes due to ResetSequenceInfo below
@@ -278,9 +277,7 @@ void CPlayerAnimState::ComputePlaybackRate()
 
 		// BUG BUG:
 		// This stuff really should be m_flPlaybackRate = speed / m_flGroundSpeed
-	}
-	else
-	{
+	}  else {
 		GetOuter()->SetPlaybackRate( 1.0f );
 	}
 }

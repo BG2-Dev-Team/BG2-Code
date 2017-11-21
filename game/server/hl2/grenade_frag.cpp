@@ -9,7 +9,7 @@
 #include "basegrenade_shared.h"
 #include "grenade_frag.h"
 #include "bg2/weapon_bg2base.h"
-#include "../shared/bg2/bg3_weapon_shared.h"
+#include "../shared/bg3/bg3_weapon_shared.h"
 #include "Sprite.h"
 #include "SpriteTrail.h"
 #include "soundent.h"
@@ -31,7 +31,7 @@ ConVar sk_plr_dmg_fraggrenade	( "sk_plr_dmg_fraggrenade","0");
 ConVar sk_npc_dmg_fraggrenade	( "sk_npc_dmg_fraggrenade","0");
 ConVar sk_fraggrenade_radius	( "sk_fraggrenade_radius", "0");
 
-#define GRENADE_MODEL "models/Weapons/w_grenade.mdl"
+#define GRENADE_MODEL "models/grenade/w_grenade.mdl"
 #define GRENADE_FUSE_MATERIAL "effects/fuse_animated.vmt"
 
 class CGrenadeFrag : public CBaseGrenade

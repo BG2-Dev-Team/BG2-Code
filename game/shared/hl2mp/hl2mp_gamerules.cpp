@@ -11,7 +11,7 @@
 #include <KeyValues.h>
 #include "ammodef.h"
 
-#include "../../server/bg3/bg3_class.h"
+#include "../../shared/bg3/bg3_class.h"
 
 #ifdef CLIENT_DLL
 	#include "c_hl2mp_player.h"
@@ -42,9 +42,9 @@
 	#include "../../server/bg2/mapfilter.h" 
 	#include "../../shared/bg3/bg3_buffs.h"
 //BG2 - Tjoppen - #includes
-#include "sdk/bg3_bot.h"
-#include "bg3_bot_manager.h"
-#include "bg3_bot_vcomms.h"
+#include "../bg3/Bots/bg3_bot.h"
+#include "../bg3/Bots/bg3_bot_manager.h"
+#include "../bg3/Bots/bg3_bot_vcomms.h"
 #ifdef DEBUG	
 	#include "hl2mp_bot_temp.h"
 #endif

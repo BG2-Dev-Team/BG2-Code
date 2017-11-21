@@ -13,7 +13,7 @@ class C_HL2MP_Player;
 #include "c_basehlplayer.h"
 #include "hl2mp_player_shared.h"
 #include "../shared/bg3/bg3_player_shared.h"
-#include "../server/bg3/bg3_class.h"
+#include "../shared/bg3/bg3_class.h"
 #include "beamdraw.h"
 
 //=============================================================================
@@ -95,7 +95,9 @@ private:
 	int		m_iPrevClass = 0;
 	int		m_iClass;
 	const CPlayerClass* m_pCurClass;
+public:
 	int		m_iClassSkin;
+private:
 	int		m_iCurrentAmmoKit;
 	int		m_iSpeedModifier;
 

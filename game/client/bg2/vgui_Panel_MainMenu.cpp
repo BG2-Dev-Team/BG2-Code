@@ -16,7 +16,7 @@
 #include "iclientmode.h"
 #include "baseviewport.h"
 #include "game_controls/vguitextwindow.h"
-#include "../bg3_hint.h"
+#include "../bg3/bg3_hint.h"
 #include "../../shared/bg3/Math/bg3_rand.h"
 
 using namespace vgui;
@@ -40,7 +40,6 @@ public:
  
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme )
 	{
- 
 		BaseClass::ApplySchemeSettings( pScheme );
 	}
  
@@ -525,3 +524,8 @@ public:
  
 static CSMenu g_SMenu;
 ISMenu *SMenu = ( ISMenu * )&g_SMenu;
+
+/*CON_COMMAND(steamoverlay, "Opens the steam overlay\n") {
+	CSteamID id = SteamClient()->GetISteamUser(GetHSteamUser(), GetHSteamPipe(), STEAMUSER_INTERFACE_VERSION)->GetSteamID();
+	SteamClient()->GetISteamFriends(GetHSteamUser(), GetHSteamPipe(), STEAMFRIENDS_INTERFACE_VERSION)->ActivateGameOverlayToUser("Friends", id);
+}*/
