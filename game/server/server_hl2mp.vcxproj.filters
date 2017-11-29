@@ -13,8 +13,23 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{BA03E055-4FA2-FCE3-8A1C-D348547D379C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\BG2">
+      <UniqueIdentifier>{91AC0176-9A0C-6F5F-7E19-DF6658B379B6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\BG3">
+      <UniqueIdentifier>{D1F4D7D5-38EB-4EBC-2ED7-6BFDBB08F144}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\BG3\Bots">
+      <UniqueIdentifier>{384056D3-8E88-B549-5215-BA8282F39DC5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\BG3\Math">
+      <UniqueIdentifier>{7F16E5FD-DE0A-D654-D59B-AD0A2D146211}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\HL2 DLL">
       <UniqueIdentifier>{3C43D38A-46AF-2183-A5E5-44383B1D2652}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HL2 DLL\unused">
+      <UniqueIdentifier>{A52C827A-EB95-73A5-F031-C0395B5E2677}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\HL2MP">
       <UniqueIdentifier>{2BA678C8-595F-A004-FD96-60E33CA8DE83}</UniqueIdentifier>
@@ -36,15 +51,6 @@
     </Filter>
     <Filter Include="VPC Scripts">
       <UniqueIdentifier>{A40EE377-781A-C6B9-0C7C-B3BE118D248E}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\BG2">
-      <UniqueIdentifier>{a4585bcf-13a7-4ff2-9a4d-7ccef3daf939}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\BG3">
-      <UniqueIdentifier>{f67e8d48-78b5-42f0-8656-4a615119fdc6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\BG3\Bots">
-      <UniqueIdentifier>{fd6474f8-07c7-428f-8ace-9932fb15316e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -438,9 +444,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\public\networkvar.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="npc_vehicledriver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\npcevent.h">
@@ -1547,16 +1550,91 @@
     <ClInclude Include="world.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="bg2\bg2_maptriggers.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\bullet.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\cannon.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\cannonball.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\ctfflag.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\flag.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg2\ironsights.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\mapfilter.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\spawnpoint.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\vcomm.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg2\weapon_bg2base.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg2\weapon_frag.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bg3_ammo_cache.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\bg3_buffs.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\bg3_class.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\bg3_player_shared.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\bg3_weapon_def.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\bg3_weapon_shared.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\Bots\bg3_bot.h">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\Bots\bg3_bot_manager.h">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\Bots\bg3_bot_navpoint.h">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\Bots\bg3_bot_vcomms.h">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\Bots\bg3_player_search.h">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\bg3_math_shared.h">
+      <Filter>Source Files\BG3\Math</Filter>
+    </ClInclude>
     <ClInclude Include="hl2\ai_behavior_functank.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\ai_behavior_holster.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\ai_goal_police.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
     <ClInclude Include="hl2\ai_interactions.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
     <ClInclude Include="hl2\ai_spotlight.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2\antlion_dust.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
     <ClInclude Include="hl2\ar2_explosion.h">
@@ -1571,10 +1649,16 @@
     <ClInclude Include="..\..\game\shared\hl2\basehlcombatweapon_shared.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
+    <ClInclude Include="hl2\cbasehelicopter.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
     <ClInclude Include="hl2\cbasespriteprojectile.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\hl2\citadel_effects_shared.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\combine_mine.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
     <ClInclude Include="hl2\energy_wave.h">
@@ -1587,6 +1671,9 @@
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
     <ClInclude Include="hl2\func_tank.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\grenade_ar2.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
     <ClInclude Include="hl2\grenade_frag.h">
@@ -1616,11 +1703,32 @@
     <ClInclude Include="hl2\item_dynamic_resupply.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
+    <ClInclude Include="hl2\prop_combine_ball.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
     <ClInclude Include="hl2\rotorwash.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
     <ClInclude Include="hl2\script_intro.h">
       <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\weapon_alyxgun.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\weapon_crowbar.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\grenade_beam.h">
+      <Filter>Source Files\HL2 DLL\unused</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\grenade_homer.h">
+      <Filter>Source Files\HL2 DLL\unused</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\grenade_pathfollower.h">
+      <Filter>Source Files\HL2 DLL\unused</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2\weapon_flaregun.h">
+      <Filter>Source Files\HL2 DLL\unused</Filter>
     </ClInclude>
     <ClInclude Include="hl2mp\hl2mp_bot_temp.h">
       <Filter>Source Files\HL2MP</Filter>
@@ -1639,12 +1747,6 @@
     </ClInclude>
     <ClInclude Include="..\..\game\shared\hl2mp\hl2mp_weapon_parse.h">
       <Filter>Source Files\HL2MP</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2mp\grenade_satchel.h">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2mp\grenade_tripmine.h">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
     </ClInclude>
     <ClInclude Include="hl2mp\te_hl2mp_shotgun_shot.h">
       <Filter>Source Files\HL2MP\Weapons</Filter>
@@ -1708,69 +1810,6 @@
     </ClInclude>
     <ClInclude Include="toolframework_server.h">
       <Filter>Tools Framework</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\bg2_maptriggers.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\bullet.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\ctfflag.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\flag.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\mapfilter.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\spawnpoint.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\vcomm.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg2\ironsights.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\bg3_player_shared.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\bg3_buffs.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\bg3_weapon_def.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\bg3_class.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg2\weapon_bg2base.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\Bots\bg3_bot.h">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\Bots\bg3_bot_manager.h">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\Bots\bg3_bot_navpoint.h">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\Bots\bg3_bot_vcomms.h">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\Bots\bg3_player_search.h">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\bg3_math_shared.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\bg3_weapon_shared.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\bg3_ammo_cache.h">
-      <Filter>Source Files\BG3</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -2017,7 +2056,16 @@
     <ClCompile Include="baseflex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="basegrenade_concussion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="basegrenade_contact.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\game\shared\basegrenade_shared.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="basegrenade_timed.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="basemultiplayerplayer.cpp">
@@ -2467,9 +2515,6 @@
     <ClCompile Include="..\..\public\networkvar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="npc_vehicledriver.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\game\shared\obstacle_pushaway.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2878,13 +2923,82 @@
     <ClCompile Include="world.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="bg2\bg2_maptriggers.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\bullet.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\cannon.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\cannonball.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\ctfflag.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\flag.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\mapfilter.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\vcomm.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg2\weapon_bg2base.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg2\weapon_bg2weapons.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_ammo_cache.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg3\bg3_buffs.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg3\bg3_class.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg3\bg3_weapon_def.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\Bots\bg3_bot.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\Bots\bg3_bot_adder.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\Bots\bg3_bot_helpers.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\Bots\bg3_bot_manager.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\Bots\bg3_bot_navpoint.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\Bots\bg3_bot_vcomm.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\Bots\bg3_player_search.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg3\bg3_math_shared.cpp">
+      <Filter>Source Files\BG3\Math</Filter>
+    </ClCompile>
     <ClCompile Include="hl2\ai_behavior_functank.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\ai_spotlight.cpp">
+    <ClCompile Include="hl2\ai_behavior_holster.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\antlion_dust.cpp">
+    <ClCompile Include="hl2\ai_goal_police.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\ai_spotlight.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl2\ar2_explosion.cpp">
@@ -2899,7 +3013,16 @@
     <ClCompile Include="..\..\game\shared\hl2\basehlcombatweapon_shared.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
+    <ClCompile Include="hl2\cbasehelicopter.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
     <ClCompile Include="hl2\cbasespriteprojectile.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\citadel_effects.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\combine_mine.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl2\env_alyxemp.cpp">
@@ -2918,6 +3041,9 @@
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl2\func_tank.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\grenade_ar2.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl2\grenade_frag.cpp">
@@ -2980,6 +3106,12 @@
     <ClCompile Include="hl2\point_apc_controller.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
+    <ClCompile Include="hl2\prop_combine_ball.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\proto_sniper.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
     <ClCompile Include="hl2\rotorwash.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
@@ -2991,6 +3123,24 @@
     </ClCompile>
     <ClCompile Include="weapon_cubemap.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\grenade_beam.cpp">
+      <Filter>Source Files\HL2 DLL\unused</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\grenade_homer.cpp">
+      <Filter>Source Files\HL2 DLL\unused</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\grenade_pathfollower.cpp">
+      <Filter>Source Files\HL2 DLL\unused</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\npc_missiledefense.cpp">
+      <Filter>Source Files\HL2 DLL\unused</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\weapon_cguard.cpp">
+      <Filter>Source Files\HL2 DLL\unused</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\weapon_flaregun.cpp">
+      <Filter>Source Files\HL2 DLL\unused</Filter>
     </ClCompile>
     <ClCompile Include="hl2mp\hl2mp_bot_temp.cpp">
       <Filter>Source Files\HL2MP</Filter>
@@ -3016,13 +3166,13 @@
     <ClCompile Include="..\..\game\shared\hl2mp\hl2mp_weapon_parse.cpp">
       <Filter>Source Files\HL2MP</Filter>
     </ClCompile>
-    <ClCompile Include="hl2mp\grenade_satchel.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2mp\grenade_tripmine.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
     <ClCompile Include="hl2mp\te_hl2mp_shotgun_shot.cpp">
+      <Filter>Source Files\HL2MP\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\hl2mp\weapon_crossbow.cpp">
+      <Filter>Source Files\HL2MP\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\hl2mp\weapon_crowbar.cpp">
       <Filter>Source Files\HL2MP\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\..\game\shared\hl2mp\weapon_frag.cpp">
@@ -3246,66 +3396,6 @@
     </ClCompile>
     <ClCompile Include="toolframework_server.cpp">
       <Filter>Tools Framework</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\bg2_maptriggers.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\bullet.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\ctfflag.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\flag.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\mapfilter.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\vcomm.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg3\bg3_buffs.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg3\bg3_weapon_def.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg3\bg3_class.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg2\weapon_bg2base.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg2\weapon_bg2weapons.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\Bots\bg3_bot.cpp">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\Bots\bg3_bot_adder.cpp">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\Bots\bg3_bot_helpers.cpp">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\Bots\bg3_bot_manager.cpp">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\Bots\bg3_bot_navpoint.cpp">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\Bots\bg3_bot_vcomm.cpp">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\Bots\bg3_player_search.cpp">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg3\bg3_math_shared.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\bg3_ammo_cache.cpp">
-      <Filter>Source Files\BG3</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

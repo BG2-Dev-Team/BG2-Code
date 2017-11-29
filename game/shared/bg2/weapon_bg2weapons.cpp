@@ -349,6 +349,7 @@ RIFLE_ACTTABLE( pennsylvania )
 DECLARE_BG2_WEAPON( pistol_a )
 {
 	m_fHolsterTime = 0.50f;
+	m_bCantAbortReload = false;
 
 	m_bWeaponHasSights = false; 
 	m_eWeaponType = PISTOL;
@@ -386,6 +387,7 @@ PISTOL_ACTTABLE( pistol_a )
 DECLARE_BG2_WEAPON( pistol_b )
 {
 	m_fHolsterTime = 0.50f;
+	m_bCantAbortReload = false;
 
 	m_bWeaponHasSights = false; 
 	m_eWeaponType = PISTOL;

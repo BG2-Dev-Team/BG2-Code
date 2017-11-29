@@ -216,6 +216,7 @@ void CHL2MP_Player::Precache(void)
 	PrecacheScriptSound( "NPC_CombineS.Die" );
 	PrecacheScriptSound( "NPC_Citizen.die" );*/
 	PrecacheScriptSound("BG2Player.die");
+	PrecacheScriptSound("AmmoCrate.Give");
 	//PrecacheScriptSound( "BG2Player.pain" );
 
 	for (i = 0; i <= HITGROUP_RIGHTLEG; i++)
@@ -313,10 +314,38 @@ void CHL2MP_Player::GiveDefaultItems(void)
 	}
 
 	//Give primary and secondary ammo
-	int ammoCount = IsLinebattle() ? m_pCurClass->m_iDefaultPrimaryAmmoCount : m_pCurClass->m_iDefaultPrimaryAmmoCount * 2;
+	int ammoCount = IsLinebattle() ? m_pCurClass->m_iDefaultPrimaryAmmoCount : m_pCurClass->m_iDefaultPrimaryAmmoCount; //* 2;
 	CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
 	if (m_pCurClass->m_pszSecondaryAmmo)
 		CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
+}
+
+void CHL2MP_Player::SetDefaultAmmoFull(bool bPlaySound) {
+	if (!HasDefaultAmmoFull()) {
+		//Set primary and secondary ammo
+		int ammoCount = m_pCurClass->m_iDefaultPrimaryAmmoCount;
+		CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
+		if (m_pCurClass->m_pszSecondaryAmmo)
+			CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
+		
+		if (bPlaySound)
+			EmitSound("AmmoCrate.Give");
+	}
+}
+
+bool CHL2MP_Player::HasDefaultAmmoFull() {
+	int primaryAmmoCount = CBasePlayer::GetAmmoCount(GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
+	int idealPrimaryAmmoCount = m_pCurClass->m_iDefaultPrimaryAmmoCount;
+
+	
+	if (m_pCurClass->m_pszSecondaryAmmo){
+		int secondaryAmmoCount = CBasePlayer::GetAmmoCount(GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
+		int idealSecondaryAmmoCount = m_pCurClass->m_iDefaultSecondaryAmmoCount;
+		return primaryAmmoCount == idealPrimaryAmmoCount && secondaryAmmoCount == idealSecondaryAmmoCount;
+	}
+	else {
+		return primaryAmmoCount == idealPrimaryAmmoCount;
+	}
 }
 
 //BG2 - Tjoppen - g_pLastIntermission
@@ -1913,22 +1942,6 @@ void CHL2MP_Player::CreateRagdollEntity(void)
 
 void CHL2MP_Player::Weapon_Drop(CBaseCombatWeapon *pWeapon, const Vector *pvecTarget, const Vector *pVelocity)
 {
-	//Drop a grenade if it's primed.
-	//BG2 - Tjoppen - don't need this
-	/*if ( GetActiveWeapon() )
-	{
-	CBaseCombatWeapon *pGrenade = Weapon_OwnsThisType("weapon_frag");
-
-	if ( GetActiveWeapon() == pGrenade )
-	{
-	if ( ( m_nButtons & IN_ATTACK ) || (m_nButtons & IN_ATTACK2) )
-	{
-	DropPrimedFragGrenade( this, pGrenade );
-	return;
-	}
-	}
-	}*/
-
 	BaseClass::Weapon_Drop(pWeapon, pvecTarget, pVelocity);
 }
 
@@ -1961,6 +1974,8 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 	CWeaponFrag * pGrenade = dynamic_cast<CWeaponFrag*>(GetActiveWeapon());
 	if (pGrenade && pGrenade->IsPrimed()) {
 		pGrenade->LobGrenade(this, 100.0f);
+		StopSound(pGrenade->entindex(), GRENADE_FUSE_SOUND);
+		pGrenade->Remove(); //avoid grenade duplication
 	}
 
 	//update damage info with our accumulated physics force

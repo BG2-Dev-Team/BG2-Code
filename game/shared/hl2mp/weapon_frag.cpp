@@ -167,7 +167,6 @@ void CWeaponFrag::CheckForFuseEnd()
 
 		DecrementAmmo(pOwner);
 		StopSound(this->entindex(), GRENADE_FUSE_SOUND);
-
 	}
 }
 #endif

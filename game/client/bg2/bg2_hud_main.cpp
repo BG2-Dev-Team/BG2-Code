@@ -549,12 +549,14 @@ void CHudBG2::Paint()
 	m_pLabelWaveTime->SizeToContents();
 	m_pLabelWaveTime->SetFgColor( ColourWhite );
 
+	//update round timer text
 	int roundtime;
 	if (HL2MPRules()->UsingTickets()) {
 		roundtime = ceilf(HL2MPRules()->m_fLastRoundRestart + mp_tickets_roundtime.GetFloat() - gpGlobals->curtime);
 	} else {
-		roundtime = ceilf(HL2MPRules()->GetMapRemainingTime() - gpGlobals->curtime);
+		roundtime = ceilf(HL2MPRules()->GetMapRemainingTime()); // -gpGlobals->curtime);
 	}
+	//only show actual time if it's a reasonable time
 	if (roundtime < 3600) {
 		if (roundtime < 0)
 			roundtime = 0;

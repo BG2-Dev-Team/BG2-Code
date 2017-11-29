@@ -3,8 +3,8 @@ This is pretty much a complete ripoff of Tjoppen's bullet code.
 While I have changed a few things here and there to work better for the cannon, 
 he deserves 95% of the credit for this code. -HairyPotter
 */
-
-#include "weapon_bg2base.h"
+#include "cbase.h"
+#include "../shared/bg2/weapon_bg2base.h"
 #include "ammodef.h"
 
 //BG2 - Draco - no hl2 player stuff on server!

@@ -844,13 +844,11 @@ END_RECV_TABLE()
 
 C_HL2MPRagdoll::C_HL2MPRagdoll()
 {
-	Msg("Constructed ragdoll on client\n");
 }
 
 C_HL2MPRagdoll::~C_HL2MPRagdoll()
 {
 	PhysCleanupFrictionSounds( this );
-	Msg("Destroyed ragdoll on client\n");
 	if ( m_hPlayer )
 	{
 		m_hPlayer->CreateModelInstance();

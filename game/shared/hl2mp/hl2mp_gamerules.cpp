@@ -171,11 +171,13 @@ REGISTER_GAMERULES_CLASS( CHL2MPRules );
 BEGIN_NETWORK_TABLE_NOBASE( CHL2MPRules, DT_HL2MPRules )
 
 	#ifdef CLIENT_DLL
+		RecvPropFloat( RECVINFO(m_flGameStartTime)),
 		RecvPropBool( RECVINFO( m_bTeamPlayEnabled ) ),
 		RecvPropFloat( RECVINFO( m_fLastRespawnWave ) ), //BG2 This needs to be here for the timer to work. -HairyPotter
 		RecvPropFloat(RECVINFO(m_fLastRoundRestart)),
 		RecvPropInt(RECVINFO(m_iCurrentRound)),
 	#else
+		SendPropFloat( SENDINFO(m_flGameStartTime)),
 		SendPropBool( SENDINFO( m_bTeamPlayEnabled ) ),
 		SendPropFloat(SENDINFO(m_fLastRespawnWave)), //BG2 This needs to be here for the timer to work. -HairyPotter
 		SendPropFloat(SENDINFO(m_fLastRoundRestart)),
@@ -752,7 +754,8 @@ void CHL2MPRules::Think( void )
 	float flTimeLimit = GetMapRemainingTime();
 	float flFragLimit = fraglimit.GetFloat();
 
-	if (flTimeLimit != 0 && gpGlobals->curtime >= flTimeLimit)
+	//why compare remaining time to current time? - Awesome
+	if (flTimeLimit != 0 && flTimeLimit < 0) //gpGlobals->curtime >= flTimeLimit)
 	{
 		GoToIntermission();
 		return;

@@ -25,6 +25,15 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{BA03E055-4FA2-FCE3-8A1C-D348547D379C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\BG2">
+      <UniqueIdentifier>{91AC0176-9A0C-6F5F-7E19-DF6658B379B6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\BG3">
+      <UniqueIdentifier>{D1F4D7D5-38EB-4EBC-2ED7-6BFDBB08F144}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\BG3\Math">
+      <UniqueIdentifier>{7F16E5FD-DE0A-D654-D59B-AD0A2D146211}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\game_controls">
       <UniqueIdentifier>{1E7DB91A-DC0A-B17F-617D-4C4FB3FA7A3E}</UniqueIdentifier>
     </Filter>
@@ -54,15 +63,6 @@
     </Filter>
     <Filter Include="VPC Scripts">
       <UniqueIdentifier>{A40EE377-781A-C6B9-0C7C-B3BE118D248E}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\BG2">
-      <UniqueIdentifier>{6ba20fe8-0682-41f8-a92c-24fad3fcff80}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\BG3">
-      <UniqueIdentifier>{77a43279-9346-4b87-bf2c-901b254b8847}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\BG3\Math">
-      <UniqueIdentifier>{1de8cd29-c5fe-48b3-95d2-2b0d1313734f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1844,6 +1844,81 @@
     <ClInclude Include="viewpostprocess.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="bg2\bg2_hud_main.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\bg2_hud_pickup.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\bg2smokeemitter.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\c_ctfflag.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\c_flag.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\classmenu.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\commmenu.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\commmenu2.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\hintbox.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg2\ironsights.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\vgui_bg2_options.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="bg2\vgui_Panel_MainMenu.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg2\weapon_bg2base.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg2\weapon_frag.h">
+      <Filter>Source Files\BG2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\bg3_buffs.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\bg3_class.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bg3_hint.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bg3_hud_compass.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bg3_localkit.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\bg3_player_shared.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bg3_teammenu.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\bg3_weapon_def.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\bg3_weapon_shared.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\bg3_math_shared.h">
+      <Filter>Source Files\BG3\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\Math\bg3_rand.h">
+      <Filter>Source Files\BG3\Math</Filter>
+    </ClInclude>
     <ClInclude Include="game_controls\basemodel_panel.h">
       <Filter>Source Files\game_controls</Filter>
     </ClInclude>
@@ -1951,78 +2026,6 @@
     </ClInclude>
     <ClInclude Include="toolframework_client.h">
       <Filter>Tool Framework</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\vgui_bg2_options.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\bg2_hud_main.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\bg2_hud_pickup.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\bg2smokeemitter.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\c_ctfflag.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\c_flag.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\classmenu.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\commmenu.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\commmenu2.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\hintbox.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg2\vgui_Panel_MainMenu.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg2\ironsights.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\bg3_buffs.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\bg3_player_shared.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\Math\bg3_rand.h">
-      <Filter>Source Files\BG3\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\bg3_weapon_def.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\bg3_teammenu.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\bg3_localkit.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\bg3_class.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\bg3_math_shared.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\bg3_weapon_shared.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg2\weapon_bg2base.h">
-      <Filter>Source Files\BG2</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\bg3_hud_compass.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\bg3_hint.h">
-      <Filter>Source Files\BG3</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -3067,6 +3070,81 @@
     <ClCompile Include="WorldDimsProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="bg2\bg2_hud_ctf.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\bg2_hud_flags.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\bg2_hud_ironsights.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\bg2_hud_main.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\bg2_hud_pickup.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\bg2_hud_stamina.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\bg2_mapintros.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\c_ctfflag.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\c_flag.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\classmenu.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\commmenu.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\commmenu2.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\hintbox.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="bg2\vgui_Panel_MainMenu.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg2\weapon_bg2base.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg2\weapon_bg2weapons.cpp">
+      <Filter>Source Files\BG2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg3\bg3_buffs.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg3\bg3_class.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_hint.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_hud_buffs.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_hud_compass.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_teammenu.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg3\bg3_weapon_def.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg3\bg3_math_shared.cpp">
+      <Filter>Source Files\BG3\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg3\Math\bg3_rand.cpp">
+      <Filter>Source Files\BG3\Math</Filter>
+    </ClCompile>
     <ClCompile Include="game_controls\basemodel_panel.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
@@ -3585,81 +3663,6 @@
     </ClCompile>
     <ClCompile Include="toolframework_client.cpp">
       <Filter>Tool Framework</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\bg2_hud_ctf.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\bg2_hud_flags.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\bg2_hud_ironsights.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\bg2_hud_main.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\bg2_hud_pickup.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\bg2_hud_stamina.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\bg2_mapintros.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\c_ctfflag.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\c_flag.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\classmenu.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\commmenu.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\commmenu2.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\hintbox.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg2\vgui_Panel_MainMenu.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\bg3_hud_buffs.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg3\bg3_buffs.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg3\Math\bg3_rand.cpp">
-      <Filter>Source Files\BG3\Math</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg3\bg3_weapon_def.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\bg3_teammenu.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg3\bg3_class.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg3\bg3_math_shared.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg2\weapon_bg2base.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg2\weapon_bg2weapons.cpp">
-      <Filter>Source Files\BG2</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\bg3_hud_compass.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\bg3_hint.cpp">
-      <Filter>Source Files\BG3</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

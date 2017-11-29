@@ -76,8 +76,8 @@ Individual accuracies defined in the weapons, general things can go here
 AMMO AMOUNTS - used in hl2mp_gamerules.h
 */
 #if 1
-#define AMMO_INFANTRY		15
-#define AMMO_OFFICER		6
+#define AMMO_INFANTRY		10
+#define AMMO_OFFICER		10
 #define AMMO_SNIPER			12
 #define AMMO_SKIRMISHER		12
 #define AMMO_LIGHT_INFANTRY	12

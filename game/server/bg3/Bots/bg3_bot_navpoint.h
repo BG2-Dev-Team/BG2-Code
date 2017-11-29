@@ -52,7 +52,7 @@ public:
 	DECLARE_DATADESC();
 
 	CBotNavpoint() {}
-	void Spawn(void) override;
+	void	Spawn(void) override;
 
 protected:
 	string_t m_iszBritPoint; //next point for british team

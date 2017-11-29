@@ -105,6 +105,8 @@ public:
 	void CreateRagdollEntity( void );
 	void GiveAllItems( void );
 	void GiveDefaultItems( void );
+	void SetDefaultAmmoFull(bool bPlaySound = true);
+	bool HasDefaultAmmoFull(void);
 	bool IsAiming() const { return GetActiveWeapon() && GetActiveWeapon()->m_bIsIronsighted; }
 	void NoteWeaponFired( void );
 
