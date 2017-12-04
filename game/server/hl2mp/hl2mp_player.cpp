@@ -1493,7 +1493,10 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 			pClassString = "Inf"; //same thing here..
 			break;
 		case CLASS_GRENADIER:
-			pClassString = "Inf";
+			if (GetTeamNumber() == TEAM_AMERICANS)
+				pClassString = "Gre";
+			else
+				pClassString = "Inf";
 			break;
 		default:
 			return;
@@ -1555,7 +1558,7 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 				if (!(client->IsNetClient()))	// Not a client ? (should never be true)
 					continue;
 
-				if (teamonly && !g_pGameRules->PlayerCanHearChat(client, this))//!= GR_TEAMMATE )
+				if (teamonly && client->GetTeamNumber() != GetTeamNumber() )
 					continue;
 
 				if (!client->CanHearAndReadChatFrom(this))
@@ -1829,7 +1832,7 @@ bool CHL2MP_Player::BecomeRagdollOnClient(const Vector &force)
 // -------------------------------------------------------------------------------- //
 // Ragdoll entities.
 // -------------------------------------------------------------------------------- //
-
+ConVar sv_ragdoll_staytime("sv_ragdoll_staytime", "30", FCVAR_GAMEDLL);
 class CHL2MPRagdoll : public CBaseAnimatingOverlay
 {
 public:
@@ -1841,7 +1844,10 @@ public:
 	{
 		return SetTransmitState(FL_EDICT_ALWAYS);
 	}
+
 public:
+	
+
 	// In case the client has the player entity, we transmit the player index.
 	// In case the client doesn't have it, we transmit the player's model index, origin, and angles
 	// so they can create a ragdoll in the right place.
@@ -1865,6 +1871,14 @@ SendPropVector(SENDINFO(m_vecRagdollVelocity)),
 SendPropBool(SENDINFO(m_bDropHat))
 END_SEND_TABLE()
 
+CON_COMMAND(destroy_ragdolls, "") {
+	CBaseEntity* pEntity = NULL;
+	while ((pEntity = gEntList.FindEntityByClassname(pEntity, "hl2mp_ragdoll")) != NULL)
+	{
+		CHL2MPRagdoll *pDoll = dynamic_cast<CHL2MPRagdoll*>(pEntity);
+		pDoll->Remove();
+	}
+}
 
 void CHL2MP_Player::CreateRagdollEntity(void)
 {
@@ -1905,6 +1919,9 @@ void CHL2MP_Player::CreateRagdollEntity(void)
 		//
 		pRagdoll->m_vecForce = m_vecTotalBulletForce;
 		pRagdoll->SetAbsOrigin(GetAbsOrigin());
+
+		//set destruction time
+		
 
 		//have a chance of having hat fall off
 		if (m_pCurClass->m_pszDroppedHat && bot_randfloat() < 0.1f) {
@@ -2265,7 +2282,7 @@ CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint(void)
 }
 
 
-CON_COMMAND(timeleft, "prints the time remaining in the match")
+CON_COMMAND_F(timeleft, "prints the time remaining in the match", FCVAR_CLIENTCMD_CAN_EXECUTE)
 {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_GetCommandClient());
 
@@ -2305,6 +2322,13 @@ CON_COMMAND(timeleft, "prints the time remaining in the match")
 	}
 }
 
+CON_COMMAND(printscores_server, "Prints scores to console\n") {
+	for (int i = 1; i < gpGlobals->maxClients; i++) {
+		CBasePlayer* pPlayer = UTIL_PlayerByIndex(i);
+		if (pPlayer)
+			Msg("%30s: %i\n", pPlayer->GetPlayerName(), pPlayer->DeathCount());
+	}
+}
 
 void CHL2MP_Player::Reset()
 {

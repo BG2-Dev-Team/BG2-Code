@@ -7967,6 +7967,7 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropFloat		( SENDINFO( m_flConstraintSpeedFactor ), 0, SPROP_NOSCALE ),
 
 		SendPropFloat		( SENDINFO( m_flDeathTime ), 0, SPROP_NOSCALE ),
+		SendPropInt			( SENDINFO( m_iDeaths), 0),
 
 		SendPropInt			( SENDINFO( m_nWaterLevel ), 2, SPROP_UNSIGNED ),
 		SendPropFloat		( SENDINFO( m_flLaggedMovementValue ), 0, SPROP_NOSCALE ),

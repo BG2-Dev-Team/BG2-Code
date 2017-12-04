@@ -246,6 +246,7 @@ END_RECV_TABLE()
 		RecvPropFloat		( RECVINFO( m_flConstraintSpeedFactor )),
 
 		RecvPropFloat		( RECVINFO( m_flDeathTime )),
+		RecvPropInt			( RECVINFO( m_iDeaths)),
 
 		RecvPropInt			( RECVINFO( m_nWaterLevel ) ),
 		RecvPropFloat		( RECVINFO( m_flLaggedMovementValue )),

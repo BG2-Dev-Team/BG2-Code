@@ -493,9 +493,13 @@ protected:
 	float			m_flFreezeFrameDistance;
 	bool			m_bWasFreezeFraming; 
 	float			m_flDeathTime;		// last time player died
+	int				m_iDeaths;
 
 	float			m_flStepSoundTime;
 	bool			m_IsFootprintOnLeft;
+
+public:
+	int DeathCount() const { return m_iDeaths; }
 
 private:
 	// Make sure no one calls this...

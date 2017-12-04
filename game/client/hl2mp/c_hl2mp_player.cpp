@@ -1138,3 +1138,4 @@ void C_HL2MP_Player::PostThink( void )
 	// Store the eye angles pitch so the client can compute its animation state correctly.
 	m_angEyeAngles = EyeAngles();
 }
+

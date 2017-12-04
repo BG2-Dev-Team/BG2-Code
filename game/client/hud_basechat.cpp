@@ -1619,7 +1619,8 @@ void CBaseHudChatLine::InsertAndColorizeText( wchar_t *buf, int clientIndex )
 		}
 	}*/
 
-	if ( !m_textRanges.Count() && m_iNameLength > 0 && m_text[0] == COLOR_USEOLDCOLORS )
+	//BG3 - always parse color of name - Awesome
+	if ( !m_textRanges.Count() && m_iNameLength > 0) // && m_text[0] == COLOR_USEOLDCOLORS )
 	{
 		TextRange range;
 		range.start = 0;

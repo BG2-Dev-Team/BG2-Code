@@ -21,7 +21,7 @@ const float PLAYER_RESOURCE_THINK_INTERVAL = 0.2f;
 IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerResource)
 	RecvPropArray3( RECVINFO_ARRAY(m_iPing), RecvPropInt( RECVINFO(m_iPing[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iScore), RecvPropInt( RECVINFO(m_iScore[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_iDeaths), RecvPropInt( RECVINFO(m_iDeaths[0]))),
+	//RecvPropArray3( RECVINFO_ARRAY(m_iDeaths), RecvPropInt( RECVINFO(m_iDeaths[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_bConnected), RecvPropInt( RECVINFO(m_bConnected[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iTeam), RecvPropInt( RECVINFO(m_iTeam[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_bAlive), RecvPropInt( RECVINFO(m_bAlive[0]))),
@@ -33,13 +33,21 @@ BEGIN_PREDICTION_DATA( C_PlayerResource )
 	DEFINE_PRED_ARRAY( m_szName, FIELD_STRING, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_iPing, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_iScore, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
-	DEFINE_PRED_ARRAY( m_iDeaths, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
+	//DEFINE_PRED_ARRAY( m_iDeaths, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_bConnected, FIELD_BOOLEAN, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_iTeam, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_bAlive, FIELD_BOOLEAN, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_iHealth, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 
 END_PREDICTION_DATA()	
+
+CON_COMMAND(printscores_client, "Prints scores to console\n") {
+	for (int i = 1; i < gpGlobals->maxClients; i++) {
+		CBasePlayer* pPlayer = UTIL_PlayerByIndex(i);
+		if (pPlayer)
+			Msg("%30s: %i\n", pPlayer->GetPlayerName(), g_PR->GetDeaths(i));
+	}
+}
 
 C_PlayerResource *g_PR;
 
@@ -294,7 +302,12 @@ int	C_PlayerResource::GetDeaths( int iIndex )
 	if ( !IsConnected( iIndex ) )
 		return 0;
 
-	return m_iDeaths[iIndex];
+	//BG3- damage score isn't transmitted correctly for some reason,
+	//so we're going to use a separate network var
+	C_BasePlayer* pPlayer = UTIL_PlayerByIndex(iIndex);
+	return pPlayer ? pPlayer->DeathCount() : 0;
+
+	//return m_iDeaths[iIndex];
 }
 
 //-----------------------------------------------------------------------------
