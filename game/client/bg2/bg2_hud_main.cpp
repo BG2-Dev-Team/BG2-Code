@@ -649,6 +649,10 @@ void CHudBG2::MsgFunc_HitVerif( bf_read &msg )
 	attackType = (hitgroup >> 4) & 0xF;
 	hitgroup &= 0xF;
 
+	//don't display messages for 0-damage
+	if (damage <= 0)
+		return;
+
 	C_HL2MP_Player *pAttacker = dynamic_cast<C_HL2MP_Player*>(UTIL_PlayerByIndex( attacker ));
 
 	if( !pAttacker )

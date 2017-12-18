@@ -254,7 +254,11 @@ void CSDKBot::Init(CBasePlayer* pPlayer, BotDifficulty* pDifficulty) {
 		((CHL2MP_Player*)pPlayer)->SetNextClass(lastClass);
 
 	pPlayer->AddFlag(FL_CLIENT | FL_FAKECLIENT);
-	pPlayer->Spawn();
+
+	//only spawn if we're not in LMS
+	if (!IsLMS())
+		pPlayer->Spawn();
+
 	curBot.m_PlayerSearchInfo.Init(pPlayer);
 }
 

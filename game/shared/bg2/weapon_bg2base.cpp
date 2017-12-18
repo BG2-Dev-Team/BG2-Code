@@ -276,8 +276,14 @@ void CBaseBG2Weapon::Fire( int iAttack )
 		return;
 	}
 
+	float flintlockDelay;
+	if (Def()->m_eWeaponType == RIFLE)
+		flintlockDelay = sv_flintlock_delay_rifle.GetFloat();
+	else
+		flintlockDelay = sv_flintlock_delay.GetFloat();
+
 	if( sv_turboshots.GetInt() == 0 )
-		m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + GetAttackRate( iAttack );
+		m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + flintlockDelay;
 	else
 		m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + 0.1f;
 
@@ -301,11 +307,7 @@ void CBaseBG2Weapon::Fire( int iAttack )
 	m_fNextHolster = gpGlobals->curtime + 0.2f; //Keep people from switching weapons right after shooting.
 
 	//flintlock delay is based on our weapon type
-	float flintlockDelay;
-	if (Def()->m_eWeaponType == RIFLE)
-		flintlockDelay = sv_flintlock_delay_rifle.GetFloat();
-	else 
-		flintlockDelay = sv_flintlock_delay.GetFloat();
+	
 		
 
 	//sample eye vector after a short delay, then fire the bullet(s) a short time after that
@@ -789,8 +791,10 @@ bool CBaseBG2Weapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 bool CBaseBG2Weapon::Reload( void )
 {
 	//BG2 - Tjoppen - disallow reloading until delayed firing has occured
-	if( m_bShouldFireDelayed )
+	if (m_bShouldFireDelayed) {
 		return false;
+	}
+		
 
 	return BaseClass::Reload();
 }

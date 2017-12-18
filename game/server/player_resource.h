@@ -27,6 +27,7 @@ public:
 	virtual int  UpdateTransmitState(void);
 	//BG2 - Tjoppen - health fix
 	void SetPlayerHealth(int entindex, int health);
+	void SetPlayerScore(int entindex, int score);
 	//
 
 protected:

@@ -43,6 +43,8 @@
 #include "../shared/bg2/weapon_frag.h"
 #include "bg3/Bots/bg3_bot_vcomms.h"
 #include "../shared/bg3/bg3_buffs.h"
+#include "bg3/bg3_scorepreserve.h"
+#include "bg3/Bots/bg3_bot_influencer.h"
 //
 
 extern ConVar mp_autobalanceteams;
@@ -170,6 +172,8 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 
 	//BG2 - Tjoppen - tickets
 	m_bDontRemoveTicket = true;
+
+	m_bInSpawnRoom = false;
 }
 
 CHL2MP_Player::~CHL2MP_Player(void)
@@ -441,6 +445,8 @@ void CHL2MP_Player::Spawn(void)
 	StopObserverMode();
 
 	UpdateWaterState(); //BG2 - This fixes the ammo respawn bug if player dies underwater. -HairyPotter
+
+	m_flStepSoundTime = gpGlobals->curtime + 0.1f; //BG3 - Awesome - make sure 100% that step time resets
 
 	GiveDefaultItems();
 
@@ -1384,19 +1390,7 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 		return false;
 	}
 
-	// BG2 - VisualMelon - This is slightly bodged while I try and get my head around how this checking works
-	//					   and decide if I need to 
-	/*limit = -1;
-	if (m_iAmmoKit == AMMO_KIT_BUCKSHOT)
-	limit = 2; // hc'd limit for testing
-	if( limit >= 0 && g_Teams[iTeam]->GetNumOfAmmoKit(AMMO_KIT_BUCKSHOT) >= limit &&
-	!(GetTeamNumber() == iTeam && m_iAmmoKit == AMMO_KIT_BUCKSHOT) ) //BG2 - check against next class, m_iClass would be officer making the if false - Roob
-	{
-	//BG2 - Tjoppen - TODO: usermessage this
-	ClientPrint( this, HUD_PRINTCENTER, "There are too players carrying buckshot on your team!\n" );
-	m_iAmmoKit = AMMO_KIT_BALL;
-	return false;
-	}*/
+	
 
 	//The following line prevents anyone else from stealing our spot..
 	//Without this line several teamswitching/new players can pick a free class, so there can be for instance 
@@ -1422,6 +1416,19 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 		else
 			ChangeTeam(iTeam);
 	}
+	else {
+		//Msg("Checking for early spawn\n");
+		//BG3 if we're not switching teams and we're in a spawn room, just respawn instantly
+		extern ConVar sv_class_respawn_time;
+		if (m_bInSpawnRoom && IsAlive() && m_bInSpawnRoom && m_fLastRespawn + sv_class_respawn_time.GetFloat() > gpGlobals->curtime) {
+			m_bDontRemoveTicket = true;
+			//Msg("Doing early spawn!\n");
+			Spawn();
+
+			//HACK HACK this prevents players from class-switching more than once, until they spawn for some other reason
+			m_fLastRespawn = 0.f;
+		}
+	}
 
 	CTeam *team = GetTeam();
 
@@ -1445,6 +1452,11 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 		team ? team->GetName() : "",
 		pClassName);
 	//
+
+	//BG3 - use this as an entry point to check if we have a preserved score available
+	if (!DeathCount()) {
+		NScorePreserve::NotifyConnected(this->entindex());
+	}
 
 	return true;
 }
@@ -1536,6 +1548,9 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 		CBotComManager* pComms = CBotComManager::GetBotCommsOfPlayer(this);
 		BotContext eContext = CBotComManager::ParseIntToContext(comm);
 		pComms->ReceiveContext(this, eContext, true);
+
+		//Inform Bot Influencer that we may have ordered our bots around
+		NBotInfluencer::NotifyCommand(this, comm);
 
 		//done. possibly also tell clients to draw text and stuff if sv_voicecomm_text is true
 		m_flNextVoicecomm = gpGlobals->curtime + 2.0f;
@@ -1991,6 +2006,7 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 	CWeaponFrag * pGrenade = dynamic_cast<CWeaponFrag*>(GetActiveWeapon());
 	if (pGrenade && pGrenade->IsPrimed()) {
 		pGrenade->LobGrenade(this, 100.0f);
+		pGrenade->DecrementAmmo(this);
 		StopSound(pGrenade->entindex(), GRENADE_FUSE_SOUND);
 		pGrenade->Remove(); //avoid grenade duplication
 	}
@@ -2242,8 +2258,13 @@ CBaseEntity* CHL2MP_Player::HandleSpawnList(const CUtlVector<CBaseEntity *>& spa
 	return NULL;
 }
 
+ConVar sv_class_respawn_time("sv_class_respawn_time", "10", FCVAR_GAMEDLL | FCVAR_NOTIFY, "How long after spawning a player will be able to change class\n");
 CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint(void)
 {
+	//no need for spawn points if we're in a room
+	if (m_bInSpawnRoom && m_fLastRespawn + sv_class_respawn_time.GetFloat() > gpGlobals->curtime)
+		return NULL;
+
 	if (GetTeamNumber() <= TEAM_SPECTATOR)
 		return NULL;	//BG2 - Tjoppen - spectators/unassigned don't spawn..
 

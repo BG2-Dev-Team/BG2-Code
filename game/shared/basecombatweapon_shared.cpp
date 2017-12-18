@@ -1287,7 +1287,8 @@ void CBaseCombatWeapon::SetViewModel()
 	if ( pOwner == NULL )
 		return;
 	CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex, false );
-	int WeaponSkin = pOwner->GetActiveWeapon()->m_nSkin; //BG2 - HACKHACK Sets the weapon skin for viewmodel -HairyPotter
+	int WeaponSkin = 0;
+	if (pOwner->GetActiveWeapon()) WeaponSkin = pOwner->GetActiveWeapon()->m_nSkin; //BG2 - HACKHACK Sets the weapon skin for viewmodel -HairyPotter
 
 	if (vm == NULL)
 		return;
@@ -2141,9 +2142,9 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 		}
 	}
 
-	if ( !bReload )
+	if (!bReload) {
 		return false;
-
+	}
 	//BG2 - Tjoppen - server side reload sound
 	//#ifdef CLIENT_DLL
 	// Play reload
@@ -2496,7 +2497,8 @@ bool CBaseCombatWeapon::SetIdealActivity( Activity ideal )
 	// Don't use transitions when we're deploying
 	//BG2 - Tjoppen - fixed for empty draw anim
 	//if ( ideal != ACT_VM_DRAW && IsWeaponVisible() && nextSequence != m_nIdealSequence )
-	if (ideal != GetDrawActivity() && IsWeaponVisible() && nextSequence != m_nIdealSequence)
+	//BG3 - always instantly go to reload activity
+	if (ideal != GetDrawActivity() && ideal != ACT_VM_RELOAD && IsWeaponVisible() && nextSequence != m_nIdealSequence)
 	{
 		//Set our activity to the next transitional animation
 		SetActivity( ACT_TRANSITION );

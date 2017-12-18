@@ -69,6 +69,7 @@
 #include "dt_utlvector_send.h"
 #include "vote_controller.h"
 #include "ai_speech.h"
+#include "hl2mp/hl2mp_gamerules.h"
 //BG2 - Tjoppen - health fix
 #include "player_resource.h"
 //
@@ -4953,7 +4954,9 @@ void CBasePlayer::Spawn( void )
 	if ( !m_fGameHUDInitialized )
 		g_pGameRules->SetDefaultPlayerTeam( this );
 
-	g_pGameRules->GetPlayerSpawnSpot( this );
+	//BG3 - linebattle rules will handle spawning for us
+	if (!UseLineSpawn())
+		g_pGameRules->GetPlayerSpawnSpot( this );
 
 	m_Local.m_bDucked = false;// This will persist over round restart if you hold duck otherwise. 
 	m_Local.m_bDucking = false;

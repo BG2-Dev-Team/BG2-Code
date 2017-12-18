@@ -691,9 +691,11 @@ public:
 	virtual void	ResetScores( void ) { ResetFragCount(); ResetDeathCount(); }
 	void	ResetFragCount();
 	void	IncrementFragCount( int nCount );
+	void	SetFragCount(int nCount) { m_iFrags = nCount; }
 
 	void	ResetDeathCount();
 	void	IncrementDeathCount( int nCount );
+	void	SetDeathCount(int nCount) { m_iDeaths = nCount; }
 
 	//void	SetArmorValue( int value );
 	//void	IncrementArmorValue( int nCount, int nMaxValue = -1 );

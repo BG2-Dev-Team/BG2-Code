@@ -915,7 +915,7 @@ void CFlagTriggerBG2::Spawn(void)
 		FlagEnt = static_cast< CFlag* >(gEntList.FindEntityByName(NULL, m_strParentName));
 		if (!FlagEnt)	//Check to see if this is even a flag. Return and remove if false, don't take the whole server down from one error.
 		{
-			Warning("This trigger has determined that the parent named '%s' is not a BG2 flag or does not exist. Trigger disabled. \n", m_strParentName);
+			Warning("This trigger has determined that the parent named '%s' is not a BG3 flag or does not exist. Trigger disabled. \n", m_strParentName);
 			UTIL_Remove(this);
 			return;
 		}

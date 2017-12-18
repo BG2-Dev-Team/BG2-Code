@@ -493,7 +493,7 @@ DECLARE_BG2_WEAPON( knife )
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_flCosAngleTolerance  = KNIFE_COS_TOLERANCE;
 	m_Attackinfos[0].m_flRetraceDuration    = KNIFE_RETRACE_DURATION;
-	m_Attackinfos[0].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
+	m_Attackinfos[0].m_iStaminaDrain		= MELEE_STAMINA_DRAIN / 1.4f;
 
 	//secondary
 	m_Attackinfos[1] = m_Attackinfos[0];

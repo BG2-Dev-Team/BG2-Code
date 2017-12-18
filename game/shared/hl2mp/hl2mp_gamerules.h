@@ -47,6 +47,7 @@ extern ConVar lb_enforce_volley_fire, lb_enforce_volley_fire_tolerance, lb_enfor
 inline bool IsLinebattle()	{ return mp_respawnstyle.GetInt() == 4; }
 inline bool IsLMS()			{ return mp_respawnstyle.GetInt() == 2 || IsLinebattle(); }
 inline bool IsLMSstrict()	{ return mp_respawnstyle.GetInt() == 2; }
+inline bool UseLineSpawn()	{ return IsLinebattle(); }
 
 /*enum
 {
@@ -153,6 +154,7 @@ public:
 	virtual Vector VecWeaponRespawnSpot( CBaseCombatWeapon *pWeapon );
 	virtual int WeaponShouldRespawn( CBaseCombatWeapon *pWeapon );
 	virtual void Think( void );
+	//virtual void PeriodicThink( void );
 	virtual void CreateStandardEntities( void );
 	virtual void ClientSettingsChanged( CBasePlayer *pPlayer );
 	virtual int PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget );
@@ -183,12 +185,14 @@ public:
 	const char *GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer );
 	//BG2 - This should handle all the score settings after each round, and also fire any triggers and play win music. -HairyPotter
 	void HandleScores(int iTeam, int iScore, int msg_type, bool bRestart);
+	virtual bool ClientConnected(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
 #else
 	//BG2 - Skillet - List of player ragdolls
 	CUtlVector<C_HL2MPRagdoll*> m_hRagdollList;
 
 #endif
 	virtual void ClientDisconnected( edict_t *pClient );
+	
 
 	bool CheckGameOver( void );
 	bool IsIntermission( void );

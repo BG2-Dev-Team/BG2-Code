@@ -83,6 +83,7 @@ public:
 	virtual bool IsValidTeam( const char *pTeamName );
 	virtual const char *SetDefaultPlayerTeam( CBasePlayer *pPlayer );
 	virtual void ChangePlayerTeam( CBasePlayer *pPlayer, const char *pTeamName, bool bKill, bool bGib );
+	virtual bool ClientConnected(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
 	virtual void ClientDisconnected( edict_t *pClient );
 	virtual bool TimerMayExpire( void ) { return true; }
 

@@ -39,6 +39,8 @@ public:
 
 class CHL2MP_Player : public CHL2_Player
 {
+	friend class CSpawnRoom;
+
 	//BG2 - returns an abitrary free spawn point from the given list
 	CBaseEntity* HandleSpawnList(const CUtlVector<CBaseEntity *>& spawns);
 
@@ -212,6 +214,9 @@ private:
 
 	//BG2 - Tjoppen - tickets. sometimes we don't want to remove tickets on spawn, such as when first joining a team
 	bool	m_bDontRemoveTicket;	
+
+	//BG3 - spawn room allows for instantaneous spawn
+	bool	m_bInSpawnRoom;
 
 	//return the player's speed based on whether which class we are, which weapon kit we're using etc.
 	int		GetCurrentSpeed(void) const;

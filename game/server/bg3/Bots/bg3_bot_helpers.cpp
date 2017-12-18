@@ -28,7 +28,7 @@ changes from the original SDK.
 In order to facilitate easy searching, all changes are and must be
 commented on the following form:
 
-//BG2 - <name of contributer>[ - <small description>]
+//BG3 - <name of contributer>[ - <small description>]
 */
 /*
 Contrib by HairyPotter: These bots could do soo much more, and also be soo much more efficient as far as CPU goes.
@@ -60,7 +60,7 @@ in separate files for bot communication, map navigation, etc.
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar bot_difficulty("bot_difficulty", "3", FCVAR_GAMEDLL, "Bot skill level. 0,1,2,3 are easy, norm, hard, and random, respectively.");
+ConVar bot_difficulty("bot_difficulty", "3", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Bot skill level. 0,1,2,3 are easy, norm, hard, and random, respectively.");
 
 BotDifficulty* CSDKBot::GetDifficulty() {
 	//determine bot skill level based on cvar

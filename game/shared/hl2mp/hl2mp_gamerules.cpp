@@ -29,6 +29,7 @@
 	#include "voice_gamemgr.h"
 	#include "iscorer.h"
 	#include "hl2mp_player.h"
+	#include "bg3\bg3_line_spawn.h"
 	#include "weapon_hl2mpbasehlmpcombatweapon.h"
 	#include "team.h"
 	#include "voice_gamemgr.h"
@@ -45,6 +46,7 @@
 #include "../bg3/Bots/bg3_bot.h"
 #include "../bg3/Bots/bg3_bot_manager.h"
 #include "../bg3/Bots/bg3_bot_vcomms.h"
+#include "../bg3/bg3_scorepreserve.h"
 #ifdef DEBUG	
 	#include "hl2mp_bot_temp.h"
 #endif
@@ -842,6 +844,7 @@ void CHL2MPRules::Think( void )
 		m_fNextGameReset = 0;//dont reset again
 
 		//reset scores...
+		NScorePreserve::Flush();
 		pAmericans->SetScore(0);//...for teams...
 		pBritish->SetScore(0);
 		int x;
@@ -957,14 +960,13 @@ void CHL2MPRules::Think( void )
 		}
 	}
 
-	/*if ( gpGlobals->curtime > m_tmNextPeriodicThink )
+	if ( gpGlobals->curtime > m_tmNextPeriodicThink )
 	{		
-		CheckAllPlayersReady();
-		CheckRestartGame();
-		m_tmNextPeriodicThink = gpGlobals->curtime + 1.0;
+		NScorePreserve::Think();
+		m_tmNextPeriodicThink = gpGlobals->curtime + 10.0f;
 	}
 
-	if ( m_flRestartGameTime > 0.0f && m_flRestartGameTime <= gpGlobals->curtime )
+	/*if ( m_flRestartGameTime > 0.0f && m_flRestartGameTime <= gpGlobals->curtime )
 	{
 		RestartGame();
 	}
@@ -1269,14 +1271,35 @@ void CHL2MPRules::ClientDisconnected( edict_t *pClient )
 			pComms->m_pContextPlayer = nullptr;
 			pComms->ResetThinkTime(bot_randfloat(4.0f, 16.0f));
 		}
+
+		//BG3 - preserve our score
+		NScorePreserve::NotifyDisconnected(pPlayer2->entindex());
 	}
 		
-	//
 
 	BaseClass::ClientDisconnected( pClient );
 
 #endif
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Player has just entered the game
+//-----------------------------------------------------------------------------
+#ifndef CLIENT_DLL
+bool CHL2MPRules::ClientConnected(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen) {
+
+	bool result = BaseClass::ClientConnected(pEntity, pszName, pszAddress, reject, maxrejectlen);
+
+	//BG3 - Awesome - this entry point doesn't actually seem to be working, trying somewhere else
+	/*if (pEntity) {
+		CBaseEntity* pEnt = GetContainingEntity(pEntity);
+		if (pEnt) {
+			NScorePreserve::NotifyConnected(pEnt->entindex());
+		}
+	}*/
+	return result;
+}
+#endif //CLIENT_DLL
 
 
 //=========================================================
@@ -1880,7 +1903,6 @@ const char *CHL2MPRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 
 void CHL2MPRules::RestartRound(bool swapTeams)
 {
-	Msg("Beginning Round Restart...");
 	//restart current round. immediately.
 	ResetMap();
 	ResetFlags();
@@ -1907,7 +1929,6 @@ void CHL2MPRules::RestartRound(bool swapTeams)
 
 	if (mp_respawntime.GetInt() > 0)
 		m_fLastRoundRestart = m_fLastRespawnWave = gpGlobals->curtime;
-	Msg("Finished!\n");
 }
 
 void CHL2MPRules::RespawnAll()
@@ -1922,7 +1943,7 @@ void CHL2MPRules::RespawnAll()
 
 		if (!pPlayer)
 			continue;
-
+		
 		pPlayer->Spawn();
 
 		//BG2 - Tjoppen - remove ragdoll - remember to change this to remove multiple ones if we decide to enable more corpses
@@ -1948,6 +1969,9 @@ void CHL2MPRules::RespawnAll()
 			UTIL_RemoveImmediate(pPlayer->m_hRagdoll);
 			pPlayer->m_hRagdoll = NULL;
 		}
+	}
+	if (UseLineSpawn()) {
+		CLineSpawn::SpawnBothTeams();
 	}
 }
 

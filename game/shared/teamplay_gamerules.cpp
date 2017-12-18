@@ -230,6 +230,13 @@ void CTeamplayRules::ClientDisconnected( edict_t *pClient )
 	BaseClass::ClientDisconnected( pClient );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Player has just entered the game
+//-----------------------------------------------------------------------------
+bool CTeamplayRules::ClientConnected(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen) {
+	return BaseClass::ClientConnected(pEntity, pszName, pszAddress, reject, maxrejectlen);
+}
+
 //=========================================================
 // ClientUserInfoChanged
 //=========================================================

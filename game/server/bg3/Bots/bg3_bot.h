@@ -96,6 +96,11 @@ struct BotThinker {
 namespace BotThinkers {
 	extern BotThinker Death;
 	extern BotThinker Waypoint;
+	extern BotThinker Retreat;
+	extern BotThinker Melee;
+	extern BotThinker PointBlank;
+	extern BotThinker MedRange;
+	extern BotThinker LongRange;
 }
 
 
@@ -139,7 +144,7 @@ struct BotDifficulty {
 // This is our bot class.
 class CSDKBot // : public CSDKPlayer
 {
-
+	friend class NBotInfluencer;
 public:
 	CPlayerSearch	m_PlayerSearchInfo;
 	BotThinker*		m_pPrevThinker;

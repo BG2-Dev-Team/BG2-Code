@@ -129,7 +129,7 @@ CBasePlayer* CPlayerSearch::FriendlyBotNearestTo(CBasePlayer* pOtherPlayer) {
 	int			 iTeam = pOtherPlayer->GetTeamNumber();
 
 	//iterate through all players to find closest fake client
-	for (int i = 0; i <= gpGlobals->maxClients; i++) {
+	for (int i = 1; i <= gpGlobals->maxClients; i++) {
 		pCurPlayer = UTIL_PlayerByIndex(i);
 		if (pCurPlayer && pCurPlayer->IsFakeClient() && pCurPlayer->GetTeamNumber() == iTeam
 			&& pCurPlayer->IsAlive()) {

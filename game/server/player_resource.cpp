@@ -78,6 +78,15 @@ void CPlayerResource::SetPlayerHealth(int entindex, int health)
 //
 
 //-----------------------------------------------------------------------------
+// Purpose: Sets score value for a particular client
+//-----------------------------------------------------------------------------
+void CPlayerResource::SetPlayerScore(int entindex, int score)
+{
+	m_iScore.Set(entindex, score);
+}
+//
+
+//-----------------------------------------------------------------------------
 // Purpose: The Player resource is always transmitted to clients
 //-----------------------------------------------------------------------------
 int CPlayerResource::UpdateTransmitState()

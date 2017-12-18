@@ -173,7 +173,7 @@ int CHL2MP_Player::GetCurrentSpeed(void) const
 		//spectating
 		base = 240;
 	}
-	else if (m_nButtons & IN_WALK && (GetActiveWeapon() && !GetActiveWeapon()->m_bInReload)) //don't let players needlessly walk while reloading
+	else if (m_nButtons & IN_WALK && (pWeapon && !pWeapon->m_bInReload)) //don't let players needlessly walk while reloading
 	{
 		base = 120;
 		//use same walking speed for all classes
@@ -184,7 +184,7 @@ int CHL2MP_Player::GetCurrentSpeed(void) const
 	}
 	
 	//Check for speed buff, but don't stack the effects
-	if ((m_iCurrentRallies & RALLY_SPEED) && !(GetActiveWeapon() && GetActiveWeapon()->m_bInReload)) {
+	if ((m_iCurrentRallies & RALLY_SPEED) && pWeapon && !pWeapon->m_bInReload && !pWeapon->m_bIsIronsighted ) {
 		scale *= RALLY_SPEED_MOD;
 	}
 
