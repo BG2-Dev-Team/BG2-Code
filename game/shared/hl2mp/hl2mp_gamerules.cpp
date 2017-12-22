@@ -137,8 +137,8 @@ ConVar mp_punish_bad_officer("mp_punish_bad_officer", "1", CVAR_FLAGS, "Whether 
 ConVar mp_punish_bad_officer_nextclass("mp_bad_officer_nextclass", "1", CVAR_FLAGS, "What class to auto-switch bad officers to. 1-6 is inf, off, sniper, skirm, linf, grenadier.");
 
 //ticket system
-ConVar mp_tickets_rounds("mp_tickets_rounds", "5", CVAR_FLAGS, "Maximum number of rounds - rounds are restarted until this or mp_timelimit");
-ConVar mp_tickets_roundtime("mp_tickets_roundtime", "300", CVAR_FLAGS, "Maximum length of round");
+ConVar mp_rounds("mp_rounds", "5", CVAR_FLAGS, "Maximum number of rounds - rounds are restarted until this or mp_timelimit");
+ConVar mp_roundtime("mp_roundtime", "300", CVAR_FLAGS, "Maximum length of round");
 ConVar mp_tickets_a("mp_tickets_a", "100", CVAR_FLAGS, "Tickets given to americans on round start");
 ConVar mp_tickets_b("mp_tickets_b", "100", CVAR_FLAGS, "Tickets given to british on round start");
 ConVar mp_tickets_drain_a("mp_tickets_drain_a", "12.5", CVAR_FLAGS, "Number of tickets drained every ten seconds when the americans have more than half of their cappable flags. Can have decimals");
@@ -522,10 +522,11 @@ void CHL2MPRules::HandleScores(int iTeam, int iScore, int msg_type, bool bRestar
 
 	if (bRestart)
 	{
-		if (UsingTickets())
+		int maxRounds = mp_rounds.GetInt();
+		if (UsingTickets() || IsLMS())
 		{
 			//if last round, then go to intermission (next map)
-			if (m_iCurrentRound >= mp_tickets_rounds.GetInt())
+			if (maxRounds && m_iCurrentRound >= maxRounds)
 			{
 				GoToIntermission();
 				return;
@@ -538,7 +539,13 @@ void CHL2MPRules::HandleScores(int iTeam, int iScore, int msg_type, bool bRestar
 		// BG2 - VisualMelon - decide whether to swap teams or not
 		int iSwapTeam = mp_swapteams.GetInt();
 		bool bSwapTeam = false;
-		if (iSwapTeam == 1 || (iSwapTeam == 0 && UsingTickets()))
+		if (iSwapTeam == 1 
+			|| (iSwapTeam == 0
+				&& maxRounds
+				//&& (UsingTickets() || IsLMS())
+				&& m_iCurrentRound == maxRounds / 2 + 1
+				)
+			)
 			bSwapTeam = true;
 		//
 		RestartRound(bSwapTeam);
@@ -754,7 +761,6 @@ void CHL2MPRules::Think( void )
 	}
 
 	float flTimeLimit = GetMapRemainingTime();
-	float flFragLimit = fraglimit.GetFloat();
 
 	//why compare remaining time to current time? - Awesome
 	if (flTimeLimit != 0 && flTimeLimit < 0) //gpGlobals->curtime >= flTimeLimit)
@@ -800,86 +806,26 @@ void CHL2MPRules::Think( void )
 	//=========================
 	//Auto Team Balance
 	//=========================
-	if (mp_autobalanceteams.GetInt() == 1)
-	{
-		//use the right sum to find diff, I don't like negative numbers...
-		int iAutoTeamBalanceTeamDiff = 0;
-		int iAutoTeamBalanceBiggerTeam = TEAM_BRITISH;
-		if (pAmericans->GetNumPlayers() > pBritish->GetNumPlayers())
-		{
-			iAutoTeamBalanceTeamDiff = (pAmericans->GetNumPlayers() - pBritish->GetNumPlayers());
-			iAutoTeamBalanceBiggerTeam = TEAM_AMERICANS;
-		}
-		else
-		{
-			iAutoTeamBalanceTeamDiff = (pBritish->GetNumPlayers() - pAmericans->GetNumPlayers());
-			iAutoTeamBalanceBiggerTeam = TEAM_BRITISH;
-		}
+	AutobalanceTeams();
 
-		if (iAutoTeamBalanceTeamDiff >= mp_autobalancetolerance.GetInt())
-		{
-			//here comes the tricky part, who to swap, how to swap?
-			//meh, go random for now, maybe lowest scorer later...
-			CTeam *pBiggerTeam = g_Teams[iAutoTeamBalanceBiggerTeam];
-			int index = random->RandomInt(0, pBiggerTeam->GetNumPlayers() - 1);
-			CHL2MP_Player *pPlayer = ToHL2MPPlayer(pBiggerTeam->GetPlayer(index));
-
-			//swap player unless they're alive
-			//if they are alive, we'll pick another player next think
-			SwapPlayerTeam(pPlayer, true);
-		}
-		//well, if we aren't even now, there's always next think...
-	}
 	//=========================
 	//Restart Round/Map
 	//=========================
-	if (sv_restartmap.GetInt() > 0)
-	{
+	if (sv_restartmap.GetInt() > 0) {
 		m_fNextGameReset = gpGlobals->curtime + sv_restartmap.GetInt();
 		sv_restartmap.SetValue(0);
 	}
+
 	//now if the time was set we can check for it, above zero means we are restarting
-	if ((m_fNextGameReset > 0) && (m_fNextGameReset <= gpGlobals->curtime))
-	{
-		m_fNextGameReset = 0;//dont reset again
-
-		//reset scores...
-		NScorePreserve::Flush();
-		pAmericans->SetScore(0);//...for teams...
-		pBritish->SetScore(0);
-		int x;
-		for (x = 0; x < g_Teams[TEAM_AMERICANS]->GetNumPlayers(); x++)
-		{
-			CBasePlayer *pPlayer = g_Teams[TEAM_AMERICANS]->GetPlayer(x);
-			if (!pPlayer)
-				continue;
-
-			pPlayer->ResetFragCount();//...for cap points...
-			pPlayer->ResetDeathCount();//...and damage
-		}
-		for (x = 0; x < g_Teams[TEAM_BRITISH]->GetNumPlayers(); x++)
-		{
-			CBasePlayer *pPlayer = g_Teams[TEAM_BRITISH]->GetPlayer(x);
-			if (!pPlayer)
-				continue;
-
-			pPlayer->ResetFragCount();//...for cap points...
-			pPlayer->ResetDeathCount();//...and damage
-		}
-		m_iCurrentRound = 1;
-		RestartRound(false);	//BG2 - Tjoppen - restart round
-
-		//Reset the map time
-		m_flGameStartTime = gpGlobals->curtime;
+	if ((m_fNextGameReset > 0) && (m_fNextGameReset <= gpGlobals->curtime)) {
+		RestartGame();
 	}
 
-	if (sv_restartround.GetInt() > 0)
-	{
+	if (sv_restartround.GetInt() > 0) {
 		m_fNextRoundReset = gpGlobals->curtime + sv_restartround.GetInt();
 		sv_restartround.SetValue(0);
 	}
-	if ((m_fNextRoundReset > 0) && (m_fNextRoundReset <= gpGlobals->curtime))
-	{
+	if ((m_fNextRoundReset > 0) && (m_fNextRoundReset <= gpGlobals->curtime)) {
 		m_fNextRoundReset = 0;//dont reset again
 		RestartRound(false);	//BG2 - restart round
 	}
@@ -887,8 +833,8 @@ void CHL2MPRules::Think( void )
 	//=========================
 	//Round systems
 	//=========================
-	if (mp_respawnstyle.GetInt() == 1 || UsingTickets())//wave spawning
-	{
+	//wave spawning 
+	if (mp_respawnstyle.GetInt() == 1 || UsingTickets()) {
 		if ((m_fLastRespawnWave + mp_respawntime.GetFloat()) <= gpGlobals->curtime)
 		{
 			RespawnWave();
@@ -896,12 +842,7 @@ void CHL2MPRules::Think( void )
 		}
 	}
 	if (IsLMS() || UsingTickets())//if line battle all at once spawn style - Draco
-	{
-		//Tjoppen - start
-		//count alive players in each team
-		int aliveamericans = CountAlivePlayersAndTickets(TEAM_AMERICANS);
-		int alivebritish = CountAlivePlayersAndTickets(TEAM_BRITISH);
-
+	{		
 		if (pAmericans->GetNumPlayers() == 0 && pBritish->GetNumPlayers() == 0)
 			return;
 
@@ -909,10 +850,15 @@ void CHL2MPRules::Think( void )
 		if (!UsingTickets() && (pAmericans->GetNumPlayers() == 0 || pBritish->GetNumPlayers() == 0))
 			return;
 
+		//Tjoppen - start
+		//count alive players in each team
+		int aliveamericans = CountAlivePlayersAndTickets(TEAM_AMERICANS);
+		int alivebritish = CountAlivePlayersAndTickets(TEAM_BRITISH);
+
 		//Tjoppen - End
 		//BG2 - Tjoppen - restart rounds a few seconds after the last person is killed
 		//wins
-		float roundLength = UsingTickets() ? mp_tickets_roundtime.GetFloat() : mp_respawntime.GetFloat();
+		float roundLength = mp_roundtime.GetFloat();
 
 		if (aliveamericans == 0 || alivebritish == 0 || m_fLastRoundRestart + roundLength <= gpGlobals->curtime || m_bIsRestartingRound)
 		{
@@ -951,34 +897,11 @@ void CHL2MPRules::Think( void )
 	}
 	//BG2 - Draco - End
 
-	if (flFragLimit)
-	{
-		if (pAmericans->GetScore() >= flFragLimit || pBritish->GetScore() >= flFragLimit)
-		{
-			GoToIntermission();
-			return;
-		}
-	}
-
 	if ( gpGlobals->curtime > m_tmNextPeriodicThink )
 	{		
 		NScorePreserve::Think();
 		m_tmNextPeriodicThink = gpGlobals->curtime + 10.0f;
 	}
-
-	/*if ( m_flRestartGameTime > 0.0f && m_flRestartGameTime <= gpGlobals->curtime )
-	{
-		RestartGame();
-	}
-
-	if( m_bAwaitingReadyRestart && m_bHeardAllPlayersReady )
-	{
-		UTIL_ClientPrintAll( HUD_PRINTCENTER, "All players ready. Game will restart in 5 seconds" );
-		UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "All players ready. Game will restart in 5 seconds" );
-
-		m_flRestartGameTime = gpGlobals->curtime + 5;
-		m_bAwaitingReadyRestart = false;
-	}*/
 
 	ManageObjectRelocation();
 
@@ -1008,6 +931,10 @@ void CHL2MPRules::GoToIntermission( void )
 #endif
 	
 }
+
+/*void CHL2MPRules::RestartGame() {
+
+}*/
 
 bool CHL2MPRules::CheckGameOver()
 {
@@ -1337,14 +1264,22 @@ void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info
 			{
 				if ( pInflictor == pScorer )
 				{
-					// If the inflictor is the killer,  then it must be their current weapon doing the damage
-					if ( pScorer->GetActiveWeapon() )
+					// // If the inflictor is the killer,  then it must be their current weapon doing the damage
+					//BG3 - changed this to the damage info's weapon, less dereferencing and catches rare cases
+					//where player dies after shooting
+					//also helps us detect swivel gun hits
+					if ( info.GetWeapon() )
 					{
 #ifdef HL1MP_DLL
 						killer_weapon_name = pScorer->GetActiveWeapon()->GetClassname();
 #else
-						killer_weapon_name = pScorer->GetActiveWeapon()->GetDeathNoticeName();
+						CBaseCombatWeapon* pWeapon = dynamic_cast<CBaseCombatWeapon*>(info.GetWeapon());
+						if (pWeapon)
+							killer_weapon_name = pScorer->GetActiveWeapon()->GetDeathNoticeName();
 #endif
+					}
+					else if (info.GetDamageType() | DMG_SWIVEL_GUN) {
+						killer_weapon_name = "swivel_gun";
 					}
 				}
 				else
@@ -1616,61 +1551,64 @@ CAmmoDef *GetAmmoDef()
 
 void CHL2MPRules::RestartGame()
 {
-	// bounds check
-	if ( mp_timelimit.GetInt() < 0 )
-	{
-		mp_timelimit.SetValue( 0 );
-	}
-	m_flGameStartTime = gpGlobals->curtime;
-	if ( !IsFinite( m_flGameStartTime.Get() ) )
-	{
-		Warning( "Trying to set a NaN game start time\n" );
-		m_flGameStartTime.GetForModify() = 0.0f;
-	}
+	m_fNextGameReset = 0;//dont reset again
 
-	//CleanUpMap();
-	
-	// now respawn all players
-	for (int i = 1; i <= gpGlobals->maxClients; i++ )
-	{
-		CHL2MP_Player *pPlayer = (CHL2MP_Player*) UTIL_PlayerByIndex( i );
-
-		if ( !pPlayer )
+	//reset scores...
+	NScorePreserve::Flush();
+	g_Teams[TEAM_AMERICANS]->SetScore(0);//...for teams...
+	g_Teams[TEAM_BRITISH]->SetScore(0);
+	int x;
+	for (x = 0; x < g_Teams[TEAM_AMERICANS]->GetNumPlayers(); x++) {
+		CBasePlayer *pPlayer = g_Teams[TEAM_AMERICANS]->GetPlayer(x);
+		if (!pPlayer)
 			continue;
 
-		if ( pPlayer->GetActiveWeapon() )
-		{
-			pPlayer->GetActiveWeapon()->Holster();
-		}
-		pPlayer->RemoveAllItems( true );
-		respawn( pPlayer, false );
-		pPlayer->Reset();
+		pPlayer->ResetFragCount();//...for cap points...
+		pPlayer->ResetDeathCount();//...and damage
 	}
+	for (x = 0; x < g_Teams[TEAM_BRITISH]->GetNumPlayers(); x++) {
+		CBasePlayer *pPlayer = g_Teams[TEAM_BRITISH]->GetPlayer(x);
+		if (!pPlayer)
+			continue;
 
-	// Respawn entities (glass, doors, etc..)
+		pPlayer->ResetFragCount();//...for cap points...
+		pPlayer->ResetDeathCount();//...and damage
+	}
+	m_iCurrentRound = 1;
+	RestartRound(false);	//BG2 - Tjoppen - restart round
 
-	CTeam *pBritish = GetGlobalTeam(TEAM_BRITISH);
-	CTeam *pAmericans = GetGlobalTeam(TEAM_AMERICANS);
+	//Reset the map time
+	m_flGameStartTime = gpGlobals->curtime;
+}
 
-	if (pAmericans)
-		pAmericans->SetScore(0);
+void CHL2MPRules::AutobalanceTeams() {
+	if (mp_autobalanceteams.GetInt() == 1) {
+		CTeam* pAmericans = g_Teams[TEAM_AMERICANS];
+		CTeam* pBritish = g_Teams[TEAM_BRITISH];
+		//use the right sum to find diff, I don't like negative numbers...
+		int iAutoTeamBalanceTeamDiff = 0;
+		int iAutoTeamBalanceBiggerTeam = TEAM_BRITISH;
+		if (pAmericans->GetNumPlayers() > pBritish->GetNumPlayers()) {
+			iAutoTeamBalanceTeamDiff = (pAmericans->GetNumPlayers() - pBritish->GetNumPlayers());
+			iAutoTeamBalanceBiggerTeam = TEAM_AMERICANS;
+		}
+		else {
+			iAutoTeamBalanceTeamDiff = (pBritish->GetNumPlayers() - pAmericans->GetNumPlayers());
+			iAutoTeamBalanceBiggerTeam = TEAM_BRITISH;
+		}
 
-	if (pBritish)
-		pBritish->SetScore(0);
+		if (iAutoTeamBalanceTeamDiff >= mp_autobalancetolerance.GetInt()) {
+			//here comes the tricky part, who to swap, how to swap?
+			//meh, go random for now, maybe lowest scorer later...
+			CTeam *pBiggerTeam = g_Teams[iAutoTeamBalanceBiggerTeam];
+			int index = random->RandomInt(0, pBiggerTeam->GetNumPlayers() - 1);
+			CHL2MP_Player *pPlayer = ToHL2MPPlayer(pBiggerTeam->GetPlayer(index));
 
-	m_flIntermissionEndTime = 0;
-	m_flRestartGameTime = 0.0;		
-	m_bCompleteReset = false;
-
-	IGameEvent * event = gameeventmanager->CreateEvent( "round_start" );
-	if ( event )
-	{
-		event->SetInt("fraglimit", 0 );
-		event->SetInt( "priority", 6 ); // HLTV event priority, not transmitted
-
-		event->SetString("objective","DEATHMATCH");
-
-		gameeventmanager->FireEvent( event );
+			//swap player unless they're alive
+			//if they are alive, we'll pick another player next think
+			SwapPlayerTeam(pPlayer, true);
+		}
+		//well, if we aren't even now, there's always next think...
 	}
 }
 
@@ -1780,54 +1718,6 @@ void CHL2MPRules::CheckChatForReadySignal( CHL2MP_Player *pPlayer, const char *c
 		{
 			pPlayer->SetReady( true );
 		}		
-	}
-}
-
-void CHL2MPRules::CheckRestartGame( void )
-{
-	// Restart the game if specified by the server
-	int iRestartDelay = mp_restartgame.GetInt();
-
-	if ( iRestartDelay > 0 )
-	{
-		if ( iRestartDelay > 60 )
-			iRestartDelay = 60;
-
-
-		// let the players know
-		char strRestartDelay[64];
-		Q_snprintf( strRestartDelay, sizeof( strRestartDelay ), "%d", iRestartDelay );
-		UTIL_ClientPrintAll( HUD_PRINTCENTER, "Game will restart in %s1 %s2", strRestartDelay, iRestartDelay == 1 ? "SECOND" : "SECONDS" );
-		UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Game will restart in %s1 %s2", strRestartDelay, iRestartDelay == 1 ? "SECOND" : "SECONDS" );
-
-		m_flRestartGameTime = gpGlobals->curtime + iRestartDelay;
-		m_bCompleteReset = true;
-		mp_restartgame.SetValue( 0 );
-	}
-
-	if( mp_readyrestart.GetBool() )
-	{
-		m_bAwaitingReadyRestart = true;
-		m_bHeardAllPlayersReady = false;
-		
-
-		const char *pszReadyString = mp_ready_signal.GetString();
-
-
-		// Don't let them put anything malicious in there
-		if( pszReadyString == NULL || Q_strlen(pszReadyString) > 16 )
-		{
-			pszReadyString = "ready";
-		}
-
-		IGameEvent *event = gameeventmanager->CreateEvent( "hl2mp_ready_restart" );
-		if ( event )
-			gameeventmanager->FireEvent( event );
-
-		mp_readyrestart.SetValue( 0 );
-
-		// cancel any restart round in progress
-		m_flRestartGameTime = -1;
 	}
 }
 

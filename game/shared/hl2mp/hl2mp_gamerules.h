@@ -34,7 +34,7 @@
 #define VEC_CROUCH_TRACE_MIN	HL2MPRules()->GetHL2MPViewVectors()->m_vCrouchTraceMin
 #define VEC_CROUCH_TRACE_MAX	HL2MPRules()->GetHL2MPViewVectors()->m_vCrouchTraceMax
 
-extern ConVar mp_respawnstyle, mp_respawntime, mp_tickets_roundtime, mp_tickets_a, mp_tickets_b;
+extern ConVar mp_respawnstyle, mp_respawntime, mp_roundtime, mp_tickets_a, mp_tickets_b;
 extern ConVar mp_punish_bad_officer, mp_punish_bad_officer_nextclass;
 
 extern ConVar lb_enforce_weapon_amer, lb_enforce_weapon_brit, lb_enforce_class_amer, lb_enforce_class_brit;
@@ -166,12 +166,11 @@ public:
 	virtual const CViewVectors* GetViewVectors() const;
 	const HL2MPViewVectors* GetHL2MPViewVectors() const;
 
-	float GetMapRemainingTime();
-	void CleanUpMap();
-	void CheckRestartGame();
-	void RestartGame();
-	
+	float	GetMapRemainingTime();
+	void	CleanUpMap();
 #ifndef CLIENT_DLL
+	void	RestartGame();
+	void	AutobalanceTeams();
 	virtual Vector VecItemRespawnSpot( CItem *pItem );
 	virtual QAngle VecItemRespawnAngles( CItem *pItem );
 	virtual float	FlItemRespawnTime( CItem *pItem );
@@ -193,19 +192,19 @@ public:
 #endif
 	virtual void ClientDisconnected( edict_t *pClient );
 	
-
+	//void RestartGame( void );
 	bool CheckGameOver( void );
 	bool IsIntermission( void );
 	int NumConnectedClients(); //includes bots
 	void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
-
+	
 	
 	//bool	IsTeamplay( void ) { return m_bTeamPlayEnabled;	}
 	void	CheckAllPlayersReady( void );
 
 	/**
 	* Current round, when UsingTickets().
-	* 1-based, so runs from 1 up to mp_tickets_rounds.
+	* 1-based, so runs from 1 up to mp_rounds.
 	*/
 	CNetworkVar(int, m_iCurrentRound);
 
