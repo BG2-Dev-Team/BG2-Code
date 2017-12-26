@@ -1,7 +1,12 @@
 #include "cbase.h"
 #include "bg3_rand.h"
 
+#ifdef CLIENT_DLL
 int a = 9158152, b = 14257153;
+#else
+extern int a;
+extern int b;
+#endif
 
 #define abs(a) ((a) < 0 ? -(a) : (a))
 

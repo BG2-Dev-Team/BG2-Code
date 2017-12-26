@@ -2254,7 +2254,7 @@ void CFuncTank::Fire( int bulletCount, const Vector &barrelEnd, const Vector &fo
 	}
 
 
-	m_OnFire.FireOutput(this, this);
+	m_OnFire.FireOutput(pAttacker, this);
 	m_bReadyToFire = false;
 }
 

@@ -149,26 +149,30 @@ public:
 		if( iAttack == ATTACK_NONE || !pPlayer)
 			return 0.0f;
 
-		
+		float modifier = 0;
+		float multiplier = 1.0f;
 
 		bool moving = false;
-		if( pPlayer->GetLocalVelocity().Length() > 10.0f ||
-			!(pPlayer->GetFlags() & FL_ONGROUND) )
+		if (pPlayer->GetLocalVelocity().Length() > 10.0f ||
+			!(pPlayer->GetFlags() & FL_ONGROUND)) {
 			moving = true;	//moving fast enough or jumping increases spread..
 
+			//also check for extra accuracy penalty from speed buff
+			if (pPlayer->RallyGetCurrentRallies() & RALLY_SPEED && !m_bIsIronsighted && !(pPlayer->m_nButtons & IN_WALK)) {
+				multiplier *= RALLY_SPEED_MOD_ACCUR;
+			}
+		}
 		/*if( GetOwner() && (GetOwner()->GetFlags() & FL_DUCKING) )
 			return m_Attackinfos[iAttack].m_vDuckSpread * (moving ? 2.0f : 1.0f);
 
 		return m_Attackinfos[iAttack].m_vStandSpread * (moving ? 2.0f : 1.0f);*/
-
-		float modifier = 0;
-		float multiplier = 1.0f;
 
 		//Check for other accuracy modifications
 		if (Def()->m_iNumShot > 0 && pPlayer->GetCurrentAmmoKit() == AMMO_KIT_BUCKSHOT)
 			modifier = Def()->m_flShotAimModifier;
 		if ((pPlayer->RallyGetCurrentRallies() & RALLY_ACCURACY) && (m_bIsIronsighted || (pPlayer->GetFlags() & FL_DUCKING)))
 			multiplier = RALLY_ACCURACY_MOD;
+		
 		
 
 		float base;
@@ -190,7 +194,7 @@ public:
 					base = Def()->m_Attackinfos[iAttack].m_flCrouchStill;
 			}
 		}
-		else if (moving && pPlayer && pPlayer->m_nButtons & IN_WALK){
+		else if (moving && pPlayer->m_nButtons & IN_WALK){
 			if (m_bIsIronsighted) //So we're aiming...
 				base = FLerp(Def()->m_Attackinfos[iAttack].m_flStandAimMoving, Def()->m_Attackinfos[iAttack].m_flStandAimStill, 0, 1, ACCURACY_WALK_LERP);
 			else //Hip shot.

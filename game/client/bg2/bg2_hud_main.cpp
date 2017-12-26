@@ -489,35 +489,37 @@ void CHudBG2::Paint()
 	                          pHealth->Width(), pHealth->Height() * (1 - health),
 	                          healthw, healthh * (1 - health), ColourWhite );
 
-	if( HL2MPRules()->UsingTickets() )
+	if( HL2MPRules()->UsingTickets())
 	{
-	Q_snprintf( msg2, 512, "%i ", pBrit ? pBrit->Get_Score() : 0);	//BG2 - Tjoppen - avoid NULL
-	m_pLabelBScore->SetText(msg2);
-	m_pLabelBScore->SizeToContents();
-	m_pLabelBScore->SetFgColor( ColourWhite );
+		Q_snprintf( msg2, 512, "%i ", pBrit ? pBrit->Get_Score() : 0);	//BG2 - Tjoppen - avoid NULL
+		m_pLabelBScore->SetText(msg2);
+		m_pLabelBScore->SizeToContents();
+		m_pLabelBScore->SetFgColor( ColourWhite );
 	
-	Q_snprintf( msg2, 512, "%i ", pAmer ? pAmer->Get_Score() : 0);	//BG2 - Tjoppen - avoid NULL
-	m_pLabelAScore->SetText(msg2);
-	m_pLabelAScore->SizeToContents();
-	m_pLabelAScore->SetFgColor( ColourWhite );
-
-		extern ConVar mp_tickets_rounds;
-
-		Q_snprintf( msg2, 512, "Round %i/%i ", HL2MPRules()->m_iCurrentRound, mp_tickets_rounds.GetInt() );
-		m_pLabelCurrentRound->SetText(msg2);
-		m_pLabelCurrentRound->SizeToContents();
-		m_pLabelCurrentRound->SetFgColor( ColourWhite );
+		Q_snprintf( msg2, 512, "%i ", pAmer ? pAmer->Get_Score() : 0);	//BG2 - Tjoppen - avoid NULL
+		m_pLabelAScore->SetText(msg2);
+		m_pLabelAScore->SizeToContents();
+		m_pLabelAScore->SetFgColor( ColourWhite );
 	}
 
-		Q_snprintf( msg2, 512, "%i ", swingb);
-		m_pLabelBTickets->SetText(msg2);
-		m_pLabelBTickets->SizeToContents();
-		m_pLabelBTickets->SetFgColor( colorForFlash(m_flBFlashEnd) );
+	extern ConVar mp_rounds;
+	bool bHasRoundCount = mp_rounds.GetBool();
+	if (bHasRoundCount) {
+		Q_snprintf(msg2, 512, "Round %i/%i ", HL2MPRules()->m_iCurrentRound, mp_rounds.GetInt());
+		m_pLabelCurrentRound->SetText(msg2);
+		m_pLabelCurrentRound->SizeToContents();
+		m_pLabelCurrentRound->SetFgColor(ColourWhite);
+	}
 
-		Q_snprintf( msg2, 512, "%i ", swinga);
-		m_pLabelATickets->SetText(msg2);
-		m_pLabelATickets->SizeToContents();
-		m_pLabelATickets->SetFgColor( colorForFlash(m_flAFlashEnd) );
+	Q_snprintf( msg2, 512, "%i ", swingb);
+	m_pLabelBTickets->SetText(msg2);
+	m_pLabelBTickets->SizeToContents();
+	m_pLabelBTickets->SetFgColor( colorForFlash(m_flBFlashEnd) );
+
+	Q_snprintf( msg2, 512, "%i ", swinga);
+	m_pLabelATickets->SetText(msg2);
+	m_pLabelATickets->SizeToContents();
+	m_pLabelATickets->SetFgColor( colorForFlash(m_flAFlashEnd) );
 
 	int iAmmoCount = pHL2Player->GetAmmoCount(wpn->GetPrimaryAmmoType()) + wpn->Clip1();
 	if( iAmmoCount >= 0 )
@@ -551,8 +553,8 @@ void CHudBG2::Paint()
 
 	//update round timer text
 	int roundtime;
-	if (HL2MPRules()->UsingTickets()) {
-		roundtime = ceilf(HL2MPRules()->m_fLastRoundRestart + mp_tickets_roundtime.GetFloat() - gpGlobals->curtime);
+	if (bHasRoundCount) {
+		roundtime = ceilf(HL2MPRules()->m_fLastRoundRestart + mp_roundtime.GetFloat() - gpGlobals->curtime);
 	} else {
 		roundtime = ceilf(HL2MPRules()->GetMapRemainingTime()); // -gpGlobals->curtime);
 	}
@@ -612,14 +614,17 @@ void CHudBG2::HideShowAll( bool visible )
 	m_pLabelBScore->SetVisible(visible && HL2MPRules()->UsingTickets());
 	m_pLabelBTickets->SetVisible(visible);
 	m_pLabelATickets->SetVisible(visible);
-	m_pLabelCurrentRound->SetVisible(visible && HL2MPRules()->UsingTickets());
+
+	extern ConVar mp_rounds;
+	m_pLabelCurrentRound->SetVisible(visible && mp_rounds.GetBool());
+
 	m_pLabelWaveTime->SetVisible(visible && !IsLMS());
 	m_pLabelRoundTime->SetVisible(visible);
 	m_pLabelAmmo->SetVisible(visible);
 	//m_pLabelBGVersion->SetVisible(false);	// BP: not used yet as its not subtle enough, m_pLabelBGVersion->SetVisible(ShouldDraw());
 	m_pLabelDamageGiven->SetVisible(m_flGivenExpireTime > gpGlobals->curtime);	//always show damage indicator (unless expired)
 	m_pLabelDamageTaken->SetVisible(m_flTakenExpireTime > gpGlobals->curtime);	//always show damage indicator (unless expired)
-	m_pLabelLMS->SetVisible( visible && mp_respawnstyle.GetInt() == 2 && cl_draw_lms_indicator.GetBool() );
+	m_pLabelLMS->SetVisible( visible && IsLMSstrict() && cl_draw_lms_indicator.GetBool() );
 }
 
 //BG2 - Tjoppen - cl_hitverif & cl_winmusic && capturesounds & voice comm sounds //HairyPotter

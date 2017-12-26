@@ -60,7 +60,12 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
-      <Command>if EXIST ..\..\..\game\mod_hl2mp\bin\.\$(TargetFileName) for /f &quot;delims=&quot; %%A in (&apos;attrib &quot;..\..\..\game\mod_hl2mp\bin\.\$(TargetFileName)&quot;&apos;) do set valveTmpIsReadOnly=&quot;%%A&quot;&#x0D;&#x0A;set valveTmpIsReadOnlyLetter=%valveTmpIsReadOnly:~6,1%&#x0D;&#x0A;if &quot;%valveTmpIsReadOnlyLetter%&quot;==&quot;R&quot; del /q &quot;$(TargetDir)&quot;$(TargetFileName)&#x0D;&#x0A;if exist &quot;..\..\devtools\bin\vpc.exe&quot; &quot;..\..\devtools\bin\vpc.exe&quot; -crc2 &quot;server_hl2mp.vcxproj&quot;&#x0D;&#x0A;if ERRORLEVEL 1 exit /b 1&#x0D;&#x0A;</Command>
+      <Command>if EXIST ..\..\..\game\mod_hl2mp\bin\.\$(TargetFileName) for /f "delims=" %%A in ('attrib "..\..\..\game\mod_hl2mp\bin\.\$(TargetFileName)"') do set valveTmpIsReadOnly="%%A"
+set valveTmpIsReadOnlyLetter=%valveTmpIsReadOnly:~6,1%
+if "%valveTmpIsReadOnlyLetter%"=="R" del /q "$(TargetDir)"$(TargetFileName)
+if exist "..\..\devtools\bin\vpc.exe" "..\..\devtools\bin\vpc.exe" -crc2 "server_hl2mp.vcxproj"
+if ERRORLEVEL 1 exit /b 1
+</Command>
     </PreBuildEvent>
     <ClCompile>
       <AdditionalOptions>/Zm200 /Gw /Zc:inline</AdditionalOptions>
@@ -110,7 +115,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)/$(TargetName).pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
-      <BaseAddress> </BaseAddress>
+      <BaseAddress>
+      </BaseAddress>
       <TargetMachine>MachineX86</TargetMachine>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -128,14 +134,31 @@
     </Bscmake>
     <PostBuildEvent>
       <Message>Publishing to ..\..\..\game\mod_hl2mp\bin\.</Message>
-      <Command>if not exist &quot;..\..\..\game\mod_hl2mp\bin\.&quot; mkdir &quot;..\..\..\game\mod_hl2mp\bin\.&quot;&#x0D;&#x0A;copy &quot;$(TargetDir)$(TargetFileName)&quot; &quot;..\..\..\game\mod_hl2mp\bin\.\$(TargetFileName)&quot;&#x0D;&#x0A;if ERRORLEVEL 1 goto BuildEventFailed&#x0D;&#x0A;if exist &quot;$(TargetDir)$(TargetName).map&quot; copy &quot;$(TargetDir)$(TargetName).map&quot; ..\..\..\game\mod_hl2mp\bin\.\$(TargetName).map&#x0D;&#x0A;copy &quot;$(TargetDir)$(TargetName).pdb&quot; ..\..\..\game\mod_hl2mp\bin\.\$(TargetName).pdb&#x0D;&#x0A;if ERRORLEVEL 1 goto BuildEventFailed&#x0D;&#x0A;goto BuildEventOK&#x0D;&#x0A;:BuildEventFailed&#x0D;&#x0A;echo *** ERROR! PostBuildStep FAILED for $(ProjectName)! EXE or DLL is probably running. ***&#x0D;&#x0A;del /q &quot;$(TargetDir)$(TargetFileName)&quot;&#x0D;&#x0A;exit 1&#x0D;&#x0A;:BuildEventOK&#x0D;&#x0A;</Command>
+      <Command>if not exist "..\..\..\game\mod_hl2mp\bin\." mkdir "..\..\..\game\mod_hl2mp\bin\."
+copy "$(TargetDir)$(TargetFileName)" "..\..\..\game\mod_hl2mp\bin\.\$(TargetFileName)"
+if ERRORLEVEL 1 goto BuildEventFailed
+if exist "$(TargetDir)$(TargetName).map" copy "$(TargetDir)$(TargetName).map" ..\..\..\game\mod_hl2mp\bin\.\$(TargetName).map
+copy "$(TargetDir)$(TargetName).pdb" ..\..\..\game\mod_hl2mp\bin\.\$(TargetName).pdb
+if ERRORLEVEL 1 goto BuildEventFailed
+goto BuildEventOK
+:BuildEventFailed
+echo *** ERROR! PostBuildStep FAILED for $(ProjectName)! EXE or DLL is probably running. ***
+del /q "$(TargetDir)$(TargetFileName)"
+exit 1
+:BuildEventOK
+</Command>
     </PostBuildEvent>
     <CustomBuildStep>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
-      <Command>if EXIST ..\..\..\game\mod_hl2mp\bin\.\$(TargetFileName) for /f &quot;delims=&quot; %%A in (&apos;attrib &quot;..\..\..\game\mod_hl2mp\bin\.\$(TargetFileName)&quot;&apos;) do set valveTmpIsReadOnly=&quot;%%A&quot;&#x0D;&#x0A;set valveTmpIsReadOnlyLetter=%valveTmpIsReadOnly:~6,1%&#x0D;&#x0A;if &quot;%valveTmpIsReadOnlyLetter%&quot;==&quot;R&quot; del /q &quot;$(TargetDir)&quot;$(TargetFileName)&#x0D;&#x0A;if exist &quot;..\..\devtools\bin\vpc.exe&quot; &quot;..\..\devtools\bin\vpc.exe&quot; -crc2 &quot;server_hl2mp.vcxproj&quot;&#x0D;&#x0A;if ERRORLEVEL 1 exit /b 1&#x0D;&#x0A;</Command>
+      <Command>if EXIST ..\..\..\game\mod_hl2mp\bin\.\$(TargetFileName) for /f "delims=" %%A in ('attrib "..\..\..\game\mod_hl2mp\bin\.\$(TargetFileName)"') do set valveTmpIsReadOnly="%%A"
+set valveTmpIsReadOnlyLetter=%valveTmpIsReadOnly:~6,1%
+if "%valveTmpIsReadOnlyLetter%"=="R" del /q "$(TargetDir)"$(TargetFileName)
+if exist "..\..\devtools\bin\vpc.exe" "..\..\devtools\bin\vpc.exe" -crc2 "server_hl2mp.vcxproj"
+if ERRORLEVEL 1 exit /b 1
+</Command>
     </PreBuildEvent>
     <ClCompile>
       <AdditionalOptions>/Zm200 /Zo /Gw /Zc:inline</AdditionalOptions>
@@ -190,7 +213,8 @@
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
-      <BaseAddress> </BaseAddress>
+      <BaseAddress>
+      </BaseAddress>
       <TargetMachine>MachineX86</TargetMachine>
       <LinkErrorReporting>PromptImmediately</LinkErrorReporting>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -208,7 +232,19 @@
     </Bscmake>
     <PostBuildEvent>
       <Message>Publishing to ..\..\..\game\mod_hl2mp\bin\.</Message>
-      <Command>if not exist &quot;..\..\..\game\mod_hl2mp\bin\.&quot; mkdir &quot;..\..\..\game\mod_hl2mp\bin\.&quot;&#x0D;&#x0A;copy &quot;$(TargetDir)$(TargetFileName)&quot; &quot;..\..\..\game\mod_hl2mp\bin\.\$(TargetFileName)&quot;&#x0D;&#x0A;if ERRORLEVEL 1 goto BuildEventFailed&#x0D;&#x0A;if exist &quot;$(TargetDir)$(TargetName).map&quot; copy &quot;$(TargetDir)$(TargetName).map&quot; ..\..\..\game\mod_hl2mp\bin\.\$(TargetName).map&#x0D;&#x0A;copy &quot;$(TargetDir)$(TargetName).pdb&quot; ..\..\..\game\mod_hl2mp\bin\.\$(TargetName).pdb&#x0D;&#x0A;if ERRORLEVEL 1 goto BuildEventFailed&#x0D;&#x0A;goto BuildEventOK&#x0D;&#x0A;:BuildEventFailed&#x0D;&#x0A;echo *** ERROR! PostBuildStep FAILED for $(ProjectName)! EXE or DLL is probably running. ***&#x0D;&#x0A;del /q &quot;$(TargetDir)$(TargetFileName)&quot;&#x0D;&#x0A;exit 1&#x0D;&#x0A;:BuildEventOK&#x0D;&#x0A;</Command>
+      <Command>if not exist "..\..\..\game\mod_hl2mp\bin\." mkdir "..\..\..\game\mod_hl2mp\bin\."
+copy "$(TargetDir)$(TargetFileName)" "..\..\..\game\mod_hl2mp\bin\.\$(TargetFileName)"
+if ERRORLEVEL 1 goto BuildEventFailed
+if exist "$(TargetDir)$(TargetName).map" copy "$(TargetDir)$(TargetName).map" ..\..\..\game\mod_hl2mp\bin\.\$(TargetName).map
+copy "$(TargetDir)$(TargetName).pdb" ..\..\..\game\mod_hl2mp\bin\.\$(TargetName).pdb
+if ERRORLEVEL 1 goto BuildEventFailed
+goto BuildEventOK
+:BuildEventFailed
+echo *** ERROR! PostBuildStep FAILED for $(ProjectName)! EXE or DLL is probably running. ***
+del /q "$(TargetDir)$(TargetFileName)"
+exit 1
+:BuildEventOK
+</Command>
     </PostBuildEvent>
     <CustomBuildStep>
     </CustomBuildStep>
@@ -230,6 +266,7 @@
     <ClInclude Include="..\..\public\mathlib\amd3dx.h" />
     <ClInclude Include="..\..\game\shared\ammodef.h" />
     <ClInclude Include="..\..\game\shared\base_playeranimstate.h" />
+    <ClInclude Include="..\shared\bg3\Math\bg3_rand.h" />
     <ClInclude Include="base_transmit_proxy.h" />
     <ClInclude Include="..\..\public\basehandle.h" />
     <ClInclude Include="basetempentity.h" />
@@ -254,6 +291,12 @@
     <ClInclude Include="..\..\public\const.h" />
     <ClInclude Include="..\..\public\vphysics\constraints.h" />
     <ClInclude Include="..\..\public\coordsize.h" />
+    <ClInclude Include="bg3\bg3_line_spawn.h" />
+    <ClInclude Include="bg3\bg3_scorepreserve.h" />
+    <ClInclude Include="bg3\bg3_triggers.h" />
+    <ClInclude Include="bg3\bots\bg3_bot_influencer.h" />
+    <ClInclude Include="bg3\static_initialize.h" />
+    <ClInclude Include="bg3_turret.h" />
     <ClInclude Include="cplane.h" />
     <ClInclude Include="damagemodifier.h" />
     <ClInclude Include="..\..\public\datamap.h" />
@@ -803,6 +846,14 @@
     <ClInclude Include="toolframework_server.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\bg3\Math\bg3_rand.cpp" />
+    <ClCompile Include="bg3\bg3_line_spawn.cpp" />
+    <ClCompile Include="bg3\bg3_scorepreserve.cpp" />
+    <ClCompile Include="bg3\bg3_triggers.cpp" />
+    <ClCompile Include="bg3\Bots\bg3_bot_helpers.cpp" />
+    <ClCompile Include="bg3\Bots\bg3_bot_influencer.cpp" />
+    <ClCompile Include="bg3_gamerules_commands.cpp" />
+    <ClCompile Include="bg3_turret.cpp" />
     <ClCompile Include="gamedll_replay.cpp" />
     <ClCompile Include="..\..\game\shared\achievement_saverestore.cpp" />
     <ClCompile Include="..\..\game\shared\achievementmgr.cpp" />
@@ -1273,7 +1324,6 @@
     <ClCompile Include="..\..\game\shared\bg3\bg3_weapon_def.cpp" />
     <ClCompile Include="bg3\Bots\bg3_bot.cpp" />
     <ClCompile Include="bg3\Bots\bg3_bot_adder.cpp" />
-    <ClCompile Include="bg3\Bots\bg3_bot_helpers.cpp" />
     <ClCompile Include="bg3\Bots\bg3_bot_manager.cpp" />
     <ClCompile Include="bg3\Bots\bg3_bot_navpoint.cpp" />
     <ClCompile Include="bg3\Bots\bg3_bot_vcomm.cpp" />
@@ -1424,18 +1474,22 @@
   <ItemGroup>
     <CustomBuild Include="..\..\public\tier0\pointeroverride.asm">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compiling pointeroverride.asm</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">&quot;$(VCInstallDir)bin\ml.exe&quot; /safeseh /c /Cp /Zi /Fo&quot;$(IntDir)\%(Filename).obj&quot; &quot;%(FullPath)&quot;</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(VCInstallDir)bin\ml.exe" /safeseh /c /Cp /Zi /Fo"$(IntDir)\%(Filename).obj" "%(FullPath)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(Filename).obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compiling pointeroverride.asm</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">&quot;$(VCInstallDir)bin\ml.exe&quot; /safeseh /c /Cp /Zi /Fo&quot;$(IntDir)\%(Filename).obj&quot; &quot;%(FullPath)&quot;</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(VCInstallDir)bin\ml.exe" /safeseh /c /Cp /Zi /Fo"$(IntDir)\%(Filename).obj" "%(FullPath)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(Filename).obj</Outputs>
     </CustomBuild>
     <CustomBuild Include="server_hl2mp.vpc">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Running VPC CRC Check - server_hl2mp.vpc</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if exist &quot;..\..\devtools\bin\vpc.exe&quot; &quot;..\..\devtools\bin\vpc.exe&quot; -crc2 &quot;server_hl2mp.vcxproj&quot;&#x0D;&#x0A;if ERRORLEVEL 1 exit /b 1&#x0D;&#x0A;echo crc_complete &gt; C:\Users\Chel\source\bg3-code\game\server\server_hl2mp.vpc.sentinel</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">if exist "..\..\devtools\bin\vpc.exe" "..\..\devtools\bin\vpc.exe" -crc2 "server_hl2mp.vcxproj"
+if ERRORLEVEL 1 exit /b 1
+echo crc_complete &gt; C:\Users\Chel\source\bg3-code\game\server\server_hl2mp.vpc.sentinel</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Users\Chel\source\bg3-code\game\server\server_hl2mp.vpc.sentinel</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Running VPC CRC Check - server_hl2mp.vpc</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if exist &quot;..\..\devtools\bin\vpc.exe&quot; &quot;..\..\devtools\bin\vpc.exe&quot; -crc2 &quot;server_hl2mp.vcxproj&quot;&#x0D;&#x0A;if ERRORLEVEL 1 exit /b 1&#x0D;&#x0A;echo crc_complete &gt; C:\Users\Chel\source\bg3-code\game\server\server_hl2mp.vpc.sentinel</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">if exist "..\..\devtools\bin\vpc.exe" "..\..\devtools\bin\vpc.exe" -crc2 "server_hl2mp.vcxproj"
+if ERRORLEVEL 1 exit /b 1
+echo crc_complete &gt; C:\Users\Chel\source\bg3-code\game\server\server_hl2mp.vpc.sentinel</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Users\Chel\source\bg3-code\game\server\server_hl2mp.vpc.sentinel</Outputs>
     </CustomBuild>
   </ItemGroup>

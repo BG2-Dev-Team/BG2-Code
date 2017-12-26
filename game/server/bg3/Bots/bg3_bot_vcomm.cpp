@@ -140,14 +140,17 @@ comm_t CBotComManager::ParseContext(BotContext context) {
 }
 
 void CBotComManager::DispatchVCommToBot() {
+	//I think the compiler is optimizing the necessary null checks, so I'll do this
+	volatile CBasePlayer* pContextPlayer = m_pContextPlayer;
+
 	if (m_pContextPlayer) {
 		if (m_eForcedContext) {
 			m_eContext = m_eForcedContext;
 			m_eForcedContext = CONTEXT_NONE;
-			m_pContextPlayer = CPlayerSearch::FriendlyBotNearestTo(m_pContextPlayer);
+			pContextPlayer = m_pContextPlayer = CPlayerSearch::FriendlyBotNearestTo(m_pContextPlayer);
 		}
 		//nearest bot might be null so check it again
-		if (m_pContextPlayer && m_pContextPlayer->IsFakeClient()) {
+		if (pContextPlayer && m_pContextPlayer && m_pContextPlayer->IsFakeClient()) {
 			
 			//build a vcomm
 			static char vcommTemplate[64];

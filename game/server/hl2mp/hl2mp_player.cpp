@@ -1419,8 +1419,14 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 	else {
 		//Msg("Checking for early spawn\n");
 		//BG3 if we're not switching teams and we're in a spawn room, just respawn instantly
-		extern ConVar sv_class_respawn_time;
-		if (m_bInSpawnRoom && IsAlive() && m_bInSpawnRoom && m_fLastRespawn + sv_class_respawn_time.GetFloat() > gpGlobals->curtime) {
+		extern ConVar sv_class_switch_time;
+		extern ConVar sv_class_switch_time_lb_multiplier;
+		float classSwitchTime = sv_class_switch_time.GetFloat();
+		if (IsLinebattle()) {
+			classSwitchTime *= sv_class_switch_time_lb_multiplier.GetFloat();
+		}
+
+		if (m_bInSpawnRoom && IsAlive() && m_bInSpawnRoom && m_fLastRespawn + classSwitchTime > gpGlobals->curtime) {
 			m_bDontRemoveTicket = true;
 			//Msg("Doing early spawn!\n");
 			Spawn();
@@ -2258,11 +2264,17 @@ CBaseEntity* CHL2MP_Player::HandleSpawnList(const CUtlVector<CBaseEntity *>& spa
 	return NULL;
 }
 
-ConVar sv_class_respawn_time("sv_class_respawn_time", "10", FCVAR_GAMEDLL | FCVAR_NOTIFY, "How long after spawning a player will be able to change class\n");
+ConVar sv_class_switch_time("sv_class_switch_time", "10", FCVAR_GAMEDLL | FCVAR_NOTIFY, "How long after spawning a player will be able to change class\n");
+ConVar sv_class_switch_time_lb_multiplier("sv_class_switch_time_lb_multiplier", "3", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Multiplier for sv_class_switch_time for linebattle mode\n");
 CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint(void)
 {
+	float classSwitchTime = sv_class_switch_time.GetFloat();
+	if (IsLinebattle()) {
+		classSwitchTime *= sv_class_switch_time_lb_multiplier.GetFloat();
+	}
+
 	//no need for spawn points if we're in a room
-	if (m_bInSpawnRoom && m_fLastRespawn + sv_class_respawn_time.GetFloat() > gpGlobals->curtime)
+	if (m_bInSpawnRoom && m_fLastRespawn + classSwitchTime > gpGlobals->curtime)
 		return NULL;
 
 	if (GetTeamNumber() <= TEAM_SPECTATOR)

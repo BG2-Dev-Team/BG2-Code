@@ -34,7 +34,7 @@
 #define VEC_CROUCH_TRACE_MIN	HL2MPRules()->GetHL2MPViewVectors()->m_vCrouchTraceMin
 #define VEC_CROUCH_TRACE_MAX	HL2MPRules()->GetHL2MPViewVectors()->m_vCrouchTraceMax
 
-extern ConVar mp_respawnstyle, mp_respawntime, mp_roundtime, mp_tickets_a, mp_tickets_b;
+extern ConVar mp_respawnstyle, mp_respawntime, mp_rounds, mp_roundtime, mp_tickets_a, mp_tickets_b;
 extern ConVar mp_punish_bad_officer, mp_punish_bad_officer_nextclass;
 
 extern ConVar lb_enforce_weapon_amer, lb_enforce_weapon_brit, lb_enforce_class_amer, lb_enforce_class_brit;
@@ -183,7 +183,7 @@ public:
 	void    CheckChatForReadySignal( CHL2MP_Player *pPlayer, const char *chatmsg );
 	const char *GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer );
 	//BG2 - This should handle all the score settings after each round, and also fire any triggers and play win music. -HairyPotter
-	void HandleScores(int iTeam, int iScore, int msg_type, bool bRestart);
+	void HandleScores(int iTeam, int iScore, int msg_type, bool bRestart, bool bCycleRound = true);
 	virtual bool ClientConnected(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
 #else
 	//BG2 - Skillet - List of player ragdolls
@@ -217,8 +217,8 @@ public:
 	float m_fNextFlagUpdate;
 	//BG2 - Draco - End
 	//BG2 - Tjoppen - restart rounds a few seconds after the last person is killed. and other stuff
-	float	m_flNextRoundRestart;
-	bool	m_bIsRestartingRound;
+	float	m_flNextRoundRestart = FLT_MAX;
+	bool	m_bIsRestartingRound = false;
 	int		m_iTDMTeamThatWon, m_iAmericanDmg, m_iBritishDmg; //BG2 - HairyPotter
 	bool	m_bHasDoneWinSong, m_bHasLoggedScores;
 	float	m_fNextWinSong;
@@ -262,7 +262,7 @@ private:
 
 	//BG2 - Tjoppen - stuff in CHL2MPRules
 public:
-	void RestartRound(bool swapTeams);
+	void RestartRound(bool swapTeams, bool bSetLastRoundTime = true); //bSetLastRoundTime set to false is for fullcaps, so that fullcaps don't reset round clock
 	void RespawnAll();
 	void WinSong(int team, bool m_bWonMap = false);
 	void RespawnWave();

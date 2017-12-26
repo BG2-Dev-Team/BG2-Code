@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual C++ Express 2010
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client (HL2MP)", "game\client\client_hl2mp.vcxproj", "{17BCE59A-9037-EC8D-433E-F81339E2F1BA}"
 	ProjectSection(ProjectDependencies) = postProject
 		{BAB92FF0-D72A-D7E5-1988-74628D39B94F} = {BAB92FF0-D72A-D7E5-1988-74628D39B94F}

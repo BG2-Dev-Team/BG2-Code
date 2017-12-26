@@ -75,6 +75,13 @@ BotDifficulty* CSDKBot::GetDifficulty() {
 }
 
 //-------------------------------------------------------------------------------------------------
+// Purpose: Setter for m_bUpdateFlags also checks for LMS in which case we don't actually update flags
+//-------------------------------------------------------------------------------------------------
+void CSDKBot::SetUpdateFlags(bool bUpdate) {
+	m_bUpdateFlags = bUpdate && !IsLMS();
+}
+
+//-------------------------------------------------------------------------------------------------
 // Purpose: Dispatches thinker start-end functions and switches to next Thinker, with a given delay
 //-------------------------------------------------------------------------------------------------
 void CSDKBot::ScheduleThinker(BotThinker* pNextThinker, float delay) {
@@ -297,6 +304,106 @@ void CSDKBot::MoveAwayFromEnemy() {
 			m_curCmd.buttons &= ~IN_FORWARD;
 		}
 		LookAt(lookTarget, 0.7f, 5.f);
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Modifies button flags to move bot toward given location without changing bot's view angles
+//		Does NOT modify m_flNextStrafeTime
+//-------------------------------------------------------------------------------------------------
+void CSDKBot::MoveTowardPointNoTurn(const Vector& vLocation) {
+	StopMoving(); //technically less efficient, but saves us space
+					//TODO provide macros or inlines to make this more efficient
+
+	rad_t r = VectorAngleFromPlayer(m_pPlayer, vLocation);
+
+	//now just go through the unit circle
+	#define pi M_PI_F
+	#define m(a) m_curCmd.buttons |= (a)
+	if (r < pi / 8 || r > 15 * pi / 8) {
+		//move right
+		m(IN_RIGHT);
+	}
+	else if (r < 3 * pi / 8) {
+		//move up-right
+		m(IN_RIGHT | IN_FORWARD);
+	}
+	else if (r < 5 * pi / 8) {
+		//move up
+		m(IN_FORWARD);
+	}
+	else if (r < 7 * pi / 8) {
+		//move up-left
+		m(IN_FORWARD | IN_LEFT);
+	}
+	else if (r < 9 * pi / 8) {
+		//move left
+		m(IN_LEFT);
+	}
+	else if (r < 11 * pi / 8) {
+		//move back-left
+		m(IN_LEFT | IN_BACK);
+	}
+	else if (r < 13 * pi / 8) {
+		//move back
+		m(IN_BACK);
+	}
+	else if (r < 15 * pi / 8) {
+		//move back-right
+		m(IN_BACK | IN_RIGHT);
+	}
+	//nothing else to do
+	#undef m
+	#undef pi
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Dances the bot around the given position, for flag capture
+//		DOES modify m_flNextStrafeTime
+//-------------------------------------------------------------------------------------------------
+void CSDKBot::DanceAround(const Vector& vLocation, vec_t flMaxRange) {
+	if (gpGlobals->curtime > m_flNextStrafeTime) {
+		vec_t dist = (m_pPlayer->GetAbsOrigin() - vLocation).Length();
+
+		flMaxRange /= 1.7f; //for safety
+
+		//base the next strafe time based on the max range
+		m_flNextStrafeTime = gpGlobals->curtime + bot_randfloat(0.1f, (flMaxRange - dist) / 240);
+
+		if (RndBool(dist / flMaxRange)) {
+			//this becomes more likely as we near the max range
+			MoveTowardPointNoTurn(vLocation);
+		}
+		else {
+			//let's move randomly, yay!
+			float rnd = bot_randfloat();
+			if (rnd < 0.33f) {
+				m_curCmd.buttons |= IN_FORWARD;
+				m_curCmd.buttons &= ~IN_BACK;
+			}
+			else if (rnd < 0.66f) {
+				m_curCmd.buttons |= IN_BACK;
+				m_curCmd.buttons &= ~IN_FORWARD;
+			}
+			else  {
+				m_curCmd.buttons &= ~IN_BACK;
+				m_curCmd.buttons &= ~IN_FORWARD;
+			}
+			rnd = bot_randfloat();
+			if (rnd < 0.33f) {
+				m_curCmd.buttons |= IN_LEFT;
+				m_curCmd.buttons &= ~IN_RIGHT;
+			}
+			else if (rnd < 0.66f) {
+				m_curCmd.buttons |= IN_RIGHT;
+				m_curCmd.buttons &= ~IN_LEFT;
+			}
+			else  {
+				m_curCmd.buttons &= ~IN_RIGHT;
+				m_curCmd.buttons &= ~IN_LEFT;
+			}
+		}
+
 	}
 }
 

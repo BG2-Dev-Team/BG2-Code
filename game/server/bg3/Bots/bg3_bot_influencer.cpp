@@ -47,7 +47,7 @@ DEF_EXECUTOR(Fire) {
 	//we could just modify m_flNextFireTime, but that wouldn't guarantee that we'd fire immediately
 	if (pBot->CanFire()
 		&& pBot->m_PlayerSearchInfo.CloseEnemy()) {
-		pBot->ScheduleThinker(&BotThinkers::PointBlank, bot_randfloat(0.0f, 0.2f));
+		pBot->ScheduleThinker(&BotThinkers::PointBlank, bot_randfloat(0.1f, 1.1f));
 	}
 }
 
@@ -87,7 +87,15 @@ DEF_EXECUTOR(Halt) {
 }
 
 DEF_EXECUTOR(Rally_Round) {
+	//stop retreating
+	if (pBot->m_pCurThinker == &Retreat) {
+		pBot->ScheduleThinker(&MedRange, 0.1f);
+	}
+	//might as well run the advance command too
+	s_pfAdvance(pBot);
 
+	//block retreats for a short time
+	pBot->m_flForceNoRetreatTime = gpGlobals->curtime + 8.f;
 }
 
 //for unique_ptr
@@ -98,6 +106,7 @@ void NBotInfluencer::InitMap(CUtlMap<comm_t, NBotInfluencer::pfExecutor>* pMap) 
 	pMap->Insert(VCOMM2_ADVANCE,	s_pfAdvance);
 	pMap->Insert(VCOMM2_HALT,		s_pfHalt);
 	pMap->Insert(VCOMM2_RETREAT,	s_pfRetreat);
+	pMap->Insert(VCOMM2_RALLY_ROUND, s_pfRally_Round);
 }
 
 //Sets up map of voice command codes to influencing functions
@@ -105,11 +114,7 @@ CUtlMap<comm_t, NBotInfluencer::pfExecutor>* NBotInfluencer::CreateMap() {
 	CUtlMap<comm_t, pfExecutor>* pMap = new CUtlMap<comm_t, pfExecutor>();
 	
 	SetDefLessFunc(*pMap);
-
-	pMap->Insert(VCOMM2_FIRE,		s_pfFire);
-	pMap->Insert(VCOMM2_ADVANCE,	s_pfAdvance);
-	pMap->Insert(VCOMM2_HALT,		s_pfHalt);
-	pMap->Insert(VCOMM2_RETREAT,	s_pfRetreat);
+	InitMap(pMap);
 
 	return pMap;
 }
@@ -120,7 +125,8 @@ CUtlMap<comm_t, NBotInfluencer::pfExecutor>* NBotInfluencer::g_pExecutorMap = Cr
 //Valve's map class is devoid of any common-sense "contains" function so we'll use this instead
 //Some day I should reimplement those utility classes myself
 bool IsExecutableVcomm(comm_t iComm) {
-	return iComm == VCOMM2_FIRE || iComm == VCOMM2_ADVANCE || iComm == VCOMM2_RETREAT || iComm == VCOMM2_HALT;
+	return iComm == VCOMM2_FIRE || iComm == VCOMM2_ADVANCE || iComm == VCOMM2_RETREAT || iComm == VCOMM2_HALT
+		|| iComm == VCOMM2_RALLY_ROUND;
 }
 
 void NBotInfluencer::DispatchCommand(CBasePlayer* pRequester, vec_t vRange, comm_t iComm) {
@@ -130,7 +136,7 @@ void NBotInfluencer::DispatchCommand(CBasePlayer* pRequester, vec_t vRange, comm
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++) {
 		CBasePlayer* pPlayer = UTIL_PlayerByIndex(i);
-		if (pPlayer && pPlayer->IsFakeClient() && pPlayer->IsAlive() && EntDist(*pRequester, *pPlayer) < vRange) {
+		if (pPlayer && pPlayer->IsFakeClient() && pPlayer->IsAlive() && pPlayer->GetTeamNumber() == pRequester->GetTeamNumber() && EntDist(*pRequester, *pPlayer) < vRange) {
 
 			//here we have a valid bot who's close enough to us
 			CSDKBot* pBot = CSDKBot::ToBot(pPlayer);

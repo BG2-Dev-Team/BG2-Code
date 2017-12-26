@@ -190,8 +190,12 @@ bool CSDKBot::ThinkCheckExitMelee() {
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkCheckRetreat() {
 	//check for emergency close-quarters combat
-	if (m_PlayerSearchInfo.CloseEnemyDist() < 800 && m_PlayerSearchInfo.OutNumbered() > 0.57 && m_PlayerSearchInfo.CloseFriendDist() < 800
-		&& m_PlayerSearchInfo.CloseFriendDist() > RETREAT_STOP_RANGE) {
+	if (m_PlayerSearchInfo.CloseEnemyDist() < 800 
+		&& m_PlayerSearchInfo.CloseEnemySecondDist() < 800 
+		&& m_PlayerSearchInfo.OutNumbered() > 0.57 
+		&& m_PlayerSearchInfo.CloseFriendDist() < 800
+		&& m_PlayerSearchInfo.CloseFriendDist() > RETREAT_STOP_RANGE
+		&& m_flForceNoRetreatTime < gpGlobals->curtime) {
 		ScheduleThinker(&BotThinkers::Retreat, BotThinkers::Retreat.m_flThinkDelay);
 		return false;
 	}
@@ -391,6 +395,7 @@ void CSDKBot::PostStateChangeThink() {
 // Purpose: 
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkWaypoint_Begin() {
+	SetUpdateFlags(true);
 	SendBotVcommContext(CLEAR);
 	m_curCmd.buttons = IN_FORWARD;
 	m_PlayerSearchInfo.UpdateNavpointFirst();
@@ -419,7 +424,7 @@ bool CSDKBot::ThinkFlag_Begin() {
 	if (bot_randfloat() < 0.4f)
 		m_flNextFireTime = gpGlobals->curtime + bot_randfloat(2.0f, 8.0f);
 	SendBotVcommContext(OBJECTIVE);
-	m_bUpdateFlags = true;
+	SetUpdateFlags(true);
 	m_bTowardFlag = true;
 	return true;
 }
@@ -429,32 +434,37 @@ bool CSDKBot::ThinkFlag_Check() {
 		&& ThinkCheckMelee() && ThinkCheckPointBlank() && ThinkCheckFlagExit();
 }
 
+const Vector g_vUpFromFlag = Vector(0, 0, 40);
+
 bool CSDKBot::ThinkFlag() {
+	CFlag* pFlag = m_PlayerSearchInfo.CloseEnemyFlagVisible();
+
 	if (IsCapturingEnemyFlagAttempt()) {
 		if (!m_bLastThinkWasInFlag) {
 			m_bLastThinkWasInFlag = true;
 			if (bot_randfloat() < 0.4f && ShouldReload()) {
 				m_curCmd.buttons |= IN_RELOAD;
 			}
+			m_flNextStrafeTime = gpGlobals->curtime;
 		}
 
-		StopMoving();
 		CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
 		if (pEnemy) {
-			LookAt(pEnemy->Weapon_ShootPosition(), 0.5f, 3);
+			LookAt(pEnemy->Weapon_ShootPosition(), 0.7f, 3);
+			if (pFlag)
+				DanceAround(pFlag->GetAbsOrigin(), pFlag->m_flCaptureRadius);
 			if (bot_randfloat() < 0.3f)
 				m_flNextFireTime = gpGlobals->curtime;
 		}
+		else {
+			StopMoving();
+		}
 	} else {
 		m_bLastThinkWasInFlag = false;
-		CFlag* pFlag = m_PlayerSearchInfo.CloseEnemyFlagVisible();
-		/*if (!pFlag) {
-			pFlag = m_PlayerSearchInfo.CloseEnemyFlag();
-		}*/
 
 		if (pFlag) {
 			m_curCmd.buttons |= IN_FORWARD;
-			LookAt(pFlag->GetAbsOrigin() + Vector(0, 0, 40), 0.8f, 5);
+			LookAt(pFlag->GetAbsOrigin() + g_vUpFromFlag, 0.8f, 5);
 		}
 		TeammateGoAround(true);
 	}
@@ -473,7 +483,7 @@ bool CSDKBot::ThinkFlag_End() {
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkLongRange_Begin() {
 	SendBotVcommContext(ADVANCE);
-	m_bUpdateFlags = true;
+	SetUpdateFlags(true);
 	if (CanFire()) {
 		float random = bot_randfloat();
 		if (random < m_pDifficult->m_flLongRangeFire) {
@@ -515,7 +525,7 @@ bool CSDKBot::ThinkLongRange_End() {
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkMedRange_Begin() {
 	SendBotVcommContext(DEFAULT);
-	m_bUpdateFlags = true;
+	SetUpdateFlags(true);
 	if (CanFire()) {
 		float random = bot_randfloat();
 		//if we're already hurt, we're more desperate
@@ -609,7 +619,7 @@ bool CSDKBot::ThinkMedRange_End() {
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkMelee_Begin() {
 	SendBotVcommContext(DEFAULT);
-	m_bUpdateFlags = false;
+	SetUpdateFlags(false);
 	//m_curCmd.buttons |= IN_FORWARD;
 	m_flNextStrafeTime = gpGlobals->curtime + RandomFloat(0.5f, 1.0f);
 	if (CanFire()) {
@@ -706,9 +716,9 @@ bool CSDKBot::ThinkMelee_End() {
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkRetreat_Begin() {
 	SendBotVcommContext(RETREAT);
-	m_bUpdateFlags = true;
+	SetUpdateFlags(true);
 	m_flNextFireTime = FLT_MAX;
-	m_flEndRetreatTime = gpGlobals->curtime + RandomFloat(1.5, 5.0) * (1 - m_pDifficult->m_flBravery);
+	m_flEndRetreatTime = gpGlobals->curtime + bot_randfloat(1.5, 7.0) * (1 - m_pDifficult->m_flBravery);
 	return true;
 }
 
@@ -744,7 +754,7 @@ bool CSDKBot::ThinkRetreat_End() {
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkPointBlank_Begin() {
 	SendBotVcommContext(FIRE);
-	m_bUpdateFlags = false;
+	SetUpdateFlags(false);
 	m_curCmd.buttons = 0;
 	//random crouching
 	
@@ -885,7 +895,7 @@ bool CSDKBot::ThinkReload_End() {
 // Purpose: Manages death/spawn switches, otherwise idles
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkDeath_Begin() {
-	m_bUpdateFlags = false;
+	SetUpdateFlags(false);
 	m_flNextFireTime = FLT_MAX;
 	m_curCmd.buttons = 0;
 	return true;
@@ -903,16 +913,14 @@ bool CSDKBot::ThinkDeath() { return true; }
 
 bool CSDKBot::ThinkDeath_End() {
 	m_curCmd.buttons = 0;
-	m_bUpdateFlags = true;
+	//SetUpdateFlags(true); //we technically don't have to do this, because if we're alive, our next thinker is always waypoint think, which also sets it to true
 	m_flNextFireTime = FLT_MAX;
-	m_flEndRetreatTime;
+	//m_flEndRetreatTime;
 	m_pWeapon = (m_pPlayer->GetActiveWeapon());
 	if (m_pWeapon) {
 		m_flMeleeRange = m_pWeapon->Def()->m_Attackinfos[1].m_flRange;
 		m_flAdjustedMeleeRange = m_flMeleeRange - m_pDifficult->m_flMeleeRangeOffset;
 	}
-		
-	m_flNextVoice = gpGlobals->curtime + RandomFloat(3.0f, 30.0f);
 
 	//update our searcher's team info in case we switched teams
 	m_PlayerSearchInfo.UpdateOwnerTeamInfo();

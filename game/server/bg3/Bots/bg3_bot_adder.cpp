@@ -223,6 +223,7 @@ void CSDKBot::Init(CBasePlayer* pPlayer, BotDifficulty* pDifficulty) {
 	CSDKBot& curBot = *ToBot(pPlayer);
 	curBot.m_pPlayer = pPlayer;
 	curBot.m_flNextStrafeTime = 0;
+	curBot.m_flForceNoRetreatTime = 0;
 
 	//default to death thinker or else bad things happen!
 	curBot.m_pPrevThinker = &BotThinkers::Death;

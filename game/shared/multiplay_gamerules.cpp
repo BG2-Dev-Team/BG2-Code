@@ -87,7 +87,7 @@ ConVar mp_timelimit( "mp_timelimit", "0", FCVAR_NOTIFY|FCVAR_REPLICATED, "game t
 #endif
 					);
 
-ConVar fraglimit( "mp_fraglimit","0", FCVAR_NOTIFY|FCVAR_REPLICATED, "The number of kills at which the map ends");
+//ConVar fraglimit( "mp_fraglimit","0", FCVAR_NOTIFY|FCVAR_REPLICATED, "The number of kills at which the map ends");
 
 ConVar mp_show_voice_icons( "mp_show_voice_icons", "1", FCVAR_REPLICATED, "Show overhead player voice icons when players are speaking.\n" );
 
@@ -382,7 +382,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		}
 
 		float flTimeLimit = mp_timelimit.GetFloat() * 60;
-		float flFragLimit = fraglimit.GetFloat();
+		//float flFragLimit = fraglimit.GetFloat();
 		
 		if ( flTimeLimit != 0 && gpGlobals->curtime >= flTimeLimit )
 		{
@@ -390,7 +390,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			return;
 		}
 
-		if ( flFragLimit )
+		/*if ( flFragLimit )
 		{
 			// check if any player is over the frag limit
 			for ( int i = 1; i <= gpGlobals->maxClients; i++ )
@@ -403,7 +403,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 					return;
 				}
 			}
-		}
+		}*/
 	}
 
 	//=========================================================

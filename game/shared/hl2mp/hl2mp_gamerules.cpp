@@ -137,7 +137,7 @@ ConVar mp_punish_bad_officer("mp_punish_bad_officer", "1", CVAR_FLAGS, "Whether 
 ConVar mp_punish_bad_officer_nextclass("mp_bad_officer_nextclass", "1", CVAR_FLAGS, "What class to auto-switch bad officers to. 1-6 is inf, off, sniper, skirm, linf, grenadier.");
 
 //ticket system
-ConVar mp_rounds("mp_rounds", "5", CVAR_FLAGS, "Maximum number of rounds - rounds are restarted until this or mp_timelimit");
+ConVar mp_rounds("mp_rounds", "0", CVAR_FLAGS, "Maximum number of rounds - rounds are restarted until this");
 ConVar mp_roundtime("mp_roundtime", "300", CVAR_FLAGS, "Maximum length of round");
 ConVar mp_tickets_a("mp_tickets_a", "100", CVAR_FLAGS, "Tickets given to americans on round start");
 ConVar mp_tickets_b("mp_tickets_b", "100", CVAR_FLAGS, "Tickets given to british on round start");
@@ -491,7 +491,7 @@ void CHL2MPRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 
 #ifndef CLIENT_DLL
 //BG2 - This should handle all the score settings after each round, and also fire any triggers and play win music. -HairyPotter
-void CHL2MPRules::HandleScores(int iTeam, int iScore, int msg_type, bool bRestart)
+void CHL2MPRules::HandleScores(int iTeam, int iScore, int msg_type, bool bRestart, bool bCycleRound)
 {
 	CMapTrigger *BG2Trigger = NULL;
 
@@ -523,15 +523,11 @@ void CHL2MPRules::HandleScores(int iTeam, int iScore, int msg_type, bool bRestar
 	if (bRestart)
 	{
 		int maxRounds = mp_rounds.GetInt();
-		if (UsingTickets() || IsLMS())
-		{
-			//if last round, then go to intermission (next map)
-			if (maxRounds && m_iCurrentRound >= maxRounds)
-			{
+		if (maxRounds && bCycleRound) {
+			if (m_iCurrentRound >= maxRounds) {
 				GoToIntermission();
 				return;
 			}
-
 			m_iCurrentRound++;
 		}
 
@@ -539,7 +535,7 @@ void CHL2MPRules::HandleScores(int iTeam, int iScore, int msg_type, bool bRestar
 		// BG2 - VisualMelon - decide whether to swap teams or not
 		int iSwapTeam = mp_swapteams.GetInt();
 		bool bSwapTeam = false;
-		if (iSwapTeam == 1 
+		if ((iSwapTeam == 1 && bCycleRound)
 			|| (iSwapTeam == 0
 				&& maxRounds
 				//&& (UsingTickets() || IsLMS())
@@ -548,7 +544,7 @@ void CHL2MPRules::HandleScores(int iTeam, int iScore, int msg_type, bool bRestar
 			)
 			bSwapTeam = true;
 		//
-		RestartRound(bSwapTeam);
+		RestartRound(bSwapTeam, bCycleRound);
 
 		//do not cause two simultaneous round restarts..
 		m_bIsRestartingRound = false;
@@ -702,6 +698,7 @@ void CHL2MPRules::Think( void )
 
 	CTeam *pAmericans = g_Teams[TEAM_AMERICANS];
 	CTeam *pBritish = g_Teams[TEAM_BRITISH];
+	bool	bUsingRoundSystem = mp_rounds.GetBool();
 
 	if ( g_fGameOver )   // someone else quit the game already
 	{
@@ -760,13 +757,21 @@ void CHL2MPRules::Think( void )
 		return;
 	}
 
-	float flTimeLimit = GetMapRemainingTime();
-
-	//why compare remaining time to current time? - Awesome
-	if (flTimeLimit != 0 && flTimeLimit < 0) //gpGlobals->curtime >= flTimeLimit)
-	{
-		GoToIntermission();
-		return;
+	/*
+	Check for end of map from timelimit if we're not using the round system
+	*/
+	if (!bUsingRoundSystem) {
+		float flTimeLimit = GetMapRemainingTime();
+		//why compare remaining time to current time? - Awesome
+		if (flTimeLimit != 0 && flTimeLimit < 0) //gpGlobals->curtime >= flTimeLimit)
+		{
+			GoToIntermission();
+			return;
+		}
+		//=========================
+		//Time Left
+		//=========================
+		mp_timeleft.SetValue((flTimeLimit - gpGlobals->curtime)); //timeleft works just as well..
 	}
 
 	//BG2 - Draco - Start
@@ -787,10 +792,7 @@ void CHL2MPRules::Think( void )
 	{
 		m_fNextFlagUpdate = gpGlobals->curtime + 1;
 	}
-	//=========================
-	//Time Left
-	//=========================
-	mp_timeleft.SetValue((flTimeLimit - gpGlobals->curtime)); //timeleft works just as well..
+	
 
 	//=========================
 	//Score Cvars
@@ -830,9 +832,6 @@ void CHL2MPRules::Think( void )
 		RestartRound(false);	//BG2 - restart round
 	}
 
-	//=========================
-	//Round systems
-	//=========================
 	//wave spawning 
 	if (mp_respawnstyle.GetInt() == 1 || UsingTickets()) {
 		if ((m_fLastRespawnWave + mp_respawntime.GetFloat()) <= gpGlobals->curtime)
@@ -841,15 +840,72 @@ void CHL2MPRules::Think( void )
 			m_fLastRespawnWave = gpGlobals->curtime;
 		}
 	}
-	if (IsLMS() || UsingTickets())//if line battle all at once spawn style - Draco
+
+	//=========================
+	//Round systems
+	//=========================
+	//don't bother if we have no players
+	if (pAmericans->GetNumPlayers() == 0 && pBritish->GetNumPlayers() == 0)
+		return;
+
+	int aliveamericans = -1;
+	int alivebritish = -1;
+	if (IsLMS() || UsingTickets()) {
+		aliveamericans = CountAlivePlayersAndTickets(TEAM_AMERICANS);
+		alivebritish = CountAlivePlayersAndTickets(TEAM_BRITISH);
+	}
+
+	//we don't want a team to "win" by the other team not having other players
+	bool bRoundVictoryPossible = (IsLMS() || UsingTickets()) && pAmericans->GetNumPlayers() != 0 && pBritish->GetNumPlayers() != 0;
+
+	//this checks if we restart round from the time running out or from a round victory
+	if ((bUsingRoundSystem && m_fLastRoundRestart + mp_roundtime.GetFloat() <= gpGlobals->curtime)
+		|| (bRoundVictoryPossible && (aliveamericans == 0 || alivebritish == 0))) {
+
+		if (!m_bIsRestartingRound)
+		{
+			//this block of code only happens once, at the end of the round
+			m_flNextRoundRestart = gpGlobals->curtime + 5;
+			m_bIsRestartingRound = true;
+
+			//calculate the winning team
+			//we do this differently depending on our gamemode
+			if (IsLMS() || UsingTickets()) {
+				if (aliveamericans > alivebritish)
+				{
+					m_iTDMTeamThatWon = TEAM_AMERICANS;
+				}
+				else if (aliveamericans < alivebritish)
+				{
+					m_iTDMTeamThatWon = TEAM_BRITISH;
+				}
+				else
+				{
+					m_iTDMTeamThatWon = TEAM_NONE;
+				}
+			}
+			else {
+				//skirmish mode
+				int britScore = pBritish->GetScore();
+				int amerScore = pAmericans->GetScore();
+				if (britScore > amerScore)		m_iTDMTeamThatWon = TEAM_BRITISH;
+				else if (amerScore > britScore) m_iTDMTeamThatWon = TEAM_AMERICANS;
+				else							m_iTDMTeamThatWon = TEAM_NONE;
+			}
+		}
+		else if (m_flNextRoundRestart < gpGlobals->curtime)
+		{
+			int score = 0;
+
+			if (m_iTDMTeamThatWon != TEAM_NONE)
+				score = 1;
+
+			HandleScores(m_iTDMTeamThatWon, score, 0, true);
+		}
+	}
+
+	/*if (IsLMS() || UsingTickets())//if line battle all at once spawn style - Draco
 	{		
-		if (pAmericans->GetNumPlayers() == 0 && pBritish->GetNumPlayers() == 0)
-			return;
-
-		//allow ticket round to restart even if there aren't any players on the other team
-		if (!UsingTickets() && (pAmericans->GetNumPlayers() == 0 || pBritish->GetNumPlayers() == 0))
-			return;
-
 		//Tjoppen - start
 		//count alive players in each team
 		int aliveamericans = CountAlivePlayersAndTickets(TEAM_AMERICANS);
@@ -894,7 +950,7 @@ void CHL2MPRules::Think( void )
 				HandleScores(m_iTDMTeamThatWon, score, 0, true);
 			}
 		}
-	}
+	}*/
 	//BG2 - Draco - End
 
 	if ( gpGlobals->curtime > m_tmNextPeriodicThink )
@@ -1791,7 +1847,7 @@ const char *CHL2MPRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 
 #ifndef CLIENT_DLL
 
-void CHL2MPRules::RestartRound(bool swapTeams)
+void CHL2MPRules::RestartRound(bool swapTeams, bool bSetLastRoundTime)
 {
 	//restart current round. immediately.
 	ResetMap();
@@ -1817,7 +1873,7 @@ void CHL2MPRules::RestartRound(bool swapTeams)
 		m_fNextFlagUpdate = gpGlobals->curtime + 10;
 	}
 
-	if (mp_respawntime.GetInt() > 0)
+	if (mp_respawntime.GetInt() > 0 && bSetLastRoundTime)
 		m_fLastRoundRestart = m_fLastRespawnWave = gpGlobals->curtime;
 }
 
@@ -2062,9 +2118,7 @@ void CHL2MPRules::CountHeldFlags(int &american_flags, int &british_flags, int &n
 				break;
 			}
 		}
-		else
-			//So the flag is set to be capped by this team.
-			switch (pFlag->m_iForTeam)
+		else switch (pFlag->m_iForTeam) //So the flag is set to be capped by this team.
 		{
 			case 0:
 			default://assume both
@@ -2111,12 +2165,12 @@ void CHL2MPRules::CheckFullcap(void)
 	{
 		if ((foramericans - american_flags) == 0 && foramericans != 0)
 		{
-			HandleScores(TEAM_AMERICANS, mp_winbonus.GetInt(), AMERICAN_ROUND_WIN, true);
+			HandleScores(TEAM_AMERICANS, mp_winbonus.GetInt(), AMERICAN_ROUND_WIN, true, false);
 			return;
 		}
 		if ((forbritish - british_flags) == 0 && forbritish != 0)
 		{
-			HandleScores(TEAM_BRITISH, mp_winbonus.GetInt(), BRITISH_ROUND_WIN, true);
+			HandleScores(TEAM_BRITISH, mp_winbonus.GetInt(), BRITISH_ROUND_WIN, true, false);
 			return;
 		}
 	}
@@ -2125,7 +2179,7 @@ void CHL2MPRules::CheckFullcap(void)
 		if (american_flags <= 0 && british_flags <= 0)
 		{
 			//draw
-			HandleScores(TEAM_NONE, 0, ROUND_DRAW, true);
+			HandleScores(TEAM_NONE, 0, ROUND_DRAW, true, false);
 			//Msg( "draw\n" );
 			return;
 		}
@@ -2134,7 +2188,7 @@ void CHL2MPRules::CheckFullcap(void)
 		{
 			//british win
 			//Msg( "british win\n" );
-			HandleScores(TEAM_BRITISH, mp_winbonus.GetInt(), BRITISH_ROUND_WIN, true);
+			HandleScores(TEAM_BRITISH, mp_winbonus.GetInt(), BRITISH_ROUND_WIN, true, false);
 			return;
 		}
 
@@ -2142,7 +2196,7 @@ void CHL2MPRules::CheckFullcap(void)
 		{
 			//americans win
 			//Msg( "americans win\n" );
-			HandleScores(TEAM_AMERICANS, mp_winbonus.GetInt(), AMERICAN_ROUND_WIN, true);
+			HandleScores(TEAM_AMERICANS, mp_winbonus.GetInt(), AMERICAN_ROUND_WIN, true, false);
 			return;
 		}
 	}

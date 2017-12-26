@@ -2,6 +2,7 @@
 BG3 - Awesome - I'm tired of magic numbers floating around everywhere so I though I'd define everything here
 */
 #pragma once
+#include "../shared/shareddefs.h"
 
 enum
 {
@@ -135,7 +136,8 @@ m_iCurrentRallies is a bit field so that a player can have multiple rallies at o
 #define RALLY_INTERVAL			50.0f //time a team must wait before their officer can do another rally
 
 #define	RALLY_SPEED				(1 << 0)
-#define RALLY_SPEED_MOD			1.1f //Speed multiplier for affected players
+#define RALLY_SPEED_MOD			1.09f //Speed multiplier for affected players
+#define RALLY_SPEED_MOD_ACCUR	1.8f
 
 #define RALLY_STAMINA			(1 << 1)
 #define RALLY_STAMINA_MOD		0.5f //Multiplier for stamina drain of affected players
@@ -167,7 +169,7 @@ FOV OFFSETS FOR RALLYING EFFECTS - used by CHL2MP_Player
 Positive values increase FOV and make player feel faster, lower FOV tightens aim and feels slower
 */
 #if 1
-#define FOV_ADJUST_ADVANCE			14.0
+#define FOV_ADJUST_ADVANCE			12.0
 #define FOV_ADJUST_ADVANCE_INTIME	8.0 //players will feel like they're getting faster and faster
 #define FOV_ADJUST_ADVANCE_OUTTIME	3.0 //let's not give them a headache
 
@@ -267,4 +269,11 @@ skins. These are used dynamically to randomly pick a skin within the corrent ran
 #define SKIN_AMER_REG			SKIN_DEFAULT
 #define SKIN_AMER_REG_ALT		8
 #define SKIN_AMER_REG_ALT2		16
+#endif
+
+/*
+Using this flag to use it as a special case for kill feed icons
+*/
+#if 1
+#define DMG_SWIVEL_GUN (DMG_LASTGENERICFLAG<<1)
 #endif

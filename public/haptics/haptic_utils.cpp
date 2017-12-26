@@ -140,7 +140,8 @@ void ConnectHaptics(CreateInterfaceFn appFactory)
 
 void DisconnectHaptics()
 {
-	haptics->ShutdownHaptics();
+	if (haptics)
+		haptics->ShutdownHaptics();
 	if(pFalconModule)
 	{
 		Sys_UnloadModule(pFalconModule);

@@ -440,7 +440,7 @@ void CBaseBG2Weapon::Hit( trace_t &traceHit, int iAttack )
 		int damage		= GetDamage( iAttack );
 
 		//BG2 - Tjoppen - apply no force
-		CTakeDamageInfo info( GetOwner(), GetOwner(), damage, DMG_CLUB | DMG_PREVENT_PHYSICS_FORCE | DMG_NEVERGIB );
+		CTakeDamageInfo info( GetOwner(), GetOwner(), this, damage, DMG_CLUB | DMG_PREVENT_PHYSICS_FORCE | DMG_NEVERGIB );
 		info.SetDamagePosition( traceHit.endpos );
 
 		pHitEntity->DispatchTraceAttack( info, hitDirection, &traceHit);	//negative dir for weird reasons
@@ -458,15 +458,19 @@ void CBaseBG2Weapon::Hit( trace_t &traceHit, int iAttack )
 		else
 		{
 			WeaponSound( MELEE_HIT_WORLD );
+#ifndef CLIENT_DLL
 			if( GetAttackType(iAttack) != ATTACKTYPE_SLASH )
 				ImpactEffect( traceHit );
+#endif
 		}
 	}
+#ifndef CLIENT_DLL
 	else if( GetAttackType(iAttack) != ATTACKTYPE_SLASH )
 	{
 		// Apply an impact effect
 		ImpactEffect( traceHit );
 	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -559,7 +563,7 @@ void CBaseBG2Weapon::Swing( int iAttack, bool bIsFirstAttempt )
 
 #ifndef CLIENT_DLL
 	// Like bullets, bludgeon traces have to trace against triggers.
-	CTakeDamageInfo triggerInfo( GetOwner(), GetOwner(), GetDamage(iAttack), DMG_CLUB );
+	CTakeDamageInfo triggerInfo( GetOwner(), GetOwner(), this, GetDamage(iAttack), DMG_CLUB );
 
 	TraceAttackToTriggers( triggerInfo, traceHit.startpos, traceHit.endpos, vec3_origin );
 #endif //Keep the following code with the client.dll

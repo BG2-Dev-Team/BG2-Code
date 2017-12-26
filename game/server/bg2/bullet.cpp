@@ -73,6 +73,7 @@ class Bullet {
 	float m_flConstantDamageRange, m_flRelativeDrag, m_flMuzzleVelocity, m_flDyingTime;
 	bool m_bHasPlayedNearmiss;
 	CBasePlayer *m_pOwner;
+	CBaseCombatWeapon* m_pWeapon;
 	int m_iBounces;
 
 public:
@@ -101,6 +102,7 @@ public:
 		m_flDyingTime = gpGlobals->curtime + /*LIFETIME*/ 3.0f;
 		m_bHasPlayedNearmiss = false;
 		m_pOwner = pOwner;
+		m_pWeapon = m_pOwner->GetActiveWeapon();
 		m_iBounces = 0;
 
 		resetRwc(sv_simulatedbullets_flex.GetBool());
@@ -298,10 +300,10 @@ private:
 				dmg = (int)(m_iDamage * speed * speed / (m_flMuzzleVelocity*m_flMuzzleVelocity));
 
 			//no force!
-			CTakeDamageInfo	dmgInfo( m_pOwner, m_pOwner, dmg, DMG_BULLET | /*DMG_PREVENT_PHYSICS_FORCE |*/DMG_CRUSH | DMG_NEVERGIB ); //Changed to avoid asserts. -HairyPotter
+			CTakeDamageInfo	dmgInfo( m_pOwner, m_pOwner, m_pWeapon, dmg, DMG_BULLET | /*DMG_PREVENT_PHYSICS_FORCE |*/DMG_CRUSH | DMG_NEVERGIB ); //Changed to avoid asserts. -HairyPotter
 			dmgInfo.SetDamagePosition( tr.endpos );
 			tr.m_pEnt->DispatchTraceAttack( dmgInfo, vecDir, &tr );
-
+			
 			ApplyMultiDamage();
 
 			//Adrian: keep going through the glass.

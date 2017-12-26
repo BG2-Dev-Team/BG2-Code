@@ -156,6 +156,7 @@ public:
 	bool			m_bLastThinkWasStateChange;
 
 	bool			m_bUpdateFlags; //we can save a little performance by not updating the flags if we don't need to
+	void			SetUpdateFlags(bool bUpdate); //we use this setter to also check for LMS in which case we should actually ignore flags
 	bool			m_bTowardFlag; //Whether or not to ignore enemies and move to the nearest flag
 
 	float			m_flNextFireTime;
@@ -164,8 +165,8 @@ public:
 	bool			m_bLastThinkWasInFlag; //used by flag think to do one-time events on entering flag
 	//bool			m_bBackwards, m_bLastTurnToRight;
 
-	float			m_flNextStrafeTime,
-					m_flNextVoice;
+	float			m_flNextStrafeTime;
+	float			m_flForceNoRetreatTime;
 
 	QAngle			m_ForwardAngle;
 	Quaternion		m_LastAngles;
@@ -212,6 +213,8 @@ public:
 	void MoveToNearestTeammate();
 	void MoveToWaypoint();
 	void MoveAwayFromEnemy();
+	void MoveTowardPointNoTurn(const Vector& vLocation); // moves bot toward point without changing look target
+	void DanceAround(const Vector& vLocation, vec_t flMaxRange); //for dancing around a flag or other point
 	void StopMoving();
 	void TeammateGoAround(bool bStopSideStep);
 
@@ -235,7 +238,7 @@ public:
 	static const int LONG_RANGE_START = 1680;
 	static const int MED_RANGE_START = 850;
 	static const int MELEE_RANGE_START = 140;
-	static const int RETREAT_STOP_RANGE = 150; //retreat stops when we are this close to friend
+	static const int RETREAT_STOP_RANGE = 125; //retreat stops when we are this close to friend
 	static const int HELP_START_RANGE = 200; //teammates will rush forward to other teammates who are this close to the enemy
 
 	/*

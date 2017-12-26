@@ -17,7 +17,7 @@ float RndFloat();
 
 float RndFloat(float min, float max);
 
-inline bool RndBool(float chance) {
+inline bool RndBool(float chance = 0.5f) {
 	return RndFloat() < chance;
 }
 

@@ -1811,6 +1811,27 @@
     <ClInclude Include="toolframework_server.h">
       <Filter>Tools Framework</Filter>
     </ClInclude>
+    <ClInclude Include="bg3\bg3_scorepreserve.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bg3_triggers.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bg3_line_spawn.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bots\bg3_bot_influencer.h">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\static_initialize.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3_turret.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\bg3\Math\bg3_rand.h">
+      <Filter>Source Files\BG3\Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gamedll_replay.cpp">
@@ -2971,9 +2992,6 @@
     <ClCompile Include="bg3\Bots\bg3_bot_adder.cpp">
       <Filter>Source Files\BG3\Bots</Filter>
     </ClCompile>
-    <ClCompile Include="bg3\Bots\bg3_bot_helpers.cpp">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClCompile>
     <ClCompile Include="bg3\Bots\bg3_bot_manager.cpp">
       <Filter>Source Files\BG3\Bots</Filter>
     </ClCompile>
@@ -3396,6 +3414,30 @@
     </ClCompile>
     <ClCompile Include="toolframework_server.cpp">
       <Filter>Tools Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_scorepreserve.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_triggers.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_line_spawn.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\Bots\bg3_bot_helpers.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\Bots\bg3_bot_influencer.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3_turret.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\bg3\Math\bg3_rand.cpp">
+      <Filter>Source Files\BG3\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3_gamerules_commands.cpp">
+      <Filter>Source Files\BG3</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
