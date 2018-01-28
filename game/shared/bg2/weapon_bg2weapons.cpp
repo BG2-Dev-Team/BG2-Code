@@ -133,6 +133,7 @@ DECLARE_BG2_WEAPON( brownbess )
 	m_bCantAbortReload	= true;
 
 	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.6f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset		= -2.5;
@@ -192,6 +193,7 @@ DECLARE_BG2_WEAPON( charleville )
 	m_bCantAbortReload	= true;
 
 	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.6f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset		= -2.5;
@@ -253,6 +255,7 @@ DECLARE_BG2_WEAPON( jaeger )
 	m_eWeaponType = RIFLE;
 
 	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 8.9f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset		= -15;
@@ -303,6 +306,7 @@ DECLARE_BG2_WEAPON( pennsylvania )
 	m_eWeaponType = RIFLE;
 
 	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 9.9f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset		= -20;
@@ -349,6 +353,7 @@ RIFLE_ACTTABLE( pennsylvania )
 DECLARE_BG2_WEAPON( pistol_a )
 {
 	m_fHolsterTime = 0.50f;
+	m_flApproximateReloadTime = 5.0f;
 	m_bCantAbortReload = false;
 
 	m_bWeaponHasSights = false; 
@@ -387,6 +392,7 @@ PISTOL_ACTTABLE( pistol_a )
 DECLARE_BG2_WEAPON( pistol_b )
 {
 	m_fHolsterTime = 0.50f;
+	m_flApproximateReloadTime = 5.0f;
 	m_bCantAbortReload = false;
 
 	m_bWeaponHasSights = false; 
@@ -671,6 +677,7 @@ DECLARE_BG2_WEAPON( revolutionnaire )
 	m_bCantAbortReload	= true;
 
 	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.6f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset		= -2.5;
@@ -742,6 +749,7 @@ DECLARE_BG2_WEAPON(revolutionnaire_nobayo)
 	m_bCantAbortReload = true;
 
 	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.6f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset = -2.5;
@@ -799,6 +807,7 @@ DECLARE_BG2_WEAPON( brownbess_nobayo )
 	m_bCantAbortReload	= true;
 
 	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.6f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset		= -2.5;
@@ -872,6 +881,7 @@ DECLARE_BG2_WEAPON( fowler )
 	m_bCantAbortReload	= true;
 
 	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.2f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset		= -2.5;
@@ -921,6 +931,7 @@ DECLARE_BG2_WEAPON( longpattern )
 	m_bCantAbortReload	= true;
 
 	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 8.2f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset		= -2.5;
@@ -980,6 +991,7 @@ DECLARE_BG2_WEAPON( longpattern_nobayo )
 	m_bCantAbortReload	= true;
 
 	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 8.2f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset		= -2.5;
@@ -1026,6 +1038,7 @@ DECLARE_BG2_WEAPON( american_brownbess )
 	m_bCantAbortReload	= true;
 
 	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.6f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset		= -2.5;
@@ -1085,6 +1098,7 @@ DECLARE_BG2_WEAPON( american_brownbess_nobayo )
 	m_bCantAbortReload	= true;
 
 	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.6f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset		= -2.5;
@@ -1130,6 +1144,7 @@ DECLARE_BG2_WEAPON( brownbess_carbine )
 	m_bCantAbortReload	= true;
 
 	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.0f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset = -2.5;
@@ -1195,6 +1210,7 @@ DECLARE_BG2_WEAPON(brownbess_carbine_nobayo)
 	m_bCantAbortReload = true;
 
 	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.0f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset = -2.5;

@@ -66,8 +66,6 @@ ConVar sv_restartround("sv_restartround", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 ConVar sv_restartmap("sv_restartmap", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 ConVar mp_americanscore("mp_americanscore", "0", FCVAR_GAMEDLL /*| FCVAR_NOTIFY*/ | FCVAR_CHEAT);
 ConVar mp_britishscore("mp_britishscore", "0", FCVAR_GAMEDLL /*| FCVAR_NOTIFY*/ | FCVAR_CHEAT);
-ConVar mp_autobalanceteams("mp_autobalanceteams", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY);
-ConVar mp_autobalancetolerance("mp_autobalancetolerance", "3", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 ConVar mp_timeleft("mp_timeleft", "0", FCVAR_GAMEDLL | FCVAR_REPLICATED, "");
 
 //BG2 - Draco - End
@@ -84,6 +82,9 @@ extern CBaseEntity	 *g_pLastRebelSpawn;*/
 #define WEAPON_MAX_DISTANCE_FROM_SPAWN 64
 
 #endif
+
+ConVar mp_autobalanceteams("mp_autobalanceteams", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_autobalancetolerance("mp_autobalancetolerance", "3", FCVAR_GAMEDLL | FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 //BG2 - Tjoppen - beautiful defines. you will see another one further down
 #ifdef CLIENT_DLL
@@ -535,20 +536,26 @@ void CHL2MPRules::HandleScores(int iTeam, int iScore, int msg_type, bool bRestar
 		// BG2 - VisualMelon - decide whether to swap teams or not
 		int iSwapTeam = mp_swapteams.GetInt();
 		bool bSwapTeam = false;
-		if ((iSwapTeam == 1 && bCycleRound)
-			|| (iSwapTeam == 0
-				&& maxRounds
-				//&& (UsingTickets() || IsLMS())
-				&& m_iCurrentRound == maxRounds / 2 + 1
+		if (bCycleRound
+			&& (
+				iSwapTeam == 1
+				|| (iSwapTeam == 0
+					&& maxRounds
+					//&& (UsingTickets() || IsLMS())
+					&& m_iCurrentRound == maxRounds / 2 + 1
+					)
 				)
 			)
 			bSwapTeam = true;
 		//
 		RestartRound(bSwapTeam, bCycleRound);
 
+		//if we're swapping teams, make a long delay
+		float restartDelay = bSwapTeam ? 5.f : 1.f;
+
 		//do not cause two simultaneous round restarts..
 		m_bIsRestartingRound = false;
-		m_flNextRoundRestart = gpGlobals->curtime + 1;
+		m_flNextRoundRestart = gpGlobals->curtime + restartDelay;
 	}
 
 	WinSong(iTeam, true);
@@ -653,7 +660,7 @@ void CHL2MPRules::SwapPlayerTeam(CHL2MP_Player *pPlayer, bool skipAlive)
 
 	if (useDefaultKit)
 	{
-		pPlayer->m_iGunKit = 1;
+		pPlayer->m_iGunKit = 0;
 		pPlayer->m_iAmmoKit = AMMO_KIT_BALL;
 	}
 
@@ -1324,7 +1331,7 @@ void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info
 					//BG3 - changed this to the damage info's weapon, less dereferencing and catches rare cases
 					//where player dies after shooting
 					//also helps us detect swivel gun hits
-					if ( info.GetWeapon() )
+					if (info.GetWeapon() && pScorer->GetActiveWeapon())
 					{
 #ifdef HL1MP_DLL
 						killer_weapon_name = pScorer->GetActiveWeapon()->GetClassname();
@@ -1508,6 +1515,8 @@ float CHL2MPRules::GetMapRemainingTime()
 //-----------------------------------------------------------------------------
 void CHL2MPRules::Precache( void )
 {
+#ifdef CLIENT_DLL
+#endif
 	//CBaseEntity::PrecacheScriptSound( "AlyxEmp.Charge" );
 }
 

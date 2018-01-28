@@ -8,10 +8,12 @@
 #include "cbase.h"
 
 #ifdef CLIENT_DLL
+#include "c_team.h"
 #include "c_hl2mp_player.h"
 #include "prediction.h"
 #define CRecipientFilter C_RecipientFilter
 #else
+#include "team.h"
 #include "hl2mp_player.h"
 #endif
 #include "../shared/bg3/bg3_player_shared.h"
@@ -202,6 +204,63 @@ void CHL2MP_Player::UpdatePlayerClass(void) {
 
 	if (bValidTeam && bValidClass)
 		m_pCurClass = CPlayerClass::fromNums(GetTeamNumber(), m_iClass);
+}
+
+bool CHL2MP_Player::PlayerMayJoinTeam(int iTeam) const {
+	extern ConVar mp_autobalanceteams;
+	extern ConVar mp_autobalancetolerance;
+	//check so we don't ruin the team balance..
+	//BG2 - Tjoppen - don't bother with checking balance if we're just changing class, not team.
+	//					CHL2MPRules::Think() will make sure the teams are kept balanced.
+	//					We want to allow people to change class even if their team is too big.
+	if (mp_autobalanceteams.GetInt() == 1 && GetTeamNumber() != iTeam) //So the team we're attempting to join is different from our current team.
+	{
+
+		//Initialize just in case.
+		int iAutoTeamBalanceTeamDiff = 0,
+			iAutoTeamBalanceBiggerTeam = NULL,
+			iNumAmericans = g_Teams[TEAM_AMERICANS]->GetNumPlayers(), //
+			iNumBritish = g_Teams[TEAM_BRITISH]->GetNumPlayers(); //
+
+		switch (GetTeamNumber()) //Our current team now, but we're changing teams..
+		{
+		case TEAM_AMERICANS:
+			iNumAmericans -= 1; //-1 because we plan on leaving.
+			break;
+		case TEAM_BRITISH:
+			iNumBritish -= 1;
+			break;
+		}
+
+		//if (pAmericans->GetNumPlayers() > pBritish->GetNumPlayers()) //So there are more Americans than British.
+		if (iNumAmericans > iNumBritish)
+		{
+			//iAutoTeamBalanceTeamDiff = ((pAmericans->GetNumPlayers() - pBritish->GetNumPlayers()) ); //+ 1
+			iAutoTeamBalanceTeamDiff = iNumAmericans - iNumBritish;
+			iAutoTeamBalanceBiggerTeam = TEAM_AMERICANS;
+		}
+		else //More british than Americans.
+		{
+			//iAutoTeamBalanceTeamDiff = ((pBritish->GetNumPlayers() - pAmericans->GetNumPlayers()) ); //+ 1
+			iAutoTeamBalanceTeamDiff = iNumBritish - iNumAmericans;
+			iAutoTeamBalanceBiggerTeam = TEAM_BRITISH;
+		}
+		if ((iAutoTeamBalanceTeamDiff >= mp_autobalancetolerance.GetInt()) && (iAutoTeamBalanceBiggerTeam == iTeam))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+bool CHL2MP_Player::HasLoadedWeapon() const {
+	//assume false, look for otherwise
+	bool bLoaded = false;
+	for (int i = 0; i < MAX_WEAPONS && !bLoaded; i++) {
+		if (GetWeapon(i))
+			bLoaded = GetWeapon(i)->Clip1() > 0;
+	}
+	return bLoaded;
 }
 
 //==========================

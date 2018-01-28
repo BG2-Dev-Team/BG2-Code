@@ -12,6 +12,17 @@ enum
 	NUM_TEAMS,	//!! must be last !!
 };
 
+//These denote the current available of a class, according to the gamerules
+// and class limits etc.
+typedef int EClassAvailability;
+enum {
+	CLASS_FREE = 0,			//a new player can take the class; it's open
+	CLASS_FULL,				//some other players already have it, limit is full
+	CLASS_UNAVAILABLE,				//the limit is 0, so nobody can have the class
+	CLASS_TAKEN_FREE,		//the requesting player already is the class in question, and it's free
+	CLASS_TAKEN_FULL,		//the requesting player already is the class in question, and it's full
+};
+
 //BG2 - Tjoppen - class system - don't change these
 #if 1
 #define	CLASS_INFANTRY			0

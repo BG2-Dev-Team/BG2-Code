@@ -1,3 +1,36 @@
+/*
+The Battle Grounds 3 - A Source modification
+Copyright (C) 2017, The Battle Grounds 3 Team and Contributors
+
+The Battle Grounds 3 free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+The Battle Grounds 3 is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+Contact information:
+Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
+
+You may also contact the (future) team via the Battle Grounds website and/or forum at:
+www.bg2mod.com
+
+Note that because of the sheer volume of files in the Source SDK this
+notice cannot be put in all of them, but merely the ones that have any
+changes from the original SDK.
+In order to facilitate easy searching, all changes are and must be
+commented on the following form:
+
+//BG3 - <name of contributer>[ - <small description>]
+*/
+
 #ifndef BG3_TEAMMENU_H
 #define BG3_TEAMMENU_H
 
@@ -42,27 +75,29 @@ class IBaseFileSystem;
 class CTeamButton : public vgui::Button {
 	DECLARE_CLASS_SIMPLE(CTeamButton, vgui::Button);
 
-	CTeamButton(Panel* parent, const char* panelName, const char* text, int team);
+	CTeamButton(Panel* parent, const char* panelName, const char* text, int team) : Button(parent, panelName, text), m_iTeam(team) {}
 
-	void SetCommand(int team);
+	void SimulateMousePressed() { OnMousePressed(MOUSE_LEFT); }
 	void OnMousePressed(vgui::MouseCode code)	override;
 	void OnCursorEntered(void)					override;
+	void OnCursorExited(void)					override;
 
 	//Function overrides from Button
-	virtual void Paint() override;
+	//virtual void Paint() override;
 	virtual void ApplySchemeSettings(vgui::IScheme* pScheme)	override;
-	virtual void ApplySettings(KeyValues* inResourceData)		override;
 
+	void PerformCommand();
+
+private:
+	friend class CTeamMenu;
 	//The paintings are in the background, we only need overlays to highlight/shadow them
 	int			m_iTeam;
-	const char* m_pszDarkenOverlay;
-	const char* m_pszHighlightOverlay;
-	bool		m_bMouseOver;
 
-	inline vgui::IImage* GetImage() {
-		const char* m_pszImage = m_bMouseOver ? m_pszHighlightOverlay : m_pszDarkenOverlay;
-		return vgui::scheme()->GetImage(m_pszImage, false);
-	}
+	bool		m_bEnabled = true;
+	bool		m_bMouseOver = false;
+
+public:
+	void UpdateGameRulesData();
 };
 
 //-----------------------------------------------------------------------------
@@ -73,12 +108,13 @@ public:
 	DECLARE_CLASS_SIMPLE(CSpectateButton, vgui::Button);
 
 	CSpectateButton(Panel *parent, const char *panelName, const char *text) : Button(parent, panelName, text) { }
-
-	void SetCommand(int command){}
-	void OnMousePressed(vgui::MouseCode code);
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
-	void OnCursorEntered(void){}
-	void PerformCommand(void);
+
+	void OnMousePressed(vgui::MouseCode code);
+	void OnCursorEntered(void);
+	//void OnCursorExited(void);
+
+private:
 };
 
 //-----------------------------------------------------------------------------
@@ -90,18 +126,22 @@ public:
 
 	CConscriptButton(Panel *parent, const char *panelName, const char *text) : Button(parent, panelName, text) { }
 
-	void SetCommand(int command){}
-	void OnMousePressed(vgui::MouseCode code);
-	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
-	void OnCursorEntered(void){}
-	void PerformCommand(void);
+	void OnMousePressed(vgui::MouseCode code)					override;
+	virtual void ApplySchemeSettings(vgui::IScheme *pScheme)	override;
+	void OnCursorEntered(void)									override;
+	//void OnCursorExited(void)									override;
+private:
+	friend class CTeamMenu;
 };
 
+//-----------------------------------------------------------------------------
+// Purpose: Wraps together all of the team menu buttons
+//-----------------------------------------------------------------------------
 class CTeamMenu : public vgui::Frame, public IViewPortPanel {
 	DECLARE_CLASS_SIMPLE(CTeamMenu, vgui::Frame);
 
 public:
-	CTeamMenu(IViewPort* pViewPort);
+	CTeamMenu(vgui::VPANEL pParent);
 	~CTeamMenu();
 
 	virtual const char* GetName(void)		override { return PANEL_TEAMS; }
@@ -109,23 +149,54 @@ public:
 	virtual void SetVisible(bool bVisible)	override ;
 	virtual void Reset(void)				override {}
 	virtual void Update(void)				override ;
-	virtual bool NeedsUpdate(void)			override { return false; }
+	virtual bool NeedsUpdate(void)			override { return m_flNextGameRulesUpdate < gpGlobals->curtime; }
 	virtual bool HasInputElements(void)		override { return true; }
 	virtual void ShowPanel(bool bShow)		override ;
 	virtual void Paint(void)				override ;
-
 	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
 	virtual bool IsVisible() { return BaseClass::IsVisible(); }
 	vgui::VPANEL GetVPanel(void) { return BaseClass::GetVPanel(); }
 	virtual void SetParent(vgui::VPANEL parent) { BaseClass::SetParent(parent); }
 
+	inline void	 SwitchToClassmenu() {
+		//ShowPanel(false); //this should be done at the class menu command
+		engine->ClientCmd("classmenu");
+	}
+
+	//choose team label
+	vgui::Label*		m_pChooseTeamLabel;
+
 	//Team selection buttons
-	CTeamButton			*m_pBritishButton,
-						*m_pAmericanButton;
+	static CTeamButton	*s_pBritishButton,
+						*s_pAmericanButton;
 	CSpectateButton		*m_pSpectateButton;
 	CConscriptButton	*m_pConscriptButton;
 
-	vgui::HTML*			*m_pInfoHTML;
+	vgui::HTML			*m_pInfoHTML;
+
+	vgui::IImage		*m_pBackground,
+						*m_pLeftHighlight,
+						*m_pRightHighlight,
+						*m_pLeftDarken,
+						*m_pRightDarken;
+
+private:
+	// VGUI2 overrides
+	//virtual void OnKeyCodePressed(vgui::KeyCode code);
+	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
+	virtual void PerformLayout();
+
+	float m_flNextGameRulesUpdate = 0.0f;
 };
+
+extern int					g_iCurrentTeammenuTeam;
+extern CTeamMenu*			g_pTeamMenu;
+
+namespace NMenuSounds {
+	void PlayMenuSound(const char* pszSound);
+
+	void PlayHoverSound();
+	void PlaySelectSound();
+}
 
 #endif //BG3_TEAMMENU_H

@@ -153,6 +153,7 @@ BEGIN_DATADESC( CBreakable )
 	DEFINE_FIELD( m_iszPropData, FIELD_STRING ),
 	DEFINE_INPUT( m_impactEnergyScale, FIELD_FLOAT, "physdamagescale" ),
 	DEFINE_KEYFIELD( m_PerformanceMode, FIELD_INTEGER, "PerformanceMode" ),
+	DEFINE_KEYFIELD(m_bIgnoreBlastDamage, FIELD_BOOLEAN, "IgnoreBlastDamage"), //BG3 -added this for siege maps
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Break", InputBreak ),
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetHealth", InputSetHealth ),
@@ -253,7 +254,7 @@ void CBreakable::Spawn( void )
 	// Initialize damage modifiers. Must be done before baseclass spawn.
 	m_flDmgModBullet = func_breakdmg_bullet.GetFloat();
 	m_flDmgModClub = func_breakdmg_club.GetFloat();
-	m_flDmgModExplosive = func_breakdmg_explosive.GetFloat();
+	m_flDmgModExplosive = m_bIgnoreBlastDamage ? 0 : func_breakdmg_explosive.GetFloat();
 
 	ParsePropData();
 
@@ -754,7 +755,12 @@ void CBreakable::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir,
 		}
 	}
 
-	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
+	//BG3 - I guess m_flDmgModExplosive isn't actually used here, just bypass it - Awesome
+	//apply damage multipliers
+	if (info.GetDamageType() ^ DMG_BLAST || !m_bIgnoreBlastDamage) {
+		BaseClass::TraceAttack(info, vecDir, ptr, pAccumulator);
+	}
+	
 }
 
 

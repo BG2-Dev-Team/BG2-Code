@@ -64,6 +64,8 @@ public:
 
 	virtual void Precache( void );
 
+	virtual bool Init() { return BaseClass::Init(); }
+
 	virtual bool ClientCommand( CBaseEntity *pEdict, const CCommand &args );
 	virtual void ClientSettingsChanged( CBasePlayer *pPlayer );
 	virtual bool IsTeamplay( void );

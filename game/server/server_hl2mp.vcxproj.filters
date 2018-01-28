@@ -3439,6 +3439,9 @@
     <ClCompile Include="bg3_gamerules_commands.cpp">
       <Filter>Source Files\BG3</Filter>
     </ClCompile>
+    <ClCompile Include="bg3\bg3_spectele.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

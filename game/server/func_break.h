@@ -162,6 +162,8 @@ protected:
 	float			m_explodeRadius;
 
 public:
+	bool		m_bIgnoreBlastDamage = false;
+
 	// IPlayerPickupVPhysics
 	virtual void OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
 	virtual void OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t Reason );

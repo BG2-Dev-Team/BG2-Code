@@ -154,7 +154,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 	m_bReady = false;
 
 	//BG2 - Default weapon kits. -Hairypotter
-	m_iGunKit = 1;
+	m_iGunKit = 0;
 	m_bNoJoinMessage = false;
 	m_iCurrentAmmoKit = m_iAmmoKit = AMMO_KIT_BALL;
 	//
@@ -290,7 +290,7 @@ void CHL2MP_Player::GiveDefaultItems(void)
 
 	//if we're a bot, randomize our gun kit
 	if (IsFakeClient()) {
-		m_iGunKit = RandomInt(1, m_pCurClass->numChooseableWeapons());;
+		m_iGunKit = RandomInt(0, m_pCurClass->numChooseableWeapons() - 1);;
 	}
 
 	//check for forced weapon change
@@ -305,14 +305,14 @@ void CHL2MP_Player::GiveDefaultItems(void)
 	}
 
 	//Clamp kit number to number of available clips
-	Clamp(m_iGunKit, 1, m_pCurClass->numChooseableWeapons());
+	Clamp(m_iGunKit, 0, m_pCurClass->numChooseableWeapons() - 1);
 
 	//give the chosen weapon
-	GiveNamedItem(m_pCurClass->m_aWeapons[m_iGunKit - 1].m_pszWeaponName);
+	GiveNamedItem(m_pCurClass->m_aWeapons[m_iGunKit].m_pszWeaponName);
 
 	//now search for weapons to always give
 	for (int i = 0; i < NUM_POSSIBLE_WEAPON_KITS; i++) {
-		if (i != m_iGunKit - 1 && m_pCurClass->m_aWeapons[i].m_bAlwaysGive) {
+		if (i != m_iGunKit && m_pCurClass->m_aWeapons[i].m_bAlwaysGive) {
 			GiveNamedItem(m_pCurClass->m_aWeapons[i].m_pszWeaponName);
 		}
 	}
@@ -1220,61 +1220,6 @@ void CHL2MP_Player::PlayermodelTeamClass()
 int CHL2MP_Player::GetAppropriateSkin() const
 {
 	return m_iClassSkin * m_pCurClass->m_iSkinDepth + RandomInt(0, m_pCurClass->m_iSkinDepth - 1);
-/*#define check(a) (m_iClassSkin == (a))
-	//Assume default, then check other cases
-	int skin = SKIN_DEFAULT;
-	//If we're British
-	if (GetTeamNumber() == TEAM_BRITISH) {
-		switch (m_iClass) {
-			case CLASS_INFANTRY:
-				if		(check(0)) skin = RandomInt(SKIN_DEFAULT, SKIN_BRITISH_REG_ALT - 1);
-				else if (check(1)) skin = RandomInt(SKIN_BRITISH_REG_ALT, SKIN_BRITISH_REG_ALT2 - 1);
-				else if (check(2)) skin = RandomInt(SKIN_BRITISH_REG_ALT2, SKIN_MAX);
-				break;
-			case CLASS_OFFICER:
-				skin = m_iClassSkin;//this is one-to-one
-				break;
-			case CLASS_SNIPER:
-				skin = RandomInt(0, 1);
-				break;
-			case CLASS_SKIRMISHER:
-				skin = RandomInt(0, 1);
-				break;
-			case CLASS_LIGHT_INFANTRY:
-				//nothing to do here...yet
-				break;
-			case CLASS_GRENADIER:
-				//nothing to do here...yet
-				break;
-		}
-	}
-	//Otherwise we're American
-	else {
-		switch (m_iClass) {
-		case CLASS_INFANTRY:
-			if (check(0))	   skin = RandomInt(SKIN_DEFAULT, SKIN_AMER_REG_ALT - 1);
-			else if (check(1)) skin = RandomInt(SKIN_AMER_REG_ALT, SKIN_AMER_REG_ALT2 - 1);
-			else if (check(2)) skin = RandomInt(SKIN_AMER_REG_ALT2, SKIN_MAX);
-			break;
-		case CLASS_OFFICER:
-			skin = m_iClassSkin;//this is one-to-one
-			break;
-		case CLASS_SNIPER:
-			skin = RandomInt(0, 15); //love how many skins we got
-			break;
-		case CLASS_SKIRMISHER:
-			skin = RandomInt(0, 1);
-			break;
-		case CLASS_LIGHT_INFANTRY:
-			//nothing to do here...yet
-			break;
-		case CLASS_GRENADIER:
-			//nothing to do here...yet
-			break;
-		}
-	}
-#undef check
-	return skin;*/
 }
 
 //BG2 - Tjoppen - CHL2MP_Player::MayRespawn()
@@ -1325,57 +1270,18 @@ bool CHL2MP_Player::MayRespawn(void)
 bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 {
 	//returns true on success, false otherwise
-	CTeam	*pAmericans = g_Teams[TEAM_AMERICANS],
-		*pBritish = g_Teams[TEAM_BRITISH];
+	/*CTeam	*pAmericans = g_Teams[TEAM_AMERICANS],
+		*pBritish = g_Teams[TEAM_BRITISH];*/
 
 	if (GetTeamNumber() == iTeam && m_iNextClass == iClass)
 		return true;
 
-	
-
-	//check so we don't ruin the team balance..
-	//BG2 - Tjoppen - don't bother with checking balance if we're just changing class, not team.
-	//					CHL2MPRules::Think() will make sure the teams are kept balanced.
-	//					We want to allow people to change class even if their team is too big.
-	if (mp_autobalanceteams.GetInt() == 1 && GetTeamNumber() != iTeam) //So the team we're attempting to join is different from our current team.
-	{
-
-		//Initialize just in case.
-		int iAutoTeamBalanceTeamDiff = 0,
-			iAutoTeamBalanceBiggerTeam = NULL,
-			iNumAmericans = pAmericans->GetNumPlayers(), //
-			iNumBritish = pBritish->GetNumPlayers(); //
-
-		switch (GetTeamNumber()) //Our current team now, but we're changing teams..
-		{
-		case TEAM_AMERICANS:
-			iNumAmericans -= 1; //-1 because we plan on leaving.
-			break;
-		case TEAM_BRITISH:
-			iNumBritish -= 1;
-			break;
-		}
-
-		//if (pAmericans->GetNumPlayers() > pBritish->GetNumPlayers()) //So there are more Americans than British.
-		if (iNumAmericans > iNumBritish)
-		{
-			//iAutoTeamBalanceTeamDiff = ((pAmericans->GetNumPlayers() - pBritish->GetNumPlayers()) ); //+ 1
-			iAutoTeamBalanceTeamDiff = iNumAmericans - iNumBritish;
-			iAutoTeamBalanceBiggerTeam = TEAM_AMERICANS;
-		}
-		else //More british than Americans.
-		{
-			//iAutoTeamBalanceTeamDiff = ((pBritish->GetNumPlayers() - pAmericans->GetNumPlayers()) ); //+ 1
-			iAutoTeamBalanceTeamDiff = iNumBritish - iNumAmericans;
-			iAutoTeamBalanceBiggerTeam = TEAM_BRITISH;
-		}
-		if ((iAutoTeamBalanceTeamDiff >= mp_autobalancetolerance.GetInt()) && (iAutoTeamBalanceBiggerTeam == iTeam))
-		{
-			//BG2 - Tjoppen - TODO: usermessage this
-			//char *sTeamName = iTeam == TEAM_AMERICANS ? "American" : "British";
-			ClientPrint(this, HUD_PRINTCENTER, "There are too many players on this team!\n");
-			return false;
-		}
+	//Check team balance limits
+	if (!PlayerMayJoinTeam(iTeam)) {
+		//BG2 - Tjoppen - TODO: usermessage this
+		//char *sTeamName = iTeam == TEAM_AMERICANS ? "American" : "British";
+		ClientPrint(this, HUD_PRINTCENTER, "There are too many players on this team!\n");
+		return false;
 	}
 
 	//check if there's a limit for this class, and if it has been exceeded
@@ -1389,8 +1295,6 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 		ClientPrint(this, HUD_PRINTCENTER, "There are too many of this class on your team!\n");
 		return false;
 	}
-
-	
 
 	//The following line prevents anyone else from stealing our spot..
 	//Without this line several teamswitching/new players can pick a free class, so there can be for instance 
@@ -1426,7 +1330,11 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 			classSwitchTime *= sv_class_switch_time_lb_multiplier.GetFloat();
 		}
 
-		if (m_bInSpawnRoom && IsAlive() && m_bInSpawnRoom && m_fLastRespawn + classSwitchTime > gpGlobals->curtime) {
+		if (m_bInSpawnRoom 
+				&& IsAlive() 
+				&& GetHealth() == 100
+				&& HasLoadedWeapon()
+				&& m_fLastRespawn + classSwitchTime > gpGlobals->curtime) {
 			m_bDontRemoveTicket = true;
 			//Msg("Doing early spawn!\n");
 			Spawn();

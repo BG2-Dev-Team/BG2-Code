@@ -87,6 +87,7 @@ public:
 
 	int		GetClass(void)	const		{ return m_iClass; }
 	int		GetCurrentAmmoKit(void)const{ return m_iCurrentAmmoKit; }
+	bool	PlayerMayJoinTeam(int iTeam) const;
 
 	//return the player's speed based on whether which class we are, which weapon kit we're using etc.
 	int		GetCurrentSpeed(void) const;
@@ -112,6 +113,7 @@ public:
 	void			OnRallyEffectEnable(); //FOV change, any sounds, etc.
 	void			OnRallyEffectDisable();
 
+	bool			HasLoadedWeapon() const;
 public: //BG2 had these private, Valve had them public? - Awesome
 	HL2MPPlayerState State_Get() const;
 

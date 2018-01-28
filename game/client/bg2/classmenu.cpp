@@ -48,10 +48,13 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+
+#if OLD_CLASSMENU
 extern IGameUIFuncs *gameuifuncs; // for key binding details
 
 ConVar cl_quickjoin( "cl_quickjoin", "0", FCVAR_ARCHIVE, "Automatically join the game after choosing a class, spawing with the default weapon kit.");
 extern ConVar cl_classmenu_sounds;
+ConVar cl_classmenu_sounds("cl_classmenu_sounds", "1", FCVAR_ARCHIVE, "Enable sounds in the team/kit selection menu.");
 
 #define CVAR_FLAGS	( FCVAR_ARCHIVE | FCVAR_USERINFO )
 
@@ -487,7 +490,7 @@ void CClassMenu::ShowFile( const char *filename )
 void CClassMenu::Paint( void )
 {
 	BaseClass::Paint();
-
+	
 	int wide, tall;
 	GetSize( wide, tall );
 	vgui::IImage *m_pImage;
@@ -1731,3 +1734,4 @@ void PlaySound( const char *m_szSound )
 	CLocalPlayerFilter filter;
 	C_BaseEntity::EmitSound( filter, SOUND_FROM_LOCAL_PLAYER, m_szSound );
 }
+#endif

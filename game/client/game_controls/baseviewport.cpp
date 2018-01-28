@@ -42,7 +42,9 @@
 #include "NavProgress.h"
 #include "commentary_modelviewer.h"
 //BG2 - Tjoppen - class selection menu
-#include "bg2/classmenu.h"
+//#include "bg2/classmenu.h"
+#include "bg3_classmenu.h"
+#include "bg3/bg3_teammenu.h"
 //#include "bg2/teammenu2.h"
 #include "bg2/commmenu.h"
 #include "bg2/commmenu2.h"
@@ -250,6 +252,7 @@ void CBaseViewport::CreateDefaultPanels( void )
 	AddNewPanel( CreatePanelByName( PANEL_NAV_PROGRESS ), "PANEL_NAV_PROGRESS" );
 	//BG2 - Tjoppen - class selection menu
 	AddNewPanel(CreatePanelByName(PANEL_CLASSES), "PANEL_CLASSES");
+	AddNewPanel(CreatePanelByName(PANEL_TEAMS), "PANEL_TEAMS");
 	AddNewPanel(CreatePanelByName(PANEL_COMM), "PANEL_COMM");
 	AddNewPanel(CreatePanelByName(PANEL_COMM2), "PANEL_COMM2");
 	//
@@ -318,12 +321,12 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	//BG2 - Tjoppen - class selection menu
 	else if (Q_strcmp(PANEL_CLASSES, szPanelName) == 0)
 	{
-		newpanel = new CClassMenu(this);
+		newpanel = new CClassMenu(this->GetVPanel());
 	}
-	/*else if ( Q_strcmp(PANEL_TEAMS, szPanelName) == 0 )
+	else if ( Q_strcmp(PANEL_TEAMS, szPanelName) == 0 )
 	{
-	newpanel = new CTeamMenu2( this );
-	}*/
+	newpanel = new CTeamMenu( this->GetVPanel() );
+	}
 	else if (Q_strcmp(PANEL_COMM, szPanelName) == 0)
 	{
 		newpanel = new CCommMenu(this);

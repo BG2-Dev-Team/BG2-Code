@@ -29,6 +29,8 @@
 
 #include "hl2mp_gamerules.h" // BG2 - VisualMelon - moved from classmenu.cpp so we can get the ammo counts
 
+#define OLD_CLASSMENU 0
+#if OLD_CLASSMENU
 class KeyValues;
 
 namespace vgui
@@ -475,4 +477,5 @@ public:
 
 extern void PlaySound( const char *m_szSound );
 
+#endif
 #endif // CLASSMENU_H

@@ -173,7 +173,7 @@ class CHudBG2 : public CHudElement, public vgui::Panel
 public:
 	CHudBG2( const char *pElementName );
 	void Init( void );
-	void VidInit( void );
+	void VidInit( void ) override;
 	virtual bool ShouldDraw( void );
 	virtual void Paint( void );
 	virtual void ApplySettings(KeyValues *inResourceData);

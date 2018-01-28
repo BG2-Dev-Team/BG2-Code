@@ -18,12 +18,19 @@
 #include "game_controls/vguitextwindow.h"
 #include "../bg3/bg3_hint.h"
 #include "../../shared/bg3/Math/bg3_rand.h"
+#include "bg3/vgui/fancy_button.h"
+#include "bg3/vgui/bg3_fonts.h"
+#include "bg3/bg3_teammenu.h"
 
 using namespace vgui;
+using namespace NMenuSounds;
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 const int buttonstarty=30;
+
+class CMainMenu;
+CMainMenu* g_pMainMenu = nullptr;
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays the logo panel
@@ -41,6 +48,14 @@ public:
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme )
 	{
 		BaseClass::ApplySchemeSettings( pScheme );
+
+#define set(a) a->SetFont(GetDefaultBG3FontScaled(pScheme, a))
+		set(m_pButtonBegin);
+		set(m_pButtonCreateDisconnect);
+		set(m_pButtonOptions);
+		set(m_pButtonSave);
+		set(m_pButtonLeave);
+#undef set
 	}
  
 	// The panel background image should be square, not rounded.
@@ -68,15 +83,14 @@ public:
 		//int verx;
 		//verx = 296;
 		x = 270;
-		vgui::ImagePanel *imgarr[narr];
-		vgui::Button *buttarr[narr];
+		vgui::FancyButton *buttarr[narr];
 		int width = this->GetWide();
 		
-		imgarr[0] = m_pImgBegin;
+		/*imgarr[0] = m_pImgBegin;
 		imgarr[1] = m_pImgCreateDisconnect;
 		imgarr[2] = m_pImgSave;
 		imgarr[3] = m_pImgOptions;
-		imgarr[4] = m_pImgLeave;
+		imgarr[4] = m_pImgLeave;*/
 		buttarr[0] = m_pButtonBegin;
 		buttarr[1] = m_pButtonCreateDisconnect;
 		buttarr[2] = m_pButtonSave;
@@ -93,40 +107,9 @@ public:
 		int border = space / (2*narr);
 		for(int i = 0; i < narr; i++)
 		{
-			imgarr[i]->SetPos((border + (i * space) / narr + biWide * i), buttonstarty);
-			buttarr[i]->SetPos((border + (i * space) / narr + biWide * i), buttonstarty);
-			imgarr[i]->SetSize(biWide, biTall);
-			buttarr[i]->SetSize(biWide, biTall);
+			buttarr[i]->SetPosAll((border + (i * space) / narr + biWide * i), buttonstarty);
+			buttarr[i]->SetSizeAll(biWide, biTall);
 		}
-		
-		//community->SetPos((width-community->GetWide())/2, 270); //melon
-		/*m_pImgBegin->SetPos(x,200);
-		m_pButtonBegin->SetPos(x,200);
-		x = x +verx;
-		m_pButtonCreateDisconnect->SetPos(x,200);
-		m_pImgCreateDisconnect->SetPos(x,200);
-		x = x +verx;
-		m_pImgOptions->SetPos(x,200);
-		m_pButtonOptions->SetPos(x,200);
-		x = x +verx;
-		m_pButtonSave->SetPos(x,200);
-		m_pImgSave->SetPos(x,200);
-		x = x +verx;
-		m_pButtonLeave->SetPos(x,200);
-		m_pImgLeave->SetPos(x, 200);*/
- 
-		//m_pImgSave->SetVisible(false);
-		//m_pButtonSave->SetVisible(false);
- 
-		//m_pImgCreateDisconnect->SetVisible(false);
-		//m_pButtonCreateDisconnect->SetVisible(false);
-
-		//melon
-		//m_pImgBegin->SetSize(256, 64);
-		//m_pImgCreateDisconnect->SetSize(256, 64);
-		//m_pImgSave->SetSize(256, 64);
-		//m_pImgOptions->SetSize(256, 64);
-		//m_pImgLeave->SetSize(256, 64);
 
 		InRolloverBegin=false;
 		InRolloverCreateDisconnect=false;
@@ -145,6 +128,7 @@ public:
  
 	virtual void OnThink()
 	{
+		//Warning("Performing main menu layout!\n");
 		// In-game, everything will be in different places than at the root menu!
 		if (InGame() && !InGameLayout) {
 			m_pButtonCreateDisconnect->SetCommand("Disconnect");
@@ -166,11 +150,16 @@ public:
  
 		GetPos(fx,fy);
  
-		CheckRolloverBegin(x,y,fx,fy);
+		if (InGame())
+			m_pButtonCreateDisconnect->SetText("#BG3_Main_Disconnect");
+		else
+			m_pButtonCreateDisconnect->SetText("#BG3_Main_Create_Server");
+
+		/*CheckRolloverBegin(x,y,fx,fy);
 		CheckRolloverCreateDisconnect(x,y,fx,fy);
 		CheckRolloverSave(x,y,fx,fy);
 		CheckRolloverOptions(x,y,fx,fy);
-		CheckRolloverLeave(x,y,fx,fy);
+		CheckRolloverLeave(x,y,fx,fy);*/
 
 		InGameLayout = InGame();
  
@@ -191,12 +180,12 @@ public:
 		if ((x > bx && x < bx+bw) && (y > by && y < by+bh))
 		{
 			if(!InRolloverBegin) {
-				m_pImgBegin->SetImage("find_server_over");
+				//m_pImgBegin->SetImage("find_server_over");
 				InRolloverBegin = true;
 			}
 		} else {
 			if(InRolloverBegin) {
-				m_pImgBegin->SetImage("find_server_normal");
+				//m_pImgBegin->SetImage("find_server_normal");
 				InRolloverBegin = false;
 			}
 		}
@@ -219,17 +208,17 @@ public:
 			{
 				if (!InRolloverCreateDisconnect || InGame() != InGameLayout) {
 					if (InGame())
-						m_pImgCreateDisconnect->SetImage("disconnect_over");
+						m_pButtonCreateDisconnect->SetText("#BG3_Main_Disconnect");
 					else
-						m_pImgCreateDisconnect->SetImage("new_game_over");
+						m_pButtonCreateDisconnect->SetImage("#BG3_Main_Create_Server");
 					InRolloverCreateDisconnect = true;
 				}
 			} else {
 				if (InRolloverCreateDisconnect || InGame() != InGameLayout) {
-					if (InGame())
-						m_pImgCreateDisconnect->SetImage("disconnect_normal");
+					/*if (InGame()
+						//m_pImgCreateDisconnect->SetImage("disconnect_normal");
 					else
-						m_pImgCreateDisconnect->SetImage("new_game_normal");
+						//m_pImgCreateDisconnect->SetImage("new_game_normal");*/
 					InRolloverCreateDisconnect = false;
 				}
 			}
@@ -250,12 +239,12 @@ public:
 			if ((x > bx && x < bx+bw) && (y > by && y < by+bh))
 			{
 				if(!InRolloverSave) {
-					m_pImgSave->SetImage("bg2options_over");
+					//m_pImgSave->SetImage("bg2options_over");
 					InRolloverSave = true;
 				}
 			} else {
 				if(InRolloverSave) {
-					m_pImgSave->SetImage("bg2options_normal");
+					//m_pImgSave->SetImage("bg2options_normal");
 					InRolloverSave = false;
 				}
 			}
@@ -275,12 +264,12 @@ public:
 		if ((x > bx && x < bx+bw) && (y > by && y < by+bh))
 		{
 			if(!InRolloverOptions) {
-				m_pImgOptions->SetImage("options_over");
+				//m_pImgOptions->SetImage("options_over");
 				InRolloverOptions = true;
 			}
 		} else {
 			if(InRolloverOptions) {
-				m_pImgOptions->SetImage("options_normal");
+				//m_pImgOptions->SetImage("options_normal");
 				InRolloverOptions = false;
 			}
 		}
@@ -299,12 +288,12 @@ public:
 		if ((x > bx && x < bx+bw) && (y > by && y < by+bh))
 		{
 			if(!InRolloverLeave) {
-				m_pImgLeave->SetImage("quit_over");
+				//m_pImgLeave->SetImage("quit_over");
 				InRolloverLeave = true;
 			}
 		} else {
 			if(InRolloverLeave) {
-				m_pImgLeave->SetImage("quit_normal");
+				//m_pImgLeave->SetImage("quit_normal");
 				InRolloverLeave = false;
 			}
 		}
@@ -322,16 +311,16 @@ public:
 	}
  
 private:
-	vgui::ImagePanel *m_pImgBegin;
-	vgui::ImagePanel *m_pImgCreateDisconnect;
-	vgui::ImagePanel *m_pImgSave;
-	vgui::ImagePanel *m_pImgOptions;
-	vgui::ImagePanel *m_pImgLeave;
-	vgui::Button *m_pButtonBegin;
-	vgui::Button *m_pButtonCreateDisconnect;
-	vgui::Button *m_pButtonSave;
-	vgui::Button *m_pButtonOptions;
-	vgui::Button *m_pButtonLeave;
+	//vgui::ImagePanel *m_pImgBegin;
+	//vgui::ImagePanel *m_pImgCreateDisconnect;
+	//vgui::ImagePanel *m_pImgSave;
+	//vgui::ImagePanel *m_pImgOptions;
+	//vgui::ImagePanel *m_pImgLeave;
+	vgui::FancyButton *m_pButtonBegin;
+	vgui::FancyButton *m_pButtonCreateDisconnect;
+	vgui::FancyButton *m_pButtonSave;
+	vgui::FancyButton *m_pButtonOptions;
+	vgui::FancyButton *m_pButtonLeave;
 	//CTextWindow *community; 
 	vgui::HTML *m_pCommunity;
 	//CTextWindow *m_pCommunity;
@@ -351,6 +340,8 @@ private:
 //-----------------------------------------------------------------------------
 CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 {
+	g_pMainMenu = this;
+
 	LoadControlSettings( "resource/UI/MainMenu.res" ); // Optional, don't need this
 
 	SetParent( parent );
@@ -373,76 +364,62 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	defaultY = 240; // y-coord for our position
 	//InGameLayout = false;
  
+	SetScheme("ClientScheme");
+
 	// Size of the panel
 	int wide,tall;
 	surface()->GetScreenSize( wide, tall );
 	SetSize(wide, tall);
- 
-	// Load invisi buttons
-        // Initialize images
 
-	m_pImgBegin = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Find Server"));
-	m_pImgCreateDisconnect = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Create Game"));
-	m_pImgOptions = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Options"));
-	m_pImgSave = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "BG2 Options"));
-	m_pImgLeave = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Leave"));
- 
+#define setup(a) \
+	a->SetSize(256, 64);\
+	a->SetContentAlignmentAll(Label::a_center);\
+	a->SetColorFrontTextHighlight(g_cBG3TextHighlightColor);\
+	a->SetColorFrontText(g_cBG3TextColor);\
+	a->SetImage("menu_icon"); \
+	a->SetHoverImage("menu_icon_dark");\
+	/*a->SetColorShadowText(g_cBG3TextShadowColor);*/ \
+	a->SetVisible(true); \
+	a->MakeReadyForUse();
+
+
 	// New game
- 
-	m_pButtonBegin = new vgui::Button(this, "btnFind", "");
+	m_pButtonBegin = new vgui::FancyButton(this, "btnFind", "");
 	m_pButtonBegin->AddActionSignalTarget( this );
-	m_pButtonBegin->SetSize(256, 64);
-	m_pButtonBegin->SetPaintBorderEnabled(false);
-	m_pButtonBegin->SetPaintEnabled(false);
+	setup(m_pButtonBegin);
 	m_pButtonBegin->SetCommand( "OpenServerBrowser" );
-	m_pImgBegin->SetImage("find_server_normal");
+	m_pButtonBegin->SetText("#BG3_Main_Find_Server");
  
 	// Create / Disconnect
-	m_pButtonCreateDisconnect = vgui::SETUP_PANEL(new vgui::Button(this, "btnCreate", ""));	
-	m_pButtonCreateDisconnect->SetSize(256, 64);
-	m_pButtonCreateDisconnect->SetPaintBorderEnabled(false);
-	m_pButtonCreateDisconnect->SetPaintEnabled(false);
+	m_pButtonCreateDisconnect = vgui::SETUP_PANEL(new vgui::FancyButton(this, "btnCreate", ""));	
+	setup(m_pButtonCreateDisconnect);
 	m_pButtonCreateDisconnect->SetCommand( "OpenCreateMultiplayerGameDialog" );
-	m_pImgCreateDisconnect->SetImage("new_game_normal");
+	m_pButtonCreateDisconnect->SetText("#BG3_Main_Create_Server");
  
 	// Save
-	m_pButtonSave = vgui::SETUP_PANEL(new vgui::Button(this, "btnBG2", ""));
-	m_pButtonSave->SetSize(256, 64);
-	m_pButtonSave->SetPaintBorderEnabled(false);
-	m_pButtonSave->SetPaintEnabled(false);
+	m_pButtonSave = vgui::SETUP_PANEL(new vgui::FancyButton(this, "btnBG2", ""));
+	setup(m_pButtonSave);
 	m_pButtonSave->SetCommand("OpenBG2OptionsDialog");
-	m_pImgSave->SetImage("bg2options_normal");
+	m_pButtonSave->SetText("#BG3_Main_BG3_Options");
  
 	// Options
-	m_pButtonOptions = vgui::SETUP_PANEL(new vgui::Button(this, "btnOptions", ""));
-	m_pButtonOptions->SetSize(256, 64);
-	m_pButtonOptions->SetPaintBorderEnabled(false);
-	m_pButtonOptions->SetPaintEnabled(false);
+	m_pButtonOptions = vgui::SETUP_PANEL(new vgui::FancyButton(this, "btnOptions", ""));
+	setup(m_pButtonOptions);
 	m_pButtonOptions->SetCommand( "OpenOptionsDialog" );
-	m_pImgOptions->SetImage("options_normal");
- 
+	m_pButtonOptions->SetText("#BG3_Main_Options");
+
 	// Leave
-	m_pButtonLeave = vgui::SETUP_PANEL(new vgui::Button(this, "btnLeave", "Exit"));
-	m_pButtonLeave->SetSize(256, 64);
-	m_pButtonLeave->SetPaintBorderEnabled(false);
-	m_pButtonLeave->SetPaintEnabled(false);
+	m_pButtonLeave = vgui::SETUP_PANEL(new vgui::FancyButton(this, "btnLeave", "Exit"));
+	setup(m_pButtonLeave);
 	m_pButtonLeave->SetCommand( "Quit" );
-	m_pImgLeave->SetImage("quit_normal");
-	
-	// community
-	//CBaseViewport* pViewPort = dynamic_cast<CBaseViewport *>( g_pClientMode->GetViewport() );
-	//community = new CTextWindow(pViewPort);
-	//community->SetVisible(false);
-	//community->MoveToFront();
-	//community->MakeReadyForUse();
-	//community->ShowText("Loading...");
-	//community->ShowURL("http://www.bg2mod.com/");
+	m_pButtonLeave->SetText("#BG3_Main_Quit");
+#undef setup
 	
 	m_pCommunity = vgui::SETUP_PANEL(new vgui::HTML(this, "CommunityHTML"));
 
 	PerformDefaultLayout();
 
-	m_pCommunity->OpenURL("http://www.bg2mod.com/", NULL);
+	m_pCommunity->OpenURL("https://battlegrounds3.com/team/", NULL);
 	m_pCommunity->SetVisible(true);
 }
  
@@ -524,8 +501,3 @@ public:
  
 static CSMenu g_SMenu;
 ISMenu *SMenu = ( ISMenu * )&g_SMenu;
-
-/*CON_COMMAND(steamoverlay, "Opens the steam overlay\n") {
-	CSteamID id = SteamClient()->GetISteamUser(GetHSteamUser(), GetHSteamPipe(), STEAMUSER_INTERFACE_VERSION)->GetSteamID();
-	SteamClient()->GetISteamFriends(GetHSteamUser(), GetHSteamPipe(), STEAMFRIENDS_INTERFACE_VERSION)->ActivateGameOverlayToUser("Friends", id);
-}*/

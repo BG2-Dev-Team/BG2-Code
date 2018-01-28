@@ -64,6 +64,9 @@
     <Filter Include="VPC Scripts">
       <UniqueIdentifier>{A40EE377-781A-C6B9-0C7C-B3BE118D248E}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\BG3\vgui">
+      <UniqueIdentifier>{139cfeec-8f65-4718-9fe9-430d3f9e5068}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\bitmap.lib">
@@ -1898,9 +1901,6 @@
     <ClInclude Include="bg3\bg3_hud_compass.h">
       <Filter>Source Files\BG3</Filter>
     </ClInclude>
-    <ClInclude Include="bg3\bg3_localkit.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\game\shared\bg3\bg3_player_shared.h">
       <Filter>Source Files\BG3</Filter>
     </ClInclude>
@@ -2026,6 +2026,15 @@
     </ClInclude>
     <ClInclude Include="toolframework_client.h">
       <Filter>Tool Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3_classmenu.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\vgui\fancy_button.h">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\vgui\bg3_fonts.h">
+      <Filter>Source Files\BG3\vgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -3133,9 +3142,6 @@
     <ClCompile Include="bg3\bg3_hud_compass.cpp">
       <Filter>Source Files\BG3</Filter>
     </ClCompile>
-    <ClCompile Include="bg3\bg3_teammenu.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\game\shared\bg3\bg3_weapon_def.cpp">
       <Filter>Source Files\BG3</Filter>
     </ClCompile>
@@ -3663,6 +3669,18 @@
     </ClCompile>
     <ClCompile Include="toolframework_client.cpp">
       <Filter>Tool Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_teammenu.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_classmenu.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\vgui\fancy_button.cpp">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\vgui\bg3_fonts.cpp">
+      <Filter>Source Files\BG3\vgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

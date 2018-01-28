@@ -44,6 +44,8 @@ commented on the following form:
 
 #endif 
 
+#define SIGNOF(a) ((a) < 0 ? -1 : 1)
+
 //Length of vector between two entities
 vec_t EntDist(const CBaseEntity& ent1, const CBaseEntity& ent2);
 
@@ -70,11 +72,21 @@ typedef float rad_t;
 * to the player's view angles. Returned results are from the unit circle, such
 * that a result of 0 is to the right of the player. pi/2 is forward, pi is left,
 * 3pi/2 is behind, etc.
+* One version is for where the vector is a displacement from the player,
+* and the other is for where the vector is an absolute world location
 ************************************************************************************/
-rad_t VectorAngleFromPlayer(CBasePlayer* pPlayer, const Vector& vWorldLocation);
+rad_t VectorAngleFromPlayerRelative(CBasePlayer* pPlayer, const Vector& vOffset);
+inline rad_t VectorAngleFromPlayer(CBasePlayer* pPlayer, const Vector& vWorldLocation) {
+	Vector offset = vWorldLocation - pPlayer->GetAbsOrigin(); 
+	return VectorAngleFromPlayerRelative(pPlayer, offset);
+}
 
 /*
 Given a sin and cos, returns the actual angle, in radians
 */
 rad_t AngleFromSinCos(float sin, float cos);
+
+//Calculates the number of radians between two angles, catching border cases
+//angle is from r1 to r2, so negative return possible
+rad_t AngleDiffRad(rad_t r1, rad_t r2);
 #endif //BG3_MATH

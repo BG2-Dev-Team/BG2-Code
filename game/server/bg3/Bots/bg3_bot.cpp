@@ -340,6 +340,7 @@ void CSDKBot::Think() {
 		ThinkMsg("Check...\n");
 		if ((this->*(m_pCurThinker->m_pThinkCheck))()) {
 			ThinkMsgF("Think...", m_pCurThinker->m_ppszThinkerName);
+			//wonderful syntax here right?
 			(this->*(m_pCurThinker->m_pThink))();
 			m_flNextThink = gpGlobals->curtime + m_pCurThinker->m_flThinkDelay;
 		} else {

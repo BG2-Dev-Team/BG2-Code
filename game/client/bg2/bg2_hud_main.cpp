@@ -30,6 +30,8 @@
 #include "engine/IEngineSound.h"
 #include "../shared/bg2/weapon_bg2base.h"
 #include "bg2_hud_main.h"
+
+#include "bg3/bg3_hud_compass.h"
 //
 
 // hintbox header
@@ -200,6 +202,10 @@ void CHudBG2::ApplySettings(KeyValues *inResourceData)
 	GET(healthbasex); GET(healthbasey); GET(healthbasew); GET(healthbaseh);
 	GET(healthx);     GET(healthy);     GET(healthw);     GET(healthh);
 
+	/*NHudCompass::Init();
+	NHudCompass::SetSize(GET_COORD(compassw), GET_COORD(compassh));
+	NHudCompass::SetPos(GET_COORD(compassx), GET_COORD(compassy));*/
+
 	BaseClass::ApplySettings(inResourceData);
 }
 
@@ -256,6 +262,8 @@ void CHudBG2::VidInit( void )
 	m_BritStamina    = gHUD.GetIcon("hud_brit_stamina");
 	m_SwingometerRed = gHUD.GetIcon("hud_swingometer_red");
 	m_SwingometerBlue= gHUD.GetIcon("hud_swingometer_blue");
+
+	
 }
 
 //==============================================
@@ -573,6 +581,9 @@ void CHudBG2::Paint()
 	m_pLabelLMS->SetText( g_pVGuiLocalize->Find("#LMS") );
 	m_pLabelLMS->SizeToContents();
 	m_pLabelLMS->SetFgColor( ColourWhite );
+
+	//Paint compass
+	//NHudCompass::Paint();
 }
 
 //==============================================

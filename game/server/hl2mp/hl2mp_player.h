@@ -110,6 +110,7 @@ public:
 	void SetDefaultAmmoFull(bool bPlaySound = true);
 	bool HasDefaultAmmoFull(void);
 	bool IsAiming() const { return GetActiveWeapon() && GetActiveWeapon()->m_bIsIronsighted; }
+	bool HasLoadedWeapon() const;
 	void NoteWeaponFired( void );
 
 	void ResetAnimation( void );
@@ -182,6 +183,7 @@ public:
 	void		RemoveSelfFromFlags(void);	//BG2 - Tjoppen - do this whenever we die, change team or disconnect or anything similar
 	int			GetLimitTeamClass(int iTeam, int iClass);
 	bool		AttemptJoin(int iTeam, int iClass, const char *pClassName);
+	bool		PlayerMayJoinTeam(int iTeam) const;
 	const char* GetHitgroupPainSound(int hitgroup, int team);
 	void		HandleVoicecomm(int comm);
 

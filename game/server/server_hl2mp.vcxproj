@@ -849,6 +849,7 @@ exit 1
     <ClCompile Include="..\shared\bg3\Math\bg3_rand.cpp" />
     <ClCompile Include="bg3\bg3_line_spawn.cpp" />
     <ClCompile Include="bg3\bg3_scorepreserve.cpp" />
+    <ClCompile Include="bg3\bg3_spectele.cpp" />
     <ClCompile Include="bg3\bg3_triggers.cpp" />
     <ClCompile Include="bg3\Bots\bg3_bot_helpers.cpp" />
     <ClCompile Include="bg3\Bots\bg3_bot_influencer.cpp" />

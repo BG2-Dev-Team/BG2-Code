@@ -124,6 +124,7 @@ public:
 			m_bAltFiresUnderwater;
 
 	float	m_fHolsterTime;
+	float	m_flApproximateReloadTime; //approximate because the actual time used is based on the animation. These values need to be kept up-to-date with animation times
 
 	CWeaponDef(const char* pszWeaponName);
 

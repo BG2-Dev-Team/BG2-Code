@@ -39,7 +39,8 @@
 
 //BG2 - Tjoppen - #includes
 #include "vguicenterprint.h"
-#include "bg2/classmenu.h"
+#include "bg3_classmenu.h"
+#include "bg3/bg3_teammenu.h"
 #include "bg2/vgui_bg2_options.h"
 #include "hl2mp_gamerules.h"
 //
@@ -612,12 +613,8 @@ void TeamMenu(void)
 {
 	if (gViewPortInterface)
 	{
-		CClassMenu *panel = static_cast<CClassMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASSES));
-
-		if (!panel)
-			return;
-
-		panel->SetScreen(1, !panel->IsInTeamMenu());
+		g_pClassMenu->ShowPanel(false);
+		g_pTeamMenu->ShowPanel(!g_pClassMenu->IsVisible());
 
 		gViewPortInterface->ShowPanel(PANEL_COMM, false);
 		gViewPortInterface->ShowPanel(PANEL_COMM2, false);
@@ -628,18 +625,18 @@ void ClassMenu(void)
 {
 	if (gViewPortInterface)
 	{
-		CClassMenu *panel = static_cast<CClassMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASSES));
-
-		if (!panel)
+		if (!g_pClassMenu)
 			return;
 
-		panel->SetScreen(2, !panel->IsInClassMenu());
+		g_pTeamMenu->ShowPanel(false);
+		g_pClassMenu->ShowPanel(!g_pClassMenu->IsVisible());
+		//panel->SetScreen(2, !panel->IsInClassMenu());
 
 		gViewPortInterface->ShowPanel(PANEL_COMM, false);
 		gViewPortInterface->ShowPanel(PANEL_COMM2, false);
 	}
 }
-void WeaponMenu(void)
+/*void WeaponMenu(void)
 {
 	if (gViewPortInterface)
 	{
@@ -653,7 +650,7 @@ void WeaponMenu(void)
 		gViewPortInterface->ShowPanel(PANEL_COMM, false);
 		gViewPortInterface->ShowPanel(PANEL_COMM2, false);
 	}
-}
+}*/
 
 void CommMenu(void)
 {
@@ -666,6 +663,7 @@ void CommMenu(void)
 			panel->ShowPanel(!panel->IsVisible());
 		}
 
+		gViewPortInterface->ShowPanel(PANEL_TEAMS, false);
 		gViewPortInterface->ShowPanel(PANEL_CLASSES, false);
 		gViewPortInterface->ShowPanel(PANEL_COMM2, false);
 	}
@@ -684,6 +682,7 @@ void CommMenu2(void)
 			panel->ShowPanel(!panel->IsVisible());
 		}
 
+		gViewPortInterface->ShowPanel(PANEL_TEAMS, false);
 		gViewPortInterface->ShowPanel(PANEL_CLASSES, false);
 		gViewPortInterface->ShowPanel(PANEL_COMM, false);
 	}
@@ -1772,7 +1771,7 @@ static ConCommand togglescores("togglescores", ToggleScores);
 //BG2 - Tjoppen - make vgui stuff into proper commands that can be issued via console
 static ConCommand teammenu("teammenu", TeamMenu);
 static ConCommand classmenu("classmenu", ClassMenu);
-static ConCommand weaponmenu("weaponmenu", WeaponMenu);
+//static ConCommand weaponmenu("weaponmenu", WeaponMenu);
 static ConCommand commmenu(PANEL_COMM, CommMenu);
 static ConCommand commmenu2(PANEL_COMM2, CommMenu2);
 //

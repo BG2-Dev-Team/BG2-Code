@@ -45,11 +45,27 @@ extern const char* g_ppszBritishPlayerModels[];
 extern const char* g_ppszAmericanPlayerModels[];
 
 class CGunKit {
+	friend class CPlayerClass;
 public:
 	char*	m_pszWeaponName = nullptr;
 
 	bool	m_bAllowBuckshot = false;
 	bool	m_bAlwaysGive = false;
+
+#ifdef CLIENT_DLL
+	wchar*	GetLocalizedName() const { return m_pLocalizedName; }
+	wchar*	GetLocalizedDesc() const { return m_pLocalizedDesc; }
+
+public:
+	void	SetLocalizedName(const char* pszToken) { m_pszLocalizedNameOverride = pszToken; }
+	void	SetLocalizedDesc(const char* pszToken) { m_pszLocalizedDescOverride = pszToken; }
+
+private:
+	mutable const char* m_pszLocalizedNameOverride = nullptr;
+	mutable const char* m_pszLocalizedDescOverride = nullptr;
+	mutable wchar*	m_pLocalizedName;
+	mutable wchar*	m_pLocalizedDesc;
+#endif
 };
 
 /*
@@ -78,7 +94,7 @@ public:
 	const char* m_pszSecondaryAmmo = nullptr;
 	int			m_iDefaultSecondaryAmmoCount = 0;
 
-#define NUM_POSSIBLE_WEAPON_KITS 4
+#define NUM_POSSIBLE_WEAPON_KITS 3
 	CGunKit		m_aWeapons[NUM_POSSIBLE_WEAPON_KITS];
 
 	int			m_iSkinDepth = 1; //how many skin variations per uniform
@@ -93,9 +109,41 @@ public:
 	inline bool isAmerican() const { return m_iDefaultTeam == TEAM_AMERICANS; }
 	inline bool isBritish() const { return m_iDefaultTeam == TEAM_BRITISH; }
 
-	int			numChooseableWeapons() const;
+	int					numChooseableWeapons() const;
+	const CWeaponDef*	getWeaponDef(byte iWeapon) const;
+	void				getWeaponDef(byte iWeapon, const CWeaponDef** ppPrimary, const CWeaponDef** ppSecondary, const CWeaponDef** ppTertiary) const;
+	const CGunKit*		getWeaponKitChooseable(byte iWeapon) const; //indexes choosable weapons, skipping over non-choosable ones.
+
+	EClassAvailability availabilityForPlayer(const CBasePlayer* pPlayer) const; //player can be null
+
 #ifdef CLIENT_DLL
-	bool shouldHaveWeaponSelectionMenu() const;
+	bool		shouldHaveWeaponSelectionMenu() const;
+
+	//Might as well store the menu-related items here instead of making separate data structures.
+	//With this, each class will remember its last selected gun, ammo, and uniform kits.
+private:
+	mutable ConVar* m_pcvWeapon = nullptr;
+	mutable ConVar* m_pcvAmmo = nullptr;
+	mutable ConVar* m_pcvUniform = nullptr;
+public:
+	//It's a bit wierd to see these as const functions, but it's okay because they aren't actually changing the stats of the class.
+	void SetDefaultWeapon	(byte iWeapon)	const; //0-based
+	void SetDefaultAmmo	(byte iAmmo)		const; //0-based
+	void SetDefaultUniform	(byte iUniform) const; //0-based
+	byte GetDefaultWeapon	(void)			const { return m_pcvWeapon->GetInt(); }
+	byte GetDefaultAmmo	(void)				const { return m_pcvAmmo->GetInt(); }
+	byte GetDefaultUniform (void)			const { return m_pcvUniform->GetInt(); }
+
+	//This function links all classes to external data stored in ConVars and localizer
+	//multi-call safe; the function will do nothing after the first call
+	static void InitClientRunTimeData(void);
+private:
+	static void InitPrevKitData();
+	static void Localize();
+
+public:
+	mutable const wchar* m_pLocalizedName;
+	mutable const wchar* m_pLocalizedDesc;
 #endif
 	static const CPlayerClass* fromNums(int iTeam, int iClass); //for backwards-compatability with old numbering system
 private:
@@ -107,7 +155,7 @@ public:
 	static int numClasses(); //teams count individually, so American Infantry and British Infantry are separate classes
 	static int numModelsForTeam(int iTeam);
 	inline static int numClassesForTeam(int iTeam) { return numModelsForTeam(iTeam); }
-	static const CPlayerClass** asList(); //retrieves a list of pointers to the classes
+	static const CPlayerClass* const * asList(); //retrieves a list of pointers to the classes
 
 };
 

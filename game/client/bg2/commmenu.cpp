@@ -27,7 +27,8 @@
 #include "IGameUIFuncs.h" // for key bindings
 
 //BG2 - HairyPotter
-#include "classmenu.h"
+//#include "classmenu.h"
+#include "bg3_classmenu.h"
 //
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -68,7 +69,7 @@ CCommBase::CCommBase() : Frame( NULL, PANEL_COMM )
 
 void CCommBase::OnKeyCodePressed(KeyCode code)
 {
-	CClassMenu *panel = static_cast<CClassMenu*>(gViewPortInterface->FindPanelByName( PANEL_CLASSES ) );
+	CClassMenu *panel = g_pClassMenu;
 
 	int iLastTrappedKey = code;	
 
@@ -81,21 +82,21 @@ void CCommBase::OnKeyCodePressed(KeyCode code)
 	else if( iLastTrappedKey == teammenu )
 	{
 		ShowPanel( false );
-		panel->SetScreen( 1, true );
+		panel->ShowPanel(true);
 
 		return;
 	}
 	else if( iLastTrappedKey == classmenu )
 	{
 		ShowPanel( false );
-		panel->SetScreen( 2, true );
+		panel->ShowPanel(true);
 
 		return;
 	}
 	else if( iLastTrappedKey == weaponmenu )
 	{
 		ShowPanel( false );
-		panel->SetScreen( 3, true );
+		panel->ShowPanel(true);
 
 		return;
 	}

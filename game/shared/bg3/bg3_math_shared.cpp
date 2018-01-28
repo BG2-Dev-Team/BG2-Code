@@ -34,7 +34,7 @@ commented on the following form:
 #include "cbase.h"
 #include "bg3_math_shared.h"
 
-#define SIGNOF(a) ((a) < 0 ? -1 : 1)
+
 
 vec_t EntDist(const CBaseEntity& ent1, const CBaseEntity& ent2) {
 	return (ent1.GetAbsOrigin() - ent2.GetAbsOrigin()).Length();
@@ -47,16 +47,15 @@ vec_t EntDist(const CBaseEntity& ent1, const CBaseEntity& ent2) {
 * that a result of 0 is to the right of the player. pi/2 is forward, pi is left,
 * 3pi/2 is behind, etc.
 ************************************************************************************/
-rad_t VectorAngleFromPlayer(CBasePlayer* pPlayer, const Vector& vWorldLocation) {
+rad_t VectorAngleFromPlayerRelative(CBasePlayer* pPlayer, const Vector& vOffset) {
 	Vector eyesright; {
 		AngleVectors(pPlayer->EyeAngles(), nullptr, &eyesright, nullptr);
 		eyesright.z = 0;
 		eyesright.NormalizeInPlace();
 	}
-	Vector offset = vWorldLocation - pPlayer->GetAbsOrigin(); {
-		offset.z = 0;
-		offset.NormalizeInPlace();
-	}
+	Vector offset = vOffset;
+	offset.z = 0;
+	offset.NormalizeInPlace();
 	
 	//because the vectors are unit vectors, the results of these are equivelant to sin and cos
 	float cos = DotProduct(eyesright, offset);
@@ -87,4 +86,20 @@ rad_t AngleFromSinCos(float sin, float cos) {
 		//quadrants 1 and 2
 		return acosf(cos);;
 	}
+}
+
+rad_t AngleDiffRad(rad_t r1, rad_t r2) {
+	//make both positive
+	while (SIGNOF(r1) < 0) r1 += 2 * M_PI_F;
+	while (SIGNOF(r2) < 0) r2 += 2 * M_PI_F;
+	//both are now between 0 and 2pi
+
+	//calc angle, then check for other direction
+	rad_t offset = r2 - r1;
+
+	if (offset > M_PI_F)
+		//negative direction instead
+		offset -= 2 * M_PI_F;
+
+	return offset;
 }
