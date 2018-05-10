@@ -35,6 +35,7 @@ namespace NClassQuota {
 	//---------------------------------------------------------------------
 #ifndef CLIENT_DLL
 	void CheckForForcedClassChange(CHL2MP_Player*);
+	void CheckBotSwitchClass(const CHL2MP_Player* pBot);
 #endif
 
 	void NotifyPlayerChangedTeamClass(const CHL2MP_Player*, const CPlayerClass* pNextClass, uint8 iNextTeam);

@@ -40,6 +40,14 @@ namespace NClassQuota {
 			pPlayer->SetNextClass(classCopy);
 		}
 	}
+
+	void CheckBotSwitchClass(const CHL2MP_Player* pBot) {
+		//look at g_qFutureBotClasses and g_qRemoveBotClasses
+		//to determine if a bot needs to switch classes
+		//use g_aInfiniteAmericanClasses or g_aInfiniteBritishClasses
+		//to identify a free class, if needed
+
+	}
 #endif
 
 	void NotifyPlayerChangedTeamClass(const CHL2MP_Player* pPlayer, const CPlayerClass* pNextClass, uint8 iNextTeam) {
