@@ -43,7 +43,7 @@
 #include "commentary_modelviewer.h"
 //BG2 - Tjoppen - class selection menu
 //#include "bg2/classmenu.h"
-#include "bg3_classmenu.h"
+#include "bg3/bg3_classmenu.h"
 #include "bg3/bg3_teammenu.h"
 //#include "bg2/teammenu2.h"
 #include "bg2/commmenu.h"

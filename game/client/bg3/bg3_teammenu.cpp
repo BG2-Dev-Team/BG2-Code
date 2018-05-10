@@ -74,6 +74,7 @@ commented on the following form:
 #include "bg3_teammenu.h"
 #include "bg3_classmenu.h"
 #include "../shared/bg3/Math/bg3_rand.h"
+#include "../shared/bg3/bg3_class_quota.h"
 #include "bg3/vgui/bg3_fonts.h"
 
 
@@ -137,7 +138,7 @@ void CTeamButton::PerformCommand() {
 void CTeamButton::UpdateGameRulesData() {
 	C_HL2MP_Player* pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
 	if (pPlayer) {
-		m_bEnabled = pPlayer->PlayerMayJoinTeam(m_iTeam);
+		m_bEnabled = NClassQuota::PlayerMayJoinTeam(pPlayer, m_iTeam);
 	}
 }
 
@@ -146,6 +147,7 @@ void CTeamButton::UpdateGameRulesData() {
 //--------------------------------------------------------------------------------------------
 void CSpectateButton::ApplySchemeSettings(IScheme* pScheme) {
 	BaseClass::ApplySchemeSettings(pScheme);
+
 
 	SetPaintBorderEnabled(false);
 }

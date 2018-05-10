@@ -2227,60 +2227,6 @@ void CHL2MPRules::CheckTicketDrain(void)
 }
 #endif
 
-int CHL2MPRules::GetLimitTeamClass(int iTeam, int iClass)
-{
-	//just get it from the class itself!
-	const CPlayerClass* pClass = CPlayerClass::fromNums(iTeam, iClass);
-	return CPlayerClass::getClassLimit(pClass);
-
-	//mp_limit_<inf/off/rif>_<a/b>_<sml/med/lrg> - mp_limit_inf_a_sml
-
-	//count players - is there a better way? this looks stupid
-	/*int num = 0;
-	for (int x = 1; x <= gpGlobals->maxClients; x++)
-		if (UTIL_PlayerByIndex(x))
-			num++;
-
-	//BG2 - Tjoppen - more macro goodness
-#define LIMIT_SWITCH( size )\
-	switch( iTeam ){\
-	case TEAM_AMERICANS:\
-		switch( iClass ){\
-		case CLASS_INFANTRY: return mp_limit_inf_a_##size.GetInt();\
-		case CLASS_OFFICER: return mp_limit_off_a_##size.GetInt();\
-		case CLASS_SNIPER: return mp_limit_rif_a_##size.GetInt();\
-		case CLASS_SKIRMISHER: return mp_limit_ski_a_##size.GetInt();\
-		case CLASS_LIGHT_INFANTRY: return mp_limit_linf_a_##size.GetInt();\
-		case CLASS_GRENADIER: return mp_limit_gre_a_##size.GetInt();\
-		default: return -1;}\
-	case TEAM_BRITISH:\
-		switch( iClass ){\
-		case CLASS_INFANTRY: return mp_limit_inf_b_##size.GetInt();\
-		case CLASS_OFFICER: return mp_limit_off_b_##size.GetInt();\
-		case CLASS_SNIPER: return mp_limit_rif_b_##size.GetInt();\
-		case CLASS_SKIRMISHER: return mp_limit_ski_b_##size.GetInt();\
-		case CLASS_LIGHT_INFANTRY: return mp_limit_linf_b_##size.GetInt();\
-		case CLASS_GRENADIER: return mp_limit_gre_b_##size.GetInt();\
-		default: return -1;}\
-	default: return -1;}
-
-	if (num <= mp_limit_mapsize_low.GetInt())
-	{
-		//small
-		LIMIT_SWITCH(sml)
-	}
-	else if (num <= mp_limit_mapsize_high.GetInt())
-	{
-		//medium
-		LIMIT_SWITCH(med)
-	}
-	else
-	{
-		//large
-		LIMIT_SWITCH(lrg)
-	}*/
-}
-
 bool CHL2MPRules::UsingTickets()
 {
 	return mp_respawnstyle.GetInt() == 3 /*|| mp_respawnstyle.GetInt() == 4*/;

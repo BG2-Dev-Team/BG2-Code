@@ -23,7 +23,7 @@
 #include <vgui_controls/Button.h>
 
 #include <game/client/iviewport.h>
-#include "bg3_classmenu.h"
+#include "bg3/bg3_classmenu.h"
 #include "bg3/bg3_teammenu.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

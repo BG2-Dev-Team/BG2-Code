@@ -97,6 +97,7 @@ BotDifficulty BotDiffHard(5.f,		0.03f,	0.45f,		0.55f,		0.8f,	8.f,				0.40f);
 namespace BotThinkers{
 	BotThinker Waypoint	(&CSDKBot::ThinkWaypoint_Begin,		&CSDKBot::ThinkWaypoint_Check,	&CSDKBot::ThinkWaypoint,	&CSDKBot::ThinkWaypoint_End,	0.3f, "Waypoint Think");
 	BotThinker Flag		(&CSDKBot::ThinkFlag_Begin,			&CSDKBot::ThinkFlag_Check,		&CSDKBot::ThinkFlag,		&CSDKBot::ThinkFlag_End,		0.4f, "Flag Think");
+	DEF_THINKER(Follow, 0.18f);
 	BotThinker LongRange(&CSDKBot::ThinkLongRange_Begin,	&CSDKBot::ThinkLongRange_Check, &CSDKBot::ThinkLongRange,	&CSDKBot::ThinkLongRange_End,	0.4f, "Long Range Think");
 	BotThinker MedRange	(&CSDKBot::ThinkMedRange_Begin,		&CSDKBot::ThinkMedRange_Check,	&CSDKBot::ThinkMedRange,	&CSDKBot::ThinkMedRange_End,	0.18f, "Med Range Think");
 	BotThinker Melee	(&CSDKBot::ThinkMelee_Begin,		&CSDKBot::ThinkMelee_Check,		&CSDKBot::ThinkMelee,		&CSDKBot::ThinkMelee_End,		0.07f, "Melee Think");

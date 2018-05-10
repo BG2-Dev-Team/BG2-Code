@@ -28,7 +28,7 @@
 
 //BG2 - HairyPotter
 //#include "classmenu.h"
-#include "bg3_classmenu.h"
+#include "bg3/bg3_classmenu.h"
 //
 
 // memdbgon must be the last include file in a .cpp file!!!

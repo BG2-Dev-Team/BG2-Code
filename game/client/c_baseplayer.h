@@ -215,6 +215,7 @@ public:
 
 
 	bool						IsLocalPlayer( void ) const;
+	bool						IsFakeClient() const { return (GetFlags() & FL_FAKECLIENT) != 0; }
 
 	// Global/static methods
 	virtual void				ThirdPersonSwitch( bool bThirdperson );

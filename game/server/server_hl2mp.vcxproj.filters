@@ -1595,7 +1595,22 @@
     <ClInclude Include="..\..\game\shared\bg3\bg3_class.h">
       <Filter>Source Files\BG3</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\bg3_class_quota.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bg3_line_spawn.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\game\shared\bg3\bg3_player_shared.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bg3_scorepreserve.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bg3_triggers.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bg3_turret.h">
       <Filter>Source Files\BG3</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\bg3\bg3_weapon_def.h">
@@ -1605,6 +1620,12 @@
       <Filter>Source Files\BG3</Filter>
     </ClInclude>
     <ClInclude Include="bg3\Bots\bg3_bot.h">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\Bots\bg3_bot_debug.h">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\Bots\bg3_bot_influencer.h">
       <Filter>Source Files\BG3\Bots</Filter>
     </ClInclude>
     <ClInclude Include="bg3\Bots\bg3_bot_manager.h">
@@ -1620,6 +1641,9 @@
       <Filter>Source Files\BG3\Bots</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\bg3\bg3_math_shared.h">
+      <Filter>Source Files\BG3\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\Math\bg3_rand.h">
       <Filter>Source Files\BG3\Math</Filter>
     </ClInclude>
     <ClInclude Include="hl2\ai_behavior_functank.h">
@@ -1810,33 +1834,6 @@
     </ClInclude>
     <ClInclude Include="toolframework_server.h">
       <Filter>Tools Framework</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\bg3_scorepreserve.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\bg3_triggers.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\bg3_line_spawn.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\bots\bg3_bot_influencer.h">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\static_initialize.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3_turret.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\Math\bg3_rand.h">
-      <Filter>Source Files\BG3\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\Bots\bg3_bot_debug.h">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\bg3\bg3_class_quota.h">
-      <Filter>Source Files\BG3</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -2989,13 +2986,46 @@
     <ClCompile Include="..\..\game\shared\bg3\bg3_class.cpp">
       <Filter>Source Files\BG3</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg3\bg3_class_quota.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_gamerules_commands.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_line_spawn.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_scorepreserve.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_spectele.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_triggers.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_turret.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\game\shared\bg3\bg3_weapon_def.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\devtools.cpp">
       <Filter>Source Files\BG3</Filter>
     </ClCompile>
     <ClCompile Include="bg3\Bots\bg3_bot.cpp">
       <Filter>Source Files\BG3\Bots</Filter>
     </ClCompile>
     <ClCompile Include="bg3\Bots\bg3_bot_adder.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\Bots\bg3_bot_debug.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\Bots\bg3_bot_helpers.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\Bots\bg3_bot_influencer.cpp">
       <Filter>Source Files\BG3\Bots</Filter>
     </ClCompile>
     <ClCompile Include="bg3\Bots\bg3_bot_manager.cpp">
@@ -3011,6 +3041,9 @@
       <Filter>Source Files\BG3\Bots</Filter>
     </ClCompile>
     <ClCompile Include="..\..\game\shared\bg3\bg3_math_shared.cpp">
+      <Filter>Source Files\BG3\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg3\Math\bg3_rand.cpp">
       <Filter>Source Files\BG3\Math</Filter>
     </ClCompile>
     <ClCompile Include="hl2\ai_behavior_functank.cpp">
@@ -3420,42 +3453,6 @@
     </ClCompile>
     <ClCompile Include="toolframework_server.cpp">
       <Filter>Tools Framework</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\bg3_scorepreserve.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\bg3_triggers.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\bg3_line_spawn.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\Bots\bg3_bot_helpers.cpp">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\Bots\bg3_bot_influencer.cpp">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3_turret.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg3\Math\bg3_rand.cpp">
-      <Filter>Source Files\BG3\Math</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3_gamerules_commands.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\bg3_spectele.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\devtools.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\Bots\bg3_bot_debug.cpp">
-      <Filter>Source Files\BG3\Bots</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\bg3\bg3_class_quota.cpp">
-      <Filter>Source Files\BG3</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -121,8 +121,8 @@ static void BuffSpriteCreate(int nModelIndex, float scale, int officerIndex) {
 		}
 	}
 
-	tempents->TempSprite(m_vecOrigin, dir, m_fScale, m_nModelIndex, kRenderTransAdd, 0, a, 0, FTENT_SPRANIMATE);
-	RecordSprite(m_vecOrigin, m_nModelIndex, m_fScale, m_nBrightness, m_iPlayerIndex);
+	//tempents->TempSprite(m_vecOrigin, dir, m_fScale, m_nModelIndex, kRenderTransAdd, 0, a, 0, FTENT_SPRANIMATE);
+	//RecordSprite(m_vecOrigin, m_nModelIndex, m_fScale, m_nBrightness, m_iPlayerIndex);
 }
 
 //-----------------------------------------------------------------------------

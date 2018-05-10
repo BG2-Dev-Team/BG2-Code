@@ -1,7 +1,11 @@
 #ifndef BG3_CLASS_QUOTA_H
 #define BG3_CLASS_QUOTA_H
 
+#ifndef CLIENT_DLL
 #include "hl2mp/hl2mp_player.h"
+#else
+#include "hl2mp/c_hl2mp_player.h"
+#endif
 
 //-------------------------------------------------------------------------
 // Controls & manages the limits for different classes.
@@ -29,7 +33,9 @@ namespace NClassQuota {
 	//---------------------------------------------------------------------
 	// Notifications/checks of external events
 	//---------------------------------------------------------------------
+#ifndef CLIENT_DLL
 	void CheckForForcedClassChange(CHL2MP_Player*);
+#endif
 
 	void NotifyPlayerChangedTeamClass(const CHL2MP_Player*, const CPlayerClass* pNextClass, uint8 iNextTeam);
 

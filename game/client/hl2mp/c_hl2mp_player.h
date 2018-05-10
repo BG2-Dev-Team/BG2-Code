@@ -87,7 +87,7 @@ public:
 
 	int		GetClass(void)	const		{ return m_iClass; }
 	int		GetCurrentAmmoKit(void)const{ return m_iCurrentAmmoKit; }
-	bool	PlayerMayJoinTeam(int iTeam) const;
+	//bool	PlayerMayJoinTeam(int iTeam) const;
 
 	//return the player's speed based on whether which class we are, which weapon kit we're using etc.
 	int		GetCurrentSpeed(void) const;

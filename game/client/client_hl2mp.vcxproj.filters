@@ -34,6 +34,9 @@
     <Filter Include="Source Files\BG3\Math">
       <UniqueIdentifier>{7F16E5FD-DE0A-D654-D59B-AD0A2D146211}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\BG3\vgui">
+      <UniqueIdentifier>{752DD3E3-0BB3-A468-39EC-AA20288CEC09}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\game_controls">
       <UniqueIdentifier>{1E7DB91A-DC0A-B17F-617D-4C4FB3FA7A3E}</UniqueIdentifier>
     </Filter>
@@ -63,9 +66,6 @@
     </Filter>
     <Filter Include="VPC Scripts">
       <UniqueIdentifier>{A40EE377-781A-C6B9-0C7C-B3BE118D248E}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\BG3\vgui">
-      <UniqueIdentifier>{139cfeec-8f65-4718-9fe9-430d3f9e5068}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1895,6 +1895,12 @@
     <ClInclude Include="..\..\game\shared\bg3\bg3_class.h">
       <Filter>Source Files\BG3</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\game\shared\bg3\bg3_class_quota.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\bg3_classmenu.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
     <ClInclude Include="bg3\bg3_hint.h">
       <Filter>Source Files\BG3</Filter>
     </ClInclude>
@@ -1918,6 +1924,24 @@
     </ClInclude>
     <ClInclude Include="..\..\game\shared\bg3\Math\bg3_rand.h">
       <Filter>Source Files\BG3\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\vgui\bg3_button_close.h">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\vgui\bg3_create_server_dialog.h">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\vgui\bg3_fonts.h">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\vgui\bg3_motd.h">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\vgui\fancy_button.h">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\vgui\timed_label.h">
+      <Filter>Source Files\BG3\vgui</Filter>
     </ClInclude>
     <ClInclude Include="game_controls\basemodel_panel.h">
       <Filter>Source Files\game_controls</Filter>
@@ -2026,30 +2050,6 @@
     </ClInclude>
     <ClInclude Include="toolframework_client.h">
       <Filter>Tool Framework</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3_classmenu.h">
-      <Filter>Source Files\BG3</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\vgui\fancy_button.h">
-      <Filter>Source Files\BG3\vgui</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\vgui\bg3_fonts.h">
-      <Filter>Source Files\BG3\vgui</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\vgui\bg3_motd.h">
-      <Filter>Source Files\BG3\vgui</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\vgui\timed_label.h">
-      <Filter>Source Files\BG3\vgui</Filter>
-    </ClInclude>
-    <ClInclude Include="c_te_buff_glow.cpp">
-      <Filter>Source Files\BG3\vgui</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\vgui\bg3_create_server_dialog.h">
-      <Filter>Source Files\BG3\vgui</Filter>
-    </ClInclude>
-    <ClInclude Include="bg3\vgui\bg3_button_close.h">
-      <Filter>Source Files\BG3\vgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -3148,6 +3148,12 @@
     <ClCompile Include="..\..\game\shared\bg3\bg3_class.cpp">
       <Filter>Source Files\BG3</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\game\shared\bg3\bg3_class_quota.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_classmenu.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
     <ClCompile Include="bg3\bg3_hint.cpp">
       <Filter>Source Files\BG3</Filter>
     </ClCompile>
@@ -3155,6 +3161,9 @@
       <Filter>Source Files\BG3</Filter>
     </ClCompile>
     <ClCompile Include="bg3\bg3_hud_compass.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\bg3_teammenu.cpp">
       <Filter>Source Files\BG3</Filter>
     </ClCompile>
     <ClCompile Include="..\..\game\shared\bg3\bg3_weapon_def.cpp">
@@ -3165,6 +3174,21 @@
     </ClCompile>
     <ClCompile Include="..\..\game\shared\bg3\Math\bg3_rand.cpp">
       <Filter>Source Files\BG3\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\vgui\bg3_button_close.cpp">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\vgui\bg3_create_server_dialog.cpp">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\vgui\bg3_fonts.cpp">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\vgui\bg3_motd.cpp">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\vgui\fancy_button.cpp">
+      <Filter>Source Files\BG3\vgui</Filter>
     </ClCompile>
     <ClCompile Include="game_controls\basemodel_panel.cpp">
       <Filter>Source Files\game_controls</Filter>
@@ -3684,27 +3708,6 @@
     </ClCompile>
     <ClCompile Include="toolframework_client.cpp">
       <Filter>Tool Framework</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\bg3_teammenu.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\bg3_classmenu.cpp">
-      <Filter>Source Files\BG3</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\vgui\fancy_button.cpp">
-      <Filter>Source Files\BG3\vgui</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\vgui\bg3_fonts.cpp">
-      <Filter>Source Files\BG3\vgui</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\vgui\bg3_motd.cpp">
-      <Filter>Source Files\BG3\vgui</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\vgui\bg3_create_server_dialog.cpp">
-      <Filter>Source Files\BG3\vgui</Filter>
-    </ClCompile>
-    <ClCompile Include="bg3\vgui\bg3_button_close.cpp">
-      <Filter>Source Files\BG3\vgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

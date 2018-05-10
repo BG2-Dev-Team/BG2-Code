@@ -49,7 +49,7 @@ commented on the following form:
 #include <vgui_controls/Button.h>
 
 #include <game/client/iviewport.h>
-#include "bg3_classmenu.h"
+#include "bg3/bg3_classmenu.h"
 #include "bg3/bg3_teammenu.h"
 #include "bg3_motd.h"
 

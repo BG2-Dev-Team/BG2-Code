@@ -28,7 +28,7 @@
 #include "../bg2/vgui_Panel_MainMenu.h"
 //BG2 - Tjoppen - options panel
 #include "../bg2/vgui_bg2_options.h"
-#include "bg3_classmenu.h"
+#include "bg3/bg3_classmenu.h"
 //
 /*class CBG2Version : public vgui::Panel
 {

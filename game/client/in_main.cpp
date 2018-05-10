@@ -39,7 +39,7 @@
 
 //BG2 - Tjoppen - #includes
 #include "vguicenterprint.h"
-#include "bg3_classmenu.h"
+#include "bg3/bg3_classmenu.h"
 #include "bg3/bg3_teammenu.h"
 #include "bg2/vgui_bg2_options.h"
 #include "hl2mp_gamerules.h"

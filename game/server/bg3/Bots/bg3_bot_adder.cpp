@@ -51,6 +51,7 @@ in separate files for bot communication, map navigation, etc.
 #include "hl2mp_player.h"
 #include "../bg2/flag.h"
 #include "../bg2/weapon_bg2base.h"
+#include "../shared/bg3/bg3_class_quota.h"
 
 //bot manager manages bot population
 #include "bg3_bot_manager.h"
@@ -248,7 +249,7 @@ void CSDKBot::Init(CBasePlayer* pPlayer, BotDifficulty* pDifficulty) {
 
 	else if (bot_limitclass.GetBool() && bot_forceclass.GetInt() < 0) //Just make sure we're not trying to force a class that has a limit.
 	{
-		int limit = HL2MPRules()->GetLimitTeamClass(g_iNextBotTeam, lastClass);
+		int limit = NClassQuota::GetLimitTeamClass(g_iNextBotTeam, lastClass);
 		if (limit >= 0 && g_Teams[g_iNextBotTeam]->GetNumOfNextClass(lastClass) >= limit)
 		{
 			Msg("Tried to spawn too much of class %i. Spawning as infantry. \n", lastClass);

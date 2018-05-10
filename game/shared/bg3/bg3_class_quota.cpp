@@ -1,7 +1,18 @@
 #include "cbase.h"
 #include "bg3_class_quota.h"
 #include "bg3_class.h"
+#include "hl2mp/hl2mp_gamerules.h"
+
+#ifndef CLIENT_DLL
 #include "team.h"
+#else
+#include "c_team.h"
+#endif
+
+extern ConVar mp_autobalanceteams;
+extern ConVar mp_autobalancetolerance;
+extern ConVar mp_limit_mapsize_low;
+extern ConVar mp_limit_mapsize_high;
 
 namespace NClassQuota {
 	static CUtlLinkedList<const CPlayerClass*> g_qFutureBotClasses;
@@ -11,6 +22,7 @@ namespace NClassQuota {
 	static CUtlLinkedList<const CPlayerClass*> g_aInfiniteBritishClasses;
 	inline static CUtlLinkedList<const CPlayerClass*>* InfiniteClassesForTeam(int iTeam) { return iTeam == TEAM_AMERICANS ? &g_aInfiniteAmericanClasses : &g_aInfiniteBritishClasses; }
 
+#ifndef CLIENT_DLL
 	void CheckForForcedClassChange(CHL2MP_Player* pPlayer) {
 		ConVar * pLimiter;
 		if (pPlayer->GetTeamNumber() == TEAM_AMERICANS)
@@ -28,6 +40,7 @@ namespace NClassQuota {
 			pPlayer->SetNextClass(classCopy);
 		}
 	}
+#endif
 
 	void NotifyPlayerChangedTeamClass(const CHL2MP_Player* pPlayer, const CPlayerClass* pNextClass, uint8 iNextTeam) {
 		//check if we need to decrement the population counter of the player's previous class
@@ -73,8 +86,7 @@ namespace NClassQuota {
 	int8 GetLimitForClass(const CPlayerClass* pClass) {
 		int numPlayers = HL2MPRules()->NumConnectedClients();
 
-		extern ConVar mp_limit_mapsize_low;
-		extern ConVar mp_limit_mapsize_high;
+
 		if (numPlayers <= mp_limit_mapsize_low.GetInt())
 			return pClass->GetLimitSml();
 		else if (numPlayers <= mp_limit_mapsize_high.GetInt())
@@ -84,8 +96,7 @@ namespace NClassQuota {
 	}
 
 	bool PlayerMayJoinTeam(const CBasePlayer* pPlayer, uint8 iTeam) {
-		extern ConVar mp_autobalanceteams;
-		extern ConVar mp_autobalancetolerance;
+		
 		//check so we don't ruin the team balance..
 		//BG2 - Tjoppen - don't bother with checking balance if we're just changing class, not team.
 		//					CHL2MPRules::Think() will make sure the teams are kept balanced.
@@ -131,6 +142,6 @@ namespace NClassQuota {
 	}
 
 	EClassAvailability PlayerMayJoinClass(const CHL2MP_Player* pPlayer, const CPlayerClass* pClass) {
-
+		return CLASS_FREE;
 	}
 }
