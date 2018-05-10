@@ -34,7 +34,10 @@ namespace NClassQuota {
 	// Notifications/checks of external events
 	//---------------------------------------------------------------------
 #ifndef CLIENT_DLL
+	//Checks if by linebattle rules, the player's whole team is switching to another class
 	void CheckForForcedClassChange(CHL2MP_Player*);
+
+	//Switches bot to another class if one is available
 	void CheckBotSwitchClass(const CHL2MP_Player* pBot);
 #endif
 
