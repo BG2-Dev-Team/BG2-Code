@@ -62,6 +62,7 @@ private:
 	DEC_EXECUTOR(Advance);
 	DEC_EXECUTOR(Halt);
 	DEC_EXECUTOR(Rally_Round);
+	DEC_EXECUTOR(Follow);
 
 	inline static bool ShouldIgnore(CSDKBot* pBot) { return pBot->m_pCurThinker == &BotThinkers::Retreat || pBot->m_pCurThinker == &BotThinkers::Melee; }
 

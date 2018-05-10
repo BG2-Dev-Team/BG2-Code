@@ -286,6 +286,12 @@ private:
 		}
 		else if(tr.m_pEnt && tr.m_pEnt != DAMAGE_NO)
 		{
+			//check friendly fire now
+			extern ConVar friendlyfire;
+			if (tr.m_pEnt->GetTeamNumber() == m_pOwner->GetTeamNumber()
+				&& !friendlyfire.GetBool())
+				return false;
+
 			//we hit something that can be damaged
 			//trace through arms
 			TraceThroughArms( &tr );

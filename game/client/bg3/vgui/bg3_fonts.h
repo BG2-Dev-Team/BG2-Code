@@ -40,14 +40,17 @@ commented on the following form:
 namespace vgui {
 	extern Color				g_cBG3TextColor;
 	extern Color				g_cBG3TextHighlightColor;
-
+	 
 	HFont GetDefaultBG3Font(IScheme* pScheme);
 
-	HFont GetDefaultBG3FontScaled(IScheme* pScheme, Label* pForLabel);
+	HFont GetDefaultBG3FontScaledHorizontal(IScheme* pScheme, Label* pForLabel);
+	HFont GetDefaultBG3FontScaledVertical(IScheme* pScheme, Label* pForLabel);
 
 	inline void SetDefaultBG3FontScaled(IScheme* pScheme, Label* pForLabel) {
-		pForLabel->SetFont(GetDefaultBG3FontScaled(pScheme, pForLabel));
+		pForLabel->SetFont(GetDefaultBG3FontScaledHorizontal(pScheme, pForLabel));
 	}
+
+	void MsgW(wchar* text);
 }
 
 #endif

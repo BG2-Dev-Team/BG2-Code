@@ -84,7 +84,7 @@ extern CBaseEntity	 *g_pLastRebelSpawn;*/
 #endif
 
 ConVar mp_autobalanceteams("mp_autobalanceteams", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_autobalancetolerance("mp_autobalancetolerance", "3", FCVAR_GAMEDLL | FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_autobalancetolerance("mp_autobalancetolerance", "2", FCVAR_GAMEDLL | FCVAR_NOTIFY | FCVAR_REPLICATED, "When the teams differ in size by this number or greater, autobalance is active.", true, 2, false, 0);
 
 //BG2 - Tjoppen - beautiful defines. you will see another one further down
 #ifdef CLIENT_DLL
@@ -130,7 +130,7 @@ ConVar mp_autobalancetolerance("mp_autobalancetolerance", "3", FCVAR_GAMEDLL | F
 extern ConVar mp_limit_mapsize_low;
 extern ConVar mp_limit_mapsize_high;
 
-ConVar mp_respawnstyle("mp_respawnstyle", "1", CVAR_FLAGS, "0 = regular dm, 1 = waves, 2 = rounds (LMS), 3 = rounds with tickets, 4 = LMS with linebattle extensions");
+ConVar mp_respawnstyle("mp_respawnstyle", "1", CVAR_FLAGS, "0 = regular dm, 1 = waves (skirmish), 2 = last man standing, 3 = ticket mode, 4 = LMS with linebattle extensions");
 ConVar mp_respawntime("mp_respawntime", "14", CVAR_FLAGS, "Time between waves, or the maximum length of the round with mp_respawnstyle 2");
 
 //For punishing officers who waste the buff during skirmish
@@ -138,7 +138,7 @@ ConVar mp_punish_bad_officer("mp_punish_bad_officer", "1", CVAR_FLAGS, "Whether 
 ConVar mp_punish_bad_officer_nextclass("mp_bad_officer_nextclass", "1", CVAR_FLAGS, "What class to auto-switch bad officers to. 1-6 is inf, off, sniper, skirm, linf, grenadier.");
 
 //ticket system
-ConVar mp_rounds("mp_rounds", "0", CVAR_FLAGS, "Maximum number of rounds - rounds are restarted until this");
+ConVar mp_rounds("mp_rounds", "0", CVAR_FLAGS, "Maximum number of rounds - rounds are restarted until this. A value of 0 deactivates the round system");
 ConVar mp_roundtime("mp_roundtime", "300", CVAR_FLAGS, "Maximum length of round");
 ConVar mp_tickets_a("mp_tickets_a", "100", CVAR_FLAGS, "Tickets given to americans on round start");
 ConVar mp_tickets_b("mp_tickets_b", "100", CVAR_FLAGS, "Tickets given to british on round start");
@@ -1341,7 +1341,7 @@ void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info
 							killer_weapon_name = pScorer->GetActiveWeapon()->GetDeathNoticeName();
 #endif
 					}
-					else if (info.GetDamageType() | DMG_SWIVEL_GUN) {
+					else if (info.GetDamageType() & DMG_SWIVEL_GUN) {
 						killer_weapon_name = "swivel_gun";
 					}
 				}
@@ -1488,7 +1488,7 @@ int CHL2MPRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget 
 const char *CHL2MPRules::GetGameDescription( void )
 { 
 	//BG2 - Tjoppen - our game descriptions - putting the current version number in these might be a good idea
-	return "Battle Grounds 3";
+	return "Battle Grounds III Beta DEV";
 	// 
 } 
 

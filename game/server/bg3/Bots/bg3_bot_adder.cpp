@@ -87,7 +87,7 @@ const char* g_ppszBotNames[] = {
 const char* g_ppszBotRareNames[] = {
 	"Karpinsky", "Allen", "Hale", "Revere", "Tallmadge", "Gates", "Morgan",
 	"Arnold", "Greene", "Howe", "Prescott", "Tarleton", "Klif", "Hawke", "Roob",
-	"Chris", "Esomewa"
+	"Chris", "Emosewa", "Fox"
 
 };
 
@@ -146,7 +146,7 @@ CBasePlayer *BotPutInServer(int iAmount, bool bFrozen)
 			Msg("Couldn't cast bot to player\n");
 			return NULL;
 		}
-
+		
 		//initialize the bot's AI, class, and team
 		CSDKBot::Init(pPlayer, pDifficulty);
 
@@ -228,6 +228,10 @@ void CSDKBot::Init(CBasePlayer* pPlayer, BotDifficulty* pDifficulty) {
 	//default to death thinker or else bad things happen!
 	curBot.m_pPrevThinker = &BotThinkers::Death;
 	curBot.m_pCurThinker = &BotThinkers::Death;
+	curBot.m_bLastThinkWasStateChange = false;
+	curBot.m_bLastThinkWasInFlag = false;
+
+	curBot.m_flLastFollowTime = FLT_MIN;
 
 	curBot.m_pDifficult = pDifficulty;
 	curBot.m_flNextThink = gpGlobals->curtime + 0.1f;
@@ -268,7 +272,7 @@ void CSDKBot::ResetAllBots() {
 	{
 		CSDKPlayer *pPlayer = UTIL_PlayerByIndex(i);// );
 
-		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
+		if (pPlayer && pPlayer->IsFakeClient())
 		{
 			CSDKBot *pBot = ToBot(pPlayer);
 			if (pBot) //Do most of the "filtering" here.

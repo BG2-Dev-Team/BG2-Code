@@ -101,6 +101,7 @@ namespace BotThinkers {
 	extern BotThinker PointBlank;
 	extern BotThinker MedRange;
 	extern BotThinker LongRange;
+	extern BotThinker Follow;
 }
 
 
@@ -175,6 +176,8 @@ public:
 
 	CSDKPlayer		*m_pPlayer;
 	CBaseCombatWeapon	*m_pWeapon;
+	EHANDLE			m_hFollowedPlayer;
+	float			m_flLastFollowTime;
 	float			m_flMeleeRange; //calculated whenever spawned
 	float			m_flAdjustedMeleeRange; //calculated whenever spawned
 
@@ -233,6 +236,7 @@ public:
 	bool ThinkCheckFlagOrFight(); //In mid-range combat, checks if we should fight or run to flag
 	bool ThinkCheckEnterLongRangeCombat();
 	bool ThinkCheckEnterMedRangeCombat();
+	bool ThinkCheckStopFollow();
 	bool ThinkCheckExitCombat();
 
 	static const int LONG_RANGE_START = 1680;
@@ -302,6 +306,10 @@ public:
 	bool ThinkDeath(); //do nothing
 	bool ThinkDeath_End(); //do spawn-related stuff here
 
+	bool ThinkFollow_Begin(); //stop updating flags, reset next follow time
+	bool ThinkFollow_Check(); //does our followed player still exist and still alive? Have we followed long enough?
+	bool ThinkFollow(); //follow player, shoot sometimes
+	bool ThinkFollow_End();
 };
 
 extern CSDKBot	gBots[MAX_PLAYERS];
@@ -311,7 +319,7 @@ extern int g_iWaitingAmount;
 // If iTeam or iClass is -1, then a team or class is randomly chosen.
 CBasePlayer *BotPutInServer(int iAmount, bool bFrozen);
 void Bot_RunAll();
-static void RunPlayerMove(CSDKPlayer *fakeclient, CUserCmd &cmd, float frametime);
+void RunPlayerMove(CSDKPlayer *fakeclient, CUserCmd &cmd, float frametime);
 
 int	  bot_rand();
 int   bot_rand(int min, int max);

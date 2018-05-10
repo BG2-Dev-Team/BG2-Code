@@ -49,7 +49,7 @@ public:
 	{
 		BaseClass::ApplySchemeSettings( pScheme );
 
-#define set(a) a->SetFont(GetDefaultBG3FontScaled(pScheme, a))
+#define set(a) a->SetFont(GetDefaultBG3FontScaledHorizontal(pScheme, a))
 		set(m_pButtonBegin);
 		set(m_pButtonCreateDisconnect);
 		set(m_pButtonOptions);
@@ -309,7 +309,7 @@ public:
 			return false;
 		}
 	}
- 
+
 private:
 	//vgui::ImagePanel *m_pImgBegin;
 	//vgui::ImagePanel *m_pImgCreateDisconnect;
@@ -419,7 +419,7 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 
 	PerformDefaultLayout();
 
-	m_pCommunity->OpenURL("https://battlegrounds3.com/team/", NULL);
+	m_pCommunity->OpenURL("https://battlegrounds3.com", NULL);
 	m_pCommunity->SetVisible(true);
 }
  
@@ -456,7 +456,7 @@ void CMainMenu::OnCommand(const char *command)
 		engine->ClientCmd("Disconnect");
 	}
 	BaseClass::OnCommand( command );
-	BaseClass::OnCommand(command);
+	//BaseClass::OnCommand(command);
 }
 
  

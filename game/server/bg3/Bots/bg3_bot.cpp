@@ -56,6 +56,7 @@ in separate files for bot communication, map navigation, etc.
 #include "bg3_bot_manager.h"
 #include "bg3_bot_navpoint.h"
 #include "bg3_bot_vcomms.h"
+#include "bg3_bot_debug.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -291,6 +292,20 @@ bool CSDKBot::ThinkCheckEnterMedRangeCombat() {
 	if (m_PlayerSearchInfo.CloseEnemyDist() < MED_RANGE_START && m_PlayerSearchInfo.CloseEnemyDist() > MELEE_RANGE_START
 		&& EnemyNoticeRange() >= MED_RANGE
 		&& !IsCapturingEnemyFlag() && !m_bTowardFlag && !WantsToRetreat()) {
+		ScheduleThinker(&BotThinkers::MedRange, 0.1f);
+		return false;
+	}
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if the playe we're following still exists and is still alive and
+//		that we havn't followed them for too long.
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkCheckStopFollow() {
+	if (m_flLastFollowTime + 8.0f < gpGlobals->curtime
+		|| !m_hFollowedPlayer
+		|| !m_hFollowedPlayer->IsAlive()) {
 		ScheduleThinker(&BotThinkers::MedRange, 0.1f);
 		return false;
 	}
@@ -916,6 +931,7 @@ bool CSDKBot::ThinkDeath_End() {
 	m_curCmd.buttons = 0;
 	//SetUpdateFlags(true); //we technically don't have to do this, because if we're alive, our next thinker is always waypoint think, which also sets it to true
 	m_flNextFireTime = FLT_MAX;
+	m_flLastFollowTime = FLT_MIN;
 	//m_flEndRetreatTime;
 	m_pWeapon = (m_pPlayer->GetActiveWeapon());
 	if (m_pWeapon) {
@@ -925,6 +941,33 @@ bool CSDKBot::ThinkDeath_End() {
 
 	//update our searcher's team info in case we switched teams
 	m_PlayerSearchInfo.UpdateOwnerTeamInfo();
+
+	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Follow player, shoot any targets, melee if necessary
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::ThinkFollow_Begin() {
+	m_flLastFollowTime = gpGlobals->curtime;
+	return true;
+}
+
+bool CSDKBot::ThinkFollow_Check() {
+	return ThinkCheckDeath() && ThinkCheckMelee() && ThinkCheckStopFollow();
+}
+
+bool CSDKBot::ThinkFollow() {
+	if (m_PlayerSearchInfo.CloseEnemy())
+		LookAt(m_PlayerSearchInfo.CloseEnemy()->Weapon_ShootPosition(), 0.5f, 2.0f);
+	else
+		LookAt(m_hFollowedPlayer->GetAbsOrigin() + Vector(0, 0, 70.0f), 2.0f);
+
+	MoveTowardPointNoTurn(m_hFollowedPlayer->GetAbsOrigin());
+	return true;
+}
+
+bool CSDKBot::ThinkFollow_End() {
 
 	return true;
 }
@@ -954,6 +997,13 @@ void Bot_RunAll(void)
 	if (bot_pause.GetBool()) //If we're true, just don't run the thinking cycle. Effectively "pausing" the bots.
 		return;
 
+	BotDebugThink();
+
+	//we're testing something, don't let the AI interfere!
+	extern ConVar bot_mimic;
+	if (bot_mimic.GetBool())
+		return;
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPlayer = UTIL_PlayerByIndex(i);// );
@@ -961,8 +1011,9 @@ void Bot_RunAll(void)
 		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
 		{
 			CSDKBot *pBot = CSDKBot::ToBot(pPlayer);
-			if (pBot) //Do most of the "filtering" here.
+			if (pBot) {//Do most of the "filtering" here.
 				pBot->Think();
+			}
 		}
 	}
 }
@@ -980,27 +1031,6 @@ void Bot_RunAll(void)
 	return !tr.DidHitWorld();
 }*/
 
-/*bool Bot_RunMimicCommand(CUserCmd& cmd)
-{
-	if (bot_mimic.GetInt() <= 0)
-		return false;
-
-	if (bot_mimic.GetInt() > gpGlobals->maxClients)
-		return false;
-
-
-	CBasePlayer *pPlayer = UTIL_PlayerByIndex(bot_mimic.GetInt());
-	if (!pPlayer)
-		return false;
-
-	if (!pPlayer->GetLastUserCommand())
-		return false;
-
-	cmd = *pPlayer->GetLastUserCommand();
-	cmd.viewangles[YAW] += bot_mimic_yaw_offset.GetFloat();
-
-	return true;
-}*/
 
 //-----------------------------------------------------------------------------
 // Purpose: Simulates a single frame of movement for a player
@@ -1014,7 +1044,7 @@ void Bot_RunAll(void)
 //			msec - 
 // Output : 	virtual void
 //-----------------------------------------------------------------------------
-static void RunPlayerMove(CSDKPlayer *fakeclient, CUserCmd &cmd, float frametime)
+void RunPlayerMove(CSDKPlayer *fakeclient, CUserCmd &cmd, float frametime)
 {
 	//if ( !fakeclient )
 	//	return;

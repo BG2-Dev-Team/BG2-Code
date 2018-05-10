@@ -70,7 +70,7 @@ public:
 	virtual void CreateViewModel( int viewmodelindex = 0 );
 	virtual bool BecomeRagdollOnClient( const Vector &force );
 	virtual void Event_Killed( const CTakeDamageInfo &info );
-	virtual int OnTakeDamage( const CTakeDamageInfo &inputInfo );
+	virtual int	 OnTakeDamage( const CTakeDamageInfo &inputInfo );
 	virtual bool WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const;
 	virtual void FireBullets ( const FireBulletsInfo_t &info );
 	virtual void TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator);
@@ -78,9 +78,8 @@ public:
 	virtual bool BumpWeapon( CBaseCombatWeapon *pWeapon );
 	virtual void ChangeTeam(int iTeam);
 	//BG2 - Like ChangeTeam() except with the ability to manually set whether the player should be killed or not.
-	void ChangeTeam(int iTeam, bool bKill);
-	void CheckForForcedClassChange(); //for class enforce in linebattle
-	void	UpdatePlayerClass(void); //BG3- updates the player class reference to match m_iClass and team number
+	void		 ChangeTeam(int iTeam, bool bKill);
+	void		 UpdatePlayerClass(void); //BG3- updates the player class reference to match m_iClass and team number
 	//
 	virtual void PickupObject ( CBaseEntity *pObject, bool bLimitMassAndSize );
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
@@ -118,8 +117,6 @@ public:
 	void SetPlayerTeamModel( void );
 	Activity TranslateTeamActivity( Activity ActToTranslate );
 	
-	float GetNextModelChangeTime( void ) { return m_flNextModelChangeTime; }
-	float GetNextTeamChangeTime( void ) { return m_flNextTeamChangeTime; }
 	void  PickDefaultSpawnTeam( void );
 	void  SetupPlayerSoundsByModel( const char *pModelName );
 	const char *GetPlayerModelSoundPrefix( void );
@@ -168,22 +165,20 @@ private:
 	CNetworkQAngle( m_angEyeAngles );
 	CPlayerAnimState   m_PlayerAnimState;
 
+	//BG2 - Tjoppen - vars in hl2mp_player
 	int m_iLastWeaponFireUsercmd;
 	int m_iModelType;
 	CNetworkVar( int, m_iSpawnInterpCounter );
 	CNetworkVar( int, m_iPlayerSoundType );
 
-	float m_flNextModelChangeTime;
-	float m_flNextTeamChangeTime;
 
-	//BG2 - Tjoppen - vars in hl2mp_player
 public:
 	void		PlayermodelTeamClass();
 	int			GetAppropriateSkin() const; //Looks at ourself to see what player model skin we should have
 	void		RemoveSelfFromFlags(void);	//BG2 - Tjoppen - do this whenever we die, change team or disconnect or anything similar
-	int			GetLimitTeamClass(int iTeam, int iClass);
+	//int			GetLimitTeamClass(int iTeam, int iClass);
 	bool		AttemptJoin(int iTeam, int iClass, const char *pClassName);
-	bool		PlayerMayJoinTeam(int iTeam) const;
+	//bool		PlayerMayJoinTeam(int iTeam) const;
 	const char* GetHitgroupPainSound(int hitgroup, int team);
 	void		HandleVoicecomm(int comm);
 

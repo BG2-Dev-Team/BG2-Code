@@ -32,9 +32,7 @@
 using namespace vgui;
 extern INetworkStringTable *g_pStringTableInfoPanel;
 
-#define TEMP_HTML_FILE	"textwindow_temp.html"
-
-ConVar cl_disablehtmlmotd( "cl_disablehtmlmotd", "0", FCVAR_ARCHIVE, "Disable HTML motds." );
+extern ConVar cl_disablehtmlmotd;
 
 //=============================================================================
 // HPE_BEGIN:
@@ -42,7 +40,8 @@ ConVar cl_disablehtmlmotd( "cl_disablehtmlmotd", "0", FCVAR_ARCHIVE, "Disable HT
 // of options.  Passing a command string is dangerous and allowed a server network
 // message to run arbitrary commands on the client.
 //=============================================================================
-CON_COMMAND( showinfo, "Shows a info panel: <type> <title> <message> [<command number>]" )
+//bg3 - moved this to bg3_motd.cpp
+/*CON_COMMAND( showinfo, "Shows a info panel: <type> <title> <message> [<command number>]" )
 {
 	if ( !gViewPortInterface )
 		return;
@@ -50,7 +49,10 @@ CON_COMMAND( showinfo, "Shows a info panel: <type> <title> <message> [<command n
 	if ( args.ArgC() < 4 )
 		return;
 		
-	IViewPortPanel * panel = gViewPortInterface->FindPanelByName( PANEL_INFO );
+	//BG3 - changed this to global pointer bc we moved PANEL_INFO
+	//to Teammenu! gViewPortInterface won't find it!
+	//IViewPortPanel * panel = gViewPortInterface->FindPanelByName( PANEL_INFO );
+	IViewPortPanel* panel = g_pMOTD;
 
 	 if ( panel )
 	 {
@@ -64,15 +66,15 @@ CON_COMMAND( showinfo, "Shows a info panel: <type> <title> <message> [<command n
 
 		 panel->SetData( kv );
 
-		 gViewPortInterface->ShowPanel( panel, true );
+		 panel->ShowPanel(true);
 
 		 kv->deleteThis();
 	 }
 	 else
 	 {
-		 Msg("Couldn't find info panel.\n" );
+		 Warning("Couldn't find info panel.\n" );
 	 }
-}
+}*/
 //=============================================================================
 // HPE_END
 //=============================================================================
@@ -80,10 +82,12 @@ CON_COMMAND( showinfo, "Shows a info panel: <type> <title> <message> [<command n
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CTextWindow::CTextWindow(IViewPort *pViewPort) : Frame(NULL, PANEL_INFO	)
+CTextWindow::CTextWindow(IViewPortPanel *pParent) : Frame(NULL, PANEL_INFO)
 {
 	// initialize dialog
-	m_pViewPort = pViewPort;
+	m_pViewPort = gViewPortInterface;
+
+	SetParent(pParent->GetVPanel());
 
 //	SetTitle("", true);
 
@@ -99,17 +103,22 @@ CTextWindow::CTextWindow(IViewPort *pViewPort) : Frame(NULL, PANEL_INFO	)
 	SetMoveable(false);
 	SetSizeable(false);
 	SetProportional(true);
+	SetCloseButtonVisible(false);
 
 	// hide the system buttons
 	SetTitleBarVisible( false );
 
-	m_pTextMessage = new TextEntry( this, "TextMessage" );
+	
 	m_pHTMLMessage = new CMOTDHTML( this,"HTMLMessage" );
-	m_pTitleLabel  = new Label( this, "MessageTitle", "Message Title" );
-	m_pOK		   = new Button(this, "ok", "#PropertyDialog_OK");
 
-	m_pOK->SetCommand("okay");
+	//BG3 - hide these
+	m_pTextMessage = new TextEntry(this, "TextMessage");
+	//m_pTitleLabel  = new Label( this, "MessageTitle", "Message Title" );
+	//m_pOK		   = new Button(this, "ok", "#PropertyDialog_OK");
+	//m_pOK->SetCommand("okay");
 	m_pTextMessage->SetMultiline( true );
+	//
+
 	m_nContentType = TYPE_TEXT;
 }
 
@@ -163,10 +172,8 @@ void CTextWindow::ShowText( const char *text )
 
 void CTextWindow::ShowURL( const char *URL, bool bAllowUserToDisable )
 {
-	#ifdef _DEBUG
-		Msg( "CTextWindow::ShowURL( %s )\n", URL );
-	#endif
-
+	Warning( "CTextWindow::ShowURL( %s )\n", URL );
+	
 	ClientModeShared *mode = ( ClientModeShared * )GetClientModeNormal();
 	if ( ( bAllowUserToDisable && cl_disablehtmlmotd.GetBool() ) || !mode->IsHTMLInfoPanelAllowed() )
 	{
@@ -279,7 +286,7 @@ void CTextWindow::Update( void )
 {
 	SetTitle( m_szTitle, false );
 
-	m_pTitleLabel->SetText( m_szTitle );
+	//m_pTitleLabel->SetText( m_szTitle ); //BG3 - hidden
 
 	if ( m_pHTMLMessage )
 		m_pHTMLMessage->SetVisible( false );
@@ -372,13 +379,13 @@ void CTextWindow::OnCommand( const char *command )
 		
 		m_pViewPort->ShowPanel( this, false );
 	}*/
-	if (!Q_strcmp(command, "okay"))
+	/*if (!Q_strcmp(command, "okay"))
 	{
 		m_pViewPort->ShowPanel(this, false);
 		//BG2 - Tjoppen - show classmenu after info panel is closed
 		m_pViewPort->ShowPanel(g_pTeamMenu, true);
 		//
-	}
+	}*/
 
 	BaseClass::OnCommand(command);
 }
@@ -423,7 +430,7 @@ void CTextWindow::ShowPanel( bool bShow )
 	if ( bShow )
 	{
 		Activate();
-		SetMouseInputEnabled( true );
+		//SetMouseInputEnabled( true ); //BG3 - protect the player!
 	}
 	else
 	{

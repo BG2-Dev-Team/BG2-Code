@@ -34,6 +34,13 @@ commented on the following form:
 #include "cbase.h"
 #include "bg3_fonts.h"
 
+#define BG3_MIN_FONT 10
+#define BG3_MAX_FONT 95
+#define BG3_MIN_FONT_INDEX (BG3_MIN_FONT / 5)
+#define BG3_MAX_FONT_INDEX (BG3_MAX_FONT / 5)
+#define BG3_NUM_FONTS (BG3_MAX_FONT_INDEX - BG3_MIN_FONT_INDEX)
+
+
 namespace vgui {
 	Color				g_cBG3TextColor(229, 228, 178, 255);
 	Color				g_cBG3TextHighlightColor(253, 252, 201, 255);
@@ -41,9 +48,12 @@ namespace vgui {
 	HFont GetDefaultBG3Font(IScheme* pScheme) {
 		return pScheme->GetFont("BG3Default30");
 	}
-	
-	static int g_iGlobalTextScale = 55;
-	HFont GetDefaultBG3FontScaled(IScheme* pScheme, Label* pForLabel) {
+
+	//this here is a global scale factor - increasing it makes text smaller
+	static int g_iGlobalTextScale = 65;
+	//
+
+	HFont GetDefaultBG3FontScaledHorizontal(IScheme* pScheme, Label* pForLabel) {
 		char buffer[32];
 		wchar wbuffer[256];
 
@@ -54,12 +64,11 @@ namespace vgui {
 		if (numChars > 0) {
 			int pixelsPerChar = width / numChars;
 
-			//do a lerp onto a 5-14 range, those are our base font sizes
 			float scale = 1.0f * pixelsPerChar / g_iGlobalTextScale;
-			int baseSize = 5 + (scale * 9 + 0.1f);
+			int baseSize = BG3_MIN_FONT_INDEX + (scale * BG3_NUM_FONTS + 0.1f);
 
 			//clamp sizes
-			baseSize = Clamp(baseSize, 5, 14);
+			baseSize = Clamp(baseSize, BG3_MIN_FONT_INDEX, BG3_MAX_FONT_INDEX);
 
 			//search for appropriate size
 			int fontSize = baseSize * 5;
@@ -67,5 +76,24 @@ namespace vgui {
 			return pScheme->GetFont(buffer);
 		}
 		return 0;
+	}
+
+	HFont GetDefaultBG3FontScaledVertical(IScheme* pScheme, Label* pForLabel) {
+		char buffer[32];
+
+		int height = pForLabel->GetTall();
+		height -= height % 5;
+		height = Clamp(height, BG3_MIN_FONT, BG3_MAX_FONT);
+
+
+		Q_snprintf(buffer, ARRAYSIZE(buffer), "BG3Default%i", height);
+		HFont font = pScheme->GetFont(buffer);
+		return font;
+	}
+
+	void MsgW(wchar* text) {
+		char buffer[256];
+		wcstombs(buffer, text, 256);
+		Msg(buffer);
 	}
 }

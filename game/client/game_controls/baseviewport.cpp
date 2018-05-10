@@ -220,13 +220,13 @@ void CBaseViewport::OnScreenSizeChanged(int iOldWide, int iOldTall)
 	ReloadScheme( NULL );
 
 	// recreate all the default panels
-	RemoveAllPanels();
+	//RemoveAllPanels();
 #ifndef _XBOX
 	m_pBackGround = new CBackGroundPanel( NULL );
 	m_pBackGround->SetZPos( -20 ); // send it to the back 
 	m_pBackGround->SetVisible( false );
 #endif
-	CreateDefaultPanels();
+	//CreateDefaultPanels();
 #ifndef _XBOX
 	vgui::ipanel()->MoveToBack( m_pBackGround->GetVPanel() ); // really send it to the back 
 #endif
@@ -246,7 +246,7 @@ void CBaseViewport::CreateDefaultPanels( void )
 	Msg("Creating default panels");
 #ifndef _XBOX
 	AddNewPanel( CreatePanelByName( PANEL_SCOREBOARD ), "PANEL_SCOREBOARD" );
-	AddNewPanel( CreatePanelByName( PANEL_INFO ), "PANEL_INFO" );
+	//AddNewPanel( CreatePanelByName( PANEL_INFO ), "PANEL_INFO" ); //BG3 - teammenu has it instead
 	AddNewPanel( CreatePanelByName( PANEL_SPECGUI ), "PANEL_SPECGUI" );
 	//AddNewPanel( CreatePanelByName( PANEL_SPECMENU ), "PANEL_SPECMENU" );
 	AddNewPanel( CreatePanelByName( PANEL_NAV_PROGRESS ), "PANEL_NAV_PROGRESS" );
@@ -277,16 +277,16 @@ void CBaseViewport::UpdateAllPanels( void )
 IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 {
 	IViewPortPanel* newpanel = NULL;
-
+	
 #ifndef _XBOX
 	if ( Q_strcmp(PANEL_SCOREBOARD, szPanelName) == 0 )
 	{
 		newpanel = new CClientScoreBoardDialog( this );
 	}
-	else if ( Q_strcmp(PANEL_INFO, szPanelName) == 0 )
+	/*else if ( Q_strcmp(PANEL_INFO, szPanelName) == 0 )
 	{
 		newpanel = new CTextWindow( this );
-	}
+	}*/
 /*	else if ( Q_strcmp(PANEL_OVERVIEW, szPanelName) == 0 )
 	{
 		newpanel = new CMapOverview( this );
@@ -375,7 +375,7 @@ IViewPortPanel* CBaseViewport::FindPanelByName(const char *szPanelName)
 		if ( Q_strcmp(m_Panels[i]->GetName(), szPanelName) == 0 )
 			return m_Panels[i];
 	}
-
+	Warning("CBaseViewport::FindPanelByName(...) could not find %s\n", szPanelName);
 	return NULL;
 }
 
@@ -437,8 +437,11 @@ void CBaseViewport::ShowPanel( const char *pName, bool state )
 		panel = FindPanelByName( pName );
 	}
 	
-	if ( !panel	)
+	if (!panel) {
+		Warning("Failed to show panel named %s\n", pName);
 		return;
+	}
+		
 
 	ShowPanel( panel, state );
 }

@@ -43,7 +43,18 @@ enum {
 
 #define AMMO_DEFAULT_NAME "357"
 
+enum
+{
+	ATTACKTYPE_NONE = 0,
+	ATTACKTYPE_STAB,
+	ATTACKTYPE_SLASH,
+	ATTACKTYPE_FIREARM,
+	/*
+	other attacktypes might be
+	ATTACKTYPE_THROW,
 
+	*/
+};
 
 /*
 //PLAYER SPEEDS - used in hl2mp_player_shared.cpp
@@ -93,7 +104,7 @@ AMMO AMOUNTS - used in hl2mp_gamerules.h
 #define AMMO_SNIPER			12
 #define AMMO_SKIRMISHER		12
 #define AMMO_LIGHT_INFANTRY	12
-#define AMMO_GRENADIER		10
+#define AMMO_GRENADIER		16
 #define AMMO_GRENADE		1
 #endif
 
@@ -135,8 +146,8 @@ CLASS-BASED DAMAGE MODIFIERS
 #define DMG_MOD_GRENADIER		0.8f //low-damage attacks while be multiplied by this amount
 #define DMG_MOD_GRENADIER_CAP	70	//damage amounts below this will have the multiplier applied to them
 
-#define DMG_MOD_NATIVE			1.15f //multiplier
-#define DMG_MOD_NATIVE_CAP		65
+#define DMG_MOD_SKI			1.15f //multiplier
+#define DMG_MOD_SKI_CAP		65
 
 /*
 RAW RALLY TYPES - DON"T CHANGE THESE UNLESS YOU' KNOW WHAT YOU'RE DOING

@@ -673,7 +673,6 @@ void CBaseEntity::ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCu
 {
 	VPROF( "CBaseEntity::ImpactTrace" );
 	Assert( pTrace->m_pEnt );
-
 	CBaseEntity *pEntity = pTrace->m_pEnt;
  
 	// Build the impact data

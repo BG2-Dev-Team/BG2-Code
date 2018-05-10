@@ -2036,6 +2036,21 @@
     <ClInclude Include="bg3\vgui\bg3_fonts.h">
       <Filter>Source Files\BG3\vgui</Filter>
     </ClInclude>
+    <ClInclude Include="bg3\vgui\bg3_motd.h">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\vgui\timed_label.h">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClInclude>
+    <ClInclude Include="c_te_buff_glow.cpp">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\vgui\bg3_create_server_dialog.h">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClInclude>
+    <ClInclude Include="bg3\vgui\bg3_button_close.h">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3680,6 +3695,15 @@
       <Filter>Source Files\BG3\vgui</Filter>
     </ClCompile>
     <ClCompile Include="bg3\vgui\bg3_fonts.cpp">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\vgui\bg3_motd.cpp">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\vgui\bg3_create_server_dialog.cpp">
+      <Filter>Source Files\BG3\vgui</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\vgui\bg3_button_close.cpp">
       <Filter>Source Files\BG3\vgui</Filter>
     </ClCompile>
   </ItemGroup>

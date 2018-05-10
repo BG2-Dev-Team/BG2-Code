@@ -205,7 +205,7 @@ static void __MsgFunc_VGUIMenu( bf_read &msg )
 
 	if ( !viewport )
 	{
-		// DevMsg("VGUIMenu: couldn't find panel '%s'.\n", panelname );
+		Warning("VGUIMenu: couldn't find panel '%s'.\n", panelname );
 		return;
 	}
 
@@ -241,7 +241,6 @@ static void __MsgFunc_VGUIMenu( bf_read &msg )
 				return;
 			}
 		}
-
 		viewport->SetData( keys );
 
 		keys->deleteThis();

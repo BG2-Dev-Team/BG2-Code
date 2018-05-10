@@ -44,13 +44,24 @@ A forward declaration here exposes it to rest of program
 extern const char* g_ppszBritishPlayerModels[];
 extern const char* g_ppszAmericanPlayerModels[];
 
+//forward declaration
+namespace NClassQuota {
+	struct SPopulationCounter;
+}
+
 class CGunKit {
 	friend class CPlayerClass;
+	friend class CWeaponButton;
 public:
-	char*	m_pszWeaponName = nullptr;
+	char*	m_pszWeaponPrimaryName		= nullptr;
+	char*	m_pszWeaponSecondaryName	= nullptr;
+	char*	m_pszWeaponTertiaryName		= nullptr;
+
 
 	bool	m_bAllowBuckshot = false;
-	bool	m_bAlwaysGive = false;
+	//bool	m_bAlwaysGive = false;
+	char*	m_pszAmmoOverrideName			= nullptr;
+	uint8	m_iAmmoOverrideCount			= 0;
 
 #ifdef CLIENT_DLL
 	wchar*	GetLocalizedName() const { return m_pLocalizedName; }
@@ -74,32 +85,38 @@ I'm tired of these stats and information being spread out into unwieldly functio
 so I'm putting them all into these separate files
 */
 class CPlayerClass {
+	
 public:
 	const char* m_pszAbbreviation; //for example, "off" or "gre", used for player class limits
 protected:
 	CPlayerClass(const char* abrv) { m_pszAbbreviation = abrv; }
 	CPlayerClass() { }
+	static void postClassConstruct(const CPlayerClass*);
 
 public:
-	int			m_iDefaultTeam;
-	int			m_iClassNumber = 0; //for backwards-compatibility
+	uint8		m_iDefaultTeam;
+	uint8		m_iClassNumber = 0; //for backwards-compatibility
+
+	uint8		m_iDefaultPrimaryAmmoCount;
+	uint8		m_iDefaultSecondaryAmmoCount = 0;
+	const char* m_pszPrimaryAmmo = AMMO_DEFAULT_NAME;
+	const char* m_pszSecondaryAmmo = nullptr;
+	
 
 	float		m_flBaseSpeed = 190.f;
 	float		m_flFlagWeightMultiplier = 1.0f;
-		
-	const char* m_pszPlayerModel;
 
-	const char* m_pszPrimaryAmmo = AMMO_DEFAULT_NAME;
-	int			m_iDefaultPrimaryAmmoCount;
-	const char* m_pszSecondaryAmmo = nullptr;
-	int			m_iDefaultSecondaryAmmoCount = 0;
+	const char* m_pszPlayerModel;
 
 #define NUM_POSSIBLE_WEAPON_KITS 3
 	CGunKit		m_aWeapons[NUM_POSSIBLE_WEAPON_KITS];
+private:
+	mutable uint8		m_iChooseableKits;
+public:
 
-	int			m_iSkinDepth = 1; //how many skin variations per uniform
-	int			m_iNumUniforms = 1; //how many uniforms?
-	int			m_iSleeveBase = 0; //chosen sleeve skin is m_iSleeveBase + pOwner->m_iClassSkin - 1
+	uint8			m_iSkinDepth = 1; //how many skin variations per uniform
+	uint8			m_iNumUniforms = 1; //how many uniforms?
+	uint8			m_iSleeveBase = 0; //chosen sleeve skin is m_iSleeveBase + pOwner->m_iClassSkin - 1
 	const char* m_pszDroppedHat = 0;
 	//bool		m_bAllowUniformSelection = false; //allow uniform selection in the menu?
 
@@ -109,9 +126,9 @@ public:
 	inline bool isAmerican() const { return m_iDefaultTeam == TEAM_AMERICANS; }
 	inline bool isBritish() const { return m_iDefaultTeam == TEAM_BRITISH; }
 
-	int					numChooseableWeapons() const;
-	const CWeaponDef*	getWeaponDef(byte iWeapon) const;
-	void				getWeaponDef(byte iWeapon, const CWeaponDef** ppPrimary, const CWeaponDef** ppSecondary, const CWeaponDef** ppTertiary) const;
+	inline uint8		numChooseableWeapons() const { return m_iChooseableKits; }
+	const CWeaponDef*	getWeaponDef(byte iKit) const;
+	void				getWeaponDef(byte iKit, const CWeaponDef** ppPrimary, const CWeaponDef** ppSecondary, const CWeaponDef** ppTertiary) const;
 	const CGunKit*		getWeaponKitChooseable(byte iWeapon) const; //indexes choosable weapons, skipping over non-choosable ones.
 
 	EClassAvailability availabilityForPlayer(const CBasePlayer* pPlayer) const; //player can be null
@@ -146,12 +163,19 @@ public:
 	mutable const wchar* m_pLocalizedDesc;
 #endif
 	static const CPlayerClass* fromNums(int iTeam, int iClass); //for backwards-compatability with old numbering system
+	bool GetLimitsAreInitialized() const { return !m_pcvLimit_sml; }
+	void InitLimits();
 private:
 	mutable ConVar* m_pcvLimit_lrg = nullptr;
 	mutable ConVar* m_pcvLimit_med = nullptr;
 	mutable ConVar* m_pcvLimit_sml = nullptr;
 public:
-	static int getClassLimit(const CPlayerClass* pClass); //maximum number of players on the team who can use this class
+	int		GetLimitLrg() const { return m_pcvLimit_lrg->GetInt(); }
+	int		GetLimitMed() const { return m_pcvLimit_med->GetInt(); }
+	int		GetLimitSml() const { return m_pcvLimit_sml->GetInt(); }
+
+	NClassQuota::SPopulationCounter* m_pPopCounter;
+	//static int getClassLimit(const CPlayerClass* pClass); //maximum number of players on the team who can use this class
 	static int numClasses(); //teams count individually, so American Infantry and British Infantry are separate classes
 	static int numModelsForTeam(int iTeam);
 	inline static int numClassesForTeam(int iTeam) { return numModelsForTeam(iTeam); }
@@ -179,7 +203,7 @@ namespace PlayerClasses {
 	dec(AFrenchGre)
 
 #undef dec
-
+	
 }
 
 #endif //BG3_PLAYER_CLASS

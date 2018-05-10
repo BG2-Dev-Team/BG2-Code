@@ -519,6 +519,7 @@ typedef enum
 
 // basic team colors
 #define COLOR_RED		Color(255, 64, 64, 255)
+#define COLOR_ORANGE	Color(255, 128, 20, 255)
 #define COLOR_BLUE		Color(153, 204, 255, 255)
 #define COLOR_YELLOW	Color(255, 178, 0, 255)
 #define COLOR_GREEN		Color(153, 255, 153, 255)

@@ -122,19 +122,26 @@ namespace vgui {
 		//m_pShadowText->SetVisible(bVisible);
 	}
 
+	void FancyButton::OnMousePressed(KeyCode code) {
+		BaseClass::OnMousePressed(code);
+		PlaySelectSound();
+		if (m_pfCommand) {
+			m_pfCommand();
+		}
+	}
+	
+
 	void FancyButton::OnCursorEntered() {
 		m_bMouseOver = true;
 		SetFgColor(m_cHighlightColor);
 		m_pCurrentImage = m_pHoverImage;
-		PlayMenuSound("Mainmenu.Hover");
-		//m_pShadowText->SetVisible(true);
+		PlayHoverSound();
 	}
 
 	void FancyButton::OnCursorExited() {
 		m_bMouseOver = false;
 		SetFgColor(m_cNormalColor);
 		m_pCurrentImage = m_pNormalImage;
-		//m_pShadowText->SetVisible(false);
 	}
 
 	void FancyButton::SetText(const char* text) {

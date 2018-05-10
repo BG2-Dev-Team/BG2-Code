@@ -45,6 +45,7 @@ commented on the following form:
 #include <igameresources.h>
 #include "engine/IEngineSound.h"
 #include <vgui/ILocalize.h>
+#include "bg3_class_quota.h"
 
 #ifdef CLIENT_DLL
 #include "c_team.h"
@@ -68,59 +69,41 @@ commented on the following form:
 #define TOTAL_BRIT_CLASSES 6 //same as above
 #define TOTAL_AMER_CLASSES 6 //^
 
-int CPlayerClass::numChooseableWeapons() const {
-	int numChooseableWeapons = 0;
-	for (int i = 0; i < ARRAYSIZE(m_aWeapons); i++) {
-		if (m_aWeapons[i].m_pszWeaponName && !m_aWeapons[i].m_bAlwaysGive)
-			numChooseableWeapons++;
-	}
-	return numChooseableWeapons;
-}
-
 const CWeaponDef* CPlayerClass::getWeaponDef(byte iWeapon) const {
-	const char* name = m_aWeapons[iWeapon].m_pszWeaponName;
+	const char* name = m_aWeapons[iWeapon].m_pszWeaponPrimaryName;
 	return CWeaponDef::GetDefForWeapon(name);
 }
 
-void CPlayerClass::getWeaponDef(byte iWeapon, const CWeaponDef** ppPrimary, const CWeaponDef** ppSecondary, const CWeaponDef** ppTertiary) const {
-	*ppPrimary = CWeaponDef::GetDefForWeapon(m_aWeapons[iWeapon].m_pszWeaponName);
-
-	*ppSecondary = nullptr;
-	*ppTertiary = nullptr;
-
-	for (byte i = 0; i < ARRAYSIZE(m_aWeapons); i++) {
-		if (m_aWeapons[i].m_pszWeaponName && m_aWeapons[i].m_bAlwaysGive && i != iWeapon) {
-			if (!(*ppSecondary)) {
-				*ppSecondary = CWeaponDef::GetDefForWeapon(m_aWeapons[i].m_pszWeaponName);
-			}
-			else {
-				*ppTertiary =  CWeaponDef::GetDefForWeapon(m_aWeapons[i].m_pszWeaponName);
-			}
+void CPlayerClass::getWeaponDef(byte iKit, const CWeaponDef** ppPrimary, const CWeaponDef** ppSecondary, const CWeaponDef** ppTertiary) const {
+	//we always have a primary
+	*ppPrimary = CWeaponDef::GetDefForWeapon(m_aWeapons[iKit].m_pszWeaponPrimaryName);
+	const char* pszSecond = m_aWeapons[iKit].m_pszWeaponSecondaryName;
+	const char* pszThird = m_aWeapons[iKit].m_pszWeaponTertiaryName;
+	if (pszSecond) {
+		*ppSecondary = CWeaponDef::GetDefForWeapon(pszSecond);
+		if (pszThird) {
+			*ppTertiary = CWeaponDef::GetDefForWeapon(pszThird);
 		}
+		else {
+			*ppTertiary = nullptr;
+		}
+	}
+	else {
+		*ppSecondary = nullptr;
+		*ppTertiary = nullptr;
 	}
 }
 
 const CGunKit* CPlayerClass::getWeaponKitChooseable(byte iWeapon) const {
-	const CGunKit* pResult = &m_aWeapons[0];
-
-	for (byte i = 0; i < ARRAYSIZE(m_aWeapons); i++) {
-		const CGunKit* pKit = &m_aWeapons[i];
-		if (pKit->m_pszWeaponName) {
-			if (iWeapon == 0 && !pKit->m_bAlwaysGive) {
-				pResult = pKit;
-				break;
-			}
-			if (!pKit->m_bAlwaysGive) {
-				iWeapon--;
-			}
-		} 
-	}
-
+	//this function used to decipher between always-give and chooseable weapons,
+	//but we've gotten rid of that in favor of the unrolled list of 3 weapons per kit
+	//more flexible
+	const CGunKit* pResult = &m_aWeapons[iWeapon];
 	return pResult;
 }
 
 EClassAvailability CPlayerClass::availabilityForPlayer(const CBasePlayer* pPlayer) const {
-	int limit = getClassLimit(this);
+	int limit = NClassQuota::GetLimitForClass(this);
 
 	if (limit == 0)
 		return CLASS_UNAVAILABLE;
@@ -159,8 +142,21 @@ const CPlayerClass* g_ppClasses[TOTAL_NUM_CLASSES];
 const char* g_ppszBritishPlayerModels[TOTAL_BRIT_CLASSES];
 const char* g_ppszAmericanPlayerModels[TOTAL_AMER_CLASSES];
 
-void addSelfToGlobalLists(const CPlayerClass* pClass) {
+void CPlayerClass::postClassConstruct(const CPlayerClass* pClass) {
 	int index = pClass->m_iClassNumber;
+
+	//count number of chooseable weapons
+	if (pClass->m_aWeapons[1].m_pszWeaponPrimaryName) {
+		if (pClass->m_aWeapons[2].m_pszWeaponPrimaryName) {
+			pClass->m_iChooseableKits = 3;
+		}
+		else {
+			pClass->m_iChooseableKits = 2;
+		}
+	}
+	else {
+		pClass->m_iChooseableKits = 1;
+	}
 
 	//this will make it so that british classes come first in the list
 	if (pClass->m_iDefaultTeam == TEAM_AMERICANS)
@@ -263,21 +259,21 @@ void CPlayerClass::Localize() {
 			const CGunKit& gk = pc.m_aWeapons[k];
 
 			//we're only doing this for chooseable weapons
-			if (!gk.m_pszWeaponName || (gk.m_bAlwaysGive && k != 0))
-				continue;
+			if (!gk.m_pszWeaponPrimaryName)
+				break;
 
-			const char* name = gk.m_pszWeaponName;
+			const char* name = gk.m_pszWeaponPrimaryName;
 			if (gk.m_pszLocalizedDescOverride)
 				name = gk.m_pszLocalizedNameOverride;
 
-			const char* desc = gk.m_pszWeaponName;
+			const char* desc = gk.m_pszWeaponPrimaryName;
 			if (gk.m_pszLocalizedNameOverride)
 				desc = gk.m_pszLocalizedNameOverride;
 
 			Q_snprintf(buffer, sizeof(buffer), "#%s", name);
 			gk.m_pLocalizedName = g_pVGuiLocalize->Find(buffer);
 
-			Q_snprintf(buffer, sizeof(buffer), "#i_%s", name);
+			Q_snprintf(buffer, sizeof(buffer), "#i_%s", desc);
 			gk.m_pLocalizedDesc = g_pVGuiLocalize->Find(buffer);
 		}
 	}
@@ -300,33 +296,23 @@ ConVar mp_limit_mapsize_high("mp_limit_mapsize_high", "32", CVAR_FLAGS, "Servers
 Given a player class determines the maximum number of players who can take that class.
 */
 #define CVAR_SEARCH_BUFFER_SIZE 30
-int CPlayerClass::getClassLimit(const CPlayerClass* pClass) {
-	//just use the cvars, and find them if we don't have have them already
-	if (!pClass->m_pcvLimit_sml) {
-		//find the cvars
-		char cvarSearchBuffer[CVAR_SEARCH_BUFFER_SIZE];
-		char cTeam = charForTeam(pClass->m_iDefaultTeam);
-		#define find(size) \
-			V_snprintf(cvarSearchBuffer, CVAR_SEARCH_BUFFER_SIZE, "mp_limit_%s_%c_"#size"\0", pClass->m_pszAbbreviation, cTeam); \
-			{ \
-				ConVarRef cvarRef(cvarSearchBuffer); \
-				pClass->m_pcvLimit_##size = static_cast<ConVar*>(cvarRef.GetLinkedConVar()); \
-			}
+void CPlayerClass::InitLimits() {
+	//find the cvars
+	char cvarSearchBuffer[CVAR_SEARCH_BUFFER_SIZE];
+	char cTeam = charForTeam(m_iDefaultTeam);
+	#define find(size) \
+		V_snprintf(cvarSearchBuffer, CVAR_SEARCH_BUFFER_SIZE, "mp_limit_%s_%c_"#size"\0", m_pszAbbreviation, cTeam); \
+		{ \
+			ConVarRef cvarRef(cvarSearchBuffer); \
+			m_pcvLimit_##size = static_cast<ConVar*>(cvarRef.GetLinkedConVar()); \
+		}
 
-		find(sml)
-		find(med)
-		find(lrg)
-		#undef find
-	}
-	int numPlayers = HL2MPRules()->NumConnectedClients();
-
-	if (numPlayers <= mp_limit_mapsize_low.GetInt())
-		return pClass->m_pcvLimit_sml->GetInt();
-	else if (numPlayers <= mp_limit_mapsize_high.GetInt())
-		return pClass->m_pcvLimit_med->GetInt();
-	else
-		return pClass->m_pcvLimit_lrg->GetInt();
+	find(sml)
+	find(med)
+	find(lrg)
+	#undef find
 }
+
 
 int CPlayerClass::numClasses() {
 	return TOTAL_NUM_CLASSES;
@@ -343,6 +329,7 @@ const CPlayerClass* const * CPlayerClass::asList() {
 /*
 PLAYER MODEL PATHS AND NAMES - these are used repeatedly for precacheing the models and assigning them to players
 */
+
 #define MODEL_BINFANTRY		"models/player/british/infantry/br_infantry.mdl"
 #define MODEL_BOFFICER		"models/player/british/light_b/light_b.mdl"
 #define MODEL_BJAEGER		"models/player/british/jager/jager.mdl"
@@ -415,10 +402,10 @@ DEC_BG3_PLAYER_CLASS(BInfantry, inf, b) {
 	m_iNumUniforms = 3;
 	//m_bAllowUniformSelection = true;
 
-	m_aWeapons[0].m_pszWeaponName = "weapon_brownbess";
-	m_aWeapons[1].m_pszWeaponName = "weapon_longpattern";
+	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess";
+	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_longpattern";
 
-	addSelfToGlobalLists(this);
+	postClassConstruct(this);
 }
 
 DEC_BG3_PLAYER_CLASS(BOfficer, off, b) {
@@ -438,13 +425,12 @@ DEC_BG3_PLAYER_CLASS(BOfficer, off, b) {
 	//m_bAllowUniformSelection = true;
 	m_bCanDoVcommBuffs = true;
 
-	m_aWeapons[0].m_pszWeaponName = "weapon_pistol_b";
-	m_aWeapons[1].m_pszWeaponName = "weapon_brownbess_carbine_nobayo";
+	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_pistol_b";
+	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_sabre_b";
+	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_brownbess_carbine_nobayo";
+	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_sabre_b";
 
-	m_aWeapons[2].m_pszWeaponName = "weapon_sabre_b";
-	m_aWeapons[2].m_bAlwaysGive = true;
-
-	addSelfToGlobalLists(this);
+	postClassConstruct(this);
 }
 
 DEC_BG3_PLAYER_CLASS(BJaeger, rif, b) {
@@ -462,12 +448,10 @@ DEC_BG3_PLAYER_CLASS(BJaeger, rif, b) {
 	m_iSleeveBase = SLEEVE_BJAEGER;
 	m_iNumUniforms = 1;
 
-	m_aWeapons[0].m_pszWeaponName = "weapon_jaeger";
-	m_aWeapons[0].m_bAlwaysGive = true;
-	m_aWeapons[1].m_pszWeaponName = "weapon_hirschf";
-	m_aWeapons[1].m_bAlwaysGive = true;
+	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_jaeger";
+	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_hirschf";
 
-	addSelfToGlobalLists(this);
+	postClassConstruct(this);
 }
 
 DEC_BG3_PLAYER_CLASS(BNative, ski, b) {
@@ -485,13 +469,15 @@ DEC_BG3_PLAYER_CLASS(BNative, ski, b) {
 	m_iSleeveBase = SLEEVE_BNATIVE;
 	m_iNumUniforms = 1;
 
-	m_aWeapons[0].m_pszWeaponName = "weapon_brownbess_nobayo";
-	m_aWeapons[1].m_pszWeaponName = "weapon_longpattern_nobayo";
+	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess_nobayo";
+	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_tomahawk";
 
-	m_aWeapons[2].m_pszWeaponName = "weapon_tomahawk";
-	m_aWeapons[2].m_bAlwaysGive = true;
+	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_longpattern_nobayo";
+	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_tomahawk";
 
-	addSelfToGlobalLists(this);
+	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_club";
+
+	postClassConstruct(this);
 }
 
 DEC_BG3_PLAYER_CLASS(BLinf, linf, b) {
@@ -509,9 +495,10 @@ DEC_BG3_PLAYER_CLASS(BLinf, linf, b) {
 	m_iSleeveBase = SLEEVE_BLINF;
 	m_iNumUniforms = 1;
 
-	m_aWeapons[0].m_pszWeaponName = "weapon_brownbess_carbine";
+	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess_carbine";
+	m_aWeapons[0].m_bAllowBuckshot = true;
 
-	addSelfToGlobalLists(this);
+	postClassConstruct(this);
 }
 
 DEC_BG3_PLAYER_CLASS(BGrenadier, gre, b) {
@@ -532,20 +519,21 @@ DEC_BG3_PLAYER_CLASS(BGrenadier, gre, b) {
 	m_iSleeveBase = SLEEVE_BGRENADIER;
 	m_iNumUniforms = 1;
 
-	m_aWeapons[0].m_pszWeaponName = "weapon_brownbess_nobayo";
-	m_aWeapons[0].m_bAlwaysGive = true;
-
-	m_aWeapons[1].m_pszWeaponName = "weapon_frag";
-	m_aWeapons[1].m_bAlwaysGive = true;
-	m_aWeapons[2].m_pszWeaponName = "weapon_shortsword";
-	m_aWeapons[2].m_bAlwaysGive = true;
+	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess_nobayo";
+	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_frag";
+	m_aWeapons[0].m_pszWeaponTertiaryName = "weapon_hanger";
 
 #ifdef CLIENT_DLL
 	m_aWeapons[0].SetLocalizedName("weapon_brownbess_gre");
 	m_aWeapons[0].SetLocalizedDesc("i_weapon_brownbess_gre");
 #endif
 
-	addSelfToGlobalLists(this);
+	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_frag";
+	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_hanger";
+	m_aWeapons[1].m_pszAmmoOverrideName = "Grenade";
+	m_aWeapons[1].m_iAmmoOverrideCount = 3;
+
+	postClassConstruct(this);
 }
 
 DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
@@ -565,10 +553,10 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 	m_pszDroppedHat = "models/player/american/infantry/american_hat.mdl";
 	//m_bAllowUniformSelection = true;
 
-	m_aWeapons[0].m_pszWeaponName = "weapon_longpattern";
-	m_aWeapons[1].m_pszWeaponName = "weapon_charleville";
+	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_longpattern";
+	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_charleville";
 
-	addSelfToGlobalLists(this);
+	postClassConstruct(this);
 }
 
 DEC_BG3_PLAYER_CLASS(AOfficer, off, a) {
@@ -588,13 +576,12 @@ DEC_BG3_PLAYER_CLASS(AOfficer, off, a) {
 	//m_bAllowUniformSelection = true;
 	m_bCanDoVcommBuffs = true;
 
-	m_aWeapons[0].m_pszWeaponName = "weapon_pistol_a";
-	m_aWeapons[1].m_pszWeaponName = "weapon_brownbess_carbine_nobayo";
+	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_pistol_a";
+	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_sabre_a";
+	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_brownbess_carbine_nobayo";
+	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_sabre_a";
 
-	m_aWeapons[2].m_pszWeaponName = "weapon_sabre_a";
-	m_aWeapons[2].m_bAlwaysGive = true;
-
-	addSelfToGlobalLists(this);
+	postClassConstruct(this);
 }
 
 DEC_BG3_PLAYER_CLASS(AFrontiersman, rif, a) {
@@ -612,12 +599,10 @@ DEC_BG3_PLAYER_CLASS(AFrontiersman, rif, a) {
 	m_iSleeveBase = SLEEVE_AFRONTIERSMAN;
 	m_iNumUniforms = 1;
 
-	m_aWeapons[0].m_pszWeaponName = "weapon_pennsylvania";
-	m_aWeapons[0].m_bAlwaysGive = true;
-	m_aWeapons[1].m_pszWeaponName = "weapon_knife";
-	m_aWeapons[1].m_bAlwaysGive = true;
+	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_pennsylvania";
+	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_knife";
 
-	addSelfToGlobalLists(this);
+	postClassConstruct(this);
 }
 
 DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
@@ -635,13 +620,14 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 	m_iSleeveBase = SLEEVE_AMILITIA;
 	m_iNumUniforms = 1;
 
-	m_aWeapons[0].m_pszWeaponName = "weapon_fowler";
-	m_aWeapons[1].m_pszWeaponName = "weapon_american_brownbess_nobayo";
+	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_fowler";
+	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_beltaxe";
+	m_aWeapons[0].m_bAllowBuckshot = true;
 
-	m_aWeapons[2].m_pszWeaponName = "weapon_beltaxe";
-	m_aWeapons[2].m_bAlwaysGive = true;
+	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_american_brownbess_nobayo";
+	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_beltaxe";
 
-	addSelfToGlobalLists(this);
+	postClassConstruct(this);
 }
 
 DEC_BG3_PLAYER_CLASS(AStateMilitia, linf, a) {
@@ -659,19 +645,17 @@ DEC_BG3_PLAYER_CLASS(AStateMilitia, linf, a) {
 	m_iSleeveBase = SLEEVE_ASTATEMILITIA;
 	m_iNumUniforms = 1;
 
-	m_aWeapons[0].m_pszWeaponName = "weapon_longpattern_nobayo";
-	m_aWeapons[0].m_bAlwaysGive = true;
-
-
-	m_aWeapons[1].m_pszWeaponName = "weapon_smallsword";
-	m_aWeapons[1].m_bAlwaysGive = true;
+	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_longpattern_nobayo";
+	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_smallsword";
 
 #ifdef CLIENT_DLL
 	m_aWeapons[0].SetLocalizedName("weapon_longpattern_state");
 	m_aWeapons[0].SetLocalizedDesc("i_weapon_longpattern_state");
 #endif 
 
-	addSelfToGlobalLists(this);
+	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_spontoon";
+
+	postClassConstruct(this);
 }
 
 DEC_BG3_PLAYER_CLASS(AFrenchGre, gre, a) {
@@ -692,12 +676,14 @@ DEC_BG3_PLAYER_CLASS(AFrenchGre, gre, a) {
 	m_iSleeveBase = SLEEVE_AFRENCH;
 	m_iNumUniforms = 1;
 
-	m_aWeapons[0].m_pszWeaponName = "weapon_revolutionnaire_nobayo";
-	m_aWeapons[0].m_bAlwaysGive = true;
-	m_aWeapons[1].m_pszWeaponName = "weapon_frag";
-	m_aWeapons[1].m_bAlwaysGive = true;
-	m_aWeapons[2].m_pszWeaponName = "weapon_hirschf_french";
-	m_aWeapons[2].m_bAlwaysGive = true;
+	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_revolutionnaire_nobayo";
+	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_frag";
+	m_aWeapons[0].m_pszWeaponTertiaryName = "weapon_hanger";
 
-	addSelfToGlobalLists(this);
+	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_frag";
+	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_hanger";
+	m_aWeapons[1].m_pszAmmoOverrideName = "Grenade";
+	m_aWeapons[1].m_iAmmoOverrideCount = 3;
+
+	postClassConstruct(this);
 }

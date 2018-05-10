@@ -36,7 +36,7 @@ using namespace vgui;
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CHL2MPTextWindow::CHL2MPTextWindow(IViewPort *pViewPort) : CTextWindow( pViewPort )
+CHL2MPTextWindow::CHL2MPTextWindow(IViewPort *pViewPort) : CTextWindow( nullptr )
 {
 	SetProportional( true );
 
@@ -60,7 +60,7 @@ void CHL2MPTextWindow::Update()
 {
 	BaseClass::Update();
 
-	m_pOK->RequestFocus();
+	//m_pOK->RequestFocus(); //BG3 - hidden
 }
 
 //-----------------------------------------------------------------------------
@@ -72,7 +72,7 @@ void CHL2MPTextWindow::SetVisible(bool state)
 
 	if ( state )
 	{
-		m_pOK->RequestFocus();
+		//m_pOK->RequestFocus(); //BG3 - hidden
 	}
 }
 

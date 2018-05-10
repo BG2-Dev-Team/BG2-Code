@@ -14,6 +14,7 @@ BG3 - simple icon display of the buff currently applied to the local player
 #include "c_baseplayer.h"
 #include "c_hl2mp_player.h"
 #include "c_team.h"
+#include "c_te_effect_dispatch.h"
 
 #include "../../shared/bg3/bg3_buffs.h"
 
@@ -32,19 +33,25 @@ public:
 	void Init(void);
 	void VidInit(void);
 	virtual bool ShouldDraw(void);
+	virtual void SetVisible(bool bVisible) override;
 	virtual void Paint(void);
 	virtual void ApplySchemeSettings(vgui::IScheme *scheme);
 	virtual void ApplySettings(KeyValues* inResourceData) override;
 	//void MsgFunc_flagstatus( bf_read &msg );
 
 	//Use different paint functions for officer/normal view
-	void PaintOfficerView		();
-	void PaintOfficerViewLabels	();
-	void PaintDefaultView		();
+	void PaintOfficerView			();
+	void PaintDefaultView			();
 
 	void HideShowLabels(bool bVisible);
-
+	
+	void LocalizeOfficerViewLabels();
+	void LocalizeEffectLabels(int iRallyFlags);
+	void PositionEffectLabels();
+	
+	friend void RallyEffectCallback(const CEffectData& data);
 private:
+	bool			m_bActivated = false;
 	int				m_iRallyFlags = 0; //local copy so we don't have to access the local player all the time
 	int				m_iTeam = TEAM_BRITISH; //to reduce stack size on paint functions
 	C_HL2MP_Player* m_pPlayer = nullptr;
@@ -53,6 +60,8 @@ private:
 	float			m_flNextCommandLabelUpdate; //let's not do the expensive look-up too often
 
 	vgui::Label*	m_ppCommandLabels[RALLY_NUM_RALLIES];
+	vgui::Label*	m_pBuffEffectLabel;
+	
 };
 
 CHudTexture* g_pEmptyDarkIcon;
@@ -62,6 +71,8 @@ using namespace vgui;
 
 DECLARE_HUDELEMENT(CBuffIcons);
 
+CBuffIcons* g_pBuffIcons;
+
 //==============================================
 // CBuffIcons
 // Constructor
@@ -69,6 +80,8 @@ DECLARE_HUDELEMENT(CBuffIcons);
 CBuffIcons::CBuffIcons(const char *pElementName) :
 CHudElement(pElementName), BaseClass(NULL, "BuffIcons")
 {
+	Warning("Creating BuffIcons!\n");
+	g_pBuffIcons = this;
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
 	Color ColourWhite(255, 255, 255, 255);
@@ -86,6 +99,12 @@ CHudElement(pElementName), BaseClass(NULL, "BuffIcons")
 		m_ppCommandLabels[i]->SetContentAlignment(vgui::Label::a_center);
 		m_ppCommandLabels[i]->SetFgColor(g_ColourWhite);
 	}
+
+	m_pBuffEffectLabel = new Label(this, "BuffIcons_info", "");
+	m_pBuffEffectLabel->SetPaintBackgroundEnabled(false);
+	m_pBuffEffectLabel->SizeToContents();
+	m_pBuffEffectLabel->SetContentAlignment(Label::a_west);
+	m_pBuffEffectLabel->SetFgColor(g_ColourWhite);
 }
 
 //==============================================
@@ -99,6 +118,7 @@ void CBuffIcons::ApplySchemeSettings(IScheme *scheme)
 	for (int i = 0; i < RALLY_NUM_RALLIES; i++) {
 		m_ppCommandLabels[i]->SetFont(font);
 	}
+	m_pBuffEffectLabel->SetFont(font);
 
 	BaseClass::ApplySchemeSettings(scheme);
 
@@ -152,7 +172,7 @@ bool CBuffIcons::ShouldDraw(void)
 {
 	m_pPlayer = static_cast<C_HL2MP_Player*>(C_HL2MP_Player::GetLocalPlayer());
 
-	if (!m_pPlayer)
+	if (!m_pPlayer || m_pPlayer->IsPlayerDead())
 		return false;
 
 	// Don't draw hud if we're using Iron Sights. -HairyPotter
@@ -167,10 +187,15 @@ bool CBuffIcons::ShouldDraw(void)
 
 	//don't draw icons if we don't have a buff
 	//or if we're not an officer
-	bool bShow = m_iRallyFlags && CHudElement::ShouldDraw()
-		|| m_bOfficerView;
+	bool bShow = (m_iRallyFlags || m_bOfficerView) && CHudElement::ShouldDraw();
+	if (bShow)
+		m_pBuffEffectLabel->SetVisible(m_iRallyFlags);
 
 	return bShow;
+}
+
+void CBuffIcons::SetVisible(bool bVisible) {
+	BaseClass::SetVisible(bVisible);
 }
 
 //==============================================
@@ -189,12 +214,10 @@ void CBuffIcons::Paint() {
 			PaintOfficerView();
 			HideShowLabels(true);
 		}
-			
 		else {
 			PaintDefaultView();
 			HideShowLabels(false);
 		}
-			
 	}
 	
 }
@@ -294,7 +317,7 @@ void CBuffIcons::PaintOfficerView() {
 	}
 
 	//Now draw all the labels
-	PaintOfficerViewLabels();
+	LocalizeOfficerViewLabels();
 }
 
 //========================================================================
@@ -303,17 +326,58 @@ void CBuffIcons::PaintOfficerView() {
 //			the player needs to press for each command
 //========================================================================
 char buff[32];
-void CBuffIcons::PaintOfficerViewLabels() {
+void CBuffIcons::LocalizeOfficerViewLabels() {
 	if (gpGlobals->curtime > m_flNextCommandLabelUpdate) {
 		for (int i = 0; i < RALLY_NUM_RALLIES; i++) {
 			//TODO get proper binds for these!
 			Q_snprintf(buff, 32, "%i\0", i + 1);
 			m_ppCommandLabels[i]->SetText(buff);
 			m_ppCommandLabels[i]->SizeToContents();
-			//Msg("Updated label text\n");
 		}
-
 		m_flNextCommandLabelUpdate = gpGlobals->curtime + 1.0f;
+	}
+}
+
+
+//========================================================================
+// Status effect localiztion
+//========================================================================
+#define RALLY_SPEED_RELOAD_APPROX 25
+void CBuffIcons::LocalizeEffectLabels(int iRallyFlags) {
+	wchar_t buffer[64];
+	switch (iRallyFlags) {
+	case RALLY_ADVANCE:
+		Warning("Localizing advance buff!\n");
+		V_snwprintf(buffer, 64, g_pVGuiLocalize->Find("#BG3_Effect_Advance"),
+			(int)(RALLY_SPEED_MOD * 100 - 100), RALLY_SPEED_RELOAD_APPROX);
+		break;
+	case RALLY_FIRE:
+		V_snwprintf(buffer, 64, g_pVGuiLocalize->Find("#BG3_Effect_Fire"),
+			(int)(((1.0f - Sqr(RALLY_ACCURACY_MOD)) * 100)), (int)(RALLY_DAMAGE_MOD * 100 - 100));
+		break;
+	case RALLY_RALLY_ROUND:
+		V_snwprintf(buffer, 64, g_pVGuiLocalize->Find("#BG3_Effect_Rally"),
+			(int)(RALLY_STAMINA_MOD * 100 - 100), (int)((1.0f - RALLY_ARMOR_MOD) * 100));
+		break;
+	case RALLY_RETREAT:
+		V_snwprintf(buffer, 64, g_pVGuiLocalize->Find("#BG3_Effect_Retreat"),
+			(int)((1.0f - RALLY_ARMOR_MOD) * 100), RALLY_SPEED_RELOAD_APPROX);
+		//RALLY_SPEED_RELOAD is an appoximation
+		//normally while reloading we move at 50% of top speed.
+		//with the buff, we move at 25% of top speed
+		//this is good enough anyways, players get the message
+		break;
+	}
+	m_pBuffEffectLabel->SetText(buffer);
+	m_pBuffEffectLabel->SizeToContents();
+}
+
+void CBuffIcons::PositionEffectLabels() {
+	if (m_bOfficerView) {
+		m_pBuffEffectLabel->SetPos(ICON_WIDTH_HEIGHT * 4, 0);
+	}
+	else {
+		m_pBuffEffectLabel->SetPos(ICON_WIDTH_HEIGHT, 0);
 	}
 }
 
@@ -324,3 +388,15 @@ void CBuffIcons::HideShowLabels(bool bVisible) {
 	for (int i = 0; i < RALLY_NUM_RALLIES; i++)
 		m_ppCommandLabels[i]->SetVisible(bVisible);
 }
+
+void RallyEffectCallBack(const CEffectData& data) {
+	C_HL2MP_Player* pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
+
+	if (pPlayer->RallyGetCurrentRallies()) {
+		g_pBuffIcons->LocalizeEffectLabels(pPlayer->RallyGetCurrentRallies());
+		g_pBuffIcons->PositionEffectLabels();
+	}
+		
+}
+
+DECLARE_CLIENT_EFFECT("RalEnab", RallyEffectCallBack);

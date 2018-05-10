@@ -98,8 +98,14 @@ DEF_EXECUTOR(Rally_Round) {
 	pBot->m_flForceNoRetreatTime = gpGlobals->curtime + 8.f;
 }
 
+DEF_EXECUTOR(Follow) {
+	if (pBot->m_pCurThinker != &Melee) {
+		pBot->ScheduleThinker(&Follow, 0.1f);
+	}
+}
+
 //for unique_ptr
-using namespace std;
+//using namespace std;
 
 void NBotInfluencer::InitMap(CUtlMap<comm_t, NBotInfluencer::pfExecutor>* pMap) {
 	pMap->Insert(VCOMM2_FIRE,		s_pfFire);
@@ -107,6 +113,7 @@ void NBotInfluencer::InitMap(CUtlMap<comm_t, NBotInfluencer::pfExecutor>* pMap) 
 	pMap->Insert(VCOMM2_HALT,		s_pfHalt);
 	pMap->Insert(VCOMM2_RETREAT,	s_pfRetreat);
 	pMap->Insert(VCOMM2_RALLY_ROUND, s_pfRally_Round);
+	pMap->Insert(VCOMM_FOLLOW,		s_pfFollow);
 }
 
 //Sets up map of voice command codes to influencing functions
@@ -126,7 +133,7 @@ CUtlMap<comm_t, NBotInfluencer::pfExecutor>* NBotInfluencer::g_pExecutorMap = Cr
 //Some day I should reimplement those utility classes myself
 bool IsExecutableVcomm(comm_t iComm) {
 	return iComm == VCOMM2_FIRE || iComm == VCOMM2_ADVANCE || iComm == VCOMM2_RETREAT || iComm == VCOMM2_HALT
-		|| iComm == VCOMM2_RALLY_ROUND;
+		|| iComm == VCOMM2_RALLY_ROUND || iComm == VCOMM_FOLLOW;
 }
 
 void NBotInfluencer::DispatchCommand(CBasePlayer* pRequester, vec_t vRange, comm_t iComm) {

@@ -1,7 +1,7 @@
 @echo off
 echo Copying to game directory
-copy "%CD%\game\client\Release_mod_hl2mp\client.dll" "F:\Program Files\Steam\SteamApps\sourcemods\bg-2013\bin"
-copy "%CD%\game\server\Release_mod_hl2mp\server.dll" "F:\Program Files\Steam\SteamApps\sourcemods\bg-2013\bin"
+copy "%CD%\game\client\Release_mod_hl2mp\client.dll" "C:\Program Files (x86)\Steam\SteamApps\sourcemods\bg-2013\bin"
+copy "%CD%\game\server\Release_mod_hl2mp\server.dll" "C:\Program Files (x86)\Steam\SteamApps\sourcemods\bg-2013\bin"
 
 @echo Copying debugging symbols
 copy "%CD%\game\client\Release_mod_hl2mp\client.dll" "%CD%\dumps"

@@ -266,6 +266,7 @@ exit 1
     <ClInclude Include="..\..\public\mathlib\amd3dx.h" />
     <ClInclude Include="..\..\game\shared\ammodef.h" />
     <ClInclude Include="..\..\game\shared\base_playeranimstate.h" />
+    <ClInclude Include="..\shared\bg3\bg3_class_quota.h" />
     <ClInclude Include="..\shared\bg3\Math\bg3_rand.h" />
     <ClInclude Include="base_transmit_proxy.h" />
     <ClInclude Include="..\..\public\basehandle.h" />
@@ -294,6 +295,7 @@ exit 1
     <ClInclude Include="bg3\bg3_line_spawn.h" />
     <ClInclude Include="bg3\bg3_scorepreserve.h" />
     <ClInclude Include="bg3\bg3_triggers.h" />
+    <ClInclude Include="bg3\Bots\bg3_bot_debug.h" />
     <ClInclude Include="bg3\bots\bg3_bot_influencer.h" />
     <ClInclude Include="bg3\static_initialize.h" />
     <ClInclude Include="bg3_turret.h" />
@@ -846,13 +848,16 @@ exit 1
     <ClInclude Include="toolframework_server.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\bg3\bg3_class_quota.cpp" />
     <ClCompile Include="..\shared\bg3\Math\bg3_rand.cpp" />
     <ClCompile Include="bg3\bg3_line_spawn.cpp" />
     <ClCompile Include="bg3\bg3_scorepreserve.cpp" />
     <ClCompile Include="bg3\bg3_spectele.cpp" />
     <ClCompile Include="bg3\bg3_triggers.cpp" />
+    <ClCompile Include="bg3\Bots\bg3_bot_debug.cpp" />
     <ClCompile Include="bg3\Bots\bg3_bot_helpers.cpp" />
     <ClCompile Include="bg3\Bots\bg3_bot_influencer.cpp" />
+    <ClCompile Include="bg3\devtools.cpp" />
     <ClCompile Include="bg3_gamerules_commands.cpp" />
     <ClCompile Include="bg3_turret.cpp" />
     <ClCompile Include="gamedll_replay.cpp" />

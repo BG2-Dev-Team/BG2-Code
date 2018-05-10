@@ -271,7 +271,6 @@ public:
 	void CheckFullcap();
 	void CheckTicketDrain();
 
-	int GetLimitTeamClass(int iTeam, int iClass);
 	//
 
 	/*

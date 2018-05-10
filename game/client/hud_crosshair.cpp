@@ -59,7 +59,6 @@ int ScreenTransform( const Vector& point, Vector& screen );
 #else
 DECLARE_HUDELEMENT( CHudCrosshair );
 #endif
-
 CHudCrosshair::CHudCrosshair( const char *pElementName ) :
 		CHudElement( pElementName ), BaseClass( NULL, "HudCrosshair" )
 {
@@ -642,7 +641,7 @@ void CHudCrosshair::Paint( void )
 			}
 		}
 
-		if (cl_crosshair.GetInt() & 8)
+		if (drawCircle && cl_crosshair.GetInt() & 8)
 		{
 			Color iconColor(255, 80, 0, 255);
 

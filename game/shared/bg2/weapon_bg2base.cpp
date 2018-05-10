@@ -161,6 +161,7 @@ bool CBaseBG2Weapon::Deploy( void )
 
 	//Awesome - make sure ironsights are disabled
 	m_bIsIronsighted = false;
+	UpdateBodyGroups();
 
 	return deploySuccess;
 }
@@ -433,6 +434,16 @@ void CBaseBG2Weapon::Hit( trace_t &traceHit, int iAttack )
 	//Apply damage to a hit target
 	if( pHitEntity && pPlayer )
 	{
+		//check friendly fire now
+		if (pPlayer->GetTeamNumber() == pHitEntity->GetTeamNumber()
+			&& !friendlyfire.GetBool()
+			&& pPlayer != pHitEntity)  //allow suicide 
+		{
+			WeaponSound(SPECIAL1); //just play miss sound then return
+			return;
+		}
+
+#ifndef CLIENT_DLL	
 		Vector hitDirection;
 		pPlayer->EyeVectors( &hitDirection, NULL, NULL );
 		VectorNormalize( hitDirection );
@@ -445,8 +456,11 @@ void CBaseBG2Weapon::Hit( trace_t &traceHit, int iAttack )
 
 		pHitEntity->DispatchTraceAttack( info, hitDirection, &traceHit);	//negative dir for weird reasons
 		ApplyMultiDamage();
+		
+		//BG3 - Awesome - fix hit sounds playing on client but not on server
 
 		WeaponSound( MELEE_HIT );
+#endif
 		if( pHitEntity->IsPlayer() )
 		{
 			//play miss sound until client gets HitVerif and overrides with MELEE_HIT
@@ -522,6 +536,8 @@ bool CBaseBG2Weapon::ImpactWater( const Vector &start, const Vector &end )
 //-----------------------------------------------------------------------------
 void CBaseBG2Weapon::ImpactEffect( trace_t &traceHit )
 {
+	//BG3 - making this server-only in order to prevent hit-not-register bugs - Awesome
+#ifndef CLIENT_DLL
 	//return; // BG2 - VisualMelon - no idea why this was here, wasn't in 2007
 	// See if we hit water (we don't do the other impact effects in this case)
 	if ( ImpactWater( traceHit.startpos, traceHit.endpos ) )
@@ -529,6 +545,7 @@ void CBaseBG2Weapon::ImpactEffect( trace_t &traceHit )
 
 	//FIXME: need new decals
 	UTIL_ImpactTrace( &traceHit, DMG_BULLET );	//BG2 - Tjoppen - surface blood
+#endif //CLIENT_DLL
 }
 
 void CBaseBG2Weapon::Swing( int iAttack, bool bIsFirstAttempt )
@@ -548,10 +565,7 @@ void CBaseBG2Weapon::Swing( int iAttack, bool bIsFirstAttempt )
 	lagcompensation->StartLagCompensation( pOwner, pOwner->GetCurrentCommand() );
 #endif
 
-	if( GetAttackType(iAttack) == ATTACKTYPE_STAB )
-		m_bLastAttackStab = true;
-	else
-		m_bLastAttackStab = false;
+	m_bLastAttackStab = GetAttackType(iAttack) == ATTACKTYPE_STAB;
 
 	Vector swingStart = pOwner->Weapon_ShootPosition( );
 	Vector forward;
@@ -618,6 +632,7 @@ void CBaseBG2Weapon::Swing( int iAttack, bool bIsFirstAttempt )
 
 void CBaseBG2Weapon::Drop( const Vector &vecVelocity )
 {
+	StopWeaponSound(RELOAD);
 /* #ifndef CLIENT_DLL
 	UTIL_Remove( this );
 #endif*/
@@ -662,49 +677,16 @@ static float AngleForZeroedRange( float muzzleVelocity, float zeroRange )
 
 void CBaseBG2Weapon::Think( void )
 {
-	CHL2MP_Player *pOwner = ToHL2MPPlayer( GetOwner() );
-	int group;
-
 	//set submodels and skins every frame
 	//TODO: we don't actually have to do this every frame - only when the animation changes
 	SetNextThink( gpGlobals->curtime ); 
-
-	if( pOwner == NULL ){
-		BaseClass::Think(); //BG2 - roob - need to call this so dropped weapons get removed.
-		return;
-	}
-
-	CBaseViewModel *pViewModel = pOwner->GetViewModel();
-
-	//only fiddle around if we have a view model and we're the active weapon
-	//if we're not the active weapon, we'd mess up the active weapon's submodels and skin!
-	if ( !pViewModel || pOwner->GetActiveWeapon() != this )
-	{
-		//BG2 - Tjoppen - don't forget to call Think() here as well
-		BaseClass::Think();
-		return;
-	}
-
-	//hide bayonet if we don't have a secondary attack
-	if ( (group = pViewModel->FindBodygroupByName( "musket_bayonet" )) >= 0)
-		pViewModel->SetBodygroup( group, Def()->m_Attackinfos[1].m_iAttacktype == ATTACKTYPE_STAB );
-
-	//pick the correct metal
-	if ( (group = pViewModel->FindBodygroupByName( "musket_metal" )) >= 0)
-		pViewModel->SetBodygroup( group, pOwner->GetTeamNumber() == TEAM_BRITISH );
-
-	//use the correct arms (natives don't have sleeves)
-	if ( (group = pViewModel->FindBodygroupByName( "arms" )) >= 0)
-		pViewModel->SetBodygroup( group, pOwner->GetTeamNumber() == TEAM_BRITISH &&
-		                            pOwner->GetClass() == CLASS_SKIRMISHER );
-
-	
-	
-	BaseClass::Think();
+	BaseClass::Think(); //BG2 - roob - need to call this so dropped weapons get removed.
+	//UpdateBodyGroups();
 }
 
 void CBaseBG2Weapon::ItemPostFrame( void )
 {
+	//UpdateBodyGroups();
 	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 
 	if( pOwner == NULL )
@@ -812,9 +794,12 @@ void CBaseBG2Weapon::Equip( CBaseCombatCharacter *pOwner )
 
 	CHL2MP_Player *player = ToHL2MPPlayer( pOwner );
 
+	BaseClass::Equip(pOwner);
+
 	//pick correct sleeve texture based on our class
 	//Msg("Setting sleeve skin to ");
 	m_nSkin = player->GetPlayerClass()->m_iSleeveBase + player->m_iClassSkin;
+	
 	//Msg("%i!\n", m_nSkin);
 
 	/*switch( player->GetTeamNumber() )
@@ -854,7 +839,7 @@ void CBaseBG2Weapon::Equip( CBaseCombatCharacter *pOwner )
 		break;
 	}*/
 
-	return BaseClass::Equip( pOwner );
+	
 
 }
 

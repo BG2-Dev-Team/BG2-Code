@@ -875,10 +875,64 @@ void CBaseCombatWeapon::OnPickedUp( CBaseCombatCharacter *pNewOwner )
 #ifdef HL2MP
 	HL2MPRules()->RemoveLevelDesignerPlacedObject( this );
 #endif
-
+	UpdateBodyGroups(); //BG3 - call it here too
 	// Someone picked me up, so make it so that I can't be removed.
 	SetRemoveable( false );
 #endif
+}
+
+//BG3 - Awesome - moving this function to BaseCombatWeapon such
+//that OnPickedUp can call it without having to dererence any virtual
+//functions or do other expensive nonsense.
+void CBaseCombatWeapon::UpdateBodyGroups() {
+#ifndef CLIENT_DLL
+	CHL2MP_Player *pOwner = ToHL2MPPlayer(GetOwner());
+	if (!pOwner)
+		return;
+
+	int group;
+
+	CBaseViewModel *pViewModel = pOwner->GetViewModel();
+
+	//TODO move this skinning stuff to a more efficient place!
+	//only fiddle around if we have a view model and we're the active weapon
+	//if we're not the active weapon, we'd mess up the active weapon's submodels and skin!
+	if (!pViewModel || pOwner->GetActiveWeapon() != this)
+		return;
+
+	//Msg("Updating weapon bodygroups\n");
+
+	//hide bayonet if we don't have a secondary attack
+	if ((group = pViewModel->FindBodygroupByName("musket_bayonet")) >= 0)
+		pViewModel->SetBodygroup(group, Def()->m_Attackinfos[1].m_iAttacktype == ATTACKTYPE_STAB);
+
+	//pick the correct team-dependent body group, can be musket metal, sleeve, etc.
+	if ((group = pViewModel->FindBodygroupByName("team")) >= 0)
+		pViewModel->SetBodygroup(group, pOwner->GetTeamNumber() == TEAM_BRITISH);
+
+	//use the correct arms (natives don't have sleeves)
+	if ((group = pViewModel->FindBodygroupByName("arms")) >= 0) {
+		int armModel = 0;
+		if (pOwner->GetPlayerClass() == PlayerClasses::g_pBNative)
+			armModel = 1;
+		else if (pOwner->GetPlayerClass() == PlayerClasses::g_pBGrenadier)
+			armModel = 2;
+		pViewModel->SetBodygroup(group, armModel);
+	}
+
+
+	//show sleeve on grenadier
+	if ((group = pViewModel->FindBodygroupByName("sleeve_inner")) >= 0)
+		pViewModel->SetBodygroup(group, pOwner->GetPlayerClass() == PlayerClasses::g_pBGrenadier);
+#endif
+}
+
+void CBaseCombatWeapon::UpdateSkinToMatchOwner(CBaseCombatCharacter* pOwner) {
+	CHL2MP_Player *player = ToHL2MPPlayer(pOwner);
+
+	//pick correct sleeve texture based on our class
+	//Msg("Setting sleeve skin to ");
+	m_nSkin = player->GetPlayerClass()->m_iSleeveBase + player->m_iClassSkin;
 }
 
 //-----------------------------------------------------------------------------
@@ -1604,6 +1658,7 @@ bool CBaseCombatWeapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 
 	//BG2 -Added for Iron Sights Testing. Credits to z33ky for the code. -HairyPotter
 	DisableIronsights();
+	UpdateBodyGroups();
 	//
 
 	CBaseCombatCharacter *pOwner = GetOwner();
@@ -1637,6 +1692,10 @@ bool CBaseCombatWeapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 	if (pOwner)
 	{
 		((CBasePlayer *)pOwner)->SetAnimation(PLAYER_HOLSTER);
+
+		//call this in holster because sometimes after spawning,
+		//our weapons autoswitch and the skins are wrong
+		UpdateSkinToMatchOwner(pOwner);
 	}
 #endif
 
@@ -1781,6 +1840,13 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 
 	// BG2 - VisualMelon - Don't need this
 	//UpdateAutoFire();
+
+	//BG3 - I'm getting really tired of this function call not working.
+	// I think it's because the model takes a frame or two to be created,
+	// so all earlier function calls don't work.
+	// so I'm putting it here... ugh
+	// TODO find a more efficient way to do this
+	UpdateBodyGroups();
 
 	//Track the duration of the fire
 	//FIXME: Check for IN_ATTACK2 as well?

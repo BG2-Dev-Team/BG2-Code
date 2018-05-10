@@ -2058,7 +2058,7 @@ static void ValidateMOTDFilename( IConVar *pConVar, const char *oldValue, float 
 	}
 }
 
-static ConVar motdfile( "motdfile", "motd.txt", 0, "The MOTD file to load.", ValidateMOTDFilename );
+static ConVar motdfile( "motdfile", "motd.htm", 0, "The MOTD file to load.", ValidateMOTDFilename );
 static ConVar motdfile_text( "motdfile_text", "motd_text.txt", 0, "The text-only MOTD file to use for clients that have disabled HTML MOTDs.", ValidateMOTDFilename );
 void CServerGameDLL::LoadMessageOfTheDay()
 {

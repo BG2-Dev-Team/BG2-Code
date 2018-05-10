@@ -23,17 +23,23 @@ namespace vgui
 	class TextEntry;
 }
 
+/*
+BG3 - removed a lot of the functionality here, such that this window
+now just manages the text window shown in the TeamMenu - Awesome
+*/
+
 //-----------------------------------------------------------------------------
 // Purpose: displays the MOTD
 //-----------------------------------------------------------------------------
-
+class CTextWindow;
+//CTextWindow* g_pMOTD = NULL;
 class CTextWindow : public vgui::Frame, public IViewPortPanel
 {
 private:
 	DECLARE_CLASS_SIMPLE( CTextWindow, vgui::Frame );
 
 public:
-	CTextWindow(IViewPort *pViewPort);
+	CTextWindow(IViewPortPanel *pParent);
 	virtual ~CTextWindow();
 
 	virtual const char *GetName( void ) { return PANEL_INFO; }
@@ -85,6 +91,7 @@ protected:
 
 	vgui::TextEntry	*m_pTextMessage;
 	
+public:
 	class CMOTDHTML : public vgui::HTML
 	{
 	private:
@@ -96,8 +103,8 @@ protected:
 	};
 	CMOTDHTML		*m_pHTMLMessage;
 	
-	vgui::Button	*m_pOK;
-	vgui::Label		*m_pTitleLabel;
+	//vgui::Button	*m_pOK;
+	//vgui::Label		*m_pTitleLabel;
 };
 
 

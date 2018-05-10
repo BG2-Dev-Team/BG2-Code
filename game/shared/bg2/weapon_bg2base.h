@@ -59,19 +59,6 @@ static const Vector g_bludgeonMaxs(BLUDGEON_HULL_DIM,BLUDGEON_HULL_DIM,BLUDGEON_
 #define CBaseBG2Weapon C_BaseBG2Weapon
 #endif
 
-enum
-{
-	ATTACKTYPE_NONE = 0,
-	ATTACKTYPE_STAB,
-	ATTACKTYPE_SLASH,
-	ATTACKTYPE_FIREARM,
-	/*
-	other attacktypes might be
-	ATTACKTYPE_THROW,
-
-	*/
-};
-
 class CBaseBG2Weapon : public CBaseHL2MPCombatWeapon
 {
 	DECLARE_CLASS( CBaseBG2Weapon, CBaseHL2MPCombatWeapon );
@@ -284,6 +271,8 @@ public:
 	bool	m_bShouldFireDelayed;
 	float	m_flNextDelayedFire;
 
+	//BG3 - Awesome - moved this to CBaseCombatWeapon
+	//void		UpdateBodyGroups();
 	void		Equip( CBaseCombatCharacter *pOwner );
 	void		Think( void );
 	void		ItemPostFrame( void );

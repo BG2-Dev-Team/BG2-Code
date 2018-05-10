@@ -361,12 +361,14 @@ public:
 	CBaseCombatCharacter	*GetOwner() const;
 	void					SetOwner( CBaseCombatCharacter *owner );
 	virtual void			OnPickedUp( CBaseCombatCharacter *pNewOwner );
+	void					UpdateBodyGroups(); //BG3 - Awesome - moving this here for performance reasons I guess
+	void					UpdateSkinToMatchOwner(CBaseCombatCharacter* pOwner); //owner must be non-null
 
 	virtual void			AddViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles ) {};
 	virtual float			CalcViewmodelBob( void ) { return 0.0f; };
 
 	//BG2 -Added for Iron Sights Testing. Credits to Jorg for the code. -HairyPotter
-	void		CalcIronsights(Vector &pos, QAngle &ang);
+	void					CalcIronsights(Vector &pos, QAngle &ang);
 	//
 
 	// Returns information about the various control panels

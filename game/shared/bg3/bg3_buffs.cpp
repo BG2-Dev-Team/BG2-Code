@@ -34,6 +34,10 @@ commented on the following form:
 #include "cbase.h"
 #include "bg3_buffs.h"
 #include "bg3_player_shared.h"
+#include "effect_dispatch_data.h"
+#ifndef CLIENT_DLL
+#include "te_effect_dispatch.h"
+#endif
 
 #ifdef CLIENT_DLL
 #define CVAR_FLAGS	(FCVAR_REPLICATED | FCVAR_NOTIFY)
@@ -91,6 +95,8 @@ namespace BG3Buffs {
 		int affectedCount = 0;
 		int iTeam = pRequester->GetTeamNumber();
 
+		CRecipientFilter filter;
+
 		//Iterate through them and rally them if they're close enough
 		CHL2MP_Player * curPlayer = nullptr;
 		Vector ourLocation = pRequester->GetAbsOrigin();
@@ -103,6 +109,7 @@ namespace BG3Buffs {
 				if ((ourLocation - theirLocation).Length() < buffRadius){
 					RallyPlayer(newRallyFlags, curPlayer);
 					affectedCount++;
+					filter.AddRecipient(curPlayer);
 				}
 			}
 		}
@@ -113,12 +120,17 @@ namespace BG3Buffs {
 		} else {
 			//if we've rallied other players, rally ourselves to
 			RallyPlayer(newRallyFlags, pRequester);
+			filter.AddRecipient(pRequester);
 
 			//Set end and next rally times
 			ConVar* pcvEndTime = EndRallyTimeCvarFor(iTeam);
 
 			pcvEndTime->SetValue(gpGlobals->curtime + GetRallyDuration(newRallyFlags));
 			SetNextRallyTime(iTeam, gpGlobals->curtime + RALLY_INTERVAL);
+
+			//notify clients of rallying, activating HUD events
+			CEffectData data;
+			DispatchEffect("RalEnab", data, filter);
 		}
 
 		//return true to indicate request as succesful

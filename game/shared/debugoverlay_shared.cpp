@@ -127,6 +127,26 @@ void NDebugOverlay::Line( const Vector &origin, const Vector &target, int r, int
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Draws a line from one position to another
+//-----------------------------------------------------------------------------
+void NDebugOverlay::LineForced(const Vector &origin, const Vector &target, int r, int g, int b, bool noDepthTest, float duration)
+{
+	// --------------------------------------------------------------
+	// Clip the line before sending so we 
+	// don't overflow the client message buffer
+	// --------------------------------------------------------------
+	CBasePlayer *player = GetLocalPlayer();
+
+	if (player == NULL)
+		return;
+
+	if (debugoverlay)
+	{
+		debugoverlay->AddLineOverlay(origin, target, r, g, b, noDepthTest, duration);
+	}
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Draw triangle

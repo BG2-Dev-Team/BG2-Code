@@ -51,10 +51,14 @@ commented on the following form:
 #include "vgui_bitmapbutton.h"
 #include <vgui_controls/ImagePanel.h>
 #include <imagemouseoverbutton.h>
-
+//#include <game_controls/vguitextwindow.h>
+#include "vgui/bg3_motd.h"
+#include "vgui/timed_label.h"
 #include <game/client/iviewport.h>
 
 #include "hl2mp_gamerules.h" // BG2 - VisualMelon - moved from classmenu.cpp so we can get the ammo counts
+
+#define TEMP_HTML_FILE	"textwindow_temp.html"
 
 class KeyValues;
 
@@ -145,14 +149,14 @@ public:
 	~CTeamMenu();
 
 	virtual const char* GetName(void)		override { return PANEL_TEAMS; }
-	virtual void SetData(KeyValues* data)	override {}
 	virtual void SetVisible(bool bVisible)	override ;
-	virtual void Reset(void)				override {}
+	virtual void Reset(void)				override { m_pMOTD->ManualReset(); }
 	virtual void Update(void)				override ;
 	virtual bool NeedsUpdate(void)			override { return m_flNextGameRulesUpdate < gpGlobals->curtime; }
 	virtual bool HasInputElements(void)		override { return true; }
 	virtual void ShowPanel(bool bShow)		override ;
 	virtual void Paint(void)				override ;
+	virtual void SetData(KeyValues* kv)		override ;
 	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
 	virtual bool IsVisible() { return BaseClass::IsVisible(); }
 	vgui::VPANEL GetVPanel(void) { return BaseClass::GetVPanel(); }
@@ -160,11 +164,25 @@ public:
 
 	inline void	 SwitchToClassmenu() {
 		//ShowPanel(false); //this should be done at the class menu command
+							//because class menu needs to know whether or not the teammenu
+							//was just visible
 		engine->ClientCmd("classmenu");
+	}
+	//Checks if we can join the team OPPOSITE to the one given.
+	inline bool	 MayJoinOtherTeam(int iCurentTeam) {
+		if (iCurentTeam == TEAM_AMERICANS)
+			return s_pBritishButton->m_bEnabled;
+		else
+			return s_pAmericanButton->m_bEnabled;
 	}
 
 	//choose team label
 	vgui::Label*		m_pChooseTeamLabel;
+
+	vgui::Label*		m_pAmericanLabel;
+	vgui::Label*		m_pBritishLabel;
+
+	vgui::TimedLabel*	m_pTeamFullLabel;
 
 	//Team selection buttons
 	static CTeamButton	*s_pBritishButton,
@@ -172,7 +190,7 @@ public:
 	CSpectateButton		*m_pSpectateButton;
 	CConscriptButton	*m_pConscriptButton;
 
-	vgui::HTML			*m_pInfoHTML;
+	CMOTDHTML			*m_pMOTD;
 
 	vgui::IImage		*m_pBackground,
 						*m_pLeftHighlight,

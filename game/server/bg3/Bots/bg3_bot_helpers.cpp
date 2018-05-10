@@ -243,6 +243,13 @@ void CSDKBot::SendBotVcommContext(BotContext context) {
 //-------------------------------------------------------------------------------------------------
 void CSDKBot::MoveToNearestTeammate() {
 	CBasePlayer* pFriend = m_PlayerSearchInfo.CloseFriend();
+	CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
+	if (pEnemy && m_PlayerSearchInfo.CloseFriendDist() < RETREAT_STOP_RANGE * 2.2f) {
+		MoveTowardPointNoTurn(pFriend->GetAbsOrigin());
+		LookAt(pEnemy->Weapon_ShootPosition(), 0.5f, 3.f);
+		return;
+	}
+
 	m_curCmd.buttons |= IN_FORWARD;
 	m_curCmd.buttons &= ~IN_BACK;
 	LookAt(pFriend->Weapon_ShootPosition(), 0.8f, 4.f);

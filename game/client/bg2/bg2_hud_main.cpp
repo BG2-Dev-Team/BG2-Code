@@ -529,12 +529,14 @@ void CHudBG2::Paint()
 	m_pLabelATickets->SizeToContents();
 	m_pLabelATickets->SetFgColor( colorForFlash(m_flAFlashEnd) );
 
-	int iAmmoCount = pHL2Player->GetAmmoCount(wpn->GetPrimaryAmmoType()) + wpn->Clip1();
-	if( iAmmoCount >= 0 )
+	int iAmmoCount = pHL2Player->GetAmmoCount(wpn->GetPrimaryAmmoType());
+	if (wpn->Clip1() > 0)
+		iAmmoCount++;
+	if( iAmmoCount > 0)
 	{
 		Q_snprintf( msg2, 512, "%i ", iAmmoCount);
 		m_pLabelAmmo->SetText(msg2);
-		if (wpn->Clip1() != 1)
+		if (wpn->Clip1() == 0)
 		{
 			m_pLabelAmmo->SetFgColor(ColourRed);
 		}

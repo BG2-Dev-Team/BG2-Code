@@ -177,7 +177,7 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 	Vector vecReported = m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
 	
 	//BG3 - Awesome - HACK HACK I tried to set the damage from inside the constructor but for some reason it woulnd't change! Oh well, we'll only have one grenade type anyway
-	CTakeDamageInfo info( this, m_hThrower, GetBlastForce(), GetAbsOrigin(), /*m_flDamage*/ CBaseBG2Weapon::GetGrenadeDamage(), bitsDamageType, 0, &vecReported );
+	CTakeDamageInfo info( this, m_hThrower, this, GetBlastForce(), GetAbsOrigin(), /*m_flDamage*/ CBaseBG2Weapon::GetGrenadeDamage(), bitsDamageType, 0, &vecReported );
 
 	RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
 

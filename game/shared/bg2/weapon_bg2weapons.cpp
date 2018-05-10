@@ -67,6 +67,9 @@ const int LONGPATTERN_FIRE_DAMAGE = 114;	//62 * 1.85
 const int LONGPATTERN_BAYONET_DAMAGE = 66;	//45 * 0.8 * 1.85
 const int LONGPATTERN_BAYONET_RANGE = 86;
 
+const int SPONTOON_DAMAGE = 55;
+const int SPONTOON_RANGE = 88;
+
 const int FOWLER_FIRE_DAMAGE = 103;			//damage per ball. 56 * 1.85
 const int FOWLER_SHOT_DAMAGE = 23;			//damage per shot. 10 * 1.85 -> 18 -> 8*18 = 144 - VisualMelon - changed to 20 (formerly 18)
 const int FOWLER_NUM_SHOT = 6;				// BG2 - VisualMelon - formerly 10
@@ -84,16 +87,18 @@ const int PISTOL_FIRE_DAMAGE = 101;			//55 * 1.85
 const int KNIFE_DAMAGE = 45;				//was 55, but lowered to 45 to balance with making knife faster
 const int SABRE_DAMAGE = 74;				//40 * 1.85
 const int TOMAHAWK_DAMAGE = 79;				//43 * 1.85
+const int CLUB_DAMAGE		= 82;
 const int HIRSCHFAENGER_DAMAGE = 55;		//used to be knife's damage, but then knife was changed from 55 to 45
-const int SHORTSWORD_DAMAGE = 70;			//this ought to be a good number
+const int HANGER_DAMAGE = 70;			//this ought to be a good number
 
 //BG2 - Tjoppen - own constants, interpreted from various places in the BG source
 const float SABRE_RANGE = 57.0;
 const float HIRSCHFAENGER_RANGE = 57.0;
-const float SHORTSWORD_RANGE = 57.0;
+const float SMALLSWORD_RANGE = 57.0f;
 const float HANGER_RANGE = 61.0;
 const float KNIFE_RANGE = 52.0;
 const float TOMAHAWK_RANGE = 55.0;
+const float CLUB_RANGE = 57.0f;
 
 const float BAYONET_COS_TOLERANCE = 0.9961946980917;		//+-5 degrees
 const float BAYONET_RETRACE_DURATION = 0.1;
@@ -104,8 +109,8 @@ ConVar sv_bayonet_retrace_duration("sv_bayonet_retrace_duration", "0.1", FCVAR_R
 const float KNIFE_COS_TOLERANCE				= 0.866f;		//+-30 degrees
 const float KNIFE_RETRACE_DURATION			= 0.15f;
 
-const float SHORTSWORD_COS_TOLERANCE		= 0.966;		//+-15 degrees
-const float SHORTSWORD_RETRACE_DURATION		= 0.18f;
+const float HANGER_COS_TOLERANCE		= 0.966;		//+-15 degrees
+const float HANGER_RETRACE_DURATION		= 0.18f;
 
 const float TOMAHAWK_COS_TOLERANCE			= 0.906f;		//+-25 degrees
 const float TOMAHAWK_RETRACE_DURATION		= 0.2f;
@@ -115,6 +120,9 @@ const float HIRSCHFAENGER_RETRACE_DURATION	= 0.2f;
 
 const float SABRE_COS_TOLERANCE				= 0.866f;		//+-30 degrees
 const float SABRE_RETRACE_DURATION			= 0.25f;
+
+const float SPONTOON_COS_TOLERANCE			= 0.99813f;		//+- 3.5 degrees
+const float SPONTOON_RETRACE_DURATION		= 0.08f;
 
 const float MUZZLE_VELOCITY_RIFLE = 20400;
 const float MUZZLE_VELOCITY_SMOOTHBORE = 15600;
@@ -537,9 +545,9 @@ MELEE_ACTTABLE( hirschf )
 #endif
 
 #ifdef CLIENT_DLL
-#define CWeaponshortsword C_Weaponshortsword
+#define CWeaponhanger C_Weaponhanger
 #endif
-DECLARE_BG2_WEAPON(shortsword)
+DECLARE_BG2_WEAPON(hanger)
 {
 	m_fHolsterTime = 0.75f;
 
@@ -547,63 +555,28 @@ DECLARE_BG2_WEAPON(shortsword)
 
 	//primary
 	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
-	m_Attackinfos[0].m_iDamage = SHORTSWORD_DAMAGE;//60;
+	m_Attackinfos[0].m_iDamage = HANGER_DAMAGE;//60;
 	m_Attackinfos[0].m_flAttackrate = 1.2;//-0.7f;
 	m_Attackinfos[0].m_flRange = HANGER_RANGE;
 	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
-	m_Attackinfos[0].m_flCosAngleTolerance = SHORTSWORD_COS_TOLERANCE;
-	m_Attackinfos[0].m_flRetraceDuration = SHORTSWORD_RETRACE_DURATION;
+	m_Attackinfos[0].m_flCosAngleTolerance = HANGER_COS_TOLERANCE;
+	m_Attackinfos[0].m_flRetraceDuration = HANGER_RETRACE_DURATION;
 	m_Attackinfos[0].m_iStaminaDrain = MELEE_STAMINA_DRAIN;
 
 	//secondary
 	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_SLASH;
-	m_Attackinfos[1].m_iDamage = SHORTSWORD_DAMAGE / 1.5;//60;
+	m_Attackinfos[1].m_iDamage = HANGER_DAMAGE / 1.5;//60;
 	m_Attackinfos[1].m_flAttackrate = 1.2 / 1.5;//-0.7f;
 	m_Attackinfos[1].m_flRange = HANGER_RANGE;
 	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
 	m_Attackinfos[1].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
-	m_Attackinfos[1].m_flCosAngleTolerance = SHORTSWORD_COS_TOLERANCE;
-	m_Attackinfos[1].m_flRetraceDuration = SHORTSWORD_RETRACE_DURATION;
+	m_Attackinfos[1].m_flCosAngleTolerance = HANGER_COS_TOLERANCE;
+	m_Attackinfos[1].m_flRetraceDuration = HANGER_RETRACE_DURATION;
 	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 1.2;
 }
 #ifndef CLIENT_DLL
-MELEE_ACTTABLE(shortsword)
-#endif
-
-#ifdef CLIENT_DLL
-#define CWeaponhirschf_french C_Weaponhirschf_french
-#endif
-DECLARE_BG2_WEAPON(hirschf_french)
-{
-	m_fHolsterTime = 0.75f;
-
-	m_bWeaponHasSights = false;
-
-	//primary
-	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
-	m_Attackinfos[0].m_iDamage = SHORTSWORD_DAMAGE;//60;
-	m_Attackinfos[0].m_flAttackrate = 1.2;//-0.7f;
-	m_Attackinfos[0].m_flRange = HANGER_RANGE;
-	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
-	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
-	m_Attackinfos[0].m_flCosAngleTolerance = SHORTSWORD_COS_TOLERANCE;
-	m_Attackinfos[0].m_flRetraceDuration = SHORTSWORD_RETRACE_DURATION;
-	m_Attackinfos[0].m_iStaminaDrain = MELEE_STAMINA_DRAIN;
-
-	//secondary
-	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_SLASH;
-	m_Attackinfos[1].m_iDamage = SHORTSWORD_DAMAGE / 1.5;//60;
-	m_Attackinfos[1].m_flAttackrate = 1.2 / 1.5;//-0.7f;
-	m_Attackinfos[1].m_flRange = HANGER_RANGE;
-	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
-	m_Attackinfos[1].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
-	m_Attackinfos[1].m_flCosAngleTolerance = SHORTSWORD_COS_TOLERANCE;
-	m_Attackinfos[1].m_flRetraceDuration = SHORTSWORD_RETRACE_DURATION;
-	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 1.2;
-}
-#ifndef CLIENT_DLL
-MELEE_ACTTABLE(hirschf_french)
+MELEE_ACTTABLE(hanger)
 #endif
 
 #ifdef CLIENT_DLL
@@ -617,24 +590,24 @@ DECLARE_BG2_WEAPON(smallsword)
 
 	//primary
 	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
-	m_Attackinfos[0].m_iDamage = SHORTSWORD_DAMAGE;//60;
+	m_Attackinfos[0].m_iDamage = HANGER_DAMAGE;//60;
 	m_Attackinfos[0].m_flAttackrate = 1.2;//-0.7f;
-	m_Attackinfos[0].m_flRange = SHORTSWORD_RANGE;
+	m_Attackinfos[0].m_flRange = SMALLSWORD_RANGE;
 	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
-	m_Attackinfos[0].m_flCosAngleTolerance = SHORTSWORD_COS_TOLERANCE;
-	m_Attackinfos[0].m_flRetraceDuration = SHORTSWORD_RETRACE_DURATION;
+	m_Attackinfos[0].m_flCosAngleTolerance = HANGER_COS_TOLERANCE;
+	m_Attackinfos[0].m_flRetraceDuration = HANGER_RETRACE_DURATION;
 	m_Attackinfos[0].m_iStaminaDrain = MELEE_STAMINA_DRAIN;
 
 	//secondary
 	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_SLASH;
-	m_Attackinfos[1].m_iDamage = SHORTSWORD_DAMAGE / 1.5;//60;
+	m_Attackinfos[1].m_iDamage = HANGER_DAMAGE / 1.5;//60;
 	m_Attackinfos[1].m_flAttackrate = 1.2 / 1.5;//-0.7f;
-	m_Attackinfos[1].m_flRange = SHORTSWORD_RANGE;
+	m_Attackinfos[1].m_flRange = SMALLSWORD_RANGE;
 	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
 	m_Attackinfos[1].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
-	m_Attackinfos[1].m_flCosAngleTolerance = SHORTSWORD_COS_TOLERANCE;
-	m_Attackinfos[1].m_flRetraceDuration = SHORTSWORD_RETRACE_DURATION;
+	m_Attackinfos[1].m_flCosAngleTolerance = HANGER_COS_TOLERANCE;
+	m_Attackinfos[1].m_flRetraceDuration = HANGER_RETRACE_DURATION;
 	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 1.2;
 }
 #ifndef CLIENT_DLL
@@ -667,6 +640,47 @@ DECLARE_BG2_WEAPON( tomahawk )
 
 #ifndef CLIENT_DLL
 MELEE_ACTTABLE( tomahawk )
+#endif
+
+#ifdef CLIENT_DLL
+#define CWeaponclub C_Weaponclub
+#endif
+DECLARE_BG2_WEAPON(club)
+{
+	m_fHolsterTime = 0.75f;
+
+	m_bWeaponHasSights = false;
+
+	m_iOwnerSpeedModOnKill = 3;
+
+	//primary
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
+	m_Attackinfos[0].m_iDamage = CLUB_DAMAGE;//60;
+	m_Attackinfos[0].m_flAttackrate = 1.4f;//-0.7f;
+	m_Attackinfos[0].m_flRange = CLUB_RANGE;
+	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_ATTACK;
+	m_Attackinfos[0].m_flCosAngleTolerance = TOMAHAWK_COS_TOLERANCE;
+	m_Attackinfos[0].m_flRetraceDuration = TOMAHAWK_RETRACE_DURATION;
+	m_Attackinfos[0].m_iStaminaDrain = MELEE_STAMINA_DRAIN;
+
+	//secondary
+	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_SLASH;
+	m_Attackinfos[1].m_iDamage = CLUB_DAMAGE * 0.64f;//60;
+	m_Attackinfos[1].m_flAttackrate = 1.4f * 0.64f;//-0.7f;
+	m_Attackinfos[1].m_flRange = CLUB_RANGE;
+	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
+	m_Attackinfos[1].m_iAttackActivity = ACT_VM_ATTACK;
+	m_Attackinfos[1].m_flCosAngleTolerance = TOMAHAWK_COS_TOLERANCE;
+	m_Attackinfos[1].m_flRetraceDuration = TOMAHAWK_RETRACE_DURATION;
+	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN * 0.64f;
+
+	//secondary
+	//m_Attackinfos[1] = m_Attackinfos[0];
+}
+
+#ifndef CLIENT_DLL
+MELEE_ACTTABLE(club)
 #endif
 
 #ifdef CLIENT_DLL
@@ -1027,6 +1041,43 @@ DECLARE_BG2_WEAPON( longpattern_nobayo )
 
 #ifndef CLIENT_DLL
 MUSKET_ACTTABLE( longpattern_nobayo )
+#endif
+
+#ifdef CLIENT_DLL
+#define CWeaponspontoon C_Weaponspontoon
+#endif
+DECLARE_BG2_WEAPON(spontoon)
+{
+	m_bWeaponHasSights = false;
+	//
+
+	//primary
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_STAB;
+	m_Attackinfos[0].m_iDamage = SPONTOON_DAMAGE;
+	m_Attackinfos[0].m_flAttackrate = 0.85f;
+	m_Attackinfos[0].m_flRange = SPONTOON_RANGE;
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_SECONDARYATTACK;
+	m_Attackinfos[0].m_iAttackActivityEmpty = ACT_VM_SECONDARYATTACK_EMPTY;
+	m_Attackinfos[0].m_flCosAngleTolerance = SPONTOON_COS_TOLERANCE;
+	m_Attackinfos[0].m_flRetraceDuration = SPONTOON_RETRACE_DURATION;
+	m_Attackinfos[0].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 2;
+
+	//secondary
+	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_STAB;
+	m_Attackinfos[1].m_iDamage = SPONTOON_DAMAGE / 2;
+	m_Attackinfos[1].m_flAttackrate = 0.85f / 2;
+	m_Attackinfos[1].m_flRange = SPONTOON_RANGE;
+	m_Attackinfos[1].m_iAttackActivity = ACT_VM_SECONDARYATTACK;
+	m_Attackinfos[1].m_iAttackActivityEmpty = ACT_VM_SECONDARYATTACK_EMPTY;
+	m_Attackinfos[1].m_flCosAngleTolerance = SPONTOON_COS_TOLERANCE;
+	m_Attackinfos[1].m_flRetraceDuration = SPONTOON_RETRACE_DURATION;
+	m_Attackinfos[1].m_iStaminaDrain = m_Attackinfos[0].m_iStaminaDrain / 2;
+
+
+}
+
+#ifndef CLIENT_DLL
+MUSKET_ACTTABLE(spontoon)
 #endif
 
 

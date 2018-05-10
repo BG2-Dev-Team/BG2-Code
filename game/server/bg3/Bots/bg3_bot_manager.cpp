@@ -154,8 +154,11 @@ void CBotManager::RemoveBotOfTeam(int iTeam) {
 	}
 
 	if (pPlayer && found) {
+		//remove fakeclient flag
+		//pPlayer->RemoveFlag(FL_FAKECLIENT);
+
 		//assert that the bot's m_pPlayer is set to null
-		gBots[pPlayer->GetClientIndex()].m_pPlayer = nullptr;
+		//gBots[pPlayer->GetClientIndex()].m_pPlayer = nullptr;
 
 		//construct a server command to kick the bot
 		//maximum length of bot name is 32 so we'll add a bit more

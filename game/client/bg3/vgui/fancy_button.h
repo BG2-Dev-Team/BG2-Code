@@ -69,7 +69,10 @@ namespace vgui {
 
 		virtual void SetVisible(bool bVisible) override;
 
-		virtual void OnMousePressed(MouseCode code) { BaseClass::OnMousePressed(code); }
+		void SetCommandFunc(void(* pCommand)()) {
+			m_pfCommand = pCommand;
+		}
+		virtual void OnMousePressed(MouseCode code);
 		void OnCursorEntered() override;
 		void OnCursorExited() override;
 
@@ -103,6 +106,7 @@ namespace vgui {
 		Color m_cNormalColor;
 		Color m_cHighlightColor;
 
+		void(* m_pfCommand)() = nullptr;
 		//void DoShadowTextOffset();
 	};
 

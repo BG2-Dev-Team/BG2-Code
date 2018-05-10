@@ -113,7 +113,7 @@ static ConVar r_skybox( "r_skybox","1", FCVAR_CHEAT, "Enable the rendering of sk
 #ifdef TF_CLIENT_DLL
 ConVar r_drawviewmodel( "r_drawviewmodel","1", FCVAR_ARCHIVE );
 #else
-ConVar r_drawviewmodel( "r_drawviewmodel","1", FCVAR_CHEAT );
+ConVar r_drawviewmodel( "r_drawviewmodel","1", 0 );
 #endif
 static ConVar r_drawtranslucentrenderables( "r_drawtranslucentrenderables", "1", FCVAR_CHEAT );
 static ConVar r_drawopaquerenderables( "r_drawopaquerenderables", "1", FCVAR_CHEAT );

@@ -387,9 +387,14 @@ exit 1
     <ClInclude Include="..\..\game\shared\weapon_ifmsteadycam.h" />
     <ClInclude Include="..\..\game\shared\weapon_parse.h" />
     <ClInclude Include="..\..\game\shared\weapon_proficiency.h" />
+    <ClInclude Include="bg3\vgui\bg3_button_close.h" />
+    <ClInclude Include="bg3\vgui\bg3_create_server_dialog.h" />
     <ClInclude Include="bg3\vgui\bg3_fonts.h" />
+    <ClInclude Include="bg3\vgui\bg3_motd.h" />
     <ClInclude Include="bg3\vgui\fancy_button.h" />
+    <ClInclude Include="bg3\vgui\timed_label.h" />
     <ClInclude Include="bg3_classmenu.h" />
+    <ClInclude Include="c_te_buff_glow.cpp" />
     <ClInclude Include="game_controls\baseviewport.h" />
     <ClInclude Include="game_controls\clientscoreboarddialog.h" />
     <ClInclude Include="game_controls\commandmenu.h" />
@@ -915,7 +920,10 @@ exit 1
   <ItemGroup>
     <ClCompile Include="bg3\bg3_classmenu.cpp" />
     <ClCompile Include="bg3\bg3_teammenu.cpp" />
+    <ClCompile Include="bg3\vgui\bg3_button_close.cpp" />
+    <ClCompile Include="bg3\vgui\bg3_create_server_dialog.cpp" />
     <ClCompile Include="bg3\vgui\bg3_fonts.cpp" />
+    <ClCompile Include="bg3\vgui\bg3_motd.cpp" />
     <ClCompile Include="bg3\vgui\fancy_button.cpp" />
     <ClCompile Include="mp3player.cpp" />
     <ClCompile Include="replay\cdll_replay.cpp" />

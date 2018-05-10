@@ -1442,7 +1442,6 @@ void UTIL_ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpa
 
 	if ( pTrace->fraction == 1.0 )
 		return;
-
 	pEntity->ImpactTrace( pTrace, iDamageType, pCustomImpactName );
 }
 

@@ -68,13 +68,13 @@ void FinishClientPutInServer( CHL2MP_Player *pPlayer )
 	const ConVar *hostname = cvar->FindVar( "hostname" );
 	const char *title = (hostname) ? hostname->GetString() : "MESSAGE OF THE DAY";
 
-	KeyValues *data = new KeyValues("data");
+	KeyValues *data = new KeyValues("motddata");
 	data->SetString( "title", title );		// info panel title
 	data->SetString( "type", "1" );			// show userdata from stringtable entry
 	data->SetString( "msg",	"motd" );		// use this stringtable entry
 	data->SetBool( "unload", sv_motd_unload_on_dismissal.GetBool() );
 
-	pPlayer->ShowViewPortPanel( PANEL_INFO, true, data );
+	pPlayer->ShowViewPortPanel( PANEL_TEAMS, true, data );
 
 	data->deleteThis();
 }
@@ -116,7 +116,7 @@ const char *GetGameDescription()
 	if ( g_pGameRules ) // this function may be called before the world has spawned, and the game rules initialized
 		return g_pGameRules->GetGameDescription();
 	else
-		return "Battlegrounds 2"; //BG2 - changed this from Half Life 2 Deathmatch
+		return "Battle Grounds III Beta DEV"; //BG2 - changed this from Half Life 2 Deathmatch
 }
 
 //-----------------------------------------------------------------------------

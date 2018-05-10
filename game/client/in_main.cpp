@@ -628,7 +628,9 @@ void ClassMenu(void)
 		if (!g_pClassMenu)
 			return;
 
-		g_pTeamMenu->ShowPanel(false);
+		//g_pTeamMenu->ShowPanel(false); //let the classmenu handle this instead
+										// because it needs to know whether or not
+										// the class menu was just open
 		g_pClassMenu->ShowPanel(!g_pClassMenu->IsVisible());
 		//panel->SetScreen(2, !panel->IsInClassMenu());
 

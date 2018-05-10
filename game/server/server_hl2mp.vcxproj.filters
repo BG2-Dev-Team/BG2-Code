@@ -1832,6 +1832,12 @@
     <ClInclude Include="..\shared\bg3\Math\bg3_rand.h">
       <Filter>Source Files\BG3\Math</Filter>
     </ClInclude>
+    <ClInclude Include="bg3\Bots\bg3_bot_debug.h">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\bg3\bg3_class_quota.h">
+      <Filter>Source Files\BG3</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gamedll_replay.cpp">
@@ -3440,6 +3446,15 @@
       <Filter>Source Files\BG3</Filter>
     </ClCompile>
     <ClCompile Include="bg3\bg3_spectele.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\devtools.cpp">
+      <Filter>Source Files\BG3</Filter>
+    </ClCompile>
+    <ClCompile Include="bg3\Bots\bg3_bot_debug.cpp">
+      <Filter>Source Files\BG3\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\bg3\bg3_class_quota.cpp">
       <Filter>Source Files\BG3</Filter>
     </ClCompile>
   </ItemGroup>

@@ -104,7 +104,7 @@ void CWeaponFrag::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChar
 
 				//switch spark bodygroup
 				//m_iWorldModelIndex
-				static int BodyGroup_Sparks = FindBodygroupByName("sparks");
+				int BodyGroup_Sparks = FindBodygroupByName("sparks");
 				SetBodygroup(BodyGroup_Sparks, 1);
 			}
 				
@@ -137,6 +137,7 @@ void CWeaponFrag::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChar
 		StopSound(this->entindex(), GRENADE_FUSE_SOUND);
 
 		DecrementAmmo(pOwner);
+		m_flFuseEndTime = FLT_MAX;
 		m_flNextPrimaryAttack	= gpGlobals->curtime + RETHROW_DELAY;
 		m_flNextSecondaryAttack	= gpGlobals->curtime + RETHROW_DELAY;
 		m_flTimeWeaponIdle = FLT_MAX; //NOTE: This is set once the animation has finished up!
@@ -179,7 +180,6 @@ bool CWeaponFrag::Deploy( void )
 	m_bRedraw = false;
 	m_fDrawbackFinished = false;
 	m_flFuseEndTime = FLT_MAX;
-
 	return BaseClass::Deploy();
 }
 

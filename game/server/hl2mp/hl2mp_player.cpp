@@ -43,6 +43,7 @@
 #include "../shared/bg2/weapon_frag.h"
 #include "bg3/Bots/bg3_bot_vcomms.h"
 #include "../shared/bg3/bg3_buffs.h"
+#include "../shared/bg3/bg3_class_quota.h"
 #include "bg3/bg3_scorepreserve.h"
 #include "bg3/Bots/bg3_bot_influencer.h"
 //
@@ -130,7 +131,7 @@ END_SEND_TABLE()
 BEGIN_DATADESC(CHL2MP_Player)
 END_DATADESC()
 
-
+#define NUM_DEATH_SOUNDS 25
 #define MAX_COMBINE_MODELS 6 // BG2 - VisualMelon - Looks like this should be 6 (formerly 4)
 #define MODEL_CHANGE_INTERVAL 5.0f
 #define TEAM_CHANGE_INTERVAL 5.0f
@@ -144,9 +145,6 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 	m_angEyeAngles.Init();
 
 	m_iLastWeaponFireUsercmd = 0;
-
-	m_flNextModelChangeTime = 0.0f;
-	m_flNextTeamChangeTime = 0.0f;
 
 	m_iSpawnInterpCounter = 0;
 
@@ -178,7 +176,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 
 CHL2MP_Player::~CHL2MP_Player(void)
 {
-
+	Msg("Destroying player object, info %i - %s\n", GetTeamNumber(), GetPlayerClass()->m_pszAbbreviation);
 }
 
 void CHL2MP_Player::UpdateOnRemove(void)
@@ -229,10 +227,10 @@ void CHL2MP_Player::Precache(void)
 		PrecacheScriptSound(GetHitgroupPainSound(i, TEAM_BRITISH));
 	}
 
+	//precache voiceover sounds
+	char name[256];
 	for (i = 0; i < NUM_VOICECOMMS; i++)
 	{
-		char name[256];
-
 		Q_snprintf(name, sizeof name, "Voicecomms.American.Inf_%i", i + 1);
 		PrecacheScriptSound(name);
 		Q_snprintf(name, sizeof name, "Voicecomms.American.Off_%i", i + 1);
@@ -249,6 +247,15 @@ void CHL2MP_Player::Precache(void)
 		Q_snprintf(name, sizeof name, "Voicecomms.British.Ski_%i", i + 1);
 		PrecacheScriptSound(name);
 	}
+	//precache death sounds
+	Q_snprintf(name, sizeof name, "BG3Player.Die");
+	char* formatStart = name + strlen("BG3Player.Die");
+	size_t maxSize = sizeof name - (formatStart - name);
+	for (i = 1; i <= NUM_DEATH_SOUNDS; i++) {
+		Q_snprintf(formatStart, maxSize, "%02i", i);
+		PrecacheScriptSound(name);
+	}
+	PrecacheScriptSound("Weapon_All.Bullet_Skullcrack");
 }
 
 void CHL2MP_Player::GiveAllItems(void)
@@ -304,16 +311,16 @@ void CHL2MP_Player::GiveDefaultItems(void)
 
 	}
 
-	//Clamp kit number to number of available clips
+	//Clamp kit number to number of available kits
 	Clamp(m_iGunKit, 0, m_pCurClass->numChooseableWeapons() - 1);
 
-	//give the chosen weapon
-	GiveNamedItem(m_pCurClass->m_aWeapons[m_iGunKit].m_pszWeaponName);
-
-	//now search for weapons to always give
-	for (int i = 0; i < NUM_POSSIBLE_WEAPON_KITS; i++) {
-		if (i != m_iGunKit && m_pCurClass->m_aWeapons[i].m_bAlwaysGive) {
-			GiveNamedItem(m_pCurClass->m_aWeapons[i].m_pszWeaponName);
+	//give the chosen weapons
+	const CGunKit& k = m_pCurClass->m_aWeapons[m_iGunKit];
+	GiveNamedItem(k.m_pszWeaponPrimaryName);
+	if (k.m_pszWeaponSecondaryName) {
+		GiveNamedItem(k.m_pszWeaponSecondaryName);
+		if (k.m_pszWeaponTertiaryName) {
+			GiveNamedItem(k.m_pszWeaponTertiaryName);
 		}
 	}
 
@@ -322,6 +329,11 @@ void CHL2MP_Player::GiveDefaultItems(void)
 	CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
 	if (m_pCurClass->m_pszSecondaryAmmo)
 		CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
+
+	//Give extra ammo from kit
+	if (k.m_pszAmmoOverrideName) {
+		CBasePlayer::SetAmmoCount(k.m_iAmmoOverrideCount, GetAmmoDef()->Index(k.m_pszAmmoOverrideName));
+	}
 }
 
 void CHL2MP_Player::SetDefaultAmmoFull(bool bPlaySound) {
@@ -423,7 +435,7 @@ void CHL2MP_Player::Spawn(void)
 	SetSpeedModifier(0);
 
 	//fpr class enforcement in linebattle
-	CheckForForcedClassChange();
+	NClassQuota::CheckForForcedClassChange(this);
 
 	//BG2 - Tjoppen - pick correct model
 	m_iClass = m_iNextClass;				//BG2 - Tjoppen - sometimes these may not match
@@ -581,6 +593,7 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 	CHL2MP_Player * pAttacker = ToHL2MPPlayer(info.GetAttacker());
 	CHL2MP_Player * pVictim = ToHL2MPPlayer(ptr->m_pEnt);
 	if (ptr && pAttacker && pVictim) {
+
 		//Okay, we're good to go, construct a new CTakeDamageInfo and later pass that instead
 		CTakeDamageInfo newInfo = info;
 		dmgInfo = &newInfo;
@@ -626,12 +639,12 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 		if (pVictim->GetClass() == CLASS_GRENADIER && newInfo.GetDamage() < DMG_MOD_GRENADIER_CAP) {
 			newInfo.ScaleDamage(DMG_MOD_GRENADIER);
 		}
-		else if (pVictim->GetClass() == CLASS_SKIRMISHER && pVictim->GetTeamNumber() == TEAM_BRITISH) {
-			if (newInfo.GetDamage() < DMG_MOD_NATIVE_CAP) {
-				newInfo.ScaleDamage(DMG_MOD_NATIVE);
+		else if (pVictim->GetClass() == CLASS_SKIRMISHER) {
+			if (newInfo.GetDamage() < DMG_MOD_SKI_CAP) {
+				newInfo.ScaleDamage(DMG_MOD_SKI);
 			}
-			else if (newInfo.GetDamage() < DMG_MOD_NATIVE * DMG_MOD_NATIVE) {
-				newInfo.SetDamage((float)(DMG_MOD_NATIVE * DMG_MOD_NATIVE_CAP));
+			else if (newInfo.GetDamage() < DMG_MOD_SKI * DMG_MOD_SKI) {
+				newInfo.SetDamage((float)(DMG_MOD_SKI * DMG_MOD_SKI_CAP));
 			}
 		}
 	}
@@ -1111,8 +1124,6 @@ void CHL2MP_Player::ChangeTeam(int iTeam, bool bKill)
 
 	BaseClass::ChangeTeam(iTeam);
 
-	m_flNextTeamChangeTime = gpGlobals->curtime + TEAM_CHANGE_INTERVAL;
-
 	if (iTeam == TEAM_SPECTATOR)
 	{
 		RemoveAllItems(true);
@@ -1125,26 +1136,6 @@ void CHL2MP_Player::ChangeTeam(int iTeam, bool bKill)
 		SetSuicideTime(gpGlobals->curtime);
 		//
 		CommitSuicide();
-	}
-}
-
-//for class enforcement in linebattle - called on spawn
-void CHL2MP_Player::CheckForForcedClassChange()
-{
-	ConVar * pLimiter;
-	if (GetTeamNumber() == TEAM_AMERICANS)
-		pLimiter = &lb_enforce_class_amer;
-	else
-		pLimiter = &lb_enforce_class_brit;
-	//do this if we're in linebattle mode AND the cvar tells us to AND we're not an officer
-	if (IsLinebattle() && pLimiter && pLimiter->GetBool() && m_iNextClass != CLASS_OFFICER) {
-		//the correspondence isn't one-to-one
-		m_iNextClass = pLimiter->GetInt() - 1;
-		//clamp it in case it was too high or low
-		//we have to use this copying stuff because we can't pass network vars into templates
-		int classCopy = m_iNextClass;
-		classCopy = Clamp(classCopy, 0, CLASS_GRENADIER);
-		m_iNextClass = classCopy;
 	}
 }
 
@@ -1277,7 +1268,7 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 		return true;
 
 	//Check team balance limits
-	if (!PlayerMayJoinTeam(iTeam)) {
+	if (!NClassQuota::PlayerMayJoinTeam(this, iTeam)) {
 		//BG2 - Tjoppen - TODO: usermessage this
 		//char *sTeamName = iTeam == TEAM_AMERICANS ? "American" : "British";
 		ClientPrint(this, HUD_PRINTCENTER, "There are too many players on this team!\n");
@@ -1287,7 +1278,7 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 	//check if there's a limit for this class, and if it has been exceeded
 	//if we're changing back to the class we currently are, because perhaps we regret choosing
 	// a new class, skip the limit check
-	int limit = HL2MPRules()->GetLimitTeamClass(iTeam, iClass);
+	int limit = NClassQuota::GetLimitTeamClass(iTeam, iClass);
 	if (limit >= 0 && g_Teams[iTeam]->GetNumOfNextClass(iClass) >= limit &&
 		!(GetTeamNumber() == iTeam && m_iNextClass == iClass)) //BG2 - check against next class, m_iClass would be officer making the if false - Roob
 	{
@@ -1917,13 +1908,15 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 	OnRallyEffectDisable();
 
 	//if we're holding a live grenade, drop it before we die!
-	CWeaponFrag * pGrenade = dynamic_cast<CWeaponFrag*>(GetActiveWeapon());
+	CBaseCombatWeapon* pWeapon = GetActiveWeapon();
+	CWeaponFrag * pGrenade = dynamic_cast<CWeaponFrag*>(pWeapon);
 	if (pGrenade && pGrenade->IsPrimed()) {
 		pGrenade->LobGrenade(this, 100.0f);
 		pGrenade->DecrementAmmo(this);
 		StopSound(pGrenade->entindex(), GRENADE_FUSE_SOUND);
 		pGrenade->Remove(); //avoid grenade duplication
 	}
+
 
 	//update damage info with our accumulated physics force
 	CTakeDamageInfo subinfo = info;
@@ -1941,25 +1934,23 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 
 	BaseClass::Event_Killed(subinfo);
 
-	if (m_hRagdoll) {
+	/*if (m_hRagdoll) {
 		if (info.GetDamageType() & DMG_DISSOLVE) {
 			m_hRagdoll->GetBaseAnimating()->Dissolve(NULL, gpGlobals->curtime, false, ENTITY_DISSOLVE_NORMAL);
 		}
-	}
+	}*/
 
 	CBaseEntity *pAttacker = info.GetAttacker();
-
-	if (pAttacker)
+	//do speed increase here
+	if (pAttacker && pAttacker->GetTeamNumber() != this->GetTeamNumber())
 	{
-		int iScoreToAdd = 1;
-
-		if (pAttacker == this)
-		{
-			iScoreToAdd = -1;
+		CHL2MP_Player* pPlayer = static_cast<CHL2MP_Player*>(pAttacker);
+		pWeapon = pPlayer->GetActiveWeapon();
+		if (pWeapon) {
+			pPlayer->m_iSpeedModifier += pWeapon->Def()->m_iOwnerSpeedModOnKill;
+		if (pPlayer->m_iSpeedModifier > 10)
+				pPlayer->m_iSpeedModifier = 10;
 		}
-
-		//BG2 - Tjoppen - only score by winnings rounds..
-		//GetGlobalTeam( pAttacker->GetTeamNumber() )->AddScore( iScoreToAdd );
 	}
 
 	m_lifeState = LIFE_DEAD;
@@ -2045,30 +2036,6 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 
 	m_vecTotalBulletForce += inputInfo.GetDamageForce();
 
-	//BG2 - Tjoppen - pain sound
-	const char *pModelName = STRING(GetModelName());
-
-	CSoundParameters params;
-	//if ( GetParametersForSound( "BG2Player.pain", params, pModelName ) == false )
-	if (GetParametersForSound(GetHitgroupPainSound(LastHitGroup(), GetTeamNumber()), params, pModelName) == false)
-		return BaseClass::OnTakeDamage(inputInfo);
-
-	Vector vecOrigin = GetAbsOrigin();
-
-	CRecipientFilter filter;
-	filter.AddRecipientsByPAS(vecOrigin);
-
-	EmitSound_t ep;
-	ep.m_nChannel = params.channel;
-	ep.m_pSoundName = params.soundname;
-	ep.m_flVolume = params.volume;
-	ep.m_SoundLevel = params.soundlevel;
-	ep.m_nFlags = 0;
-	ep.m_nPitch = params.pitch;
-	ep.m_pOrigin = &vecOrigin;
-
-	EmitSound(filter, entindex(), ep);
-
 	//BG2 - Tjoppen - print hit verification
 	if (inputInfo.GetAttacker()->IsPlayer())
 	{
@@ -2096,6 +2063,34 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		WRITE_SHORT(inputInfo.GetDamage());				//damage
 		MessageEnd();
 	}
+	//BG3 - moved this HitVerif part to be before the sound part, because the sound part has some early returns
+	//Otherwise, I think this might prove problematic in cases where there's lots of damages going around
+
+	//BG2 - Tjoppen - pain sound
+	const char *pModelName = STRING(GetModelName());
+
+	CSoundParameters params;
+	//if ( GetParametersForSound( "BG2Player.pain", params, pModelName ) == false )
+	if (GetParametersForSound(GetHitgroupPainSound(LastHitGroup(), GetTeamNumber()), params, pModelName) == false)
+		return BaseClass::OnTakeDamage(inputInfo);
+
+	Vector vecOrigin = GetAbsOrigin();
+
+	CRecipientFilter filter;
+	filter.AddRecipientsByPAS(vecOrigin);
+
+	EmitSound_t ep;
+	ep.m_nChannel = params.channel;
+	ep.m_pSoundName = params.soundname;
+	ep.m_flVolume = params.volume;
+	ep.m_SoundLevel = params.soundlevel;
+	ep.m_nFlags = 0;
+	ep.m_nPitch = params.pitch;
+	ep.m_pOrigin = &vecOrigin;
+
+	EmitSound(filter, entindex(), ep);
+
+	
 	//
 	//gamestats->Event_PlayerDamage( this, inputInfo );
 
@@ -2112,9 +2107,12 @@ void CHL2MP_Player::DeathSound(const CTakeDamageInfo &info)
 		return;
 	//
 
-	char szStepSound[128];
-
-	Q_snprintf(szStepSound, sizeof(szStepSound), "%s.Die", GetPlayerModelSoundPrefix());
+	//BG3 - Awesome - we're indexing here instead of using the built-in "rndwave" parameter
+	// because "rndwave" has a cap on number of sounds
+	// and because valve's RNG functions are crap
+	char szStepSound[32];
+	int iSound = RndInt(1, NUM_DEATH_SOUNDS);
+	Q_snprintf(szStepSound, sizeof(szStepSound), "BG3Player.Die%02i" /*, GetPlayerModelSoundPrefix()*/, iSound);
 
 	//BG2 - Tjoppen - don't care about gender
 	//const char *pModelName = STRING( GetModelName() );
@@ -2138,6 +2136,23 @@ void CHL2MP_Player::DeathSound(const CTakeDamageInfo &info)
 	ep.m_pOrigin = &vecOrigin;
 
 	EmitSound(filter, entindex(), ep);
+
+	if (LastHitGroup() == HITGROUP_HEAD && (info.GetDamageType() & DMG_BULLET)) {
+		if (GetParametersForSound("Weapon_All.Bullet_Skullcrack", params, NULL/*pModelName*/) == false)
+			return;
+
+		//Msg("Playing skull crush sound!\n");
+		EmitSound_t ep;
+		ep.m_nChannel = params.channel;
+		ep.m_pSoundName = params.soundname;
+		ep.m_flVolume = params.volume;
+		ep.m_SoundLevel = params.soundlevel;
+		ep.m_nFlags = 0;
+		ep.m_nPitch = params.pitch;
+		ep.m_pOrigin = &vecOrigin;
+
+		EmitSound(filter, entindex(), ep);
+	}
 }
 
 CBaseEntity* CHL2MP_Player::HandleSpawnList(const CUtlVector<CBaseEntity *>& spawns)

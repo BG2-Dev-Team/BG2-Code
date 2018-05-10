@@ -359,7 +359,7 @@ bool CTeamplayRules::IsTeamplay( void )
 	return true;
 }
 
-bool CTeamplayRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker, const CTakeDamageInfo &info )
+/*bool CTeamplayRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker, const CTakeDamageInfo &info )
 {
 	if ( pAttacker && PlayerRelationship( pPlayer, pAttacker ) == GR_TEAMMATE && !info.IsForceFriendlyFire() )
 	{
@@ -372,7 +372,7 @@ bool CTeamplayRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pA
 	}
 
 	return BaseClass::FPlayerCanTakeDamage( pPlayer, pAttacker, info );
-}
+}*/
 
 //=========================================================
 //=========================================================

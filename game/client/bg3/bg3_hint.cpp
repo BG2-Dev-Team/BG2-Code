@@ -42,10 +42,10 @@ commented on the following form:
 namespace BG3Hint {
 	//Translators may not want to translate everything, so we have to calculate
 	//how many hints and quotes we have
-	int g_iNumBasicHints = -1;
-	int g_iNumIntermediateHints = -1;
-	int g_iNumAdvancedHints = -1;
-	int g_iNumQuotes = -1;
+	static int g_iNumBasicHints = -1;
+	static int g_iNumIntermediateHints = -1;
+	static int g_iNumAdvancedHints = -1;
+	static int g_iNumQuotes = -1;
 
 	inline bool HaveCalculatedCounts() { return g_iNumBasicHints != -1; }
 
@@ -77,7 +77,7 @@ namespace BG3Hint {
 		int count;
 
 		const char* baseHintText;
-		switch (cl_hintlevel.GetInt()) {
+		switch (RndInt(0,2)) {
 		default:
 		case 0:
 			count = g_iNumBasicHints;
