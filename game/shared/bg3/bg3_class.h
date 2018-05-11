@@ -163,8 +163,8 @@ public:
 	mutable const wchar* m_pLocalizedDesc;
 #endif
 	static const CPlayerClass* fromNums(int iTeam, int iClass); //for backwards-compatability with old numbering system
-	bool GetLimitsAreInitialized() const { return !m_pcvLimit_sml; }
-	void InitLimits();
+	bool GetLimitsAreInitialized() const { return m_pcvLimit_sml != NULL; }
+	void InitLimits() const;
 private:
 	mutable ConVar* m_pcvLimit_lrg = nullptr;
 	mutable ConVar* m_pcvLimit_med = nullptr;

@@ -1238,7 +1238,7 @@ int CHL2MPRules::WeaponShouldRespawn( CBaseCombatWeapon *pWeapon )
 void CHL2MPRules::ClientDisconnected( edict_t *pClient )
 {
 #ifndef CLIENT_DLL
-	// Msg( "CLIENT DISCONNECTED, REMOVING FROM TEAM.\n" );
+	Msg( "CLIENT DISCONNECTED, REMOVING FROM TEAM.\n" );
 
 	CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity::Instance( pClient );
 	if ( pPlayer )

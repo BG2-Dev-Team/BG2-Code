@@ -296,7 +296,7 @@ ConVar mp_limit_mapsize_high("mp_limit_mapsize_high", "32", CVAR_FLAGS, "Servers
 Given a player class determines the maximum number of players who can take that class.
 */
 #define CVAR_SEARCH_BUFFER_SIZE 30
-void CPlayerClass::InitLimits() {
+void CPlayerClass::InitLimits() const {
 	//find the cvars
 	char cvarSearchBuffer[CVAR_SEARCH_BUFFER_SIZE];
 	char cTeam = charForTeam(m_iDefaultTeam);

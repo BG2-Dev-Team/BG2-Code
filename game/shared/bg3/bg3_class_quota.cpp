@@ -94,7 +94,9 @@ namespace NClassQuota {
 	int8 GetLimitForClass(const CPlayerClass* pClass) {
 		int numPlayers = HL2MPRules()->NumConnectedClients();
 
-
+		//TODO find a better place to initialize these 
+		if (!pClass->GetLimitsAreInitialized())
+			pClass->InitLimits();
 		if (numPlayers <= mp_limit_mapsize_low.GetInt())
 			return pClass->GetLimitSml();
 		else if (numPlayers <= mp_limit_mapsize_high.GetInt())
