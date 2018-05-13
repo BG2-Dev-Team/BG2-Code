@@ -174,7 +174,7 @@ public:
 
 	
 
-	CSDKPlayer		*m_pPlayer;
+	CHL2MP_Player	*m_pPlayer;
 	CBaseCombatWeapon	*m_pWeapon;
 	EHANDLE			m_hFollowedPlayer;
 	float			m_flLastFollowTime;
@@ -189,7 +189,7 @@ public:
 	Constructors and Initializers
 	*/
 	CSDKBot(); //called when game server is created
-	static void Init(CBasePlayer* pPlayer, BotDifficulty* pDifficulty); //called when a bot is put in the server
+	static void Init(CHL2MP_Player* pPlayer, BotDifficulty* pDifficulty); //called when a bot is put in the server
 
 	static BotDifficulty* GetDifficulty();
 
@@ -206,6 +206,8 @@ public:
 	bool		IsCapturingEnemyFlag() const;
 	bool		IsCapturingEnemyFlagAttempt() const;
 	inline bool WantsToRetreat() const { return m_flEndRetreatTime < FLT_MAX - 1; }
+	void		CheckSwitchWeapon(); //have we fired and does our current weapon not have melee? if so, switch weapons
+	void		UpdateWeaponInfo(); //looks at our player's current weapon to update our own weapon info
 	
 	ENavPointRange EnemyNoticeRange() const;
 

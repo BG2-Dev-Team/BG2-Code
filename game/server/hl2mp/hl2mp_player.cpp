@@ -781,6 +781,16 @@ void CHL2MP_Player::NoteWeaponFired(void)
 	}
 }
 
+CBaseCombatWeapon* CHL2MP_Player::Weapon_FindMeleeWeapon() const {
+	for (int i = 0; i < WeaponCount(); i++) {
+		CBaseCombatWeapon* pWeapon = GetWeapon(i);
+		if (pWeapon && pWeapon->Def()->HasMelee()) {
+			return pWeapon;
+		}
+	}
+	return NULL;
+}
+
 extern ConVar sv_maxunlag;
 
 bool CHL2MP_Player::WantsLagCompensationOnEntity(const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits) const
@@ -1296,6 +1306,7 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 	m_iNextClass = iClass;
 
 	//m_iClass = m_iNextClass;
+	NClassQuota::NotifyPlayerChangedTeamClass(this, CPlayerClass::fromNums(iTeam, m_iNextClass), iTeam);
 
 	if (GetTeamNumber() != iTeam)
 	{

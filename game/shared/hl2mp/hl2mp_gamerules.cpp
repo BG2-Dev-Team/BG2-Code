@@ -47,6 +47,7 @@
 #include "../bg3/Bots/bg3_bot_manager.h"
 #include "../bg3/Bots/bg3_bot_vcomms.h"
 #include "../bg3/bg3_scorepreserve.h"
+#include "../shared/bg3/bg3_class_quota.h"
 #ifdef DEBUG	
 	#include "hl2mp_bot_temp.h"
 #endif
@@ -1238,9 +1239,9 @@ int CHL2MPRules::WeaponShouldRespawn( CBaseCombatWeapon *pWeapon )
 void CHL2MPRules::ClientDisconnected( edict_t *pClient )
 {
 #ifndef CLIENT_DLL
-	Msg( "CLIENT DISCONNECTED, REMOVING FROM TEAM.\n" );
+	//Msg( "CLIENT DISCONNECTED, REMOVING FROM TEAM.\n" );
 
-	CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity::Instance( pClient );
+	CHL2MP_Player *pPlayer = (CHL2MP_Player *)CBaseEntity::Instance( pClient );
 	if ( pPlayer )
 	{
 		// Remove the player from his team
@@ -1248,24 +1249,23 @@ void CHL2MPRules::ClientDisconnected( edict_t *pClient )
 		{
 			pPlayer->GetTeam()->RemovePlayer( pPlayer );
 		}
-	}
 
-	//BG2 - Tjoppen - disconnecting. remove from flags
-	CHL2MP_Player *pPlayer2 = dynamic_cast<CHL2MP_Player*>(pPlayer);
-	if (pPlayer2) {
-		pPlayer2->RemoveSelfFromFlags();
+		//BG2 - Tjoppen - disconnecting. remove from flags
+		pPlayer->RemoveSelfFromFlags();
 
 		//BG3 - remove self from vcomm manager
-		CBotComManager* pComms = CBotComManager::GetBotCommsOfPlayer(pPlayer2);
-		if (pComms->m_pContextPlayer == pPlayer2) {
+		CBotComManager* pComms = CBotComManager::GetBotCommsOfPlayer(pPlayer);
+		if (pComms->m_pContextPlayer == pPlayer) {
 			pComms->m_pContextPlayer = nullptr;
 			pComms->ResetThinkTime(bot_randfloat(4.0f, 16.0f));
 		}
 
 		//BG3 - preserve our score
-		NScorePreserve::NotifyDisconnected(pPlayer2->entindex());
-	}
-		
+		NScorePreserve::NotifyDisconnected(pPlayer->entindex());
+
+		//BG3 - notify class quotas that this player's class may be available
+		NClassQuota::NotifyPlayerLeave(pPlayer);
+	}	
 
 	BaseClass::ClientDisconnected( pClient );
 

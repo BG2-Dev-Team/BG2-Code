@@ -89,7 +89,7 @@ class CPlayerClass {
 public:
 	const char* m_pszAbbreviation; //for example, "off" or "gre", used for player class limits
 protected:
-	CPlayerClass(const char* abrv) { m_pszAbbreviation = abrv; }
+	CPlayerClass(const char* abrv);
 	CPlayerClass() { }
 	static void postClassConstruct(const CPlayerClass*);
 

@@ -42,6 +42,7 @@ Weapon stats will now be stored in this comprehensive struct for two reason:
 #define BG3_WEAPON_DEF_H
 
 #include "cbase.h"
+#include "bg3_player_shared.h"
 
 //This was ported from BG2
 //-----------------------------------------------------------------------------
@@ -78,8 +79,12 @@ struct attackinfo
 			m_flConstantDamageRange,	//how long until we start losing damage?
 			m_flRelativeDrag;			//how does the drag on this bullet compare to a musket's?
 
-	
+	inline bool HasMelee() const;
 };
+
+bool attackinfo::HasMelee() const {
+	return m_iAttacktype == ATTACKTYPE_SLASH || m_iAttacktype == ATTACKTYPE_STAB;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Not used very much, see comments below for more
@@ -132,6 +137,7 @@ public:
 
 	static const CWeaponDef* GetDefForWeapon(const char* pszWeaponName);
 	static const CWeaponDef* GetDefault(); //for non-standard weapons, to avoid crashing
+	inline bool HasMelee() const { return m_Attackinfos[0].HasMelee() || m_Attackinfos[1].HasMelee(); }
 };
 
 //Don't use this macro by itself - combine it with DEC_BG3_WEAPON_ENT, unless you know what you're doing

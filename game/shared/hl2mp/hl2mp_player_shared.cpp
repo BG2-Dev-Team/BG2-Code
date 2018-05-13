@@ -17,6 +17,7 @@
 #include "hl2mp_player.h"
 #endif
 #include "../shared/bg3/bg3_player_shared.h"
+#include "../shared/bg3/bg3_class_quota.h"
 
 #include "engine/IEngineSound.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
@@ -202,8 +203,15 @@ void CHL2MP_Player::UpdatePlayerClass(void) {
 	bool bValidClass = iClass >= 0 && iClass < CPlayerClass::numClassesForTeam(iTeam);
 
 
-	if (bValidTeam && bValidClass)
-		m_pCurClass = CPlayerClass::fromNums(GetTeamNumber(), m_iClass);
+	if (bValidTeam && bValidClass) {
+		const CPlayerClass* pClass = CPlayerClass::fromNums(GetTeamNumber(), m_iClass);
+		if (m_pCurClass != pClass) {
+			m_pCurClass->m_pPopCounter->RemovePlayer(this);
+			pClass->m_pPopCounter->AddPlayer(this);
+			m_pCurClass = pClass;
+		}
+	}
+		
 }
 
 bool CHL2MP_Player::HasLoadedWeapon() const {

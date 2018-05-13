@@ -111,6 +111,7 @@ public:
 	bool IsAiming() const { return GetActiveWeapon() && GetActiveWeapon()->m_bIsIronsighted; }
 	bool HasLoadedWeapon() const;
 	void NoteWeaponFired( void );
+	CBaseCombatWeapon* Weapon_FindMeleeWeapon() const;
 
 	void ResetAnimation( void );
 	void SetPlayerModel( void );

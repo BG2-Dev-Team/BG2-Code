@@ -51,6 +51,7 @@ in separate files for bot communication, map navigation, etc.
 #include "hl2mp_player.h"
 #include "../bg2/flag.h"
 #include "../bg2/weapon_bg2base.h"
+#include "../shared/bg3/bg3_class_quota.h"
 
 //bot manager manages bot population
 #include "bg3_bot_manager.h"
@@ -404,6 +405,7 @@ void CSDKBot::PostStateChangeThink() {
 	if (m_pWeapon && m_pWeapon->IsIronsighted() && m_pCurThinker != &BotThinkers::PointBlank) {
 		m_curCmd.buttons &= ~IN_ZOOM; //disable ironsights
 	}
+		
 	//Msg("%s\tchanged state from \"%s\" to \"%s\"\n", m_pPlayer->GetPlayerName(), m_pPrevThinker->m_ppszThinkerName, m_pCurThinker->m_ppszThinkerName);
 }
 
@@ -544,21 +546,30 @@ bool CSDKBot::ThinkMedRange_Begin() {
 	SendBotVcommContext(DEFAULT);
 	SetUpdateFlags(true);
 	if (CanFire()) {
-		float random = bot_randfloat();
-		//if we're already hurt, we're more desperate
-		if (m_pPlayer->GetHealth() < 70)
-			random -= 0.1;
+		float random;
 
-		//if our enemy is at a flag, it's more important to stop him!
-		CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
-		if (pEnemy) {
-			CFlag* pOurFlag = m_PlayerSearchInfo.CloseFriendFlag();
-			CFlag* pTheirFlag = m_PlayerSearchInfo.CloseEnemyFlag();
-			if (pOurFlag && EntDist(*pOurFlag, *pEnemy) < pOurFlag->m_flCaptureRadius)
-				random -= 0.1;
-			else if (pTheirFlag && EntDist(*pTheirFlag, *pEnemy) < pTheirFlag->m_flCaptureRadius)
-				random -= 0.2;
+		//if our current weapon can't do melee, prioritize shooting early
+		if (!m_pWeapon->Def()->HasMelee()) {
+			random = -1;
 		}
+		else {
+			random = bot_randfloat();
+			//if we're already hurt, we're more desperate
+			if (m_pPlayer->GetHealth() < 70)
+				random -= 0.1;
+
+			//if our enemy is at a flag, it's more important to stop him!
+			CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
+			if (pEnemy) {
+				CFlag* pOurFlag = m_PlayerSearchInfo.CloseFriendFlag();
+				CFlag* pTheirFlag = m_PlayerSearchInfo.CloseEnemyFlag();
+				if (pOurFlag && EntDist(*pOurFlag, *pEnemy) < pOurFlag->m_flCaptureRadius)
+					random -= 0.1;
+				else if (pTheirFlag && EntDist(*pTheirFlag, *pEnemy) < pTheirFlag->m_flCaptureRadius)
+					random -= 0.2;
+			}
+		}
+		
 		if (random < 0.9) {
 			m_flNextFireTime = gpGlobals->curtime + bot_randfloat(0.1f, 3.2f);
 		}
@@ -635,6 +646,7 @@ bool CSDKBot::ThinkMedRange_End() {
 // Purpose: Simulates close-quarters combat
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkMelee_Begin() {
+	CheckSwitchWeapon();
 	SendBotVcommContext(DEFAULT);
 	SetUpdateFlags(false);
 	//m_curCmd.buttons |= IN_FORWARD;
@@ -841,6 +853,8 @@ bool CSDKBot::ThinkPointBlank_End() {
 	m_curCmd.buttons &= ~IN_ZOOM;
 	
 	m_flNextFireTime = FLT_MAX;
+
+	CheckSwitchWeapon(); //check if our weapon doesn't have melee and swap if need be
 	return true;
 }
 
@@ -915,6 +929,7 @@ bool CSDKBot::ThinkDeath_Begin() {
 	SetUpdateFlags(false);
 	m_flNextFireTime = FLT_MAX;
 	m_curCmd.buttons = 0;
+	NClassQuota::CheckBotSwitchClass(m_pPlayer);
 	return true;
 }
 
@@ -934,11 +949,7 @@ bool CSDKBot::ThinkDeath_End() {
 	m_flNextFireTime = FLT_MAX;
 	m_flLastFollowTime = FLT_MIN;
 	//m_flEndRetreatTime;
-	m_pWeapon = (m_pPlayer->GetActiveWeapon());
-	if (m_pWeapon) {
-		m_flMeleeRange = m_pWeapon->Def()->m_Attackinfos[1].m_flRange;
-		m_flAdjustedMeleeRange = m_flMeleeRange - m_pDifficult->m_flMeleeRangeOffset;
-	}
+	UpdateWeaponInfo();
 
 	//update our searcher's team info in case we switched teams
 	m_PlayerSearchInfo.UpdateOwnerTeamInfo();

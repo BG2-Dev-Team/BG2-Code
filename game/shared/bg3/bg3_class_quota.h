@@ -30,22 +30,32 @@ namespace NClassQuota {
 		}
 	};
 
+#ifndef CLIENT_DLL
+
+	//Initializer flushes list and creates initial 
+	void Init();
+
 	//---------------------------------------------------------------------
 	// Notifications/checks of external events
 	//---------------------------------------------------------------------
-#ifndef CLIENT_DLL
+
 	//Checks if by linebattle rules, the player's whole team is switching to another class
 	void CheckForForcedClassChange(CHL2MP_Player*);
 
 	//Switches bot to another class if one is available
-	void CheckBotSwitchClass(const CHL2MP_Player* pBot);
+	void CheckBotSwitchClass(CHL2MP_Player* pBot);
+
+	void NotifyClassLimitChanged(const CPlayerClass*);
+
+	void CheckBotAddClass(const CPlayerClass* pClass);
+	void CheckBotRemoveClass(const CPlayerClass* pClass);
 #endif
 
 	void NotifyPlayerChangedTeamClass(const CHL2MP_Player*, const CPlayerClass* pNextClass, uint8 iNextTeam);
 
 	void NotifyPlayerLeave(const CHL2MP_Player*);
 
-	void NotifyClassLimitChanged(const CPlayerClass*);
+	
 
 	//---------------------------------------------------------------------
 	// Getters/accessors

@@ -273,5 +273,10 @@ $Project "Server (HL2MP)"
 				$File	"$SRCDIR\game\shared\hl2mp\weapon_physcannon.h"
 			}
 		}
+		$Folder "Types"
+		{
+			$File 	"$SRCDIR\game\shared\types\CDblLkLst.h"
+			$File 	"$SRCDIR\game\shared\types\CDblLkLst.hpp"
+		}
 	}
 }

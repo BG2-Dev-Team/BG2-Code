@@ -140,7 +140,7 @@ CBasePlayer *BotPutInServer(int iAmount, bool bFrozen)
 		}
 
 		// Allocate a player entity for the bot, and call spawn
-		CSDKPlayer *pPlayer = ((CSDKPlayer *)CBaseEntity::Instance(pEdict));
+		CHL2MP_Player *pPlayer = dynamic_cast<CHL2MP_Player*>(CBaseEntity::Instance(pEdict));
 
 		if (!pPlayer)
 		{
@@ -220,7 +220,7 @@ CSDKBot::CSDKBot() {
 }
 
 //called when a bot is put in the server
-void CSDKBot::Init(CBasePlayer* pPlayer, BotDifficulty* pDifficulty) {
+void CSDKBot::Init(CHL2MP_Player* pPlayer, BotDifficulty* pDifficulty) {
 	CSDKBot& curBot = *ToBot(pPlayer);
 	curBot.m_pPlayer = pPlayer;
 	curBot.m_flNextStrafeTime = 0;

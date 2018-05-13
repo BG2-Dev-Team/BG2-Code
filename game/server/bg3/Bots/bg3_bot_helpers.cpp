@@ -193,6 +193,31 @@ bool CSDKBot::IsCapturingEnemyFlagAttempt() const {
 }
 
 //-------------------------------------------------------------------------------------------------
+// Purpose: Checks if we need to switch to a different weapon (for melee), and does so if needed
+//-------------------------------------------------------------------------------------------------
+void CSDKBot::CheckSwitchWeapon() {
+	if (CanFire())
+		return;
+
+	if (m_pWeapon && m_pWeapon->Def()->m_Attackinfos[1].m_iAttacktype == ATTACKTYPE_NONE) {
+		Msg("Bot attempts switching weapon!\n");
+		m_pPlayer->Weapon_Switch(m_pPlayer->Weapon_FindMeleeWeapon());
+		UpdateWeaponInfo();
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks if we need to switch to a different weapon (for melee), and does so if needed
+//-------------------------------------------------------------------------------------------------
+void CSDKBot::UpdateWeaponInfo() {
+	m_pWeapon = (m_pPlayer->GetActiveWeapon());
+	if (m_pWeapon) {
+		m_flMeleeRange = m_pWeapon->Def()->m_Attackinfos[1].m_flRange;
+		m_flAdjustedMeleeRange = m_flMeleeRange - m_pDifficult->m_flMeleeRangeOffset;
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
 // Purpose: Retrieves the enumerated distance a bot using navpoints should start noticing enemies
 //-------------------------------------------------------------------------------------------------
 ENavPointRange CSDKBot::EnemyNoticeRange() const {

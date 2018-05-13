@@ -69,6 +69,11 @@ commented on the following form:
 #define TOTAL_BRIT_CLASSES 6 //same as above
 #define TOTAL_AMER_CLASSES 6 //^
 
+CPlayerClass::CPlayerClass(const char* abrv) {
+		m_pszAbbreviation = abrv;
+		m_pPopCounter = new NClassQuota::SPopulationCounter;
+}
+
 const CWeaponDef* CPlayerClass::getWeaponDef(byte iWeapon) const {
 	const char* name = m_aWeapons[iWeapon].m_pszWeaponPrimaryName;
 	return CWeaponDef::GetDefForWeapon(name);
@@ -111,7 +116,8 @@ EClassAvailability CPlayerClass::availabilityForPlayer(const CBasePlayer* pPlaye
 		return CLASS_FREE; //not necessary, but may improve performance
 	
 	//how many players are of our class?
-	int count = g_Teams[m_iDefaultTeam]->GetNumOfClass(m_iClassNumber);
+	//int count = g_Teams[m_iDefaultTeam]->GetNumOfClass(m_iClassNumber);
+	int count = m_pPopCounter->m_iTotalPopulation - m_pPopCounter->m_iBotPopulation; //don't include bots in class limits - bots handle those on their own
 
 	//eh
 	if (pPlayer) {
