@@ -450,6 +450,7 @@ namespace NClassWeaponStats {
 	}
 
 	void UpdateWeaponStatsAllCurrent() {
+
 		//update displayed weapon stats!
 		//we may have multiple weapons, make sure we get all of them!
 		const CWeaponDef* pPrimary;
@@ -464,6 +465,16 @@ namespace NClassWeaponStats {
 			NClassWeaponStats::UpdateToMatchWeapon(pSecondary);
 		if (pTertiary)
 			NClassWeaponStats::UpdateToMatchWeapon(pTertiary);
+
+		//if our primary weapon isn't a firearm, hide the firearm stats
+		//BG3 - contrib from darthmotta
+		if (pPrimary->m_Attackinfos[0].m_iAttacktype != ATTACKTYPE_FIREARM){
+			g_iAccuracyWidth = 1;
+			g_iBulletDamageWidth = 1;
+			g_iReloadSpeedWidth = 1;
+			g_pnBulletDamage->SetText("");
+			g_pnReloadSpeed->SetText("");
+		}
 	}
 
 	void UpdateToMatchWeapon(const CWeaponDef* pWeapon) {
