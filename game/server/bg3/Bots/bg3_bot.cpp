@@ -28,7 +28,7 @@ changes from the original SDK.
 In order to facilitate easy searching, all changes are and must be
 commented on the following form:
 
-//BG2 - <name of contributer>[ - <small description>]
+//BG3 - <name of contributer>[ - <small description>]
 */
 /*
 Contrib by HairyPotter: These bots could do soo much more, and also be soo much more efficient as far as CPU goes.
@@ -629,7 +629,6 @@ bool CSDKBot::ThinkMedRange() {
 		} else if (!bForceForward) {
 			m_curCmd.buttons &= ~IN_FORWARD;
 		}
-
 		m_flNextStrafeTime += RandomFloat(0.1f, 1.4f);
 	}
 	return true;
