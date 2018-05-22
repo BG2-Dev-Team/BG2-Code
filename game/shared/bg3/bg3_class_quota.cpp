@@ -21,7 +21,7 @@ namespace NClassQuota {
 	
 #ifndef CLIENT_DLL
 	//BG3 - Awesome - I'm TIRED of Valve's list classes being so non-functional and undocumented...
-	// so here we go with my own list type I wrote more than a whole year ago - May 2018
+	// so here we go with my own list type I wrote more than a whole year ago in 2017 - May 2018
 	static CDblLkLst<const CPlayerClass*> g_qFutureBotClasses;
 	static CDblLkLst<const CPlayerClass*> g_qRemoveBotClasses;
 

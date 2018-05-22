@@ -39,13 +39,14 @@ commented on the following form:
 
 #define DEF_EXECUTOR(name) \
 	NBotInfluencer::pfExecutor NBotInfluencer::s_pf##name = NBotInfluencer::Execute_##name; \
-	void NBotInfluencer::Execute_##name(CSDKBot* pBot)
+	void NBotInfluencer::Execute_##name(CSDKBot* pBot, CHL2MP_Player* pExecutor)
 
 using namespace BotThinkers;
 
 DEF_EXECUTOR(Fire) {
 	//we could just modify m_flNextFireTime, but that wouldn't guarantee that we'd fire immediately
-	if (pBot->CanFire()
+	if (!BotEngaged(pBot)
+		&& pBot->CanFire()
 		&& pBot->m_PlayerSearchInfo.CloseEnemy()) {
 		pBot->ScheduleThinker(&BotThinkers::PointBlank, bot_randfloat(0.1f, 1.1f));
 	}
@@ -61,14 +62,16 @@ DEF_EXECUTOR(Retreat) {
 
 DEF_EXECUTOR(Advance) {
 	//most of the time bots are already moving forward because they're more efficient than human players
-	if (pBot->m_PlayerSearchInfo.CloseFriend()
-		&& (pBot->m_pCurThinker == &MedRange || pBot->m_pCurThinker == &Melee)) {
+	if ((pBot->m_pCurThinker == &MedRange || pBot->m_pCurThinker == &Melee)) {
+
+		//say YES
+		pBot->SendBotVcommContext(BotContext::AFFIRM);
 
 		pBot->m_curCmd.buttons |= IN_FORWARD;
 		pBot->m_curCmd.buttons &= ~IN_BACK;
 
 		//set next strafe time so we'll be moving forward for a little while longer
-		pBot->m_flNextStrafeTime = gpGlobals->curtime + bot_randfloat(3.0f, 5.0f);
+		pBot->m_flNextStrafeTime = gpGlobals->curtime + bot_randfloat(4.0f, 6.0f);
 	}
 }
 
@@ -92,14 +95,16 @@ DEF_EXECUTOR(Rally_Round) {
 		pBot->ScheduleThinker(&MedRange, 0.1f);
 	}
 	//might as well run the advance command too
-	s_pfAdvance(pBot);
+	s_pfAdvance(pBot, pExecutor);
 
 	//block retreats for a short time
 	pBot->m_flForceNoRetreatTime = gpGlobals->curtime + 8.f;
 }
 
 DEF_EXECUTOR(Follow) {
-	if (pBot->m_pCurThinker != &Melee) {
+	//ignore bots who are in melee, and don't tell bot to follow itself
+	if (pBot->m_pCurThinker != &Melee && pBot->m_pPlayer != pExecutor) {
+		pBot->m_hFollowedPlayer = pExecutor;
 		pBot->ScheduleThinker(&Follow, 0.1f);
 	}
 }
@@ -136,7 +141,8 @@ bool IsExecutableVcomm(comm_t iComm) {
 		|| iComm == VCOMM2_RALLY_ROUND || iComm == VCOMM_FOLLOW;
 }
 
-void NBotInfluencer::DispatchCommand(CBasePlayer* pRequester, vec_t vRange, comm_t iComm) {
+void NBotInfluencer::DispatchCommand(CHL2MP_Player* pRequester, vec_t vRange, comm_t iComm) {
+
 	//Get our executor we'll send to the bots
 	unsigned short pfIndex = g_pExecutorMap->Find(iComm);
 	pfExecutor pExecutor = g_pExecutorMap->Element(pfIndex);
@@ -149,11 +155,11 @@ void NBotInfluencer::DispatchCommand(CBasePlayer* pRequester, vec_t vRange, comm
 			CSDKBot* pBot = CSDKBot::ToBot(pPlayer);
 
 			//Some bots may be retreating or meleeing
-			if (ShouldIgnore(pBot))
-				continue;
+			//if (ShouldIgnore(pBot))
+				//continue;
 
 			//Call the executor onto the bot
-			pExecutor(pBot);
+			pExecutor(pBot, pRequester);
 		}
 	}
 }
@@ -161,11 +167,13 @@ void NBotInfluencer::DispatchCommand(CBasePlayer* pRequester, vec_t vRange, comm
 //We won't let players harass & confuse the bots by using these
 //TODO make these for individual bots instead of whole teams,
 //but this should work for now.
-float g_flNextAmericanExecutor	= -1.f;
-float g_flNextBritishExecutor	= -1.f;
-const float g_flExecutorInterval = 2.0f;
+namespace {
+	float g_flNextAmericanExecutor = -FLT_MAX;
+	float g_flNextBritishExecutor = -FLT_MAX;
+	const float g_flExecutorInterval = 2.0f;
+}
 
-void NBotInfluencer::NotifyCommand(CBasePlayer* pPlayer, comm_t iComm) {
+void NBotInfluencer::NotifyCommand(CHL2MP_Player* pPlayer, comm_t iComm) {
 	if (!IsExecutableVcomm(iComm))
 		return;
 
@@ -179,4 +187,9 @@ void NBotInfluencer::NotifyCommand(CBasePlayer* pPlayer, comm_t iComm) {
 		//Dispatch the command to the bots
 		DispatchCommand(pPlayer, GetExecutorCommandRange(), iComm);
 	}
+}
+
+void NBotInfluencer::Reset() {
+	g_flNextAmericanExecutor = -FLT_MAX;
+	g_flNextBritishExecutor = -FLT_MAX;
 }

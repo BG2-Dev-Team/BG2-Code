@@ -52,9 +52,9 @@ private:
 
 	//Execution commands act on a single bot
 	//One execution per sensible voice command
-	typedef		void (*pfExecutor)(CSDKBot*);
+	typedef		void (*pfExecutor)(CSDKBot* pBot, CHL2MP_Player* pExecutor);
 #define DEC_EXECUTOR(name) \
-	static void Execute_##name(CSDKBot* pBot);\
+	static void Execute_##name(CSDKBot* pBot, CHL2MP_Player* pExecutor);\
 	static pfExecutor s_pf##name;
 
 	DEC_EXECUTOR(Fire);
@@ -64,16 +64,17 @@ private:
 	DEC_EXECUTOR(Rally_Round);
 	DEC_EXECUTOR(Follow);
 
-	inline static bool ShouldIgnore(CSDKBot* pBot) { return pBot->m_pCurThinker == &BotThinkers::Retreat || pBot->m_pCurThinker == &BotThinkers::Melee; }
+	inline static bool BotEngaged(CSDKBot* pBot) { return pBot->m_pCurThinker == &BotThinkers::Retreat || pBot->m_pCurThinker == &BotThinkers::Melee; }
 
 	static void InitMap(CUtlMap<comm_t, pfExecutor>* pMap);
 	static CUtlMap<comm_t, pfExecutor>* CreateMap();
 	static CUtlMap<comm_t, pfExecutor>* g_pExecutorMap;
 
-	static void		DispatchCommand(CBasePlayer* pRequester, vec_t vRange, comm_t iComm);
+	static void		DispatchCommand(CHL2MP_Player* pRequester, vec_t vRange, comm_t iComm);
 	inline static vec_t	GetExecutorCommandRange() { return 512.f; }
 public:
-	static void NotifyCommand(CBasePlayer* pPlayer, comm_t iComm);
+	static void NotifyCommand(CHL2MP_Player* pPlayer, comm_t iComm);
+	static void Reset();
 };
 
 

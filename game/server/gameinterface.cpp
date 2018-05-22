@@ -94,6 +94,7 @@
 #ifndef CLIENT_DLL
 #include "hl2mp_gamerules.h"
 #include "bg3/Bots/bg3_bot.h"
+#include "bg3/Bots/bg3_bot_influencer.h"
 #include "../shared/bg3/bg3_class_quota.h"
 #ifndef USE_ENTITY_BULLET
 #include "bg2/bullet.h"
@@ -1098,6 +1099,9 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 
 	//BG3 - initialize class quotas so bots can start taking up new classes
 	NClassQuota::Init();
+
+	//BG3 - reset timers which prevent bots from having influences spammed
+	NBotInfluencer::Reset();
 
 	//BG2 - Tjoppen - tickets
 	//we need to call CTeam::ResetTickets() here rather than in CTeam::Init() since the teams get inited before the map config is loaded

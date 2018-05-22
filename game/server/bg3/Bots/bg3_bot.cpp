@@ -960,7 +960,9 @@ bool CSDKBot::ThinkDeath_End() {
 // Purpose: Follow player, shoot any targets, melee if necessary
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkFollow_Begin() {
+	SendBotVcommContext(BotContext::AFFIRM);
 	m_flLastFollowTime = gpGlobals->curtime;
+	m_curCmd.buttons = 0;
 	return true;
 }
 
@@ -969,17 +971,23 @@ bool CSDKBot::ThinkFollow_Check() {
 }
 
 bool CSDKBot::ThinkFollow() {
-	if (m_PlayerSearchInfo.CloseEnemy())
-		LookAt(m_PlayerSearchInfo.CloseEnemy()->Weapon_ShootPosition(), 0.5f, 2.0f);
-	else
-		LookAt(m_hFollowedPlayer->GetAbsOrigin() + Vector(0, 0, 70.0f), 2.0f);
+	m_curCmd.buttons = 0;
 
-	MoveTowardPointNoTurn(m_hFollowedPlayer->GetAbsOrigin());
+	bool bMove = EntDist(*m_pPlayer, *(m_hFollowedPlayer.Get())) > 98;
+	if (m_PlayerSearchInfo.CloseEnemy()) {
+		LookAt(m_PlayerSearchInfo.CloseEnemy()->Weapon_ShootPosition(), 0.5f, 2.0f);
+		if (bMove) MoveTowardPointNoTurn(m_hFollowedPlayer->GetAbsOrigin());
+	}
+	else {
+		Vector lookTarget = m_hFollowedPlayer->GetAbsOrigin() + Vector(0, 0, 70.0f);
+		LookAt(lookTarget, 0.5f);
+		if (bMove) m_curCmd.buttons = IN_FORWARD;
+	}
+		
 	return true;
 }
 
 bool CSDKBot::ThinkFollow_End() {
-
 	return true;
 }
 
