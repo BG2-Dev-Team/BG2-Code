@@ -163,7 +163,8 @@ void CtfFlag::Think( void )
 			float scale = pPlayer->m_pCurClass->m_flFlagWeightMultiplier;
 
 			//decrease the carrier's speed
-			pPlayer->SetSpeedModifier( -m_iFlagWeight * scale );
+			pPlayer->AddSpeedModifier(-m_iFlagWeight * scale, ESpeedModID::Flag); //BG3 - Awesome - moved to more robust speed modifier system
+			//pPlayer->SetSpeedModifier( -m_iFlagWeight * scale );
 
 			m_bFlagIsDropped = false; //So it doesn't return while you're carrying it!
 			PrintAlert( CTF_PICKUP, pPlayer->GetPlayerName(), cFlagName );

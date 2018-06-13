@@ -450,6 +450,9 @@ void CBaseBG2Weapon::Hit( trace_t &traceHit, int iAttack )
 
 		int damage		= GetDamage( iAttack );
 
+		//BG3 - apply aerial damage mod early on
+		//if (!(pPlayer->GetFlags() & FL_ONGROUND)) damage += Def()->m_iAerialDamageMod;
+
 		//BG2 - Tjoppen - apply no force
 		CTakeDamageInfo info( GetOwner(), GetOwner(), this, damage, DMG_CLUB | DMG_PREVENT_PHYSICS_FORCE | DMG_NEVERGIB );
 		info.SetDamagePosition( traceHit.endpos );
@@ -792,55 +795,16 @@ void CBaseBG2Weapon::Equip( CBaseCombatCharacter *pOwner )
 	if( pOwner == NULL )
 		return;
 
-	CHL2MP_Player *player = ToHL2MPPlayer( pOwner );
+	
 
 	BaseClass::Equip(pOwner);
 
+
 	//pick correct sleeve texture based on our class
 	//Msg("Setting sleeve skin to ");
-	m_nSkin = player->GetPlayerClass()->m_iSleeveBase + player->m_iClassSkin;
-	
-	//Msg("%i!\n", m_nSkin);
-
-	/*switch( player->GetTeamNumber() )
-	{
-		case TEAM_AMERICANS:
-		switch( player->GetClass() )
-		{
-		case CLASS_SNIPER:
-			//minuteman
-			m_nSkin = 1;
-			break;
-		case CLASS_SKIRMISHER:
-			//militia
-			m_nSkin = 2;
-			break;
-		default:
-			//everyone else
-			m_nSkin = 0;
-			break;
-		}
-		break;
-	case TEAM_BRITISH:
-		switch( player->GetClass() )
-		{
-		case CLASS_SNIPER:
-			//jäger
-			m_nSkin = 4;
-			break;
-		default:
-			//everyone else
-			m_nSkin = 3;
-			break;
-		}
-		break;
-	default:
-		m_nSkin = 0;
-		break;
-	}*/
-
-	
-
+#ifndef CLIENT_DLL
+	UpdateSkinToMatchOwner(pOwner);
+#endif
 }
 
 float CBaseBG2Weapon::GetGrenadeDamage()

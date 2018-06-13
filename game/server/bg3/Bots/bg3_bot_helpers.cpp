@@ -60,7 +60,7 @@ in separate files for bot communication, map navigation, etc.
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar bot_difficulty("bot_difficulty", "3", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Bot skill level. 0,1,2,3 are easy, norm, hard, and random, respectively.");
+extern ConVar bot_difficulty;
 
 BotDifficulty* CSDKBot::GetDifficulty() {
 	//determine bot skill level based on cvar
@@ -200,7 +200,7 @@ void CSDKBot::CheckSwitchWeapon() {
 		return;
 
 	if (m_pWeapon && m_pWeapon->Def()->m_Attackinfos[1].m_iAttacktype == ATTACKTYPE_NONE) {
-		Msg("Bot attempts switching weapon!\n");
+		//Msg("Bot attempts switching weapon!\n");
 		m_pPlayer->Weapon_Switch(m_pPlayer->Weapon_FindMeleeWeapon());
 		UpdateWeaponInfo();
 	}
@@ -259,7 +259,9 @@ void CSDKBot::LookAt(Vector location, float lerp, vec_t randomOffset) {
 //-------------------------------------------------------------------------------------------------
 void CSDKBot::SendBotVcommContext(BotContext context) {
 	CBotComManager* pComms = CBotComManager::GetBotCommsOfPlayer(m_pPlayer);
-	pComms->ReceiveContext(m_pPlayer, context);
+
+													//some bots have priority over others, namely officers
+	pComms->ReceiveContext(m_pPlayer, context, false, m_bHasVcommPriority && (RndBool(0.3f) || context == BotContext::FIRE));
 }
 
 //-------------------------------------------------------------------------------------------------

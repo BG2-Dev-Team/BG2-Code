@@ -419,6 +419,36 @@ int CTeam::GetNumOfNextClass(int iNextClass)
 	return iAmount;
 }
 
+int CTeam::GetNumOfClassRealPlayers(int iClass)
+{
+	int iAmount = 0;
+
+	for (int x = 0; x < GetNumPlayers(); x++)
+	{
+		CHL2MP_Player *pHL2Player = ToHL2MPPlayer(GetPlayer(x));
+
+		if (pHL2Player && !(pHL2Player->GetFlags() & FL_FAKECLIENT) && pHL2Player->GetClass() == iClass)
+			iAmount++;
+	}
+
+	return iAmount;
+}
+
+int CTeam::GetNumOfNextClassRealPlayers(int iNextClass)
+{
+	int iAmount = 0;
+
+	for (int x = 0; x < GetNumPlayers(); x++)
+	{
+		CHL2MP_Player *pHL2Player = ToHL2MPPlayer(GetPlayer(x));
+
+		if (pHL2Player && !(pHL2Player->GetFlags() & FL_FAKECLIENT) && pHL2Player->GetNextClass() == iNextClass)
+			iAmount++;
+	}
+
+	return iAmount;
+}
+
 int CTeam::GetNumOfAmmoKit(int iAmmoKit)
 {
 	int iAmount = 0;

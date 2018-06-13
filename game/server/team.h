@@ -66,6 +66,8 @@ public:
 	int GetNumSnipers();
 	int GetNumOfClass(int iClass);
 	int GetNumOfNextClass(int iNextClass);
+	int GetNumOfClassRealPlayers(int iClass);
+	int GetNumOfNextClassRealPlayers(int iClass);
 	int GetNumOfAmmoKit(int iAmmoKit); // BG2 - VisualMelon - May need revising
 	/*float GetMorale();
 	void AddMorale(float New, float Time);

@@ -2,9 +2,10 @@
 #include "bg3_button_close.h"
 
 using namespace vgui;
+extern IImage* g_pSelectionIcon;
 
-CCloseButton::CCloseButton(Panel* pParent, const char* buttonName)
-	: Button(pParent, buttonName, "")  {
+CCloseButton::CCloseButton(Panel* pParent, const char* buttonName, const char* pszImgName)
+	: Button(pParent, buttonName, ""), m_bMouseOver(false)  {
 
 	SetPaintBackgroundEnabled(false);
 	SetPaintBorderEnabled(false);
@@ -19,6 +20,8 @@ CCloseButton::CCloseButton(Panel* pParent, const char* buttonName)
 		m_bParentIsViewport = false;
 	}
 
+	//Get image
+	m_pImage = scheme()->GetImage(pszImgName, false);
 }
 
 void CCloseButton::OnMousePressed(MouseCode code) {
@@ -27,5 +30,19 @@ void CCloseButton::OnMousePressed(MouseCode code) {
 	}
 	else {
 		m_pPanelParent->SetVisible(false);
+	}
+}
+
+void CCloseButton::Paint() {
+	int w, h;
+	GetSize(w, h);
+	m_pImage->SetSize(w, h);
+	m_pImage->SetPos(0, 0);
+	m_pImage->Paint();
+
+	if (m_bMouseOver) {
+		g_pSelectionIcon->SetPos(0, 0);
+		g_pSelectionIcon->SetSize(w, h);
+		g_pSelectionIcon->Paint();
 	}
 }

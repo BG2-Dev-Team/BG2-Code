@@ -86,7 +86,7 @@ namespace NScorePreserveRound {
 	//	@return - whether or not the MAJORITY of players switched teams
 	//---------------------------------------------------------------------
 	bool RestoreRoundScore(uint8 iRound) {
-
+		return true;
 	}
 
 	

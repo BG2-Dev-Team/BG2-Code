@@ -58,6 +58,7 @@ class CWeaponButton;
 class CAmmoButton;
 class CUniformButton;
 class CTeamToggleButton;
+class GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons;
 
 extern CClassButton*	g_pDisplayedClassButton;	//which class is currently displayed?
 extern CClassButton*	g_pSelectedClassButton;		//what was the last class clicked on?
@@ -70,18 +71,24 @@ extern vgui::IImage*			g_pDarkIcon;
 extern vgui::IImage*			g_pNoneIcon;
 
 //image file paths
-#define MENU_GO_ICON		"classmenu/go"
-#define MENU_SELECTION_ICON	"classmenu/select"
-#define MENU_HOVER_ICON		"classmenu/hover"
-#define MENU_DARK_ICON		"classmenu/darken"
-#define MENU_NONE_ICON		"classmenu/none"
-#define MENU_STATBAR		"classmenu/statbar"
-#define MENU_STATBARMETER	"classmenu/statbarmeter"
-#define MENU_BACKGROUND_A	"classmenu/background_a"
-#define MENU_BACKGROUND_B	"classmenu/background_b"	
+#define MENU_GO_ICON			"classmenu/go"
+#define MENU_SELECTION_ICON		"classmenu/select"
+#define MENU_HOVER_ICON			"classmenu/hover"
+#define MENU_DARK_ICON			"classmenu/darken"
+#define MENU_NONE_ICON			"classmenu/none"
+#define MENU_STATBAR			"classmenu/statbar"
+#define MENU_STATBARMETER		"classmenu/statbarmeter"
+#define MENU_BACKGROUND_A		"classmenu/background_a"
+#define MENU_BACKGROUND_B		"classmenu/background_b"	
 
-#define MENU_AMMO_BALL		"classmenu/ammo/ball"
-#define MENU_AMMO_BUCKSHOT	"classmenu/ammo/buckshot"
+#define MENU_AMMO_BALL			"classmenu/ammo/ball"
+#define MENU_AMMO_BUCKSHOT		"classmenu/ammo/buckshot"
+
+#define MENU_ARROW_NORMAL		"classmenu/weapons/arrow_normal"
+#define MENU_ARROW_HOVER		"classmenu/weapons/arrow_hover"
+
+#define MENU_TEAM_SWITCH_ICON	"classmenu/team_switch"
+#define MENU_CLOSE_ICON			"classmenu/close"
 
 //-----------------------------------------------------------------------------
 // Purpose: These buttons store and link all of the class-related menu data,
@@ -108,11 +115,12 @@ public:
 	static void		UpdateDisplayedButton(CClassButton* pNext);
 	void			Select();
 	inline bool		IsSelected()	const { return g_pSelectedClassButton == this; }
-	inline bool		IsAvailable()	const { return m_eAvailable != CLASS_FULL && m_eAvailable != CLASS_UNAVAILABLE; }
+	inline bool		IsAvailable()	{ return m_eAvailable != CLASS_FULL && m_eAvailable != CLASS_UNAVAILABLE && IsVisible(); }
 	int				GetIndex()		const { return m_iIndex; }
 
 	void	UpdateToMatchClass(const CPlayerClass* pClass);
 	const CPlayerClass* m_pPlayerClass; //what class are we representing?
+	
 
 	static int s_iSize;
 private:
@@ -153,15 +161,42 @@ public:
 	void	ManualPaint();
 	void UpdateToMatchPlayerClass(const CPlayerClass* pClass);
 	void SetCurrentGunKit(int iKit);
-	int GetCurrentGunKit() const { return m_iCurrentWeapon; }
+	uint8  GetCurrentGunKit() const { return m_iCurrentWeapon; }
+	uint8  GetNumWeapons() const { return m_iWeaponCount; }
 
 private:
 	bool m_bMouseOver = false;
-	int m_iWeaponCount; //how many weapons do we cycle through?
-	int m_iCurrentWeapon; //which weapon are we currently displaying?
+	uint8 m_iWeaponCount; //how many weapons do we cycle through?
+	uint8 m_iCurrentWeapon; //which weapon are we currently displaying?
 	vgui::IImage*			m_pCurrentImage;
 
 	void			UpdateImage(const CGunKit* pKit);
+};
+
+//-----------------------------------------------------------------------------
+// Purpose: Arrow that glows and pulses to let players know they can switch
+// weapon kits
+//-----------------------------------------------------------------------------
+class GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons {
+public:
+
+	GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons();
+
+			void PaintToScreen();
+	inline	void SetPosition(uint16 x, uint16 y)	{ m_iX = x; m_iY = y; }
+	inline	void SetSize(uint16 wh)					{ m_iWH = wh; }
+	inline  void SetPulseSize(uint8 sz)				{ m_iPulseSize = sz; }
+	inline	void SetVisible(bool bVisible)			{ m_bVisible = bVisible; }
+	inline  bool IsVisible() const					{ return m_bVisible; }
+	inline	void SetImage(const char* pszImgName);
+
+private:
+	vgui::IImage* m_pImage;
+	uint16	m_iX;
+	uint16	m_iY;
+	uint16	m_iWH;
+	uint8	m_iPulseSize;
+	bool	m_bVisible;
 };
 
 //-----------------------------------------------------------------------------
@@ -259,11 +294,20 @@ private:
 	vgui::IImage* m_pCurrentImage;
 };
 
+//-----------------------------------------------------------------------------
+// Purpose: Switches classmenu between teams without having to enter Teammenu
+//-----------------------------------------------------------------------------
 class CTeamToggleButton : public vgui::Button {
 public:
-	CTeamToggleButton();
+	CTeamToggleButton(const char* pszImgName);
 
-	void OnMousePressed(vgui::MouseCode code);
+	void OnMousePressed(vgui::MouseCode code) override;
+	void Paint() override;
+	void OnCursorEntered() override;
+	void OnCursorExited() override { m_bMouseOver = false; }
+private:
+	vgui::IImage* m_pImage;
+	bool m_bMouseOver;
 };
 
 //-----------------------------------------------------------------------------
@@ -310,9 +354,12 @@ public:
 	int m_iPreviouslyShownTeam = TEAM_INVALID;
 private:
 
-	float m_flNextGameRulesUpdate = 0.0f;
+	float				m_flNextGameRulesUpdate = 0.0f;
 
-	vgui::IImage* m_pBackground;
+	vgui::IImage*		m_pBackground;
+
+	vgui::CCloseButton*	m_pCloseButton;
+	CTeamToggleButton*	m_pTeamToggleButton;
 };
 
 extern CClassMenu* g_pClassMenu;

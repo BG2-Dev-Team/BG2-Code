@@ -44,7 +44,7 @@ CUtlDict<CWeaponDef*> g_dictWeaponDefs;
 CWeaponDef::CWeaponDef(const char* pszWeaponName) {
 	m_bDontAutoreload = true;
 	m_bCantAbortReload = true;
-	m_iOwnerSpeedModOnKill = 0;
+	//m_iOwnerSpeedModOnKill = m_iAerialDamageMod = 0;
 
 	m_eWeaponType = GENERIC;
 

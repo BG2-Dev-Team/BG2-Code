@@ -835,7 +835,7 @@ bool CSDKBot::ThinkPointBlank_Check() {
 bool CSDKBot::ThinkPointBlank() {
 	CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
 	if (pEnemy) {
-		LookAt(pEnemy->Weapon_ShootPosition() + downToChest * bot_randfloat(0.5, 2.0), 0.9f, m_pDifficult->m_flRandomAim / 6);
+		LookAt(pEnemy->Weapon_ShootPosition() + downToChest * bot_randfloat(0.5, 2.0), 0.35f + m_pDifficult->m_flAimTurnLerp, m_pDifficult->m_flRandomAim / 6);
 	}
 	if (CanFire() && m_flNextFireTime < gpGlobals->curtime && !IsAimingAtTeammate(m_PlayerSearchInfo.CloseEnemyDist())) {
 		m_curCmd.buttons |= IN_ATTACK;
@@ -949,6 +949,9 @@ bool CSDKBot::ThinkDeath_End() {
 	m_flLastFollowTime = FLT_MIN;
 	//m_flEndRetreatTime;
 	UpdateWeaponInfo();
+
+	//set our vcomm priority to true if we are an officer
+	m_bHasVcommPriority = m_pPlayer->GetClass() == CLASS_OFFICER;
 
 	//update our searcher's team info in case we switched teams
 	m_PlayerSearchInfo.UpdateOwnerTeamInfo();

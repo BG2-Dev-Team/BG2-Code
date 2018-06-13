@@ -928,11 +928,17 @@ void CBaseCombatWeapon::UpdateBodyGroups() {
 }
 
 void CBaseCombatWeapon::UpdateSkinToMatchOwner(CBaseCombatCharacter* pOwner) {
-	CHL2MP_Player *player = ToHL2MPPlayer(pOwner);
 
 	//pick correct sleeve texture based on our class
 	//Msg("Setting sleeve skin to ");
-	m_nSkin = player->GetPlayerClass()->m_iSleeveBase + player->m_iClassSkin;
+#ifndef CLIENT_DLL
+	CHL2MP_Player *player = ToHL2MPPlayer(pOwner);
+	int8 skinOverride = player->GetPlayerClass()->m_aWeapons[player->m_iGunKit].m_iSleeveSkinOverride;
+	if (skinOverride != -1)
+		m_nSkin = skinOverride;
+	else
+		m_nSkin = player->GetPlayerClass()->m_iSleeveBase + player->m_iClassSkin;
+#endif
 }
 
 //-----------------------------------------------------------------------------

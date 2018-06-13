@@ -89,4 +89,16 @@ rad_t AngleFromSinCos(float sin, float cos);
 //Calculates the number of radians between two angles, catching border cases
 //angle is from r1 to r2, so negative return possible
 rad_t AngleDiffRad(rad_t r1, rad_t r2);
+
+
+/************************************************************************************
+* Returns the absolute value of the distance between the given number and the
+* nearest even number.
+************************************************************************************/
+inline float DistanceFromEven(float val) {
+	int truncated = val;
+	float diff = val - truncated;
+	return (truncated & 1) ? 1 - diff : diff;
+}
+
 #endif //BG3_MATH

@@ -70,12 +70,12 @@ private:
 	float			m_flNextComm; //when the next comm should be played
 
 	BotContext		m_eContext; //this is continuously updated by this team's bots.
-	CBasePlayer*	m_pContextPlayer; //the player who sent the last context
+	CHL2MP_Player*	m_pContextPlayer; //the player who sent the last context
 
-	//if not NONE , and m_pContextPlayer has a nearby bot teammate, the bot plays this context instead
+	//if not NONE , and m_pContextPlayer has a nearby bot teammate, and m_bRedirectForcedContextToTeammate the bot plays this context instead
 	//used for bots responding with yes/no to other players' and bots' commands
 	BotContext		m_eForcedContext; 
-
+	bool			m_bRedirectForcedContextToTeammate;
 
 public:
 	/*
@@ -88,7 +88,7 @@ private:
 	/*
 	Private helper functions
 	*/
-	static comm_t ParseContext(BotContext context); //parses a context into appropriate vcomm number
+	comm_t ParseContext(BotContext context); //parses a context into appropriate vcomm number
 
 	void DispatchVCommToBot(); //Looks at our contexts to dispatch a voice command to a bot
 
@@ -97,9 +97,10 @@ public:
 	Public functions and procedures
 	*/
 	void Think(); //checks if a bot should play a vcomm, and calls for it if so
+	void Reset();
 
 	//notifies the vcomms manager of a new context, whether it's been created or not
-	void ReceiveContext(CBasePlayer* pDispatcher, BotContext eContext, bool bSoundAlreadyPlayed = false);
+	void ReceiveContext(CHL2MP_Player* pDispatcher, BotContext eContext, bool bSoundAlreadyPlayed = false, bool bForce = false);
 
 	BotContext	LastContext() const { return m_eContext; }
 	bool		LastContextFromRealPlayer() const { return m_pContextPlayer && !(m_pContextPlayer->GetFlags() & FL_FAKECLIENT); }

@@ -320,3 +320,33 @@ int C_Team::GetNumOfClass(int iClass)
 
 	return iAmount;
 }
+
+int C_Team::GetNumOfClassRealPlayers(int iClass)
+{
+	int iAmount = 0;
+
+	for (int x = 0; x < GetNumPlayers(); x++)
+	{
+		CHL2MP_Player *pHL2Player = ToHL2MPPlayer(cl_entitylist->GetEnt(x));
+
+		if (pHL2Player && !(pHL2Player->GetFlags() & FL_FAKECLIENT) && pHL2Player->GetClass() == iClass)
+			iAmount++;
+	}
+
+	return iAmount;
+}
+
+int C_Team::GetNumOfNextClassRealPlayers(int iNextClass)
+{
+	int iAmount = 0;
+
+	for (int x = 0; x < GetNumPlayers(); x++)
+	{
+		CHL2MP_Player *pHL2Player = ToHL2MPPlayer(cl_entitylist->GetEnt(x));
+
+		if (pHL2Player && !(pHL2Player->GetFlags() & FL_FAKECLIENT) && pHL2Player->GetNextClass() == iNextClass)
+			iAmount++;
+	}
+
+	return iAmount;
+}

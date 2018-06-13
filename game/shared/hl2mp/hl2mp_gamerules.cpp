@@ -1607,7 +1607,11 @@ CAmmoDef *GetAmmoDef()
 			}
 		}*/
 
-		return BaseClass::FShouldSwitchWeapon( pPlayer, pWeapon );
+		//return BaseClass::FShouldSwitchWeapon( pPlayer, pWeapon );
+
+		//BG3 - Awesome - some weapons in HL2 had higher priorities than others, such that you would switch to a weapon after picking it up the first time
+		//	disabling this, so that the primary weapon in the kit is always the one which is out when spawning
+		return pPlayer->GetActiveWeapon() == NULL;
 	}
 
 #endif

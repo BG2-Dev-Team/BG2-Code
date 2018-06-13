@@ -16,6 +16,8 @@
 
 #include <game/client/iviewport.h>
 
+#include "fancy_button.h"
+
 //---------------------------------------------------------------
 // Purpose: These are the definitions of classes and functions
 //		used in the dialog which creates a new local server
@@ -26,18 +28,36 @@ namespace vgui {
 	// Purpose: These buttons control the bot settings which are loaded
 	//		when the player creates a local game.
 	//---------------------------------------------------------------
+	class	CBotButton;
+	extern	CBotButton* g_pSelectedBotButton;
 	class	CBotButton : public ::vgui::Button {
 	public:
-		CBotButton(Panel* parent, int buttonCode);
+		enum class setting {
+			NONE = -2,
+			RANDOM,
+			EASY,
+			MED,
+			HARD,
+
+			NUM_SETTINGS = HARD - NONE + 1,
+		};
+
+		CBotButton(Panel* parent, int buttonCode, setting botSetting);
 
 		void OnCursorEntered(void) override;
 		void OnCursorExited(void) override;
 		void OnMousePressed(MouseCode code) override;
 		void Paint() override;
 
+		void Select();
+		void ExecuteCommand();
+
+		static const wchar* GetBotSettingLabelText();
+		static void			LoadDefaults();
 	private:
-		bool m_bMouseOver;
-		int m_iButtonCode;
+		bool	m_bMouseOver;
+		int		m_iButtonCode;
+		setting m_eBotSetting;
 
 		static IImage* s_pImageNormal;
 		static IImage* s_pImageHover;
@@ -51,17 +71,50 @@ namespace vgui {
 	class	CMapButton;
 	extern	CCreateMapDialog* g_pCreateMapDialog;
 	class	CCreateMapDialog : public ::vgui::Panel {
-			
-		CCreateMapDialog(Panel* pParent, const char* panelName, const CUtlVector<char*>& mapNames);
-		void LoadMaplistFromFilesystem(CUtlVector<char*>&);
+		
+		friend class CBotButton;
+
+	public:
+		//constructor loads everything and sets us to the first page
+		//calls CreateLayoutForResolution()
+		CCreateMapDialog(Panel* pParent, const char* panelName);
+
+		//Refreshes the map list, nothing more (does no GUI operations)
+		void RefreshMapList();
+
+		//loads the positions and sizes of everything, calls SetupPages(), and sets current page to the first page
 		void CreateLayoutForResolution();
 
-	private:
-		void LoadButtonImages();
+		//sets the page to the given page
+		//@param iPage - page to set to.
+		//@requires 0 <= iPage < NumPages()
+		void SetPage(int iPage);
+		inline int NumPages() const { return m_iNumPages; }
 
-		CMapButton**	m_pMapButtons;
-		int				m_iNumMapButtons;
-		CBotButton**	m_pBotButtons;
+	private:
+		//loads map list into given vector
+		static void LoadMaplistFromFilesystem(CUtlVector<char*>&);
+
+		void LoadMapButtonImagesForCurrentPage();
+		void LoadMapDialogIdealButtonSizes();
+
+		uint8				FindPageForDefaultMap() const;
+
+		CMapButton**		m_pMapButtons;
+		CBotButton**		m_pBotButtons;
+		Label*				m_pBotButtonLabel;
+
+		CUtlVector<char*>	m_aMapNames;
+
+		//page system
+		uint8				m_iCurrentPage;
+		uint8				m_iNumPages;
+		uint8				m_iButtonsPerRow;
+		uint8				m_iNumRows;
+		uint8				m_iNumMapButtons;
+		uint16				m_iButtonSize;
+
+		FancyButton*		m_pGoButton;
 	};
 
 
@@ -76,7 +129,7 @@ namespace vgui {
 	class	CMapButton : public ::vgui::Button {
 		friend class CCreateMapDialog;
 	public:
-		CMapButton(Panel* parent, const char* panelName, const char* pszMapName);
+		CMapButton(Panel* parent, const char* panelName);
 
 		inline void	SimulateMousePressed() { OnMousePressed(MOUSE_LEFT); }
 		void		OnMousePressed(MouseCode code); //selects this button, plays sound
@@ -86,9 +139,13 @@ namespace vgui {
 		
 		void		Paint() override;
 		
-		const char*	GetMapName();
-		static CMapButton* ButtonForMap(const char* pszMapName); //Finds the button for given map
-		static CMapButton* ButtonDefaultMap();
+		const char*			GetMapName() const;
+		void				SetMapName(const char* pszMapName) { m_pszMapName = pszMapName; }
+
+		static void			ButtonDictionaryLoad(CUtlVector<char*>& aMapNames, uint8 start, uint8 xEns);
+		static CMapButton*	ButtonForMap(const char* pszMapName); //Finds the button for given map
+		static CMapButton*	ButtonDefaultMap();
+		static void			ButtonDictionaryFlush();
 
 	private:
 		const char* m_pszMapName;

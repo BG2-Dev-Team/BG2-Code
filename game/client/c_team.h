@@ -79,6 +79,8 @@ public:
 	int GetNumOfficers();
 	int GetNumSnipers();
 	int GetNumOfClass(int iClass);
+	int GetNumOfClassRealPlayers(int iClass);
+	int GetNumOfNextClassRealPlayers(int iClass);
 	//
 };
 

@@ -48,20 +48,20 @@ namespace NClassQuota {
 			pClass->m_pPopCounter->m_iTotalPopulation = 0;
 
 			//ignore grenadier classes - we don't want bots with grenades
-			if (pClass->m_iClassNumber == CLASS_GRENADIER)
+			if (pClass == PlayerClasses::g_pAFrenchGre || pClass == PlayerClasses::g_pBGrenadier)
 				continue;
 
 			//let future bots know the current class settings
 			int limit = GetLimitForClass(pClass);
 
-			Warning("Class limit for %i%s is %i\n", pClass->m_iDefaultTeam, pClass->m_pszAbbreviation, limit);
+			//Warning("Class limit for %i%s is %i\n", pClass->m_iDefaultTeam, pClass->m_pszAbbreviation, limit);
 			if (limit < 0) {
 				CDblLkLst<const CPlayerClass*>* pInfiniteList = InfiniteClassesForTeam(pClass->m_iDefaultTeam);
 				pInfiniteList->push(pClass);
 			}
 			//BG3 - Awesome - setting an extra limit of 2, because otherwise there are too MANY other classes
 			else for (int j = 0; j < limit && j < MAX_NUM_BOTS_PER_CLASS; j++) {
-				Warning("Adding class %i%s to the queue\n", pClass->m_iDefaultTeam, pClass->m_pszAbbreviation);
+				//Warning("Adding class %i%s to the queue\n", pClass->m_iDefaultTeam, pClass->m_pszAbbreviation);
 				g_qFutureBotClasses.add(RndInt(0, g_qFutureBotClasses.length()), pClass);
 			}
 		}
@@ -81,7 +81,8 @@ namespace NClassQuota {
 			//clamp it in case it was too high or low
 			//we have to use this copying stuff because we can't pass network vars into templates
 			int classCopy = pPlayer->GetNextClass();
-			classCopy = Clamp(classCopy, 0, CLASS_GRENADIER);
+			int max = CPlayerClass::numClassesForTeam(pPlayer->GetTeamNumber());
+			classCopy = Clamp(classCopy, 0, max);
 			pPlayer->SetNextClass(classCopy);
 		}
 	}
@@ -92,22 +93,34 @@ namespace NClassQuota {
 		//use g_aInfiniteAmericanClasses or g_aInfiniteBritishClasses
 		//to identify a free class, if needed
 		const CPlayerClass* pClass = pBot->GetPlayerClass();
-		CDblLkLst<const CPlayerClass*>* pList = InfiniteClassesForTeam(pBot->GetTeamNumber());
+		int iTeam = pBot->GetTeamNumber();
+		CDblLkLst<const CPlayerClass*>* pList = InfiniteClassesForTeam(iTeam);
+		if (pList->length() == 0) {
+			Warning("ERROR: Could not find infinite-limit class to switch bot to! Change your class limits!");
+			return;
+		}
 
 		//check for switching off a class which is full
-		if (g_qRemoveBotClasses.length() > 0 && g_qRemoveBotClasses.get(0) == pClass) {
+		int removeIndex = g_qRemoveBotClasses.indexOf(pClass);
+		if (g_qRemoveBotClasses.length() > 0 && removeIndex != -1) {
 			//find an infinite class to take instead
-			int index = RndInt(0, pList->length());
-			pBot->SetNextClass(pList->get(index)->m_iClassNumber);
-			g_qRemoveBotClasses.remove(0);
+			int index = RndInt(0, pList->length() - 1);
+			index = clamp(index, 0, pList->length());
+			const CPlayerClass* pNextClass = pList->get(index);
+			pBot->ForceJoin(pNextClass, iTeam, pNextClass->m_iClassNumber);
+			g_qRemoveBotClasses.remove(removeIndex);
 		}
-		else if (g_qFutureBotClasses.length() > 0
-					&& g_qFutureBotClasses.get(0)->m_iDefaultTeam == pBot->GetTeamNumber()
-					&& pList->contains(pClass)
-					) {
-			//remove and set at the same TIME!! WOW
-			pBot->SetNextClass(g_qFutureBotClasses.popFront()->m_iClassNumber);
-		}
+		else //if (g_qFutureBotClasses.length() > 0) {
+			//Msg("Checking if bot %s needs to switch classes. Next team = %i and bot's team = %i", pBot->GetPlayerName(), g_qFutureBotClasses.get(0)->m_iDefaultTeam, iTeam);
+			if (g_qFutureBotClasses.length() > 0
+				&& g_qFutureBotClasses.get(0)->m_iDefaultTeam == iTeam
+				&& pList->contains(pClass)
+				) {
+				//remove and set at the same TIME!! WOW
+				const CPlayerClass* pNextClass = g_qFutureBotClasses.popFront();
+				pBot->ForceJoin(pNextClass, iTeam, pNextClass->m_iClassNumber);
+			}
+		
 	}
 
 	void NotifyClassLimitChanged(const CPlayerClass* pClass) {
@@ -132,7 +145,8 @@ namespace NClassQuota {
 		CDblLkLst< const CPlayerClass*>* pList = InfiniteClassesForTeam(pClass->m_iDefaultTeam);
 		if (pClass->m_pPopCounter->m_iTotalPopulation < GetLimitForClass(pClass)
 			&& pClass->m_pPopCounter->m_iBotPopulation < MAX_NUM_BOTS_PER_CLASS
-			&& !pList->contains(pClass)) {
+			&& !pList->contains(pClass)
+			&& (pClass != PlayerClasses::g_pAFrenchGre && pClass != PlayerClasses::g_pBGrenadier)) {
 			//int index = RndInt(0, g_qFutureBotClasses.Count());
 			g_qFutureBotClasses.push(pClass);
 		}
@@ -143,6 +157,7 @@ namespace NClassQuota {
 	void CheckBotRemoveClass(const CPlayerClass* pClass) {
 #ifndef CLIENT_DLL
 		CDblLkLst< const CPlayerClass*>* pList = InfiniteClassesForTeam(pClass->m_iDefaultTeam);
+		//Msg("Checking bot removal from class %s... %i > %i\n", pClass->m_pszAbbreviation, pClass->m_pPopCounter->m_iTotalPopulation, GetLimitForClass(pClass));
 		if (pClass->m_pPopCounter->m_iTotalPopulation > GetLimitForClass(pClass)
 			&& !pList->contains(pClass))
 		g_qRemoveBotClasses.push(pClass);
@@ -159,8 +174,10 @@ namespace NClassQuota {
 		}
 
 		//increment counter for next class
-		pNextClass->m_pPopCounter->AddPlayer(pPlayer);
-		CheckBotRemoveClass(pNextClass);
+		if (iNextTeam >= TEAM_AMERICANS) {
+			pNextClass->m_pPopCounter->AddPlayer(pPlayer);
+			CheckBotRemoveClass(pNextClass);
+		}
 	}
 
 	void NotifyPlayerLeave(const CHL2MP_Player* pPlayer) {
@@ -240,7 +257,26 @@ namespace NClassQuota {
 	}
 
 	EClassAvailability PlayerMayJoinClass(const CHL2MP_Player* pPlayer, const CPlayerClass* pClass) {
-		return CLASS_FREE;
+		int limit = NClassQuota::GetLimitForClass(pClass);
+
+		if (limit == 0)
+			return CLASS_UNAVAILABLE;
+		if (limit == -1)
+			return CLASS_FREE; //not necessary, but may improve performance
+
+		//how many players are of our class?
+		int count;
+#ifdef CLIENT_DLL
+		count = g_Teams[pClass->m_iDefaultTeam]->GetNumOfClassRealPlayers(pClass->m_iClassNumber);
+#else
+		count = pClass->m_pPopCounter->NumRealPlayers(); //don't include bots in class limits - bots handle those on their own
+#endif
+		if (pPlayer->GetPlayerClass() == pClass) {
+			return count >= limit ? CLASS_TAKEN_FULL : CLASS_TAKEN_FREE;
+		}
+		
+
+		return count >= limit ? CLASS_FULL : CLASS_FREE;
 	}
 }
 
@@ -265,8 +301,16 @@ CON_COMMAND(class_report, "Reports populations of all player classes")
 
 #ifndef CLIENT_DLL
 CON_COMMAND(class_queue_report, "Lists classes which are scheduled to be switched to by bots") {
+	Msg("Classes scheduled to be added:\n");
 	for (int i = 0; i < NClassQuota::g_qFutureBotClasses.length(); i++) {
-		const CPlayerClass* pClass = NClassQuota::g_qFutureBotClasses.get(0);
+		const CPlayerClass* pClass = NClassQuota::g_qFutureBotClasses.get(i);
+		Msg("%i - %s \n",
+			pClass->m_iDefaultTeam,
+			pClass->m_pszAbbreviation);
+	}
+	Msg("Classes scheduled to be removed:\n");
+	for (int i = 0; i < NClassQuota::g_qRemoveBotClasses.length(); i++) {
+		const CPlayerClass* pClass = NClassQuota::g_qRemoveBotClasses.get(i);
 		Msg("%i - %s \n",
 			pClass->m_iDefaultTeam,
 			pClass->m_pszAbbreviation);

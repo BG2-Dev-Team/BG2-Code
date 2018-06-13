@@ -117,7 +117,8 @@ public:
 	uint8	m_iNumShot;
 	float	m_iDamagePerShot;
 
-	uint8	m_iOwnerSpeedModOnKill;
+	//uint8	m_iOwnerSpeedModOnKill; //BG3 - was for Native war club, removed for now
+	//uint8	m_iAerialDamageMod; //damage modifier for hits in the air
 
 	bool	m_bDontAutoreload;
 	bool	m_bCantAbortReload;

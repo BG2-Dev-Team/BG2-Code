@@ -50,7 +50,7 @@ namespace vgui {
 	}
 
 	//this here is a global scale factor - increasing it makes text smaller
-	static int g_iGlobalTextScale = 65;
+	const static int g_iGlobalTextScale = 45;
 	//
 
 	HFont GetDefaultBG3FontScaledHorizontal(IScheme* pScheme, Label* pForLabel) {

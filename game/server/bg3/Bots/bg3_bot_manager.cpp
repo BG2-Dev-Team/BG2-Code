@@ -55,7 +55,6 @@ commented on the following form:
 ConVar bot_minplayers("bot_minplayers", "8", FCVAR_GAMEDLL, "");
 ConVar bot_maxplayers("bot_maxplayers", "0", FCVAR_GAMEDLL, "Kicks bots to ensure that bot population will not inflate player count beyond this number");
 ConVar bot_minplayers_map("bot_minplayers_map", "0", FCVAR_GAMEDLL, "Map-defined minimum bot players. Whether or not this is used depends on bot_minplayers_mode");
-ConVar bot_minplayers_mode("bot_minplayers_mode", "0", FCVAR_GAMEDLL, "0 bots disabled, 1 use bot_minplayers, 2 let bot_minplayers_map override, 3 use only bot_minplayers_map");
 
 
 extern bool g_bServerReady;
@@ -191,7 +190,7 @@ void CBotManager::Think() {
 
 		//check if we need to add bots
 		if (iPlayersToAdd > 0) {
-			for (iPlayersToAdd; iPlayersToAdd > 0; iPlayersToAdd--) {
+			for (; iPlayersToAdd > 0; iPlayersToAdd--) {
 				//update the values on each iteration
 				iAmerPlayers = CountPlayersOfTeam(TEAM_AMERICANS);
 				iBritPlayers = CountPlayersOfTeam(TEAM_BRITISH);

@@ -92,11 +92,14 @@ public:
 	//return the player's speed based on whether which class we are, which weapon kit we're using etc.
 	int		GetCurrentSpeed(void) const;
 	void	UpdatePlayerClass(void); //BG3- updates the player class reference to match m_iClass and team number
+	inline int GetNextClass() const { return m_iNextClass; }
 private:
 	int		m_iPrevClass = 0;
 	int		m_iClass;
+	int		m_iNextClass;
 	const CPlayerClass* m_pCurClass;
 public:
+	//int		m_iGunKit;
 	int		m_iClassSkin;
 private:
 	int		m_iCurrentAmmoKit;

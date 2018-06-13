@@ -41,7 +41,7 @@ The purpose of this file is to provide utilities used strictly for development-o
 
 static CBaseEntity* g_pAdjustedEntity = nullptr;
 
-CON_COMMAND_F(ent_adjust_select, "Selects entity to moe about via console commands.", FCVAR_CHEAT) {
+CON_COMMAND_F(ent_adjust_select, "Selects entity to move about via console commands.", FCVAR_CHEAT) {
 	if (args.ArgC() == 2) {
 		CBaseEntity* pEnt = gEntList.FindEntityByName(g_pAdjustedEntity, args[1]);
 		if (pEnt)

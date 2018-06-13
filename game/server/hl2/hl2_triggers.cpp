@@ -1096,7 +1096,8 @@ void CTriggerCTFCapture::StartTouch(CBaseEntity *pOther)
 			pPlayer->IncrementFragCount(m_iPlayerBonus); //Give the player the points.
 
 			//reset the capturer's speed
-			pPlayer->SetSpeedModifier(0);
+			//pPlayer->SetSpeedModifier(0);
+			pPlayer->RemoveSpeedModifier(ESpeedModID::Flag); //BG3 - Awesome - removed to more robust speed modifier system
 
 			pFlag->PrintAlert(CTF_CAPTURE, pPlayer->GetPlayerName(), pFlag->cFlagName);
 

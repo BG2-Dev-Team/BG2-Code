@@ -97,6 +97,7 @@ CBotComManager::CBotComManager(int iTeam) {
 	m_flNextComm = FLT_MAX;
 	m_pContextPlayer = nullptr;
 	m_eForcedContext = CONTEXT_NONE;
+	m_pContextPlayer = NULL;
 }
 
 void CBotComManager::ResetThinkTime(float flDelay) {
@@ -107,6 +108,7 @@ void CBotComManager::ResetThinkTime(float flDelay) {
 // Purpose: Private helper functions
 //-------------------------------------------------------------------------------------------------
 comm_t CBotComManager::ParseContext(BotContext context) {
+	
 	comm_t* commArray = g_vclDefault;
 	switch (context)
 	{
@@ -123,6 +125,10 @@ comm_t CBotComManager::ParseContext(BotContext context) {
 		commArray = g_vclClear;
 		break;
 	case FIRE:
+		//treat the "Fire!" context specially
+		//if the context player is an officer, always just say "Fire!" instead of just aiming
+		if (m_pContextPlayer->GetClass() == CLASS_OFFICER)
+			return VCOMM2_FIRE;
 		commArray = g_vclFire;
 		break;
 	case AFFIRM:
@@ -141,13 +147,16 @@ comm_t CBotComManager::ParseContext(BotContext context) {
 
 void CBotComManager::DispatchVCommToBot() {
 	//I think the compiler is optimizing the necessary null checks, so I'll do this
-	volatile CBasePlayer* pContextPlayer = m_pContextPlayer;
+	volatile CHL2MP_Player* pContextPlayer = m_pContextPlayer;
 
 	if (m_pContextPlayer) {
 		if (m_eForcedContext) {
 			m_eContext = m_eForcedContext;
 			m_eForcedContext = CONTEXT_NONE;
-			pContextPlayer = m_pContextPlayer = CPlayerSearch::FriendlyBotNearestTo(m_pContextPlayer);
+			if (m_bRedirectForcedContextToTeammate) {
+				pContextPlayer = m_pContextPlayer = ToHL2MPPlayer(CPlayerSearch::FriendlyBotNearestTo(m_pContextPlayer));
+				m_bRedirectForcedContextToTeammate = false;
+			}
 		}
 		//nearest bot might be null so check it again
 		if (pContextPlayer && m_pContextPlayer && m_pContextPlayer->IsFakeClient()) {
@@ -173,9 +182,24 @@ void CBotComManager::Think() {
 	}
 }
 
-void CBotComManager::ReceiveContext(CBasePlayer* pDispatcher, BotContext eContext, bool bSoundAlreadyPlayed) {
+void CBotComManager::Reset() {
+	m_eContext = CONTEXT_NONE;
+	m_flNextComm = FLT_MAX;
+	m_pContextPlayer = nullptr;
+	m_eForcedContext = CONTEXT_NONE;
+	m_pContextPlayer = NULL;
+}
+
+void CBotComManager::ReceiveContext(CHL2MP_Player* pDispatcher, BotContext eContext, bool bSoundAlreadyPlayed, bool bForce) {
+	//if we already have a context that's forced, don't do anything
+	if (m_eForcedContext && !bForce)
+		return;
+
+	m_pContextPlayer = pDispatcher;
+
 	//don't always respond to other contexts
-	if (bSoundAlreadyPlayed && bot_randfloat() < 0.35f) {
+	m_bRedirectForcedContextToTeammate = bSoundAlreadyPlayed && bot_randfloat() < 0.35f;
+	if (m_bRedirectForcedContextToTeammate) {
 		if (eContext == RETREAT || eContext == NEGATE)
 			m_eForcedContext = NEGATE;
 		else if (eContext == ADVANCE && bot_randfloat() < 0.6f)
@@ -185,8 +209,11 @@ void CBotComManager::ReceiveContext(CBasePlayer* pDispatcher, BotContext eContex
 		ResetThinkTime(bot_randfloat(0.75f, 1.75f));
 	} else if (!bSoundAlreadyPlayed) {
 		m_eContext = eContext;
+		if (bForce) {
+			ResetThinkTime(0.5f);
+			m_eForcedContext = eContext;
+		}
 	}
-	m_pContextPlayer = pDispatcher;
 }
 
 BotContext CBotComManager::ParseIntToContext(int iCom) {

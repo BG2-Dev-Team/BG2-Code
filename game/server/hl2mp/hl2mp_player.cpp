@@ -118,10 +118,12 @@ SendPropInt(SENDINFO(m_iStamina), 7, SPROP_UNSIGNED),	//0 <= stamina <= 100, 7 b
 //
 //BG2 - Tjoppen - m_iClass and m_iCurrentAmmoKit are network vars
 SendPropInt(SENDINFO(m_iClass), 3, SPROP_UNSIGNED),			//BG2 - Tjoppen - remember: max eight classes per team or increase this
+SendPropInt(SENDINFO(m_iNextClass), 3, SPROP_UNSIGNED),		//BG2 - Tjoppen - remember: max eight classes per team or increase this
+//SendPropInt(SENDINFO(m_iGunKit), 2, SPROP_UNSIGNED),
 SendPropInt(SENDINFO(m_iCurrentAmmoKit), 2, SPROP_UNSIGNED),//BG2 - Tjoppen - remember: max four ammo kits or increase this
 SendPropInt(SENDINFO(m_iSpeedModifier), 9, 0),
 //Rallying info
-SendPropInt(SENDINFO(m_iCurrentRallies), 9, 0),
+SendPropInt(SENDINFO(m_iCurrentRallies), RALLY_NUM, SPROP_UNSIGNED), //BG3 - only RALY_NUM different rallies available, 1 bit per rally
 
 //	SendPropExclude( "DT_ServerAnimationData" , "m_flCycle" ),	
 //	SendPropExclude( "DT_AnimTimeMustBeFirst" , "m_flAnimTime" ),
@@ -196,20 +198,25 @@ void CHL2MP_Player::Precache(void)
 
 	PrecacheModel("sprites/glow01.vmt");
 
-	//Precache Citizen models
-	int nHeads = CPlayerClass::numModelsForTeam(TEAM_BRITISH);
+	//Precache models from classes
 	int i;
+	const CPlayerClass* const * pClasses = CPlayerClass::asList();
+	for (i = 0; i < CPlayerClass::numClasses(); i++) {
+		const CPlayerClass* pClass = pClasses[i];
 
-	for (i = 0; i < nHeads; ++i)
-		PrecacheModel(g_ppszBritishPlayerModels[i]);
+		PrecacheModel(pClass->m_pszPlayerModel);//precache player model
 
-	//Precache Combine Models
-	nHeads = CPlayerClass::numModelsForTeam(TEAM_AMERICANS);
+		//iterate through weapons to precache player model overrides
+		for (int j = 0; j < pClass->numChooseableWeapons(); j++) {
+			const char* pOverride = pClass->m_aWeapons[j].m_pszPlayerModelOverrideName;
+			if (pOverride) {
+				PrecacheModel(pOverride);
+			}
+		}
 
-	for (i = 0; i < nHeads; ++i)
-		PrecacheModel(g_ppszAmericanPlayerModels[i]);
-
-	PrecacheModel("models/player/american/infantry/american_hat.mdl");
+		//precache any dropped hat models
+		if (pClass->m_pszDroppedHat) PrecacheModel(pClass->m_pszDroppedHat);
+	}
 
 	PrecacheFootStepSounds();
 
@@ -301,18 +308,17 @@ void CHL2MP_Player::GiveDefaultItems(void)
 	}
 
 	//check for forced weapon change
-	if (m_iClass == CLASS_INFANTRY) {
+	if (GetClass() == CLASS_INFANTRY) {
 		ConVar* m_pWeaponKitEnforcer = GetTeamNumber() == TEAM_AMERICANS ? &lb_enforce_weapon_amer : &lb_enforce_weapon_brit;
 		int forcedKit = m_pWeaponKitEnforcer->GetInt();
-		Clamp(forcedKit, 0, 2);
+		forcedKit = Clamp(forcedKit, 0, 2);
 
 		if (forcedKit)
 			m_iGunKit = forcedKit;
 
 	}
 
-	//Clamp kit number to number of available kits
-	Clamp(m_iGunKit, 0, m_pCurClass->numChooseableWeapons() - 1);
+	
 
 	//give the chosen weapons
 	const CGunKit& k = m_pCurClass->m_aWeapons[m_iGunKit];
@@ -323,6 +329,10 @@ void CHL2MP_Player::GiveDefaultItems(void)
 			GiveNamedItem(k.m_pszWeaponTertiaryName);
 		}
 	}
+	
+
+	//Apply kit-specific speed modifier
+	AddSpeedModifier(k.m_iMovementSpeedModifier, ESpeedModID::Weapon);
 
 	//Give primary and secondary ammo
 	int ammoCount = IsLinebattle() ? m_pCurClass->m_iDefaultPrimaryAmmoCount : m_pCurClass->m_iDefaultPrimaryAmmoCount; //* 2;
@@ -432,7 +442,7 @@ void CHL2MP_Player::Spawn(void)
 		return;	//we're done
 	//
 	//reset speed modifier
-	SetSpeedModifier(0);
+	ClearSpeedModifier();
 
 	//fpr class enforcement in linebattle
 	NClassQuota::CheckForForcedClassChange(this);
@@ -440,8 +450,8 @@ void CHL2MP_Player::Spawn(void)
 	//BG2 - Tjoppen - pick correct model
 	m_iClass = m_iNextClass;				//BG2 - Tjoppen - sometimes these may not match
 	UpdatePlayerClass();
-
-	PlayermodelTeamClass(); //BG2 - Just set the player models on spawn. We have the technology. -HairyPotter
+	VerifyKitAmmoUniform();
+	
 
 	BaseClass::Spawn();
 
@@ -461,6 +471,7 @@ void CHL2MP_Player::Spawn(void)
 	m_flStepSoundTime = gpGlobals->curtime + 0.1f; //BG3 - Awesome - make sure 100% that step time resets
 
 	GiveDefaultItems();
+	PlayermodelTeamClass(); //BG2 - Just set the player models on spawn. We have the technology. -HairyPotter
 
 	RemoveEffects(EF_NOINTERP);
 
@@ -495,8 +506,7 @@ void CHL2MP_Player::Spawn(void)
 	SetPlayerUnderwater(false);
 
 	//BG2 - Put the speed handler into spawn so flag weight works, among other things. -HairyPotter
-	//5 speed added to all classes.
-	HandleSpeedChanges(); //BG2 - Awesome - this function actually does nothing now, so why call it?
+	HandleSpeedChanges(); 
 	//
 
 	//BG2 - Tjoppen - tickets
@@ -636,7 +646,7 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 		newInfo.ScaleDamage(scale);
 
 		//Do the grenadier damage scale last because it depends on what the damage already is
-		if (pVictim->GetClass() == CLASS_GRENADIER && newInfo.GetDamage() < DMG_MOD_GRENADIER_CAP) {
+		if (pVictim->GetPlayerClass()->m_bHasImplicitDamageResistance && newInfo.GetDamage() < DMG_MOD_GRENADIER_CAP) {
 			newInfo.ScaleDamage(DMG_MOD_GRENADIER);
 		}
 		else if (pVictim->GetClass() == CLASS_SKIRMISHER) {
@@ -659,11 +669,24 @@ void CHL2MP_Player::HandleSpeedChanges(void)
 	SetMaxSpeed(GetCurrentSpeed());
 }
 
-void CHL2MP_Player::SetSpeedModifier(int iSpeedModifier)
+
+/*void CHL2MP_Player::SetSpeedModifier(int iSpeedModifier)
 {
 	m_iSpeedModifier = iSpeedModifier;
+}*/
+
+void CHL2MP_Player::AddSpeedModifier(int8 mod, ESpeedModID id) {
+	m_iSpeedModifier += m_aSpeedMods.AddOrReplace(mod, id);
 }
 
+void CHL2MP_Player::RemoveSpeedModifier(ESpeedModID id) {
+	m_iSpeedModifier -= m_aSpeedMods.Remove(id);
+}
+
+void CHL2MP_Player::ClearSpeedModifier() {
+	m_iSpeedModifier = 0;
+	m_aSpeedMods.Clear();
+}
 
 void CHL2MP_Player::PreThink(void)
 {
@@ -1205,21 +1228,29 @@ void ClientPrinttTalkAll(char *str, int type)
 // TODO: Obsolve the term "skin" where it is used inappropriatley
 void CHL2MP_Player::PlayermodelTeamClass()
 {
-	SetModel(m_pCurClass->m_pszPlayerModel);
+	const char* pszModel = m_pCurClass->m_pszPlayerModel;
+	const char* pszWeaponOverride = m_pCurClass->m_aWeapons[m_iGunKit].m_pszPlayerModelOverrideName;
+	if (pszWeaponOverride) pszModel = pszWeaponOverride;
+	SetModel(pszModel);
 
 	//Handle skins separately pls - Awesome
 	m_nSkin = GetAppropriateSkin();
 
 	//If we're a grenadier, we're big and strong so our model is slightly bigger
-	if (m_iClass == CLASS_GRENADIER)
+	if (m_pCurClass->m_bHasImplicitDamageResistance)
 		this->SetModelScale(1.07f);
 	else
 		this->SetModelScale(1.0f);
 }
 
 //Looks at our member variables to determine what our player model's skin should be
-int CHL2MP_Player::GetAppropriateSkin() const
+int CHL2MP_Player::GetAppropriateSkin()
 {
+	//if we're a bot, randomize our uniform
+	if (IsFakeClient()) {
+		m_iClassSkin = RandomInt(0, m_pCurClass->m_iNumUniforms - 1);
+	}
+
 	return m_iClassSkin * m_pCurClass->m_iSkinDepth + RandomInt(0, m_pCurClass->m_iSkinDepth - 1);
 }
 
@@ -1268,11 +1299,9 @@ bool CHL2MP_Player::MayRespawn(void)
 }
 //
 
-bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
+bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass)
 {
-	//returns true on success, false otherwise
-	/*CTeam	*pAmericans = g_Teams[TEAM_AMERICANS],
-		*pBritish = g_Teams[TEAM_BRITISH];*/
+	const CPlayerClass* pDesiredClass = CPlayerClass::fromNums(iTeam, iClass);
 
 	if (GetTeamNumber() == iTeam && m_iNextClass == iClass)
 		return true;
@@ -1289,13 +1318,22 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 	//if we're changing back to the class we currently are, because perhaps we regret choosing
 	// a new class, skip the limit check
 	int limit = NClassQuota::GetLimitTeamClass(iTeam, iClass);
-	if (limit >= 0 && g_Teams[iTeam]->GetNumOfNextClass(iClass) >= limit &&
+	if (limit >= 0 && pDesiredClass->m_pPopCounter->NumRealPlayers() >= limit &&
 		!(GetTeamNumber() == iTeam && m_iNextClass == iClass)) //BG2 - check against next class, m_iClass would be officer making the if false - Roob
 	{
 		//BG2 - Tjoppen - TODO: usermessage this
+		Msg("Too many players of class! %i/%i", pDesiredClass->m_pPopCounter->NumRealPlayers(), limit);
 		ClientPrint(this, HUD_PRINTCENTER, "There are too many of this class on your team!\n");
 		return false;
 	}
+
+	ForceJoin(pDesiredClass, iTeam, iClass);
+
+	return true;
+}
+
+void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass) {
+	//Warning("Player forcing join %s %i %i\n", pClass->m_pszAbbreviation, iTeam, iClass);
 
 	//The following line prevents anyone else from stealing our spot..
 	//Without this line several teamswitching/new players can pick a free class, so there can be for instance 
@@ -1306,7 +1344,7 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 	m_iNextClass = iClass;
 
 	//m_iClass = m_iNextClass;
-	NClassQuota::NotifyPlayerChangedTeamClass(this, CPlayerClass::fromNums(iTeam, m_iNextClass), iTeam);
+	NClassQuota::NotifyPlayerChangedTeamClass(this, pClass, iTeam);
 
 	if (GetTeamNumber() != iTeam)
 	{
@@ -1332,11 +1370,11 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 			classSwitchTime *= sv_class_switch_time_lb_multiplier.GetFloat();
 		}
 
-		if (m_bInSpawnRoom 
-				&& IsAlive() 
-				&& GetHealth() == 100
-				&& HasLoadedWeapon()
-				&& m_fLastRespawn + classSwitchTime > gpGlobals->curtime) {
+		if (m_bInSpawnRoom
+			&& IsAlive()
+			&& GetHealth() == 100
+			&& HasLoadedWeapon()
+			&& m_fLastRespawn + classSwitchTime > gpGlobals->curtime) {
 			m_bDontRemoveTicket = true;
 			//Msg("Doing early spawn!\n");
 			Spawn();
@@ -1347,6 +1385,7 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 	}
 
 	CTeam *team = GetTeam();
+	const char* pClassName = pClass->m_pszJoinName;
 
 	//BG2 - Tjoppen - TODO: usermessage this change 
 	//This bit of code needs to be run AFTER the team change... if it changed.
@@ -1373,8 +1412,6 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass, const char *pClassName)
 	if (!DeathCount()) {
 		NScorePreserve::NotifyConnected(this->entindex());
 	}
-
-	return true;
 }
 
 /* HandleVoicecomm
@@ -1418,13 +1455,14 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 				pClassString = "Rif"; //We'll use infantry sounds for the Militia class.. for now.
 			break;
 		case CLASS_LIGHT_INFANTRY:
-			pClassString = "Inf"; //same thing here..
-			break;
-		case CLASS_GRENADIER:
 			if (GetTeamNumber() == TEAM_AMERICANS)
-				pClassString = "Gre";
+				pClassString = "Gre"; //BG3 - Awesome - french grenadier is in light infantry slot...
 			else
 				pClassString = "Inf";
+			break;
+			break;
+		case CLASS_GRENADIER:
+			pClassString = "Gre";
 			break;
 		default:
 			return;
@@ -1510,6 +1548,18 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 	}
 }
 
+void CHL2MP_Player::VerifyKitAmmoUniform() {
+	//Clamp kit number to number of available kits
+	m_iGunKit = Clamp(m_iGunKit, 0, m_pCurClass->numChooseableWeapons() - 1);
+
+	//clamp skin to valid value
+	m_iClassSkin = Clamp(m_iClassSkin, 0, (int)m_pCurClass->m_iNumUniforms);
+
+	//clamp ammo kit, then verify that our weapon allows for it
+	m_iAmmoKit = Clamp(m_iAmmoKit, AMMO_KIT_BALL, AMMO_KIT_BUCKSHOT);
+	if (!m_pCurClass->m_aWeapons[m_iGunKit].m_bAllowBuckshot) m_iAmmoKit = AMMO_KIT_BALL;
+}
+
 /*CBotComManager* CHL2MP_Player::GetComManager() const {
 	if (GetTeamNumber() == TEAM_AMERICANS)
 		return &g_BotAmerComms;
@@ -1572,7 +1622,17 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 {
 	const char *cmd = args[0];
 
-	if (FStrEq(args[0], "spectate"))
+	//Check if the command is in our map of commands, otherwise pass it down
+	int commandIndex = s_mPlayerCommands.Find(cmd);
+	if (commandIndex != s_mPlayerCommands.InvalidIndex()) {
+		PlayerCommandFunc pcf = s_mPlayerCommands[commandIndex];
+		pcf(this, args);
+		return true;
+	}
+
+	return BaseClass::ClientCommand(args);
+
+	/*if (FStrEq(args[0], "spectate"))
 	{
 		if (ShouldRunRateLimitedCommand(args))
 		{
@@ -1591,63 +1651,18 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 	}
 	else if (FStrEq(cmd, "class") && args.ArgC() > 2)
 	{
-		int desiredClass = atoi(args[2]);
+		int iClass = atoi(args[2]);
 
 		//Eh.. it's a little messy, but it seems a bit more efficent to just use a switch here rather than comparing strings over and over.
 		switch (atoi(args[1])) //Team
 		{
 		case TEAM_BRITISH:
-
-			switch (desiredClass)
-			{
-			case CLASS_INFANTRY:
-				AttemptJoin(TEAM_BRITISH, CLASS_INFANTRY, "Royal Infantry");
-				break;
-			case CLASS_OFFICER:
-				AttemptJoin(TEAM_BRITISH, CLASS_OFFICER, "a Royal Commander");
-				break;
-			case CLASS_SNIPER:
-				AttemptJoin(TEAM_BRITISH, CLASS_SNIPER, "a Jaeger");
-				break;
-			case CLASS_SKIRMISHER:
-				AttemptJoin(TEAM_BRITISH, CLASS_SKIRMISHER, "a Native");
-				break;
-			case CLASS_LIGHT_INFANTRY:
-				AttemptJoin(TEAM_BRITISH, CLASS_LIGHT_INFANTRY, "Light Infantry");
-				break;
-			case CLASS_GRENADIER:
-				AttemptJoin(TEAM_BRITISH, CLASS_GRENADIER, "a Grenadier");
-				break;
-			default:
-				Msg("Class selection invalid. \n");
-				return false;
-			}
+			if (iClass >= 0 && iClass < TOTAL_BRIT_CLASSES)
+				AttemptJoin(TEAM_BRITISH, iClass);
 			break;
 		case TEAM_AMERICANS:
-			switch (atoi(args[2])) //Class
-			{
-			case CLASS_INFANTRY:
-				AttemptJoin(TEAM_AMERICANS, CLASS_INFANTRY, "a Continental Soldier");
-				break;
-			case CLASS_OFFICER:
-				AttemptJoin(TEAM_AMERICANS, CLASS_OFFICER, "a Continental Officer");
-				break;
-			case CLASS_SNIPER:
-				AttemptJoin(TEAM_AMERICANS, CLASS_SNIPER, "a Frontiersman");
-				break;
-			case CLASS_SKIRMISHER:
-				AttemptJoin(TEAM_AMERICANS, CLASS_SKIRMISHER, "Militia");
-				break;
-			case CLASS_LIGHT_INFANTRY:
-				AttemptJoin(TEAM_AMERICANS, CLASS_LIGHT_INFANTRY, "Light Infantry");
-				break;
-			case CLASS_GRENADIER:
-				AttemptJoin(TEAM_AMERICANS, CLASS_GRENADIER, "a Grenadier");
-				break;
-			default:
-				Msg("Class selection invalid. \n");
-				return false;
-			}
+			if (iClass >= 0 && iClass < TOTAL_AMER_CLASSES)
+				AttemptJoin(TEAM_AMERICANS, iClass);
 			break;
 		default:
 			Msg("Team selection invalid. \n");
@@ -1669,10 +1684,11 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 		HandleVoicecomm(NUM_BATTLECRY);
 
 		return true;
-	}
+	}*/
 	//
+	//Msg("Received client command %s\n", cmd);
 
-	return BaseClass::ClientCommand(args);
+	
 }
 
 void CHL2MP_Player::CheatImpulseCommands(int iImpulse)
@@ -1951,9 +1967,9 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 		}
 	}*/
 
-	CBaseEntity *pAttacker = info.GetAttacker();
+	//CBaseEntity *pAttacker = info.GetAttacker();
 	//do speed increase here
-	if (pAttacker && pAttacker->GetTeamNumber() != this->GetTeamNumber())
+	/*if (pAttacker && pAttacker->GetTeamNumber() != this->GetTeamNumber())
 	{
 		CHL2MP_Player* pPlayer = static_cast<CHL2MP_Player*>(pAttacker);
 		pWeapon = pPlayer->GetActiveWeapon();
@@ -1962,7 +1978,7 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 		if (pPlayer->m_iSpeedModifier > 10)
 				pPlayer->m_iSpeedModifier = 10;
 		}
-	}
+	}*/
 
 	m_lifeState = LIFE_DEAD;
 

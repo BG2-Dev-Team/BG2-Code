@@ -154,6 +154,8 @@ RAW RALLY TYPES - DON"T CHANGE THESE UNLESS YOU' KNOW WHAT YOU'RE DOING
 m_iCurrentRallies is a bit field so that a player can have multiple rallies at once!
 */
 #if 1
+#define RALLY_NUM				7	//Data tables need this, so keep it up-to-date
+
 #define RALLY_DURATION			10.0f	//default until you change the derived macros
 #define RALLY_INTERVAL			50.0f //time a team must wait before their officer can do another rally
 

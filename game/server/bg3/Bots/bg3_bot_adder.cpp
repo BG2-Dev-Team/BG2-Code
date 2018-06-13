@@ -161,7 +161,7 @@ int  g_iWaitingAmount = 0; //This is just a temp int really.
 int  g_iNextBotTeam = TEAM_BRITISH;
 
 //ConCommand  cc_Bot( "bot_add", BotAdd_f, "Add a bot", FCVAR_CHEAT );
-CON_COMMAND_F(bot_add, "Creates bot(s)in the server. <Bot Count>", FCVAR_GAMEDLL)
+CON_COMMAND_F(bot_add, "Creates bot(s)in the server. <Bot Count>", FCVAR_GAMEDLL | FCVAR_SPONLY)
 {
 	int m_iCount;
 	if (args.ArgC() > 1)
@@ -237,17 +237,22 @@ void CSDKBot::Init(CHL2MP_Player* pPlayer, BotDifficulty* pDifficulty) {
 	curBot.m_pDifficult = pDifficulty;
 	curBot.m_flNextThink = gpGlobals->curtime + 0.1f;
 	pPlayer->ClearFlags();
+	pPlayer->AddFlag(FL_CLIENT | FL_FAKECLIENT);
 
-	//lastClass = (lastClass + 1) % 4; //4 classes now.
-	int lastClass = RandomInt(0, 3);
-
-	pPlayer->ChangeTeam(g_iNextBotTeam);
+	//pPlayer->ChangeTeam(g_iNextBotTeam);
 
 	//BG2 - Obey Class Limits now. -HairyPotter
+	int iClass = CLASS_INFANTRY;
 	if (bot_forceclass.GetInt() > -1) //Force the bot to spawn as the given class.
-		((CHL2MP_Player*)pPlayer)->SetNextClass(bot_forceclass.GetInt());
+		iClass = bot_forceclass.GetInt();
+	
+	//BG3 - Awesome - For now, just choose infantry class as default
+	//	and we have to use ForceJoin, because that's the entry point for NClassQuota
+	const CPlayerClass* pClass = CPlayerClass::fromNums(g_iNextBotTeam, iClass);
+	pPlayer->ForceJoin(pClass, g_iNextBotTeam, iClass);
+	
 
-	else if (bot_limitclass.GetBool() && bot_forceclass.GetInt() < 0) //Just make sure we're not trying to force a class that has a limit.
+	/*else if (bot_limitclass.GetBool() && bot_forceclass.GetInt() < 0) //Just make sure we're not trying to force a class that has a limit.
 	{
 		int limit = NClassQuota::GetLimitTeamClass(g_iNextBotTeam, lastClass);
 		if (limit >= 0 && g_Teams[g_iNextBotTeam]->GetNumOfNextClass(lastClass) >= limit)
@@ -257,9 +262,9 @@ void CSDKBot::Init(CHL2MP_Player* pPlayer, BotDifficulty* pDifficulty) {
 		} else
 			((CHL2MP_Player*)pPlayer)->SetNextClass(lastClass);
 	} else //Otherwise just spawn as whatever RandomInt() turns up.
-		((CHL2MP_Player*)pPlayer)->SetNextClass(lastClass);
+		((CHL2MP_Player*)pPlayer)->SetNextClass(lastClass);*/
 
-	pPlayer->AddFlag(FL_CLIENT | FL_FAKECLIENT);
+	
 
 	//only spawn if we're not in LMS
 	if (!IsLMS())

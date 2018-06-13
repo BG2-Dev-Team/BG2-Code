@@ -52,6 +52,8 @@ namespace BG3Buffs {
 	void	RallyPlayer(int rallyFlags, CHL2MP_Player* pPlayer);
 
 	void	SetNextRallyTime(int iTeam, float flTime); //For when round restarts etc.
+
+	void	Reset();
 #else
 	CHudTexture* RallyIconFrom(int rallyFlags);
 	enum RallyAsInt {
@@ -71,7 +73,6 @@ namespace BG3Buffs {
 #endif //CLIENT_DLL
 	float	GetEndRallyTime(int iTeam);
 	float	GetNextRallyTime(int iTeam);
-
 
 	inline float GetTimeUntilNextRally(int iTeam) {
 		float tTime = GetNextRallyTime(iTeam) - gpGlobals->curtime;

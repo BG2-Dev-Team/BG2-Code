@@ -2,12 +2,13 @@
 #define BG3_STATIC_INITIALIZE_H
 
 #define STATIC_INITIALIZE(id) \
-	namespace NStaticInitialize { \
+	static void __static_initialize_##id(); \
+	namespace { \
 		class CInit_##id { \
-			CInit_##id(); \
+			CInit_##id() { __static_initialize_##id(); } \
 		}; \
 	} \
-	NStaticInitialize::CInit_##id id; \
-	NStaticInitialize::CInit_##id::CInit_##id()
+	static NStaticInitialize::CInit_##id id; \
+	static void __static_initialize_##id()
 
 #endif //BG3_STATIC_INITIALIZE_H

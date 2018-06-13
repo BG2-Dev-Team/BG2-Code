@@ -868,6 +868,7 @@ bool CBasePlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex 
 		if ( pViewModel )
 			pViewModel->RemoveEffects( EF_NODRAW );
 		ResetAutoaim( );
+		//Msg("Switched to weapon named %s\n", pWeapon->GetName());
 		return true;
 	}
 	return false;

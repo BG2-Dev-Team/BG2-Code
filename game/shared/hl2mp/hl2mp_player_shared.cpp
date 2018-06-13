@@ -206,8 +206,6 @@ void CHL2MP_Player::UpdatePlayerClass(void) {
 	if (bValidTeam && bValidClass) {
 		const CPlayerClass* pClass = CPlayerClass::fromNums(GetTeamNumber(), m_iClass);
 		if (m_pCurClass != pClass) {
-			m_pCurClass->m_pPopCounter->RemovePlayer(this);
-			pClass->m_pPopCounter->AddPlayer(this);
 			m_pCurClass = pClass;
 		}
 	}

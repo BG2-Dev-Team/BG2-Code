@@ -54,11 +54,11 @@ extern ConVar lb_officer_classoverride_a;
 extern ConVar lb_officer_classoverride_b;
 
 
-ConVar mp_nextrally_amer("mp_nextrally_amer", "0", FCVAR_RALLY_TIME);
-ConVar mp_nextrally_brit("mp_nextrally_brit", "0", FCVAR_RALLY_TIME);
+static ConVar mp_nextrally_amer("mp_nextrally_amer", "0", FCVAR_RALLY_TIME | FCVAR_HIDDEN | FCVAR_REPLICATED);
+static ConVar mp_nextrally_brit("mp_nextrally_brit", "0", FCVAR_RALLY_TIME | FCVAR_HIDDEN | FCVAR_REPLICATED);
 
-ConVar mp_endrally_amer("mp_endrally_amer", "0", FCVAR_RALLY_TIME);
-ConVar mp_endrally_brit("mp_endrally_brit", "0", FCVAR_RALLY_TIME);
+static ConVar mp_endrally_amer("mp_endrally_amer", "0", FCVAR_RALLY_TIME | FCVAR_HIDDEN | FCVAR_REPLICATED);
+static ConVar mp_endrally_brit("mp_endrally_brit", "0", FCVAR_RALLY_TIME | FCVAR_HIDDEN | FCVAR_REPLICATED);
 
 inline ConVar* NextRallyTimeCvarFor(int iTeam) { return iTeam == TEAM_AMERICANS ? &mp_nextrally_amer : &mp_nextrally_brit; }
 inline ConVar* EndRallyTimeCvarFor(int iTeam) { return iTeam == TEAM_AMERICANS ? &mp_endrally_amer : &mp_endrally_brit; }
@@ -124,8 +124,8 @@ namespace BG3Buffs {
 
 			//Set end and next rally times
 			ConVar* pcvEndTime = EndRallyTimeCvarFor(iTeam);
-
 			pcvEndTime->SetValue(gpGlobals->curtime + GetRallyDuration(newRallyFlags));
+
 			SetNextRallyTime(iTeam, gpGlobals->curtime + RALLY_INTERVAL);
 
 			//notify clients of rallying, activating HUD events
@@ -165,7 +165,13 @@ namespace BG3Buffs {
 		pcvNextTime->SetValue(flTime);
 	}
 
-
+//-----------------------------------------------------------------------------
+// Purpose: Resets rally times to appropriate values
+//-----------------------------------------------------------------------------
+	void	Reset() {
+		mp_nextrally_amer.SetValue(gpGlobals->curtime);
+		mp_nextrally_brit.SetValue(gpGlobals->curtime);
+	}
 
 #else
 

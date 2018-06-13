@@ -59,9 +59,12 @@ public:
 
 
 	bool	m_bAllowBuckshot = false;
+	uint8	m_iAmmoOverrideCount = 0;
+	int8	m_iMovementSpeedModifier = 0;
+	int8	m_iSleeveSkinOverride = -1;
 	//bool	m_bAlwaysGive = false;
 	char*	m_pszAmmoOverrideName			= nullptr;
-	uint8	m_iAmmoOverrideCount			= 0;
+	char*	m_pszPlayerModelOverrideName	= nullptr;
 
 #ifdef CLIENT_DLL
 	wchar*	GetLocalizedName() const { return m_pLocalizedName; }
@@ -79,6 +82,9 @@ private:
 #endif
 };
 
+#define TOTAL_BRIT_CLASSES 6 //same as above
+#define TOTAL_AMER_CLASSES 5 // merged state militia and minuteman classes
+
 /*
 A "class" in BG3 is unique with its own model, skins, weapons, and stats. 
 I'm tired of these stats and information being spread out into unwieldly functions, 
@@ -91,7 +97,7 @@ public:
 protected:
 	CPlayerClass(const char* abrv);
 	CPlayerClass() { }
-	static void postClassConstruct(const CPlayerClass*);
+	static void postClassConstruct(CPlayerClass*);
 
 public:
 	uint8		m_iDefaultTeam;
@@ -107,6 +113,7 @@ public:
 	float		m_flFlagWeightMultiplier = 1.0f;
 
 	const char* m_pszPlayerModel;
+	const char* m_pszJoinName = nullptr;
 
 #define NUM_POSSIBLE_WEAPON_KITS 3
 	CGunKit		m_aWeapons[NUM_POSSIBLE_WEAPON_KITS];
@@ -117,10 +124,11 @@ public:
 	uint8			m_iSkinDepth = 1; //how many skin variations per uniform
 	uint8			m_iNumUniforms = 1; //how many uniforms?
 	uint8			m_iSleeveBase = 0; //chosen sleeve skin is m_iSleeveBase + pOwner->m_iClassSkin - 1
-	const char* m_pszDroppedHat = 0;
-	//bool		m_bAllowUniformSelection = false; //allow uniform selection in the menu?
+	const char*		m_pszDroppedHat = 0;
+	//bool			m_bAllowUniformSelection = false; //allow uniform selection in the menu?
 
-	bool		m_bCanDoVcommBuffs = false; //this will be true for officer
+	bool			m_bCanDoVcommBuffs = false; //this will be true for officer
+	bool			m_bHasImplicitDamageResistance = false;
 
 //Functions
 	inline bool isAmerican() const { return m_iDefaultTeam == TEAM_AMERICANS; }
@@ -131,7 +139,7 @@ public:
 	void				getWeaponDef(byte iKit, const CWeaponDef** ppPrimary, const CWeaponDef** ppSecondary, const CWeaponDef** ppTertiary) const;
 	const CGunKit*		getWeaponKitChooseable(byte iWeapon) const; //indexes choosable weapons, skipping over non-choosable ones.
 
-	EClassAvailability availabilityForPlayer(const CBasePlayer* pPlayer) const; //player can be null
+	//EClassAvailability availabilityForPlayer(const CBasePlayer* pPlayer) const; //player can be null
 
 #ifdef CLIENT_DLL
 	bool		shouldHaveWeaponSelectionMenu() const;
@@ -178,7 +186,7 @@ public:
 	//static int getClassLimit(const CPlayerClass* pClass); //maximum number of players on the team who can use this class
 	static int numClasses(); //teams count individually, so American Infantry and British Infantry are separate classes
 	static int numModelsForTeam(int iTeam);
-	inline static int numClassesForTeam(int iTeam) { return numModelsForTeam(iTeam); }
+	inline static int numClassesForTeam(int iTeam) { return iTeam == TEAM_AMERICANS ? TOTAL_AMER_CLASSES : TOTAL_BRIT_CLASSES; }
 	static const CPlayerClass* const * asList(); //retrieves a list of pointers to the classes
 
 };
@@ -199,7 +207,7 @@ namespace PlayerClasses {
 	dec(AOfficer)
 	dec(AFrontiersman)
 	dec(AMilitia)
-	dec(AStateMilitia)
+	//dec(AStateMilitia)
 	dec(AFrenchGre)
 
 #undef dec

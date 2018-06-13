@@ -115,6 +115,7 @@ struct BotDifficulty {
 	float m_flMidRangeReload; //chance of reloading after firing in mid-range combat
 	float m_flLongRangeFire; //chance of firing early in long-range
 	float m_flMeleeTurnLerp; //higher value allow for faster turning in melee
+	float m_flAimTurnLerp;
 	float m_flBravery; //0.0-1.0, tendency to run away when outnumbered
 	float m_flMeleeRangeOffset; //reduction of melee range
 	float m_flMeleeReaction;
@@ -123,7 +124,7 @@ struct BotDifficulty {
 		m_flRandomAim = aimInnaccuracy;
 		m_flMidRangeReload = midRangeReload;
 		m_flLongRangeFire = longRangeFire;
-		m_flMeleeTurnLerp = meleeTurnLerp;
+		m_flAimTurnLerp = m_flMeleeTurnLerp = meleeTurnLerp;
 		m_flBravery = bravery;
 		m_flMeleeRangeOffset = meleeRangeOffset;
 		m_flMeleeReaction = meleeReaction;
@@ -178,6 +179,7 @@ public:
 	CBaseCombatWeapon	*m_pWeapon;
 	EHANDLE			m_hFollowedPlayer;
 	float			m_flLastFollowTime;
+	bool			m_bHasVcommPriority;
 	float			m_flMeleeRange; //calculated whenever spawned
 	float			m_flAdjustedMeleeRange; //calculated whenever spawned
 

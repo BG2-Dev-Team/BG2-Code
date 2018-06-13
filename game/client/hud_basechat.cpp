@@ -2019,7 +2019,7 @@ void CBaseHudChat::MsgFunc_VoiceComm(bf_read &msg)
 		if (!isamerican && m_iClass == CLASS_SKIRMISHER && (comm + 1 == 19)) //Native battlecry
 			Q_snprintf(searchstring, sizeof searchstring, "#BG2_VoiceComm_N19");
 		else {
-			char americanChar = m_iClass == CLASS_GRENADIER ? 'F' : 'A'; //french subtitles for french grenadier
+			char americanChar = m_iClass == CLASS_LIGHT_INFANTRY ? 'F' : 'A'; //french subtitles for french grenadier
 			char britishChar = m_iClass == CLASS_SNIPER ? 'G' : 'B'; //subtitles for german jaegar
 
 			Q_snprintf(searchstring, sizeof searchstring, "#BG2_VoiceComm_%c%i", isamerican ? americanChar : britishChar, comm + 1);

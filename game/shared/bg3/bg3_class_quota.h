@@ -28,6 +28,8 @@ namespace NClassQuota {
 			m_iTotalPopulation--;
 			if (pPlayer->IsFakeClient()) m_iBotPopulation--;
 		}
+
+		inline uint8 NumRealPlayers() const { return m_iTotalPopulation - m_iBotPopulation; }
 	};
 
 #ifndef CLIENT_DLL

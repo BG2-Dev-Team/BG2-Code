@@ -132,7 +132,7 @@ void CCommBase::ApplySchemeSettings(IScheme *pScheme)
 
 void CCommBase::Update()
 {
-	#define getkey( index ) if( slot##index < 0 ) slot##index = gameuifuncs->GetButtonCodeForBind( "slot" #index )
+	/*#define getkey( index ) if( slot##index < 0 ) slot##index = gameuifuncs->GetButtonCodeForBind( "slot" #index )
 		getkey( 1 );
 		getkey( 2 );
 		getkey( 3 );
@@ -142,8 +142,23 @@ void CCommBase::Update()
 		getkey( 7 );
 		getkey( 8 );
 		getkey( 9 );
-		getkey( 10 );
+		getkey( 10 );*/
 
+	//BG3 - at least temporarily moving off the slot system, otherwise the buff command binds (ex. vcomm_advance) will conflict with these
+#define s(n) slot##n = KEY_##n;
+	s(1);
+	s(2);
+	s(3);
+	s(4);
+	s(5);
+	s(6);
+	s(7);
+	s(8);
+	s(9);
+	slot10 = KEY_0;
+#undef s
+	
+	
 	if( teammenu < 0 ) teammenu = gameuifuncs->GetButtonCodeForBind( "teammenu" );
 	if( classmenu < 0 ) classmenu = gameuifuncs->GetButtonCodeForBind( "classmenu" );
 	if( commmenu < 0 ) commmenu = gameuifuncs->GetButtonCodeForBind( "commmenu" );

@@ -65,9 +65,8 @@ commented on the following form:
 #define CVAR_FLAGS_HIDDEN (FCVAR_GAMEDLL | FCVAR_REPLICATED)
 #endif
 
-#define TOTAL_NUM_CLASSES 12 //used to build the list of classes and model lists
-#define TOTAL_BRIT_CLASSES 6 //same as above
-#define TOTAL_AMER_CLASSES 6 //^
+#define TOTAL_NUM_CLASSES (TOTAL_BRIT_CLASSES + TOTAL_AMER_CLASSES) //used to build the list of classes and model lists
+
 
 CPlayerClass::CPlayerClass(const char* abrv) {
 		m_pszAbbreviation = abrv;
@@ -107,7 +106,8 @@ const CGunKit* CPlayerClass::getWeaponKitChooseable(byte iWeapon) const {
 	return pResult;
 }
 
-EClassAvailability CPlayerClass::availabilityForPlayer(const CBasePlayer* pPlayer) const {
+//BG3 - moved this to NClassQuota
+/*EClassAvailability CPlayerClass::availabilityForPlayer(const CBasePlayer* pPlayer) const {
 	int limit = NClassQuota::GetLimitForClass(this);
 
 	if (limit == 0)
@@ -129,7 +129,7 @@ EClassAvailability CPlayerClass::availabilityForPlayer(const CBasePlayer* pPlaye
 	}
 
 	return count >= limit ? CLASS_FULL : CLASS_FREE;
-}
+}*/
 
 #ifdef CLIENT_DLL
 bool CPlayerClass::shouldHaveWeaponSelectionMenu() const {
@@ -145,10 +145,14 @@ bool CPlayerClass::shouldHaveWeaponSelectionMenu() const {
 #endif
 
 const CPlayerClass* g_ppClasses[TOTAL_NUM_CLASSES];
-const char* g_ppszBritishPlayerModels[TOTAL_BRIT_CLASSES];
-const char* g_ppszAmericanPlayerModels[TOTAL_AMER_CLASSES];
 
-void CPlayerClass::postClassConstruct(const CPlayerClass* pClass) {
+#define NUM_BRIT_PLAYERMODELS 6
+#define NUM_AMER_PLAYERMODELS 6
+
+const char* g_ppszBritishPlayerModels[NUM_BRIT_PLAYERMODELS];
+const char* g_ppszAmericanPlayerModels[NUM_AMER_PLAYERMODELS];
+
+void CPlayerClass::postClassConstruct(CPlayerClass* pClass) {
 	int index = pClass->m_iClassNumber;
 
 	//count number of chooseable weapons
@@ -325,7 +329,7 @@ int CPlayerClass::numClasses() {
 }
 
 int CPlayerClass::numModelsForTeam(int iTeam) {
-	return iTeam == TEAM_AMERICANS ? TOTAL_AMER_CLASSES : TOTAL_BRIT_CLASSES;
+	return iTeam == TEAM_AMERICANS ? NUM_AMER_PLAYERMODELS : NUM_BRIT_PLAYERMODELS;
 }
 
 const CPlayerClass* const * CPlayerClass::asList() {
@@ -400,6 +404,7 @@ DEC_BG3_PLAYER_CLASS(BInfantry, inf, b) {
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_INFANTRY;
 
 	m_pszPlayerModel = MODEL_BINFANTRY;
+	m_pszJoinName = "Royal Infantry";
 
 	m_iDefaultPrimaryAmmoCount = AMMO_INFANTRY;
 
@@ -410,6 +415,7 @@ DEC_BG3_PLAYER_CLASS(BInfantry, inf, b) {
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess";
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_longpattern";
+
 
 	postClassConstruct(this);
 }
@@ -422,6 +428,7 @@ DEC_BG3_PLAYER_CLASS(BOfficer, off, b) {
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_OFFICER;
 
 	m_pszPlayerModel = MODEL_BOFFICER;
+	m_pszJoinName = "a Royal Commander";
 
 	m_iDefaultPrimaryAmmoCount = AMMO_OFFICER;
 
@@ -435,6 +442,7 @@ DEC_BG3_PLAYER_CLASS(BOfficer, off, b) {
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_sabre_b";
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_brownbess_carbine_nobayo";
 	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_sabre_b";
+	//m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_spontoon";
 
 	postClassConstruct(this);
 }
@@ -447,6 +455,7 @@ DEC_BG3_PLAYER_CLASS(BJaeger, rif, b) {
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_SNIPER;
 
 	m_pszPlayerModel = MODEL_BJAEGER;
+	m_pszJoinName = "a Jaeger";
 
 	m_iDefaultPrimaryAmmoCount = AMMO_SNIPER;
 
@@ -468,6 +477,7 @@ DEC_BG3_PLAYER_CLASS(BNative, ski, b) {
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_SKIRMISHER;
 	
 	m_pszPlayerModel = MODEL_BNATIVE;
+	m_pszJoinName = "a Native";
 
 	m_iDefaultPrimaryAmmoCount = AMMO_SKIRMISHER;
 
@@ -482,6 +492,8 @@ DEC_BG3_PLAYER_CLASS(BNative, ski, b) {
 	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_tomahawk";
 
 	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_club";
+	m_aWeapons[2].m_iMovementSpeedModifier = 5;
+
 
 	postClassConstruct(this);
 }
@@ -494,6 +506,7 @@ DEC_BG3_PLAYER_CLASS(BLinf, linf, b) {
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_LIGHT_INFANTRY;
 
 	m_pszPlayerModel = MODEL_BLINF;
+	m_pszJoinName = "Light Infantry";
 
 	m_iDefaultPrimaryAmmoCount = AMMO_LIGHT_INFANTRY;
 
@@ -510,11 +523,13 @@ DEC_BG3_PLAYER_CLASS(BLinf, linf, b) {
 DEC_BG3_PLAYER_CLASS(BGrenadier, gre, b) {
 	m_iDefaultTeam = TEAM_BRITISH;
 	m_iClassNumber = CLASS_GRENADIER;
+	m_bHasImplicitDamageResistance = true;
 
 	m_flBaseSpeed = SPEED_GRENADIER;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_GRENADIER;
 
 	m_pszPlayerModel = MODEL_BGRENADIER;
+	m_pszJoinName = "a Grenadier";
 
 	m_iDefaultPrimaryAmmoCount = AMMO_GRENADIER;
 
@@ -534,10 +549,10 @@ DEC_BG3_PLAYER_CLASS(BGrenadier, gre, b) {
 	m_aWeapons[0].SetLocalizedDesc("i_weapon_brownbess_gre");
 #endif
 
-	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_frag";
+	/*m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_frag";
 	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_hanger";
 	m_aWeapons[1].m_pszAmmoOverrideName = "Grenade";
-	m_aWeapons[1].m_iAmmoOverrideCount = 3;
+	m_aWeapons[1].m_iAmmoOverrideCount = 3;*/
 
 	postClassConstruct(this);
 }
@@ -550,6 +565,7 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_INFANTRY;
 
 	m_pszPlayerModel = MODEL_AINFANTRY;
+	m_pszJoinName = "a Continental Soldier";
 
 	m_iDefaultPrimaryAmmoCount = AMMO_INFANTRY;
 
@@ -573,6 +589,7 @@ DEC_BG3_PLAYER_CLASS(AOfficer, off, a) {
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_OFFICER;
 
 	m_pszPlayerModel = MODEL_AOFFICER;
+	m_pszJoinName = "a Continental Officer";
 
 	m_iDefaultPrimaryAmmoCount = AMMO_OFFICER;
 
@@ -587,6 +604,8 @@ DEC_BG3_PLAYER_CLASS(AOfficer, off, a) {
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_brownbess_carbine_nobayo";
 	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_sabre_a";
 
+	//m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_spontoon";
+
 	postClassConstruct(this);
 }
 
@@ -598,6 +617,7 @@ DEC_BG3_PLAYER_CLASS(AFrontiersman, rif, a) {
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_SNIPER;
 
 	m_pszPlayerModel = MODEL_AFRONTIERSMAN;
+	m_pszJoinName = "a Frontiersman";
 
 	m_iDefaultPrimaryAmmoCount = AMMO_SNIPER;
 
@@ -619,6 +639,7 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_SKIRMISHER;
 
 	m_pszPlayerModel = MODEL_AMILITIA;
+	m_pszJoinName = "Militia";
 
 	m_iDefaultPrimaryAmmoCount = AMMO_SKIRMISHER;
 
@@ -633,10 +654,20 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_american_brownbess_nobayo";
 	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_beltaxe";
 
+	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_longpattern_nobayo";
+	m_aWeapons[2].m_pszWeaponSecondaryName = "weapon_smallsword";
+	m_aWeapons[2].m_pszPlayerModelOverrideName = MODEL_ASTATEMILITIA; //BG3 - minuteman/state class merge
+	m_aWeapons[2].m_iSleeveSkinOverride = SLEEVE_ASTATEMILITIA;
+
+#ifdef CLIENT_DLL
+	m_aWeapons[2].SetLocalizedName("weapon_longpattern_state");
+	m_aWeapons[2].SetLocalizedDesc("i_weapon_longpattern_state");
+#endif 
+
 	postClassConstruct(this);
 }
 
-DEC_BG3_PLAYER_CLASS(AStateMilitia, linf, a) {
+/*DEC_BG3_PLAYER_CLASS(AStateMilitia, linf, a) {
 	m_iDefaultTeam = TEAM_AMERICANS;
 	m_iClassNumber = CLASS_LIGHT_INFANTRY;
 
@@ -644,6 +675,7 @@ DEC_BG3_PLAYER_CLASS(AStateMilitia, linf, a) {
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_LIGHT_INFANTRY;
 
 	m_pszPlayerModel = MODEL_ASTATEMILITIA;
+	m_pszJoinName = "Light Infantry";
 
 	m_iDefaultPrimaryAmmoCount = AMMO_LIGHT_INFANTRY;
 
@@ -653,25 +685,27 @@ DEC_BG3_PLAYER_CLASS(AStateMilitia, linf, a) {
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_longpattern_nobayo";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_smallsword";
+	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_brownbess_carbine";
+	m_aWeapons[1].m_bAllowBuckshot = true;
 
 #ifdef CLIENT_DLL
 	m_aWeapons[0].SetLocalizedName("weapon_longpattern_state");
 	m_aWeapons[0].SetLocalizedDesc("i_weapon_longpattern_state");
 #endif 
 
-	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_spontoon";
-
 	postClassConstruct(this);
-}
+}*/
 
 DEC_BG3_PLAYER_CLASS(AFrenchGre, gre, a) {
 	m_iDefaultTeam = TEAM_AMERICANS;
-	m_iClassNumber = CLASS_GRENADIER;
+	m_iClassNumber = CLASS_LIGHT_INFANTRY;
+	m_bHasImplicitDamageResistance = true;
 
 	m_flBaseSpeed = SPEED_GRENADIER;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_GRENADIER;
 
 	m_pszPlayerModel = MODEL_AFRENCH;
+	m_pszJoinName = "a Grenadier";
 
 	m_iDefaultPrimaryAmmoCount = AMMO_GRENADIER;
 
@@ -686,10 +720,10 @@ DEC_BG3_PLAYER_CLASS(AFrenchGre, gre, a) {
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_frag";
 	m_aWeapons[0].m_pszWeaponTertiaryName = "weapon_hanger";
 
-	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_frag";
+	/*m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_frag";
 	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_hanger";
 	m_aWeapons[1].m_pszAmmoOverrideName = "Grenade";
-	m_aWeapons[1].m_iAmmoOverrideCount = 3;
+	m_aWeapons[1].m_iAmmoOverrideCount = 3;*/
 
 	postClassConstruct(this);
 }

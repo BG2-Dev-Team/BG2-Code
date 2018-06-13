@@ -79,6 +79,8 @@ commented on the following form:
 #include "bg3/vgui/bg3_fonts.h"
 #include "bg3/vgui/fancy_button.h"
 #include "../shared/bg3/Math/bg3_rand.h"
+#include "../shared/bg3/bg3_math_shared.h"
+#include "../shared/bg3/bg3_class_quota.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -99,6 +101,7 @@ CAmmoButton**	g_ppAmmoButtons			= nullptr;
 CUniformButton**	g_ppUniformButtons	= nullptr;
 
 FancyButton*	g_pGoButton;
+GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons* g_pGlowyWeaponArrow;
 
 vgui::IImage* g_pSelectionIcon;
 vgui::IImage* g_pHoverIcon;
@@ -220,7 +223,7 @@ void CClassButton::UpdateGamerulesData() {
 	if (!pPlayer)
 		return;
 
-	m_eAvailable = m_pPlayerClass->availabilityForPlayer(pPlayer);
+	m_eAvailable = NClassQuota::PlayerMayJoinClass(pPlayer, m_pPlayerClass); //m_pPlayerClass->availabilityForPlayer(pPlayer);
 
 	UpdateImage();
 }
@@ -348,9 +351,17 @@ void CWeaponButton::OnMousePressed(MouseCode code) {
 void CWeaponButton::OnCursorEntered() {
 	m_bMouseOver = true;
 	PlayHoverSound();
+	if (m_iWeaponCount > 1) {
+		g_pGlowyWeaponArrow->SetImage(MENU_ARROW_HOVER);
+	}
 }
 
-void CWeaponButton::OnCursorExited() { m_bMouseOver = false; }
+void CWeaponButton::OnCursorExited() { 
+	m_bMouseOver = false; 
+	if (m_iWeaponCount > 1) {
+		g_pGlowyWeaponArrow->SetImage(MENU_ARROW_NORMAL);
+	}
+}
 
 void CWeaponButton::ManualPaint() {
 	int x, y;
@@ -371,6 +382,7 @@ void CWeaponButton::ManualPaint() {
 
 void CWeaponButton::UpdateToMatchPlayerClass(const CPlayerClass* pClass) {
 	m_iWeaponCount = pClass->numChooseableWeapons();
+	g_pGlowyWeaponArrow->SetVisible(m_iWeaponCount > 1);
 
 	SetCurrentGunKit(pClass->GetDefaultWeapon());
 }
@@ -410,7 +422,25 @@ void CWeaponButton::UpdateImage(const CGunKit* pKit) {
 }
 
 
+//-----------------------------------------------------------------------------
+// Purpose: Glowing/pulsing arrow indicates that weapons can be swapped
+//-----------------------------------------------------------------------------
+GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons::GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons() {
+	m_pImage = scheme()->GetImage(MENU_ARROW_NORMAL, false);
+}
 
+
+void GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons::PaintToScreen() {
+	uint8 pulse = m_iPulseSize * DistanceFromEven(gpGlobals->curtime * 2);
+	uint8 halfpulse = pulse / 2;
+	m_pImage->SetPos(m_iX - halfpulse, m_iY - halfpulse);
+	m_pImage->SetSize(m_iWH + pulse, m_iWH + pulse);
+	m_pImage->Paint();
+}
+
+void GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons::SetImage(const char* pszImgName) 	{ 
+	m_pImage = scheme()->GetImage(pszImgName, false); 
+}
 
 
 //-----------------------------------------------------------------------------
@@ -442,14 +472,19 @@ namespace NClassWeaponStats {
 	int g_iMeleeSpeedWidth;
 
 	void UpdateToMatchClass(const CPlayerClass* pClass) {
-		float relativeSpeed = FLerp(0.5f, 1.0f, SPEED_GRENADIER, SPEED_SKIRMISHER, pClass->m_flBaseSpeed);
-		g_iClassSpeedWidth = g_iBarWidth * relativeSpeed;
-		char buffer[4];
-		Q_snprintf(buffer, sizeof(buffer), "%i", (int)(pClass->m_flBaseSpeed + 0.1f));
-		g_pnClassSpeed->SetText(buffer);
+		/**/
 	}
 
 	void UpdateWeaponStatsAllCurrent() {
+
+		//Update player movement speed also, because that can be weapon-dependent!
+		float speed = GetDisplayedClass()->m_flBaseSpeed;
+		speed += GetDisplayedClass()->m_aWeapons[g_pWeaponButton->GetCurrentGunKit()].m_iMovementSpeedModifier;
+		float relativeSpeed = FLerp(0.4f, 1.0f, SPEED_GRENADIER, SPEED_SKIRMISHER + 5, speed);
+		g_iClassSpeedWidth = g_iBarWidth * relativeSpeed;
+		char buffer[4];
+		Q_snprintf(buffer, sizeof(buffer), "%i", (int)(speed + 0.1f));
+		g_pnClassSpeed->SetText(buffer);
 
 		//update displayed weapon stats!
 		//we may have multiple weapons, make sure we get all of them!
@@ -888,12 +923,14 @@ void CUniformButton::UpdateToMatchClass(const CPlayerClass* pClass) {
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Go button sends us into the game.
+// Purpose: Team toggle button switches between teams instantly
 //-----------------------------------------------------------------------------
-CTeamToggleButton::CTeamToggleButton()
-	: Button(g_pClassMenu, "TeamToggleButton", "") { 
+CTeamToggleButton::CTeamToggleButton(const char* pszImgName) : m_bMouseOver(false),
+	Button(g_pClassMenu, "TeamToggleButton", "") { 
 	SetPaintBackgroundEnabled(false);
 	SetPaintBorderEnabled(false);
+
+	m_pImage = scheme()->GetImage(pszImgName, false);
 }
 
 void CTeamToggleButton::OnMousePressed(MouseCode code) {
@@ -902,9 +939,27 @@ void CTeamToggleButton::OnMousePressed(MouseCode code) {
 
 	int nextTeam = g_iCurrentTeammenuTeam == TEAM_AMERICANS ? TEAM_BRITISH : TEAM_AMERICANS;
 	g_pClassMenu->UpdateToMatchTeam(nextTeam);
-	PlayHoverSound();
+	PlaySelectSound();
 }
 
+void CTeamToggleButton::Paint() {
+	int w, h;
+	GetSize(w, h);
+	m_pImage->SetSize(w, h);
+	m_pImage->SetPos(0, 0);
+	m_pImage->Paint();
+
+	if (m_bMouseOver) {
+		g_pSelectionIcon->SetPos(0, 0);
+		g_pSelectionIcon->SetSize(w, h);
+		g_pSelectionIcon->Paint();
+	}
+}
+
+void CTeamToggleButton::OnCursorEntered() {
+	m_bMouseOver = true; 
+	PlayHoverSound();
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Begin class menu functions
@@ -938,6 +993,9 @@ CClassMenu::CClassMenu(vgui::VPANEL pParent) : Frame(NULL, PANEL_CLASSES) {
 	//Construct weapon button
 	g_pWeaponButton = new CWeaponButton(this, "WeaponButton", "");
 
+	//Create glowy arrow
+	g_pGlowyWeaponArrow = new GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons();
+
 	//Construct ammo buttons
 	g_ppAmmoButtons = new CAmmoButton*[NUM_AMMO_BUTTONS];
 	g_ppAmmoButtons[AMMO_KIT_BALL] = new CAmmoButton(this, "AmmoButton", "", AMMO_KIT_BALL);
@@ -970,7 +1028,9 @@ CClassMenu::CClassMenu(vgui::VPANEL pParent) : Frame(NULL, PANEL_CLASSES) {
 	g_pClassDescLabel = new Label(this, "ClassDescLabel", "");
 	g_pWeaponDescLabel = new Label(this, "ClassDescLabel", "");
 
-
+	//Build TeamToggle and Close Buttons
+	m_pCloseButton = new CCloseButton(this, "ClassMenuCloseButton", MENU_CLOSE_ICON);
+	m_pTeamToggleButton = new CTeamToggleButton(MENU_TEAM_SWITCH_ICON);
 
 	//Be 100% sure that the runtime data we need from the classes has been initialized
 	//CPlayerClass::InitClientRunTimeData();
@@ -1004,7 +1064,8 @@ void CClassMenu::Update() {
 
 	//have class buttons recalculate their availability
 	for (int i = 0; i < NUM_CLASS_BUTTONS; i++)
-		g_ppClassButtons[i]->UpdateGamerulesData();
+		if (g_ppClassButtons[i]->IsVisible())
+			g_ppClassButtons[i]->UpdateGamerulesData();
 }
 
 void CClassMenu::ShowPanel(bool bShow) {
@@ -1058,6 +1119,7 @@ void CClassMenu::Paint() {
 	*****************************************************/
 	int i;
 	for (i = 0; i < NUM_CLASS_BUTTONS; i++)
+		if (g_ppClassButtons[i]->IsVisible())
 		g_ppClassButtons[i]->ManualPaint();
 	for (i = 0; i < NUM_UNIFORM_BUTTONS; i++)
 		if (g_ppUniformButtons[i]->IsVisible())
@@ -1067,8 +1129,13 @@ void CClassMenu::Paint() {
 		if (g_ppAmmoButtons[i]->IsVisible())
 			g_ppAmmoButtons[i]->ManualPaint();
 	}
-		
+	
+	//Paint weapon button
 	g_pWeaponButton->ManualPaint();
+
+	//Paint glowy button on top
+	if (g_pGlowyWeaponArrow->IsVisible())
+		g_pGlowyWeaponArrow->PaintToScreen();
 
 	//call class weapon stats paint
 	//these will paint the images in the current frame
@@ -1212,6 +1279,17 @@ void CClassMenu::PerformLayout() {
 	}
 
 	//----------------------------------------------------------
+	//GLOWY ARROW OVER WEAPON BUTTON
+	//----------------------------------------------------------
+	const int ARROW_SIZE = iconsz / 1.5f;
+	g_pGlowyWeaponArrow->SetSize(ARROW_SIZE);
+	g_pGlowyWeaponArrow->SetPulseSize(iconsz / 8);
+	const int ARROW_OFFSET = (iconsz - ARROW_SIZE) / 2;
+	g_pGlowyWeaponArrow->SetPosition(weaponx + 3 * iconsz + ARROW_OFFSET, yBase + ARROW_OFFSET);
+	g_pGlowyWeaponArrow->SetImage(MENU_ARROW_NORMAL);
+	
+
+	//----------------------------------------------------------
 	//AMMO BUTTONS
 	//----------------------------------------------------------
 	int icon_half = iconsz / sqrtf(2);
@@ -1260,13 +1338,11 @@ void CClassMenu::PerformLayout() {
 	//CLOSE & TEAM SWITCH BUTTONS
 	//----------------------------------------------------------
 	int smlsz = iconsz / 6;
-	CCloseButton* pCloseButton = new CCloseButton(this, "ClassMenuCloseButton");
-	pCloseButton->SetPos(0, 0);
-	pCloseButton->SetSize(smlsz, smlsz);
+	m_pCloseButton->SetPos(0, 0);
+	m_pCloseButton->SetSize(smlsz, smlsz);
 
-	CTeamToggleButton* pToggleButton = new CTeamToggleButton();
-	pToggleButton->SetPos(smlsz, 0);
-	pToggleButton->SetSize(smlsz, smlsz);
+	m_pTeamToggleButton->SetPos(smlsz, 0);
+	m_pTeamToggleButton->SetSize(smlsz, smlsz);
 
 	//----------------------------------------------------------
 	//GLOBAL TEXTS
@@ -1298,11 +1374,18 @@ void CClassMenu::UpdateToMatchTeam(int iTeam) {
 	if (m_iPreviouslyShownTeam == iTeam)
 		return;
 
-	//update class buttons
-	for (int i = 0; i < NUM_CLASS_BUTTONS; i++) {
+	//update class buttons, their classes and their visibility
+	int i = 0;
+	int numClasses = CPlayerClass::numClassesForTeam(iTeam);
+	for (; i < numClasses; i++) {
+		g_ppClassButtons[i]->SetVisible(true);
+
 		const CPlayerClass* pClass = CPlayerClass::fromNums(iTeam, i);
 		g_ppClassButtons[i]->UpdateToMatchClass(pClass);
 	}
+	//hide the rest of the class buttons
+	for (; i < NUM_CLASS_BUTTONS; i++)
+		g_ppClassButtons[i]->SetVisible(false);
 
 	//find a default button to select
 	g_pSelectedClassButton = nullptr;

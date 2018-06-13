@@ -43,6 +43,8 @@ IMPLEMENT_CLIENTCLASS_DT(C_HL2MP_Player, DT_HL2MP_Player, CHL2MP_Player)
 	//BG2 - Tjoppen - m_iClass, m_iCurrentAmmoKit and m_iSpeedModifier are network vars
 	// BG2 - VisualMelon - m_iClassSkin is also network var
 	RecvPropInt(RECVINFO(m_iClass)),
+	RecvPropInt(RECVINFO(m_iNextClass)),
+	//RecvPropInt(RECVINFO(m_iGunKit)),
 	RecvPropInt(RECVINFO(m_iClassSkin)),
 	RecvPropInt(RECVINFO(m_iCurrentAmmoKit)),
 	RecvPropInt(RECVINFO(m_iSpeedModifier)),

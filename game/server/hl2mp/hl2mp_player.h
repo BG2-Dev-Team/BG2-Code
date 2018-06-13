@@ -16,11 +16,13 @@ class CHL2MP_Player;
 #include "hl2_player.h"
 #include "../shared/bg3/bg3_player_shared.h"
 #include "../shared/bg3/bg3_class.h"
+#include "bg3/bg3_player_commands.h"
 #include "simtimer.h"
 #include "soundenvelope.h"
 #include "hl2mp_player_shared.h"
 #include "hl2mp_gamerules.h"
 #include "utldict.h"
+#include "bg3/Math/bg3_speedmod_list.h"
 
 //=============================================================================
 // >> HL2MP_Player
@@ -66,6 +68,7 @@ public:
 	virtual void PlayerDeathThink( void );
 	virtual void SetAnimation( PLAYER_ANIM playerAnim );
 	virtual bool HandleCommand_JoinTeam( int team );
+	static CUtlDict<PlayerCommandFunc> s_mPlayerCommands;
 	virtual bool ClientCommand( const CCommand &args );
 	virtual void CreateViewModel( int viewmodelindex = 0 );
 	virtual bool BecomeRagdollOnClient( const Vector &force );
@@ -175,16 +178,18 @@ private:
 
 public:
 	void		PlayermodelTeamClass();
-	int			GetAppropriateSkin() const; //Looks at ourself to see what player model skin we should have
+	int			GetAppropriateSkin(); //Looks at ourself to see what player model skin we should have
 	void		RemoveSelfFromFlags(void);	//BG2 - Tjoppen - do this whenever we die, change team or disconnect or anything similar
 	//int			GetLimitTeamClass(int iTeam, int iClass);
-	bool		AttemptJoin(int iTeam, int iClass, const char *pClassName);
+	bool		AttemptJoin(int iTeam, int iClass);
+	void		ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass);
 	//bool		PlayerMayJoinTeam(int iTeam) const;
 	const char* GetHitgroupPainSound(int hitgroup, int team);
 	void		HandleVoicecomm(int comm);
 
 	int GetCurrentAmmoKit(void) const { return m_iCurrentAmmoKit; }
 
+	void VerifyKitAmmoUniform();
 	int m_iGunKit,
 		m_iAmmoKit,
 		m_iClassSkin;
@@ -194,18 +199,20 @@ public:
 	CNetworkVar(int, m_iStamina);
 
 	const CPlayerClass* m_pCurClass;
-	inline const CPlayerClass* GetPlayerClass() const { return m_pCurClass; }
+	inline const CPlayerClass*	GetPlayerClass() const { return m_pCurClass; }
 private:
 	CNetworkVar(int, m_iClass);
 	CNetworkVar(int, m_iCurrentAmmoKit);	//BG2 - Tjoppen - we need to copy m_iAmmoKit when spawned so players can't change current load by typing "kit ..."
 	CNetworkVar(int, m_iSpeedModifier);
+	CNetworkVar(int, m_iNextClass); //BG3 - Awesome - clients need to know about other player's next classes so that two players don't claim the same class.
+									//				BG2 got away with this because it was only a rare event, BG3 won't
 
 public:
 	CNetworkVar(int, m_iCurrentRallies); //BG3 - Awesome - bitfield of rallies which are currently affecting this player - controlled by the server
 	inline int RallyGetCurrentRallies() { return m_iCurrentRallies; }
 private:
 	//int		m_iClass;					//BG2 - Tjoppen - class system
-	int		m_iNextClass;					//BG2 - Tjoppen - which class will we become on our next respawn?
+	//int		m_iNextClass;					//BG2 - Tjoppen - which class will we become on our next respawn?
 	float	m_flNextVoicecomm,				//BG2 - Tjoppen - voice comms
 		m_flNextGlobalVoicecomm;		//BG2 - Tjoppen - only battlecries for now
 	float	m_fNextStamRegen;				//BG2 - Draco - stamina regen timer
@@ -224,7 +231,14 @@ public:
 	void	OnRallyEffectDisable();
 
 	//used for temporary speed modifiers (carrying flags and such)
-	void	SetSpeedModifier(int iSpeedModifier);
+	//void	SetSpeedModifier(int iSpeedModifier);
+	//BG3 - Awesome - added more robust speed mod manager
+private:
+	CSpeedModList m_aSpeedMods;
+public:
+	void AddSpeedModifier(int8 mod, ESpeedModID id);
+	void RemoveSpeedModifier(ESpeedModID id);
+	void ClearSpeedModifier();
 
 	//used for a lot of things, mostly linebattle rule checking and the like
 	CHL2MP_Player * GetNearestPlayerOfTeam(int iTeam, float& loadedDistance);

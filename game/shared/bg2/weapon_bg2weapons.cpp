@@ -67,8 +67,8 @@ const int LONGPATTERN_FIRE_DAMAGE = 114;	//62 * 1.85
 const int LONGPATTERN_BAYONET_DAMAGE = 66;	//45 * 0.8 * 1.85
 const int LONGPATTERN_BAYONET_RANGE = 86;
 
-const int SPONTOON_DAMAGE = 55;
-const int SPONTOON_RANGE = 88;
+const int SPONTOON_DAMAGE = 53;
+const int SPONTOON_RANGE = 95;
 
 const int FOWLER_FIRE_DAMAGE = 103;			//damage per ball. 56 * 1.85
 const int FOWLER_SHOT_DAMAGE = 23;			//damage per shot. 10 * 1.85 -> 18 -> 8*18 = 144 - VisualMelon - changed to 20 (formerly 18)
@@ -121,8 +121,8 @@ const float HIRSCHFAENGER_RETRACE_DURATION	= 0.2f;
 const float SABRE_COS_TOLERANCE				= 0.866f;		//+-30 degrees
 const float SABRE_RETRACE_DURATION			= 0.25f;
 
-const float SPONTOON_COS_TOLERANCE			= 0.99813f;		//+- 3.5 degrees
-const float SPONTOON_RETRACE_DURATION		= 0.08f;
+//const float SPONTOON_COS_TOLERANCE			= 0.99813f;		//+- 3.5 degrees
+//const float SPONTOON_RETRACE_DURATION		= 0.08f;
 
 const float MUZZLE_VELOCITY_RIFLE = 20400;
 const float MUZZLE_VELOCITY_SMOOTHBORE = 15600;
@@ -651,7 +651,7 @@ DECLARE_BG2_WEAPON(club)
 
 	m_bWeaponHasSights = false;
 
-	m_iOwnerSpeedModOnKill = 3;
+	//m_iOwnerSpeedModOnKill = 3;
 
 	//primary
 	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
@@ -1058,22 +1058,23 @@ DECLARE_BG2_WEAPON(spontoon)
 	m_Attackinfos[0].m_flRange = SPONTOON_RANGE;
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_SECONDARYATTACK;
 	m_Attackinfos[0].m_iAttackActivityEmpty = ACT_VM_SECONDARYATTACK_EMPTY;
-	m_Attackinfos[0].m_flCosAngleTolerance = SPONTOON_COS_TOLERANCE;
-	m_Attackinfos[0].m_flRetraceDuration = SPONTOON_RETRACE_DURATION;
+	m_Attackinfos[0].m_flCosAngleTolerance = BAYONET_COS_TOLERANCE;
+	m_Attackinfos[0].m_flRetraceDuration = BAYONET_RETRACE_DURATION;
 	m_Attackinfos[0].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 2;
 
 	//secondary
 	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_STAB;
-	m_Attackinfos[1].m_iDamage = SPONTOON_DAMAGE / 2;
+	m_Attackinfos[1].m_iDamage = (SPONTOON_DAMAGE) / 1.8f;
 	m_Attackinfos[1].m_flAttackrate = 0.85f / 2;
 	m_Attackinfos[1].m_flRange = SPONTOON_RANGE;
 	m_Attackinfos[1].m_iAttackActivity = ACT_VM_SECONDARYATTACK;
 	m_Attackinfos[1].m_iAttackActivityEmpty = ACT_VM_SECONDARYATTACK_EMPTY;
-	m_Attackinfos[1].m_flCosAngleTolerance = SPONTOON_COS_TOLERANCE;
-	m_Attackinfos[1].m_flRetraceDuration = SPONTOON_RETRACE_DURATION;
+	m_Attackinfos[1].m_flCosAngleTolerance = BAYONET_COS_TOLERANCE;
+	m_Attackinfos[1].m_flRetraceDuration = BAYONET_RETRACE_DURATION;
 	m_Attackinfos[1].m_iStaminaDrain = m_Attackinfos[0].m_iStaminaDrain / 2;
 
-
+	//Do more damage while in the air - this lets us be fatal
+	//m_iAerialDamageMod = 5;
 }
 
 #ifndef CLIENT_DLL

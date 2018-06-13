@@ -2031,11 +2031,12 @@ int CHL2_Player::GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound)
 	if (nAmmoIndex < 0)
 		return 0;
 
-	bool bCheckAutoSwitch = false;
+	//BG3 - Awesome - stop switching weapons on ammo pickup - these can cause bugs on player spawn where players switch weapons while spawning
+	/*bool bCheckAutoSwitch = false;
 	if (!HasAnyAmmoOfType(nAmmoIndex))
 	{
 		bCheckAutoSwitch = true;
-	}
+	}*/
 
 	int nAdd = BaseClass::GiveAmmo(nCount, nAmmoIndex, bSuppressSound);
 
@@ -2053,7 +2054,8 @@ int CHL2_Player::GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound)
 	// If I was dry on ammo for my best weapon and justed picked up ammo for it,
 	// autoswitch to my best weapon now.
 	//
-	if (bCheckAutoSwitch)
+	//BG3 - Awesome - stop switching weapons on ammo pickup - these can cause bugs on player spawn where players switch weapons while spawning
+	/*if (bCheckAutoSwitch)
 	{
 		CBaseCombatWeapon *pWeapon = g_pGameRules->GetNextBestWeapon(this, GetActiveWeapon());
 
@@ -2061,7 +2063,7 @@ int CHL2_Player::GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound)
 		{
 			SwitchToNextBestWeapon(GetActiveWeapon());
 		}
-	}
+	}*/
 
 	return nAdd;
 }

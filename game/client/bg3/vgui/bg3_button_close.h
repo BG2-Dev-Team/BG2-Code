@@ -21,9 +21,12 @@
 namespace vgui {
 	class CCloseButton : public ::vgui::Button {
 	public:
-		CCloseButton(Panel* pParent, const char* buttonName);
+		CCloseButton(Panel* pParent, const char* buttonName, const char* pszImgName);
 
-		void OnMousePressed(MouseCode code);
+		void OnMousePressed(MouseCode code) override;
+		void Paint() override;
+		void OnCursorEntered() override { m_bMouseOver = true; }
+		void OnCursorExited() override { m_bMouseOver = false; }
 
 	private:
 		union {
@@ -31,6 +34,8 @@ namespace vgui {
 			Panel* m_pPanelParent;
 		};
 		bool	m_bParentIsViewport;
+		IImage* m_pImage;
+		bool	m_bMouseOver;
 	};
 }
 

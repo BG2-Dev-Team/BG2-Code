@@ -11,6 +11,7 @@ BG3 - simple icon display of the buff currently applied to the local player
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 #include <KeyValues.h>
+#include "IGameUIFuncs.h" // for key bindings
 #include "c_baseplayer.h"
 #include "c_hl2mp_player.h"
 #include "c_team.h"
@@ -325,15 +326,17 @@ void CBuffIcons::PaintOfficerView() {
 //		shows the label for the key
 //			the player needs to press for each command
 //========================================================================
-char buff[32];
 void CBuffIcons::LocalizeOfficerViewLabels() {
 	if (gpGlobals->curtime > m_flNextCommandLabelUpdate) {
+		m_ppCommandLabels[0]->SetText(KeyCodeToDisplayString(gameuifuncs->GetButtonCodeForBind("vcomm_advance")));
+		m_ppCommandLabels[1]->SetText(KeyCodeToDisplayString(gameuifuncs->GetButtonCodeForBind("vcomm_fire")));
+		m_ppCommandLabels[2]->SetText(KeyCodeToDisplayString(gameuifuncs->GetButtonCodeForBind("vcomm_rally")));
+		m_ppCommandLabels[3]->SetText(KeyCodeToDisplayString(gameuifuncs->GetButtonCodeForBind("vcomm_retreat")));
+
 		for (int i = 0; i < RALLY_NUM_RALLIES; i++) {
-			//TODO get proper binds for these!
-			Q_snprintf(buff, 32, "%i\0", i + 1);
-			m_ppCommandLabels[i]->SetText(buff);
 			m_ppCommandLabels[i]->SizeToContents();
 		}
+
 		m_flNextCommandLabelUpdate = gpGlobals->curtime + 1.0f;
 	}
 }
