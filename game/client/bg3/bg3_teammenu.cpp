@@ -138,7 +138,8 @@ void CTeamButton::PerformCommand() {
 void CTeamButton::UpdateGameRulesData() {
 	C_HL2MP_Player* pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
 	if (pPlayer) {
-		m_bEnabled = NClassQuota::PlayerMayJoinTeam(pPlayer, m_iTeam);
+		C_HL2MP_Player* pDummyBot;
+		m_bEnabled = NClassQuota::PlayerMayJoinTeam(pPlayer, m_iTeam, &pDummyBot);
 	}
 }
 

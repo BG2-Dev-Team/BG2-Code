@@ -62,7 +62,7 @@ DEF_EXECUTOR(Retreat) {
 
 DEF_EXECUTOR(Advance) {
 	//most of the time bots are already moving forward because they're more efficient than human players
-	if ((pBot->m_pCurThinker == &MedRange || pBot->m_pCurThinker == &Melee)) {
+	if ((pBot->m_pCurThinker == &MedRange || pBot->m_pCurThinker == &Melee || pBot->m_pCurThinker == &Follow)) {
 
 		//say YES
 		pBot->SendBotVcommContext(BotContext::AFFIRM);

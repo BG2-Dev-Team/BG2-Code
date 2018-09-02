@@ -1627,7 +1627,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 	bool CMultiplayRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 	{
-		CBasePlayer *pPlayer = ToBasePlayer( pEdict );
+		/*CBasePlayer *pPlayer = ToBasePlayer( pEdict );
 
 		const char *pcmd = args[0];
 		if ( FStrEq( pcmd, "voicemenu" ) )
@@ -1646,7 +1646,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			}
 
 			return true;
-		}
+		}*/ //BG3 - Awesome - removed unused code, for efficiency
 
 		return BaseClass::ClientCommand( pEdict, args );
 	}

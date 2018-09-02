@@ -47,6 +47,8 @@ const int	PISTOL_STAMINA_DRAIN = 0,
 			MUSKET_RIFLE_STAMINA_DRAIN = 0,
 			MELEE_STAMINA_DRAIN = 25;
 
+const float LOCK_TIME_RIFLE = 0.0675f;
+
 //BG2 - Tjoppen - these constants are based on values from weapon_data.h @ BG 1.0F RC14
 //they have since been adjusted and normalized to work with a chest damage modifier of 1 instead of 1.85
 const int BESS_FIRE_DAMAGE = 111;			//60 * 1.85
@@ -60,6 +62,10 @@ const int REVOL_BAYONET_RANGE = 75;
 const int CHARLE_FIRE_DAMAGE = 107; //Formally equivelent to REVOL_FIRE_DAMAGE - Awesome
 const int CHARLE_BAYONET_DAMAGE = REVOL_BAYONET_DAMAGE;
 const int CHARLE_BAYONET_RANGE = 80;
+
+const int MIQUELET_FIRE_DAMAGE = 104; //Formally equivelent to REVOL_FIRE_DAMAGE - Awesome
+const int MIQUELET_BAYONET_DAMAGE = 60;
+const int MIQUELET_BAYONET_RANGE = 81;
 
 const int PENNY_FIRE_DAMAGE = BESS_FIRE_DAMAGE;
 
@@ -253,6 +259,66 @@ DECLARE_BG2_WEAPON( charleville )
 MUSKET_ACTTABLE( charleville )
 #endif
 
+#ifdef CLIENT_DLL
+#define CWeaponmiquelet C_Weaponmiquelet
+#endif
+DECLARE_BG2_WEAPON(miquelet)
+{
+	m_bCantAbortReload = true;
+
+	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.6f;
+	m_flLockTime = 0.03f;
+
+	//Iron sights viewmodel settings.
+	m_flIronsightFOVOffset = -2.5;
+
+	m_bWeaponHasSights = true;
+	//
+
+	//primary
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_FIREARM;
+	m_Attackinfos[0].m_iDamage = MIQUELET_FIRE_DAMAGE;//75;
+	m_Attackinfos[0].m_flAttackrate = 1.0;
+	m_Attackinfos[0].m_flRecoil = 0.6;
+	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
+	m_Attackinfos[0].m_flCrouchMoving = 11.5f;
+	m_Attackinfos[0].m_flCrouchStill = 3.4f;
+	m_Attackinfos[0].m_flStandMoving = 12.7f; //11.5f;
+	m_Attackinfos[0].m_flStandStill = 3.5f;
+	//Iron Sights. These values will probably be changed.
+	m_Attackinfos[0].m_flStandAimStill = 2.3f;
+	m_Attackinfos[0].m_flStandAimMoving = 8.5f;
+	m_Attackinfos[0].m_flCrouchAimStill = 2.2f;
+	m_Attackinfos[0].m_flCrouchAimMoving = 7.7f;
+	//
+	m_Attackinfos[0].m_flConstantDamageRange = MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
+	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
+
+	//secondary
+	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_STAB;
+	m_Attackinfos[1].m_iDamage = MIQUELET_BAYONET_DAMAGE;//60;
+	m_Attackinfos[1].m_flAttackrate = 1.0f;//-0.7f;
+	m_Attackinfos[1].m_flRange = MIQUELET_BAYONET_RANGE;
+	//m_Attackinfos[1].m_flCosAngleTolerance	= 0.95f;
+	m_Attackinfos[1].m_iAttackActivity = ACT_VM_SECONDARYATTACK;
+	m_Attackinfos[1].m_iAttackActivityEmpty = ACT_VM_SECONDARYATTACK_EMPTY;
+	m_Attackinfos[1].m_flCosAngleTolerance = BAYONET_COS_TOLERANCE;
+	m_Attackinfos[1].m_flRetraceDuration = BAYONET_RETRACE_DURATION;
+	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN;
+
+	m_pBayonetDeathNotice = "miquelet_bayonet";
+
+	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
+	m_flZeroRange = ZERO_RANGE_MUSKET;
+	m_iNumShot = 0;
+}
+#ifndef CLIENT_DLL
+MUSKET_ACTTABLE(miquelet)
+#endif
+
 //jäger rifle, but spelled jaeger to avoid any charset problems
 #ifdef CLIENT_DLL
 #define CWeaponjaeger C_Weaponjaeger
@@ -261,6 +327,7 @@ DECLARE_BG2_WEAPON( jaeger )
 {
 	m_bCantAbortReload	= true;
 	m_eWeaponType = RIFLE;
+	m_flLockTime = LOCK_TIME_RIFLE;
 
 	m_fHolsterTime = 0.75f;
 	m_flApproximateReloadTime = 8.9f;
@@ -312,6 +379,7 @@ DECLARE_BG2_WEAPON( pennsylvania )
 {
 	m_bCantAbortReload	= true;
 	m_eWeaponType = RIFLE;
+	m_flLockTime = LOCK_TIME_RIFLE;
 
 	m_fHolsterTime = 0.75f;
 	m_flApproximateReloadTime = 9.9f;

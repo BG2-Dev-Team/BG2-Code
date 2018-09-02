@@ -64,13 +64,22 @@ in separate files for bot communication, map navigation, etc.
 ConVar bot_forceclass("bot_forceclass", "0", FCVAR_GAMEDLL | FCVAR_HIDDEN, "Force bots to spawn as given class. 0 = Infantry, 1 = Officer, 2 = Sniper, 3 = Skirmisher");
 ConVar bot_limitclass("bot_limitclass", "1", 0, "Force bots to conform to class regulations.");
 
-const char* g_ppszEasyBotPrefixes[] = { "Pte.", "Pte.", "LCpl.", };
+#define RANK_PTE	"Pte."
+#define RANK_LCPL	"LCpl."
+#define RANK_CPL	"Cpl."
+#define RANK_SJT	"Sjt."
+#define RANK_LT		"Lt."
+#define RANK_CAPT	"Capt."
+#define RANK_MAJ	"Maj."
+#define RANK_LCOL	"LtCol."
 
-const char* g_ppszMedBotPrefixes[] = { "Pte.", "Pte.", "LCpl.", "LCpl.", "Cpl.", };
+const char* g_ppszEasyBotPrefixes[] = { RANK_PTE, RANK_PTE, RANK_LCPL, };
 
-const char* g_ppszHardBotPrefixes[] = { "Cpl.", "Cpl.", "Sjt.", "Sjt.", };
+const char* g_ppszMedBotPrefixes[] = { RANK_PTE, RANK_PTE, RANK_LCPL, RANK_LCPL, RANK_CPL };
 
-const char* g_ppszRareBotPrefixes[] = { "Lt.", "Capt.", "Maj.", "LtCol.", };
+const char* g_ppszHardBotPrefixes[] = { RANK_CPL, RANK_SJT, };
+
+const char* g_ppszRareBotPrefixes[] = { RANK_LT, RANK_CAPT, RANK_MAJ, RANK_LCOL, };
 
 const char* g_ppszBotNames[] = {
 	"Martin", "Smith", "Williams", "Jones", "Coleman", "Jenkins", "Adams", "Clark",
@@ -92,6 +101,42 @@ const char* g_ppszBotRareNames[] = {
 
 };
 
+static CUtlDict<char*> g_mUsedBotNames;
+
+void GenerateNameForBot(char* buffer, uint8 bufferSize, const BotDifficulty* pForDifficulty) {
+
+//regenerate:
+	const char* pRank;
+	const char* pName;
+
+	//randomly get a name
+	if (pForDifficulty == &BotDiffEasy) {
+		pRank = g_ppszEasyBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszEasyBotPrefixes) - 1)];
+		pName = g_ppszBotNames[RandomInt(0, ARRAYSIZE(g_ppszBotNames) - 1)];
+	}
+	else if (pForDifficulty == &BotDiffNorm) {
+		pRank = g_ppszMedBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszMedBotPrefixes) - 1)];
+		pName = g_ppszBotNames[RandomInt(0, ARRAYSIZE(g_ppszBotNames) - 1)];
+	}
+	else {
+		if (RandomFloat() > 0.95f) {
+			pRank = g_ppszRareBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszRareBotPrefixes) - 1)];
+			pName = g_ppszBotRareNames[RandomInt(0, ARRAYSIZE(g_ppszBotRareNames) - 1)];
+		}
+		else {
+			pRank = g_ppszHardBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszHardBotPrefixes) - 1)];
+			pName = g_ppszBotNames[RandomInt(0, ARRAYSIZE(g_ppszBotNames) - 1)];
+		}
+	}
+
+	Q_snprintf(buffer, bufferSize, "%s %s", pRank, pName);
+
+	//if we've regenerated an existing name, generate a new one
+	/*if (g_mUsedBotNames.IsValidIndex(g_mUsedBotNames.Find(buffer))) {
+		goto regenerate;
+	}*/
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Create a new Bot and put it in the game.
 // Output : Pointer to the new Bot, or NULL if there's no free clients.
@@ -102,30 +147,12 @@ CBasePlayer *BotPutInServer(int iAmount, bool bFrozen)
 	while (i <= iAmount)
 	{
 		char botname[32];
-		const char * pRank;
-		const char * pName;
 
 		//First choose a difficulty
 		BotDifficulty* pDifficulty = CSDKBot::GetDifficulty();
 
-		//randomly get a name
-		if (pDifficulty == &BotDiffEasy) {
-			pRank = g_ppszEasyBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszEasyBotPrefixes) - 1)];
-			pName = g_ppszBotNames[RandomInt(0, ARRAYSIZE(g_ppszBotNames) - 1)];
-		} else if (pDifficulty == &BotDiffNorm) {
-			pRank = g_ppszMedBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszMedBotPrefixes) - 1)];
-			pName = g_ppszBotNames[RandomInt(0, ARRAYSIZE(g_ppszBotNames) - 1)];
-		} else {
-			if (RandomFloat() > 0.95f) {
-				pRank = g_ppszRareBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszRareBotPrefixes) - 1)];
-				pName = g_ppszBotRareNames[RandomInt(0, ARRAYSIZE(g_ppszBotRareNames) - 1)];
-			} else {
-				pRank = g_ppszHardBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszHardBotPrefixes) - 1)];
-				pName = g_ppszBotNames[RandomInt(0, ARRAYSIZE(g_ppszBotNames) - 1)];
-			}
-		}
-
-		Q_snprintf(botname, sizeof(botname), "%s %s", pRank, pName);
+		//Give the bot a name
+		GenerateNameForBot(botname, sizeof botname, pDifficulty);
 
 		// This trick lets us create a CSDKBot for this client instead of the CSDKPlayer
 		// that we would normally get when ClientPutInServer is called.
@@ -161,46 +188,40 @@ int  g_iWaitingAmount = 0; //This is just a temp int really.
 int  g_iNextBotTeam = TEAM_BRITISH;
 
 //ConCommand  cc_Bot( "bot_add", BotAdd_f, "Add a bot", FCVAR_CHEAT );
-CON_COMMAND_F(bot_add, "Creates bot(s)in the server. <Bot Count>", FCVAR_GAMEDLL | FCVAR_SPONLY)
+CON_COMMAND_SERVER(bot_add, "Creates bot(s)in the server. <Bot Count>")
 {
-	int m_iCount;
-	if (args.ArgC() > 1)
-		m_iCount = atoi(args[1]); //Spawn given number of bots.
-	else
-		m_iCount = 1; //Just spawn 1 bot.
+	int iCount = pVar->GetInt();
+	if (iCount <= 0)
+		return;
 
 	g_iNextBotTeam = g_iNextBotTeam == TEAM_AMERICANS ? TEAM_BRITISH : TEAM_AMERICANS;
 
 	if (g_bServerReady) //Server is already loaded, just do it.
-		CBotManager::AddBotOfTeam(g_iNextBotTeam, m_iCount);
+		CBotManager::AddBotOfTeam(g_iNextBotTeam, iCount);
 }
 
-CON_COMMAND_F(bot_add_a, "Creates bot(s)in the server. <Bot Count>", FCVAR_GAMEDLL)
+CON_COMMAND_SERVER(bot_add_a, "Creates bot(s)in the server. <Bot Count>")
 {
-	int m_iCount;
-	if (args.ArgC() > 1)
-		m_iCount = atoi(args[1]); //Spawn given number of bots.
-	else
-		m_iCount = 1; //Just spawn 1 bot.
+	int iCount = pVar->GetInt();
+	if (iCount <= 0)
+		return;
 
 	g_iNextBotTeam = TEAM_AMERICANS;
 
 	if (g_bServerReady) //Server is already loaded, just do it.
-		CBotManager::AddBotOfTeam(g_iNextBotTeam, m_iCount);
+		CBotManager::AddBotOfTeam(g_iNextBotTeam, iCount);
 }
 
-CON_COMMAND_F(bot_add_b, "Creates bot(s)in the server. <Bot Count>", FCVAR_GAMEDLL)
+CON_COMMAND_SERVER(bot_add_b, "Creates bot(s)in the server. <Bot Count>")
 {
-	int m_iCount;
-	if (args.ArgC() > 1)
-		m_iCount = atoi(args[1]); //Spawn given number of bots.
-	else
-		m_iCount = 1; //Just spawn 1 bot.
+	int iCount = pVar->GetInt();
+	if (iCount <= 0)
+		return;
 
 	g_iNextBotTeam = TEAM_BRITISH;
 
 	if (g_bServerReady) //Server is already loaded, just do it.
-		CBotManager::AddBotOfTeam(g_iNextBotTeam, m_iCount);
+		CBotManager::AddBotOfTeam(g_iNextBotTeam, iCount);
 }
 
 //called when game server is created
@@ -243,8 +264,12 @@ void CSDKBot::Init(CHL2MP_Player* pPlayer, BotDifficulty* pDifficulty) {
 
 	//BG2 - Obey Class Limits now. -HairyPotter
 	int iClass = CLASS_INFANTRY;
-	if (bot_forceclass.GetInt() > -1) //Force the bot to spawn as the given class.
+	if (bot_forceclass.GetInt() > -1) { //Force the bot to spawn as the given class.
 		iClass = bot_forceclass.GetInt();
+
+		//clamp bot class number - prevents crashes from accessing non-existing classes
+		iClass = Clamp(iClass, 0, CPlayerClass::numClassesForTeam(g_iNextBotTeam) - 1);
+	}
 	
 	//BG3 - Awesome - For now, just choose infantry class as default
 	//	and we have to use ForceJoin, because that's the entry point for NClassQuota

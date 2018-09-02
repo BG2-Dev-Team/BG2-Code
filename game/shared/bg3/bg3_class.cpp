@@ -345,7 +345,7 @@ PLAYER MODEL PATHS AND NAMES - these are used repeatedly for precacheing the mod
 #define MODEL_BJAEGER		"models/player/british/jager/jager.mdl"
 #define MODEL_BNATIVE		"models/player/british/mohawk/mohawk.mdl"
 #define MODEL_BLINF			"models/player/british/loyalist/loyalist.mdl"
-#define MODEL_BGRENADIER	MODEL_BINFANTRY //TODO change model!
+#define MODEL_BGRENADIER	"models/player/british/grenadier/br_grenadier.mdl"
 
 #define MODEL_AINFANTRY		"models/player/american/infantry/american_infantry.mdl"
 #define MODEL_AOFFICER		"models/player/american/light_a/light_a.mdl"
@@ -577,6 +577,7 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_longpattern";
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_charleville";
+	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_miquelet";
 
 	postClassConstruct(this);
 }

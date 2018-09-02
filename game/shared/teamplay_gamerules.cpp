@@ -109,7 +109,7 @@ bool CTeamplayRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 	if( BaseClass::ClientCommand( pEdict, args ) )
 		return true;
 	
-	if ( FStrEq( args[0], "menuselect" ) )
+	/*if ( FStrEq( args[0], "menuselect" ) )
 	{
 		if ( args.ArgC() < 2 )
 			return true;
@@ -119,7 +119,7 @@ bool CTeamplayRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 		// select the item from the current menu
 
 		return true;
-	}
+	}*/ //BG3 - removed because we don't use it - Awesome
 
 	return false;
 }

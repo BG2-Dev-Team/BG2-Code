@@ -140,9 +140,9 @@ public:
 		float multiplier = 1.0f;
 
 		bool moving = false;
-		if (pPlayer->GetLocalVelocity().Length() > 10.0f ||
+		if (pPlayer->GetLocalVelocity().LengthSqr() > 100.0f ||
 			!(pPlayer->GetFlags() & FL_ONGROUND)) {
-			moving = true;	//moving fast enough or jumping increases spread..
+			moving = !m_bIsIronsighted;	//moving fast enough or jumping increases spread..
 
 			//also check for extra accuracy penalty from speed buff
 			if (pPlayer->RallyGetCurrentRallies() & RALLY_SPEED && !m_bIsIronsighted && !(pPlayer->m_nButtons & IN_WALK)) {

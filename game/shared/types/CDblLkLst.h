@@ -125,6 +125,9 @@ public:
 	 * @return - the value of the node
 	 */
 	inline T 	popFront() { return remove(0); }
+
+	inline T	front() { return get(0); }
+	inline T	end() { return get(m_iLength - 1); }
 	
 	/**
 	 * @brief Removes all elements from the list

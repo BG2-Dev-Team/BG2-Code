@@ -21,7 +21,7 @@
 #define HISTORY_DRAW_TIME	"5"
 
 ConVar hud_drawhistory_time( "hud_drawhistory_time", HISTORY_DRAW_TIME, 0 );
-ConVar hud_fastswitch( "hud_fastswitch", "0", FCVAR_ARCHIVE | FCVAR_ARCHIVE_XBOX );
+ConVar hud_fastswitch( "hud_fastswitch", "1", FCVAR_ARCHIVE | FCVAR_ARCHIVE_XBOX);
 
 //-----------------------------------------------------------------------------
 // Purpose: Weapon Selection commands
@@ -447,10 +447,10 @@ void CBaseHudWeaponSelection::UserCmd_NextWeapon(void)
 		return;
 
 	CycleToNextWeapon();
-	if( hud_fastswitch.GetInt() > 0 )
-	{
+	//if( hud_fastswitch.GetInt() > 0 ) //BG3 - removed fastswitch dependency for cycling weapons - Awesome
+	//{
 		SelectWeapon();
-	}
+	//}
 	UpdateSelectionTime();
 }
 
@@ -465,10 +465,10 @@ void CBaseHudWeaponSelection::UserCmd_PrevWeapon(void)
 
 	CycleToPrevWeapon();
 
-	if( hud_fastswitch.GetInt() > 0 )
-	{
+	//if( hud_fastswitch.GetInt() > 0 ) //BG3 - removed fastswitch dependency for cycling weapons - Awesome
+	//{
 		SelectWeapon();
-	}
+	//}
 
 	UpdateSelectionTime();
 }

@@ -47,6 +47,7 @@ CWeaponDef::CWeaponDef(const char* pszWeaponName) {
 	//m_iOwnerSpeedModOnKill = m_iAerialDamageMod = 0;
 
 	m_eWeaponType = GENERIC;
+	m_flLockTime = 0.135f;
 
 	m_flIronsightFOVOffset = 0.0f;
 	m_bWeaponHasSights = false;

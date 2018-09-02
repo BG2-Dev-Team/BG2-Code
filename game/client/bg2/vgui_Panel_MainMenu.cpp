@@ -17,6 +17,7 @@
 #include "baseviewport.h"
 #include "game_controls/vguitextwindow.h"
 #include "../bg3/bg3_hint.h"
+#include "../bg3/vgui/html_hidden_load.h"
 #include "../../shared/bg3/Math/bg3_rand.h"
 #include "bg3/vgui/fancy_button.h"
 #include "bg3/vgui/bg3_fonts.h"
@@ -322,7 +323,7 @@ private:
 	vgui::FancyButton *m_pButtonOptions;
 	vgui::FancyButton *m_pButtonLeave;
 	//CTextWindow *community; 
-	vgui::HTML *m_pCommunity;
+	CHidingHTML *m_pCommunity;
 	//CTextWindow *m_pCommunity;
 
 	int defaultX;
@@ -415,7 +416,7 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	m_pButtonLeave->SetText("#BG3_Main_Quit");
 #undef setup
 	
-	m_pCommunity = vgui::SETUP_PANEL(new vgui::HTML(this, "CommunityHTML"));
+	m_pCommunity = vgui::SETUP_PANEL(new CHidingHTML(this, "CommunityHTML"));
 
 	PerformDefaultLayout();
 

@@ -49,6 +49,18 @@ inline bool IsLMS()			{ return mp_respawnstyle.GetInt() == 2 || IsLinebattle(); 
 inline bool IsLMSstrict()	{ return mp_respawnstyle.GetInt() == 2; }
 inline bool UseLineSpawn()	{ return IsLinebattle(); }
 
+#ifndef CLIENT_DLL
+#define CON_COMMAND_SERVER(name, tooltip) \
+	static void PerformCommand_##name(ConVar* pVar, const char* pszOldValue, float flOldValue); \
+	ConVar cvar_command_##name(#name, "0", FCVAR_GAMEDLL | FCVAR_NOTIFY | FCVAR_REPLICATED, tooltip, (FnChangeCallback_t)[](IConVar* pVar, const char* pszOldValue, float flOldValue){ \
+		if (pszOldValue && pszOldValue[0] == '0') { \
+			PerformCommand_##name((ConVar*)pVar, pszOldValue, flOldValue); \
+				} \
+		pVar->SetValue("0"); \
+	}); \
+	void PerformCommand_##name(ConVar* pVar, const char* pszOldValue, float flOldValue)
+#endif
+
 /*enum
 {
 	TEAM_AMERICANS = 2,
@@ -171,6 +183,7 @@ public:
 #ifndef CLIENT_DLL
 	void	RestartGame();
 	void	AutobalanceTeams();
+	float	m_flNextAutobalanceCheck;
 	virtual Vector VecItemRespawnSpot( CItem *pItem );
 	virtual QAngle VecItemRespawnAngles( CItem *pItem );
 	virtual float	FlItemRespawnTime( CItem *pItem );

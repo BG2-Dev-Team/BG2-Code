@@ -108,8 +108,8 @@ ConVar sv_show_damages("sv_show_damages", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, 
 ConVar sv_show_enemy_names("sv_show_enemy_names", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow people to view enemy names in crosshair?");
 
 ConVar sv_muzzle_velocity_override("sv_muzzle_velocity_override", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "If non-zero, overide muzzle velocities with this value (inch per seconds)");
-ConVar sv_flintlock_delay("sv_flintlock_delay", "0.135", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "Delay in seconds of the flintlock mechanism (delay bullet firing by this amount)");
-ConVar sv_flintlock_delay_rifle("sv_flintlock_delay_rifle", "0.0675", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "Delay in seconds of a rifle's flintlock mechanism");
+//ConVar sv_flintlock_delay("sv_flintlock_delay", "0.135", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "Delay in seconds of the flintlock mechanism (delay bullet firing by this amount)");
+//ConVar sv_flintlock_delay_rifle("sv_flintlock_delay_rifle", "0.0675", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "Delay in seconds of a rifle's flintlock mechanism");
 
 //-----------------------------------------------------------------------------
 // CBaseBG2Weapon
@@ -138,6 +138,7 @@ CBaseBG2Weapon::CBaseBG2Weapon( void )
 
 	m_bShouldSampleForward = false;
 	m_bShouldFireDelayed = false;
+	
 
 	//m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_NONE;
 	//m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_NONE; //BG3 - Awesome - moved these to def
@@ -277,11 +278,7 @@ void CBaseBG2Weapon::Fire( int iAttack )
 		return;
 	}
 
-	float flintlockDelay;
-	if (Def()->m_eWeaponType == RIFLE)
-		flintlockDelay = sv_flintlock_delay_rifle.GetFloat();
-	else
-		flintlockDelay = sv_flintlock_delay.GetFloat();
+	float flintlockDelay = Def()->m_flLockTime;
 
 	if( sv_turboshots.GetInt() == 0 )
 		m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + flintlockDelay;
@@ -635,7 +632,6 @@ void CBaseBG2Weapon::Swing( int iAttack, bool bIsFirstAttempt )
 
 void CBaseBG2Weapon::Drop( const Vector &vecVelocity )
 {
-	StopWeaponSound(RELOAD);
 /* #ifndef CLIENT_DLL
 	UTIL_Remove( this );
 #endif*/

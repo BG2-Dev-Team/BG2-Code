@@ -235,7 +235,7 @@ void CBotManager::KickAllBots() {
 	}
 }
 
-CON_COMMAND_F(bot_kick_all, "Removes all bots from the server and sets bot_minplayers_mode to 0", FCVAR_GAMEDLL) {
+CON_COMMAND_SERVER(bot_kick_all, "Removes all bots from the server and sets bot_minplayers_mode to 0") {
 	CBotManager::KickAllBots();
 	bot_minplayers_mode.SetValue("0");
 }

@@ -37,28 +37,33 @@ commented on the following form:
 /*
 The console commands here are shorthands for beginning different competitive matches
 */
-CON_COMMAND_F(linebattle, "Starts a linebattle. With an integer argument provided, the round count is set to the given number and the competitive cfg is loaded. Otherwise the round system is disabled and then the public linebattle cfg is loaded. Modified CFGs can override the round system settings.", FCVAR_GAMEDLL) {
-	if (args.ArgC() == 2) {
-		int roundCount = atoi(args[1]);
+CON_COMMAND_SERVER(linebattle, "Starts a linebattle. With an integer argument provided, the round count is set to the given number and the competitive cfg is loaded. Otherwise the round system is disabled and then the public linebattle cfg is loaded. Modified CFGs can override the round system settings.") {
+	int roundCount = pVar->GetInt();
+	if (roundCount > 0) {
 		mp_rounds.SetValue(roundCount);
 		engine->ServerCommand("exec linebattle.cfg\n");
 	}
-	else {
+	/*else {
 		engine->ServerCommand("exec linebattle_public.cfg\n");
+	}*/
+	engine->ServerExecute();
+}
+
+CON_COMMAND_SERVER(lms, "Starts an LMS match. With an integer argument provided, the round count is set to the given number and then lms.cfg is loaded. If no argument is provided, the round count is set to 0 and then the lms.cfg is loaded. Modifying lms.cfg can override the round system settings.") {
+	int roundCount = pVar->GetInt();
+	if (roundCount > 0) {
+		mp_rounds.SetValue(roundCount);
+		engine->ServerCommand("exec lms.cfg\n");
+		engine->ServerExecute();
 	}
-	engine->ServerExecute();
 }
 
-CON_COMMAND_F(lms, "Starts an LMS match. With an integer argument provided, the round count is set to the given number and then lms.cfg is loaded. If no argument is provided, the round count is set to 0 and then the lms.cfg is loaded. Modifying lms.cfg can override the round system settings.", FCVAR_GAMEDLL) {
-	int roundCount = args.ArgC() == 2 ? atoi(args[1]) : 0;
-	mp_rounds.SetValue(roundCount);
-	engine->ServerCommand("exec lms.cfg\n");
-	engine->ServerExecute();
+CON_COMMAND_SERVER(skirm, "Starts a 2-round competitive skirmish. An extra integer argument, if provided, sets the round duration in minutes, and then the skirm.cfg is loaded. If no argument is provided, a 20 minute round duration is assumed. Modify the skirm.cfg to change parameters.") {
+	int minuteCount = pVar->GetInt();
+	if (minuteCount > 0) {
+		mp_roundtime.SetValue(minuteCount * 60);
+		engine->ServerCommand("exec skirm.cfg\n");
+		engine->ServerExecute();
+	}
 }
 
-CON_COMMAND_F(skirm, "Starts a 2-round competitive skirmish. An extra integer argument, if provided, sets the round duration in minutes, and then the skirm.cfg is loaded. If no argument is provided, a 20 minute round duration is assumed. Modify the skirm.cfg to change parameters.", FCVAR_GAMEDLL) {
-	int minuteCount = args.ArgC() == 2 ? atoi(args[1]) : 20;
-	mp_roundtime.SetValue(minuteCount * 60);
-	engine->ServerCommand("exec skirm.cfg\n");
-	engine->ServerExecute();
-}

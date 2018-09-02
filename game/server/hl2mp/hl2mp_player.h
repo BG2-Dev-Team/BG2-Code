@@ -79,9 +79,11 @@ public:
 	virtual void TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator);
 	virtual bool Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0);
 	virtual bool BumpWeapon( CBaseCombatWeapon *pWeapon );
+private:
 	virtual void ChangeTeam(int iTeam);
 	//BG2 - Like ChangeTeam() except with the ability to manually set whether the player should be killed or not.
 	void		 ChangeTeam(int iTeam, bool bKill);
+public:
 	void		 UpdatePlayerClass(void); //BG3- updates the player class reference to match m_iClass and team number
 	//
 	virtual void PickupObject ( CBaseEntity *pObject, bool bLimitMassAndSize );
@@ -200,6 +202,7 @@ public:
 
 	const CPlayerClass* m_pCurClass;
 	inline const CPlayerClass*	GetPlayerClass() const { return m_pCurClass; }
+	inline const CPlayerClass*	GetNextPlayerClass() const { return CPlayerClass::fromNums(GetTeamNumber(), m_iNextClass); }
 private:
 	CNetworkVar(int, m_iClass);
 	CNetworkVar(int, m_iCurrentAmmoKit);	//BG2 - Tjoppen - we need to copy m_iAmmoKit when spawned so players can't change current load by typing "kit ..."

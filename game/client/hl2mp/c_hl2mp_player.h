@@ -112,6 +112,7 @@ private:
 
 public:
 	inline const CPlayerClass* GetPlayerClass() const { return m_pCurClass; }
+	inline const CPlayerClass* GetNextPlayerClass() const { return CPlayerClass::fromNums(GetTeamNumber(), m_iNextClass); }
 	int				RallyGetCurrentRallies(void) const { return m_iCurrentRallies; }
 	void			OnRallyEffectEnable(); //FOV change, any sounds, etc.
 	void			OnRallyEffectDisable();

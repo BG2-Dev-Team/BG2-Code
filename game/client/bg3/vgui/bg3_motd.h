@@ -33,21 +33,14 @@ commented on the following form:
 #ifndef BG3_MOTD_H
 #define BG3_MOTD_H
 
-#include "cbase.h"
-
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/Button.h>
-#include <vgui_controls/HTML.h>
-
-#include <game/client/iviewport.h>
-#include "shareddefs.h"
+#include "html_hidden_load.h"
 
 class CMOTDHTML;
 CMOTDHTML* g_pMOTD = nullptr;
-class CMOTDHTML : public vgui::HTML
+class CMOTDHTML : public CHidingHTML
 {
 private:
-	DECLARE_CLASS_SIMPLE(CMOTDHTML, vgui::HTML);
+	DECLARE_CLASS_SIMPLE(CMOTDHTML, CHidingHTML);
 
 public:
 	CMOTDHTML(vgui::Panel* parent, const char* name);

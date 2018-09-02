@@ -484,6 +484,7 @@ int CHL2MPRules::NumConnectedClients() {
 
 void CHL2MPRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info )
 {
+	if (pVictim->GetActiveWeapon()) pVictim->GetActiveWeapon()->StopWeaponSound(RELOAD);
 #ifndef CLIENT_DLL
 	if ( IsIntermission() )
 		return;
@@ -665,9 +666,12 @@ void CHL2MPRules::SwapPlayerTeam(CHL2MP_Player *pPlayer, bool skipAlive)
 		pPlayer->m_iAmmoKit = AMMO_KIT_BALL;
 	}
 
-	//don't kill the player
 	pPlayer->m_bNoJoinMessage = true;
-	pPlayer->ChangeTeam(iOtherTeam, false);
+	const CPlayerClass* pClass = CPlayerClass::fromNums(iOtherTeam, playerClass);
+	pPlayer->ForceJoin(pClass, iOtherTeam, playerClass);
+
+	//don't kill the player
+	//pPlayer->ChangeTeam(iOtherTeam, false);
 }
 
 void CHL2MPRules::SwapTeams(void)
@@ -1622,6 +1626,9 @@ void CHL2MPRules::RestartGame()
 {
 	m_fNextGameReset = 0;//dont reset again
 
+	//reset autoabalance think time
+	m_flNextAutobalanceCheck = -FLT_MAX;
+
 	//reset scores...
 	NScorePreserve::Flush();
 	g_Teams[TEAM_AMERICANS]->SetScore(0);//...for teams...
@@ -1651,9 +1658,14 @@ void CHL2MPRules::RestartGame()
 }
 
 void CHL2MPRules::AutobalanceTeams() {
-	if (mp_autobalanceteams.GetInt() == 1) {
+	if (gpGlobals->curtime < m_flNextAutobalanceCheck)
+		return;
+	m_flNextAutobalanceCheck = gpGlobals->curtime + 1;
+
+	if (mp_autobalanceteams.GetBool()) {
 		CTeam* pAmericans = g_Teams[TEAM_AMERICANS];
 		CTeam* pBritish = g_Teams[TEAM_BRITISH];
+
 		//use the right sum to find diff, I don't like negative numbers...
 		int iAutoTeamBalanceTeamDiff = 0;
 		int iAutoTeamBalanceBiggerTeam = TEAM_BRITISH;

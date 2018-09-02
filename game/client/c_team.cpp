@@ -290,23 +290,7 @@ int GetNumberOfTeams( void )
 	return g_Teams.Size();
 }
 
-//BG2 - Tjoppen - stuff in C_Team
-int C_Team::GetNumInfantry()
-{
-	return GetNumOfClass(CLASS_INFANTRY);
-}
-
-int C_Team::GetNumOfficers()
-{
-	return GetNumOfClass(CLASS_OFFICER);
-}
-
-int C_Team::GetNumSnipers()
-{
-	return GetNumOfClass(CLASS_SNIPER);
-}
-
-int C_Team::GetNumOfClass(int iClass)
+int C_Team::GetNumOfNextClass(int iClass)
 {
 	int iAmount = 0;
 
@@ -314,14 +298,14 @@ int C_Team::GetNumOfClass(int iClass)
 	{
 		CHL2MP_Player *pHL2Player = ToHL2MPPlayer(cl_entitylist->GetEnt(x));
 
-		if (pHL2Player && pHL2Player->GetTeamNumber() == GetTeamNumber() && pHL2Player->GetClass() == iClass)
+		if (pHL2Player && pHL2Player->GetTeamNumber() == GetTeamNumber() && pHL2Player->GetNextClass() == iClass)
 			iAmount++;
 	}
 
 	return iAmount;
 }
 
-int C_Team::GetNumOfClassRealPlayers(int iClass)
+/*int C_Team::GetNumOfClassRealPlayers(int iClass)
 {
 	int iAmount = 0;
 
@@ -334,19 +318,35 @@ int C_Team::GetNumOfClassRealPlayers(int iClass)
 	}
 
 	return iAmount;
-}
+}*/
 
 int C_Team::GetNumOfNextClassRealPlayers(int iNextClass)
 {
 	int iAmount = 0;
 
-	for (int x = 0; x < GetNumPlayers(); x++)
+	for (int x = 1; x <= gpGlobals->maxClients; x++)
 	{
-		CHL2MP_Player *pHL2Player = ToHL2MPPlayer(cl_entitylist->GetEnt(x));
+		CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(x));
 
-		if (pHL2Player && !(pHL2Player->GetFlags() & FL_FAKECLIENT) && pHL2Player->GetNextClass() == iNextClass)
+		if (pPlayer && pPlayer->GetNextClass() == iNextClass && pPlayer->GetTeamNumber() == GetTeamNumber() && !pPlayer->IsFakeClient()) {
 			iAmount++;
+		}
+
 	}
 
 	return iAmount;
+}
+
+void C_Team::GetNumOfNextClass(int iClass, uint8* pBotCount, uint8* pRealCount) {
+	*pBotCount = *pRealCount = 0;
+	for (int x = 1; x <= gpGlobals->maxClients; x++)
+	{
+		CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(x));
+
+		if (pPlayer && pPlayer->GetNextClass() == iClass && pPlayer->GetTeamNumber() == GetTeamNumber()) {
+			uint8* pCount = pPlayer->IsFakeClient() ? pBotCount : pRealCount;
+			(*pCount)++;
+		}
+			
+	}
 }

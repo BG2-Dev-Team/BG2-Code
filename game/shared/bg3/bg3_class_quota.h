@@ -51,6 +51,8 @@ namespace NClassQuota {
 
 	void CheckBotAddClass(const CPlayerClass* pClass);
 	void CheckBotRemoveClass(const CPlayerClass* pClass);
+
+	const CPlayerClass* FindInfiniteClassForTeam(uint8 iTeam);
 #endif
 
 	void NotifyPlayerChangedTeamClass(const CHL2MP_Player*, const CPlayerClass* pNextClass, uint8 iNextTeam);
@@ -65,7 +67,7 @@ namespace NClassQuota {
 	int8 GetLimitTeamClass(uint8 iTeam, uint8 iClass);
 	int8 GetLimitForClass(const CPlayerClass*);
 
-	bool PlayerMayJoinTeam(const CBasePlayer* pPlayer, uint8 iTeam);
+	bool PlayerMayJoinTeam(const CHL2MP_Player* pPlayer, uint8 iTeam, CHL2MP_Player** ppBotToSwitch);
 
 	EClassAvailability PlayerMayJoinClass(const CHL2MP_Player*, const CPlayerClass*);
 

@@ -75,12 +75,10 @@ public:
 	int		m_iTeamNum;
 
 	//BG2 - Tjoppen - stuff in C_Team
-	int GetNumInfantry();
-	int GetNumOfficers();
-	int GetNumSnipers();
-	int GetNumOfClass(int iClass);
-	int GetNumOfClassRealPlayers(int iClass);
+	int GetNumOfNextClass(int iClass);
+	//int GetNumOfClassRealPlayers(int iClass);
 	int GetNumOfNextClassRealPlayers(int iClass);
+	void GetNumOfNextClass(int iClass, uint8* pBotCount, uint8* pRealCount);
 	//
 };
 

@@ -105,7 +105,7 @@ CON_COMMAND(showinfo, "Shows a info panel: <type> <title> <message> [<command nu
 
 
 using namespace vgui;
-CMOTDHTML::CMOTDHTML(Panel* parent, const char* name) : HTML(parent, name) {
+CMOTDHTML::CMOTDHTML(Panel* parent, const char* name) : BaseClass(parent, name) {
 	m_pViewPort = gViewPortInterface;
 
 	m_szTitle[0] = '\0';

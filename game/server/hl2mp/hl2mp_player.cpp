@@ -178,7 +178,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 
 CHL2MP_Player::~CHL2MP_Player(void)
 {
-	Msg("Destroying player object, info %i - %s\n", GetTeamNumber(), GetPlayerClass()->m_pszAbbreviation);
+	//Msg("Destroying player object, info %i - %s\n", GetTeamNumber(), GetPlayerClass()->m_pszAbbreviation);
 }
 
 void CHL2MP_Player::UpdateOnRemove(void)
@@ -1180,6 +1180,8 @@ bool CHL2MP_Player::HandleCommand_JoinTeam(int team)
 		return false;
 	}
 
+	m_bNoJoinMessage = true;
+
 	if (team == TEAM_SPECTATOR)
 	{
 		// Prevent this is the cvar is set
@@ -1199,7 +1201,8 @@ bool CHL2MP_Player::HandleCommand_JoinTeam(int team)
 			IncrementFragCount(1);
 		}
 
-		ChangeTeam(TEAM_SPECTATOR);
+		//ChangeTeam(TEAM_SPECTATOR);
+		ForceJoin(GetPlayerClass(), team, GetClass());
 
 		return true;
 	}
@@ -1210,7 +1213,7 @@ bool CHL2MP_Player::HandleCommand_JoinTeam(int team)
 	}
 
 	// Switch their actual team...
-	ChangeTeam(team);
+	ForceJoin(GetPlayerClass(), team, GetClass());
 
 	return true;
 }
@@ -1306,8 +1309,11 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass)
 	if (GetTeamNumber() == iTeam && m_iNextClass == iClass)
 		return true;
 
+	int iEnemyTeam = iTeam == TEAM_AMERICANS ? TEAM_BRITISH : TEAM_AMERICANS;
+
 	//Check team balance limits
-	if (!NClassQuota::PlayerMayJoinTeam(this, iTeam)) {
+	CHL2MP_Player* pBotToSwitch = NULL;
+	if (!NClassQuota::PlayerMayJoinTeam(this, iTeam, &pBotToSwitch)) {
 		//BG2 - Tjoppen - TODO: usermessage this
 		//char *sTeamName = iTeam == TEAM_AMERICANS ? "American" : "British";
 		ClientPrint(this, HUD_PRINTCENTER, "There are too many players on this team!\n");
@@ -1327,6 +1333,17 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass)
 		return false;
 	}
 
+	//if there's a bot to switch, switch it to this player's class
+	if (pBotToSwitch) { 
+		//the bot either switches the class we were, or an infinite class on the other team
+		const CPlayerClass* pBotSwitchClass = GetNextPlayerClass();
+
+		//don't switch to our current class if we're not even in the game yet...
+		if (GetTeamNumber() < TEAM_AMERICANS) {
+			pBotSwitchClass = NClassQuota::FindInfiniteClassForTeam(iEnemyTeam);
+		}
+		pBotToSwitch->ForceJoin(GetNextPlayerClass(), iEnemyTeam, pBotSwitchClass->m_iClassNumber);
+	}
 	ForceJoin(pDesiredClass, iTeam, iClass);
 
 	return true;
@@ -1341,10 +1358,18 @@ void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass)
 	//This may be slightly unfair since a still living player may "steal" a spot without spawning as that class,
 	// since it's possible to switch classes around very fast. a player could block the use of a limited class,
 	// though it'd be very tedious. It's a tradeoff.
+	//Warning("Recieved command \"class %i %i\"\n", iTeam, iClass);
+	//Warning("this = %p\n", this);
+
+	//This is a subtle thing... we actually have references to 3 separate classes to worry about
+	// iClass - the class the player is currently asking for
+	// m_iNextClass - the class the player had previously asked for
+	// m_iClass - the class the player currently has
+	// NClassQuota doesn't care about m_iClass, only m_iNextClass. So we change m_iNextClass
+	// only after notifying. If we did it before, Notify(...) would lose that information
+	NClassQuota::NotifyPlayerChangedTeamClass(this, pClass, iTeam);
 	m_iNextClass = iClass;
 
-	//m_iClass = m_iNextClass;
-	NClassQuota::NotifyPlayerChangedTeamClass(this, pClass, iTeam);
 
 	if (GetTeamNumber() != iTeam)
 	{
@@ -1361,7 +1386,6 @@ void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass)
 			ChangeTeam(iTeam);
 	}
 	else {
-		//Msg("Checking for early spawn\n");
 		//BG3 if we're not switching teams and we're in a spawn room, just respawn instantly
 		extern ConVar sv_class_switch_time;
 		extern ConVar sv_class_switch_time_lb_multiplier;
@@ -1376,7 +1400,6 @@ void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass)
 			&& HasLoadedWeapon()
 			&& m_fLastRespawn + classSwitchTime > gpGlobals->curtime) {
 			m_bDontRemoveTicket = true;
-			//Msg("Doing early spawn!\n");
 			Spawn();
 
 			//HACK HACK this prevents players from class-switching more than once, until they spawn for some other reason
@@ -1397,16 +1420,17 @@ void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass)
 		Q_snprintf(str, sizeof(str), "%s is going to fight as %s for the %s\n", GetPlayerName(), pClassName, team ? team->GetName() : "");
 		ClientPrinttTalkAll(str, HUD_BG2CLASSCHANGE);
 		Msg(str); // BG2 - VisualMelon - Debugging
-	}
 
-	//BG2 - Added for HlstatsX Support. -HairyPotter
-	UTIL_LogPrintf("\"%s<%i><%s><%s>\" changed role to \"%s\"\n",
-		GetPlayerName(),
-		GetUserID(),
-		GetNetworkIDString(),
-		team ? team->GetName() : "",
-		pClassName);
-	//
+
+		//BG2 - Added for HlstatsX Support. -HairyPotter
+		UTIL_LogPrintf("\"%s<%i><%s><%s>\" changed role to \"%s\"\n",
+			GetPlayerName(),
+			GetUserID(),
+			GetNetworkIDString(),
+			team ? team->GetName() : "",
+			pClassName);
+		//
+	}
 
 	//BG3 - use this as an entry point to check if we have a preserved score available
 	if (!DeathCount()) {
@@ -1621,6 +1645,7 @@ void CHL2MP_Player::OnRallyEffectDisable() {
 bool CHL2MP_Player::ClientCommand(const CCommand &args)
 {
 	const char *cmd = args[0];
+	//Msg("Player received command %s\n", cmd);
 
 	//Check if the command is in our map of commands, otherwise pass it down
 	int commandIndex = s_mPlayerCommands.Find(cmd);
@@ -1630,65 +1655,14 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 		return true;
 	}
 
+	//Check if command is server-only
+	//Ex. not just any player should be able to add bots
+	/*ConCommand* pCommand = g_pCVar->FindCommand(cmd);
+	if (pCommand && (pCommand->IsFlagSet(FCVAR_GAMEDLL)))
+		return true;*/
+
 	return BaseClass::ClientCommand(args);
 
-	/*if (FStrEq(args[0], "spectate"))
-	{
-		if (ShouldRunRateLimitedCommand(args))
-		{
-			// instantly join spectators
-			HandleCommand_JoinTeam(TEAM_SPECTATOR);
-		}
-		return true;
-	}
-	//BG2 Stuff Below - HairyPotter
-	else if (FStrEq(cmd, "kit") && args.ArgC() > 3)
-	{
-		m_iGunKit = atoi(args[1]);
-		m_iAmmoKit = atoi(args[2]);
-		m_iClassSkin = atoi(args[3]);
-		return true;
-	}
-	else if (FStrEq(cmd, "class") && args.ArgC() > 2)
-	{
-		int iClass = atoi(args[2]);
-
-		//Eh.. it's a little messy, but it seems a bit more efficent to just use a switch here rather than comparing strings over and over.
-		switch (atoi(args[1])) //Team
-		{
-		case TEAM_BRITISH:
-			if (iClass >= 0 && iClass < TOTAL_BRIT_CLASSES)
-				AttemptJoin(TEAM_BRITISH, iClass);
-			break;
-		case TEAM_AMERICANS:
-			if (iClass >= 0 && iClass < TOTAL_AMER_CLASSES)
-				AttemptJoin(TEAM_AMERICANS, iClass);
-			break;
-		default:
-			Msg("Team selection invalid. \n");
-			return false;
-		}
-		return true;
-	}
-	//BG2 - Tjoppen - voice comms
-	else if (FStrEq(cmd, "voicecomm") && args.ArgC() > 1)
-	{
-		int comm = atoi(args[1]);
-		HandleVoicecomm(comm);
-		BG3Buffs::RallyRequest(comm, this);//BG3 - rallying ability
-
-		return true;
-	}
-	else if (FStrEq(cmd, "battlecry"))
-	{
-		HandleVoicecomm(NUM_BATTLECRY);
-
-		return true;
-	}*/
-	//
-	//Msg("Received client command %s\n", cmd);
-
-	
 }
 
 void CHL2MP_Player::CheatImpulseCommands(int iImpulse)

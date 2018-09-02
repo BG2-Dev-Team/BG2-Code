@@ -2218,7 +2218,7 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 		return false;
 	}
 	//BG2 - Tjoppen - server side reload sound
-	//#ifdef CLIENT_DLL
+	//#ifndef CLIENT_DLL
 	// Play reload
 	WeaponSound(RELOAD);
 	//#endif
