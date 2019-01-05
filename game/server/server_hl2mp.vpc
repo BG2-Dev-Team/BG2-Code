@@ -217,6 +217,11 @@ $Project "Server (HL2MP)"
 				$File "$SRCDIR\game\shared\bg3\Math\bg3_rand.h"
 				$File "bg3\Math\bg3_speedmod_list.h"
 			}
+			$Folder "StatTracker"
+			{
+				$File "$SRCDIR\game\shared\bg3\StatTracker\bg3_stat_tracker.cpp"
+				$File "$SRCDIR\game\shared\bg3\StatTracker\bg3_stat_tracker.h"
+			}
 			$File	"bg3\bg3_ammo_cache.cpp"
 			$File	"bg3\bg3_ammo_cache.h"
 			$File 	"$SRCDIR\game\shared\bg3\bg3_buffs.cpp"

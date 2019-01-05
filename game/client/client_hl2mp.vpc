@@ -157,6 +157,11 @@ $Project "Client (HL2MP)"
 				$File "$SRCDIR\game\shared\bg3\Math\bg3_rand.cpp"
 				$File "$SRCDIR\game\shared\bg3\Math\bg3_rand.h"
 			}
+			$Folder "StatTracker"
+			{
+				$File "$SRCDIR\game\shared\bg3\StatTracker\bg3_stat_tracker.cpp"
+				$File "$SRCDIR\game\shared\bg3\StatTracker\bg3_stat_tracker.h"
+			}
 			$Folder "vgui"
 			{
 				$File "bg3\vgui\bg3_button_close.cpp"

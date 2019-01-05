@@ -1,7 +1,7 @@
 [vpc crc file version 2]
 b9c20ec3 C:\Users\Chel\source\bg3-code\devtools\bin\vpc.exe
 _Nc_VS2013/vpcgame:hl2mp_
-cc9fa587 server_hl2mp.vpc
+8d21ff17 server_hl2mp.vpc
 85074ec5 ..\..\game\server\server_base.vpc
 4832e67a ..\..\vpc_scripts\source_dll_base.vpc
 d752cf80 ..\..\vpc_scripts\platform_dirs.vpc
