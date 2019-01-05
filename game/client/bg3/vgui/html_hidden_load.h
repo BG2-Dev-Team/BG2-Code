@@ -48,6 +48,7 @@ commented on the following form:
 // Purpose - to specialize the HTML object such that it hides
 //   itself while loading a page. This way, when different pages are
 //   loaded, the old page doesn't show while the new page is loading.
+//TODO reimplement? SetVisible(...) doesn't seem to work here
 //-------------------------------------------------------------------
 class CHidingHTML : public vgui::HTML {
 	DECLARE_CLASS_SIMPLE(CHidingHTML, vgui::HTML);

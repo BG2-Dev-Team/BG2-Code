@@ -110,7 +110,6 @@ namespace BotThinkers{
 //Default thinker is death
 BotThinker* CSDKBot::s_pDefaultThinker = &BotThinkers::Death;
 
-//BG3 - this function is here because it is inline
 //-------------------------------------------------------------------------------------------------
 // Purpose: Checks whether or not the musket is capable of firing at this moment. Does not look for FF
 //-------------------------------------------------------------------------------------------------
@@ -122,6 +121,21 @@ bool CSDKBot::CanFire() {
 	}
 
 	return canFire;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Purpose: Checks whether or not the musket is capable of firing at this moment. Does not look for FF
+//-------------------------------------------------------------------------------------------------
+bool CSDKBot::CanMelee() {
+	bool canMelee = false;
+	m_pWeapon = static_cast<CBaseBG2Weapon*>(m_pPlayer->GetActiveWeapon());
+	//kind of a hack, assuming what the m_iAttackType values will be instead of checking in the general case.
+	//i.e. we're not checking if the first attack type is a stab
+	if (m_pWeapon) {
+		canMelee = m_pWeapon->Def()->m_Attackinfos[0].m_iAttacktype == ATTACKTYPE_SLASH || m_pWeapon->Def()->m_Attackinfos[1].m_iAttacktype == ATTACKTYPE_STAB;
+	}
+
+	return canMelee;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -645,18 +659,31 @@ bool CSDKBot::ThinkMedRange_End() {
 // Purpose: Simulates close-quarters combat
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkMelee_Begin() {
-	CheckSwitchWeapon();
+	//CheckSwitchWeapon(); //This is instead handled farther below
 	SendBotVcommContext(DEFAULT);
 	SetUpdateFlags(false);
 	//m_curCmd.buttons |= IN_FORWARD;
 	m_flNextStrafeTime = gpGlobals->curtime + RandomFloat(0.5f, 1.0f);
+	bool canMelee = CanMelee();
 	if (CanFire()) {
-		float random = RandomFloat();
-		if (m_pPlayer->GetHealth() < 70)
-			random += 0.2;
-		if (random > 0.5) {
-			m_flNextFireTime = gpGlobals->curtime + RandomFloat(0.5f, 1.2f);
+		//If we can't melee, fire as soon as possible
+		if (!canMelee) {
+			m_flNextFireTime = -FLT_MAX;
 		}
+		//Otherwise, possibly fire
+		else {
+			float random = RandomFloat();
+			if (m_pPlayer->GetHealth() < 70)
+				random += 0.3;
+			if (random > 0.5) {
+				m_flNextFireTime = gpGlobals->curtime + RandomFloat(0.5f, 1.2f);
+			}
+		}
+	}
+	//If we can't fire and can't melee, switch weapons
+	else if (!canMelee){
+		m_pPlayer->Weapon_Switch(m_pPlayer->Weapon_FindMeleeWeapon());
+		UpdateWeaponInfo();
 	}
 
 	float randomStrafe = bot_randfloat();
@@ -701,6 +728,7 @@ bool CSDKBot::ThinkMelee() {
 	}
 	DoMelee();
 	if (gpGlobals->curtime > m_flNextStrafeTime) {
+		CheckSwitchWeapon(); //check if we've fired and need to switch weapon
 		float randomStrafe = bot_randfloat();
 		if (randomStrafe < 0.45f) {
 			m_curCmd.buttons |= IN_LEFT;

@@ -350,7 +350,7 @@ PLAYER MODEL PATHS AND NAMES - these are used repeatedly for precacheing the mod
 #define MODEL_AINFANTRY		"models/player/american/infantry/american_infantry.mdl"
 #define MODEL_AOFFICER		"models/player/american/light_a/light_a.mdl"
 #define MODEL_AFRONTIERSMAN "models/player/american/frontiersman/frontiersman.mdl"
-#define MODEL_AMILITIA		"models/player/american/militia/militia.mdl"
+#define MODEL_AMILITIA		"models/player/american/minuteman/minuteman.mdl"
 #define MODEL_ASTATEMILITIA "models/player/american/state/state_militia.mdl"
 #define MODEL_AFRENCH		"models/player/american/french_gre/french_gre.mdl"
 

@@ -32,6 +32,7 @@ commented on the following form:
 */
 
 #include "cbase.h"
+#include "client.h"
 #include "bg3_bot_debug.h"
 
 #include "bg3_bot.h"
@@ -90,6 +91,20 @@ CON_COMMAND_F(bot_debug_switch, "Tells the currently controlled bot to switch it
 	CBaseCombatWeapon* next = g_pDebugBot->m_pPlayer->GetWeapon(g_iDebugBotWeapon);
 	if (next)
 		g_pDebugBot->m_pPlayer->Weapon_Switch(next);
+}
+
+CON_COMMAND_F(bot_debug_say, "Tells the selected bot to say the given text to chat.", FCVAR_CHEAT | FCVAR_GAMEDLL) {
+	if (!g_pDebugBot || args.ArgC() != 2)
+		return;
+
+	char textBuffer[128];
+	Q_snprintf(textBuffer, sizeof(textBuffer), "\"%s\"", args[1]);
+	CCommand sayCommand;
+	sayCommand.Tokenize(textBuffer, CCommand::DefaultBreakSet());
+
+	Host_Say(g_pDebugBot->m_pPlayer->edict(), sayCommand, false);
+	
+	
 }
 
 void BotDebugThink() {

@@ -236,6 +236,8 @@ void CClassButton::UpdateImage() {
 }
 
 void CClassButton::UpdateDisplayedButton(CClassButton* pNext) {
+
+	//Don't bother if we're already displaying this class button on the current team
 	if (pNext == g_pDisplayedClassButton && g_pClassMenu->m_iPreviouslyShownTeam == g_iCurrentTeammenuTeam)
 		return;
 
@@ -984,6 +986,8 @@ CClassMenu::CClassMenu(vgui::VPANEL pParent) : Frame(NULL, PANEL_CLASSES) {
 	surface()->GetScreenSize(wide, tall);
 	SetSize(wide, tall);
 
+	m_pBackground = NULL;
+
 	//Construct class buttons
 	g_ppClassButtons = new CClassButton*[NUM_CLASS_BUTTONS];
 	for (int i = 0; i < NUM_CLASS_BUTTONS; i++) {
@@ -1120,7 +1124,7 @@ void CClassMenu::Paint() {
 	int i;
 	for (i = 0; i < NUM_CLASS_BUTTONS; i++)
 		if (g_ppClassButtons[i]->IsVisible())
-		g_ppClassButtons[i]->ManualPaint();
+			g_ppClassButtons[i]->ManualPaint();
 	for (i = 0; i < NUM_UNIFORM_BUTTONS; i++)
 		if (g_ppUniformButtons[i]->IsVisible())
 			g_ppUniformButtons[i]->ManualPaint();
@@ -1228,7 +1232,7 @@ void CClassMenu::PerformLayout() {
 	BaseClass::PerformLayout();
 
 	//Find default background image
-	m_pBackground = scheme()->GetImage(MENU_BACKGROUND_A, false);
+	if (!m_pBackground) m_pBackground = scheme()->GetImage(MENU_BACKGROUND_A, false);
 
 	//calculate margins
 	int xBase = 50;
@@ -1401,6 +1405,7 @@ void CClassMenu::UpdateToMatchTeam(int iTeam) {
 }
 
 void CClassMenu::SetBackground(const char* pszImage) {
+	Warning("Setting background to %s\n", pszImage);
 	m_pBackground = scheme()->GetImage(pszImage, false);
 	m_pBackground->SetSize(ScreenWidth(), ScreenHeight());
 	m_pBackground->SetPos(0, 0);

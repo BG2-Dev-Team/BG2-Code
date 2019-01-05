@@ -2,7 +2,7 @@
 The Battle Grounds 3 - A Source modification
 Copyright (C) 2017, The Battle Grounds 3 Team and Contributors
 
-The Battle Grounds 2 free software; you can redistribute it and/or
+The Battle Grounds 3 is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
 version 2.1 of the License, or (at your option) any later version.
@@ -20,7 +20,7 @@ Contact information:
 Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
 
 You may also contact the (future) team via the Battle Grounds website and/or forum at:
-www.bg2mod.com
+battlegrounds3.com
 
 Note that because of the sheer volume of files in the Source SDK this
 notice cannot be put in all of them, but merely the ones that have any
@@ -203,6 +203,7 @@ public:
 	static CSDKBot*	ToBot(CBasePlayer* pPlayer);
 	bool		DoMelee(); //based on difficulty, range, current weapon, a little randomness
 	inline bool CanFire(); //whether or not the bot's current weapon is capable of firing
+	inline bool CanMelee(); //Whether or not the bot's current weapon is capable of melee
 	inline bool ShouldReload(); //whether or not we can and could reload
 	bool		IsAimingAtTeammate(vec_t range) const; //whether or not we're aiming at a teammate
 	bool		IsCapturingEnemyFlag() const;

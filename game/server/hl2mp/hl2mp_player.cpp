@@ -1472,17 +1472,14 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 		case CLASS_SNIPER:
 			pClassString = "Rif";
 			break;
-		case CLASS_SKIRMISHER: //TODO - Get native sounds in. - HairyPotter
-			if (GetTeamNumber() == TEAM_BRITISH)
-				pClassString = "Ski";
-			else
-				pClassString = "Rif"; //We'll use infantry sounds for the Militia class.. for now.
+		case CLASS_SKIRMISHER:
+			pClassString = "Ski";
 			break;
 		case CLASS_LIGHT_INFANTRY:
 			if (GetTeamNumber() == TEAM_AMERICANS)
 				pClassString = "Gre"; //BG3 - Awesome - french grenadier is in light infantry slot...
 			else
-				pClassString = "Inf";
+				pClassString = "Linf";
 			break;
 			break;
 		case CLASS_GRENADIER:
