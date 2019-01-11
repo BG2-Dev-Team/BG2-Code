@@ -635,6 +635,9 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 			break;
 		}
 
+		//Store the hitgroup information in the info
+		newInfo.SetHitGroup(ptr->hitgroup);
+
 		float scale = 1.0f;
 
 		if ((pVictim->RallyGetCurrentRallies() & RALLY_ARMOR) && newInfo.GetDamage() < 100){

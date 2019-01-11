@@ -101,6 +101,9 @@ public:
 	void			AdjustPlayerDamageInflictedForSkillLevel();
 	void			AdjustPlayerDamageTakenForSkillLevel();
 
+	void			SetHitGroup(uint8 iHitGroup) { m_iHitGroup = iHitGroup; }
+	uint8			GetHitGroup() const { return m_iHitGroup; }
+
 	// Given a damage type (composed of the #defines above), fill out a string with the appropriate text.
 	// For designer debug output.
 	static void		DebugGetDamageTypeString(unsigned int DamageType, char *outbuf, int outbuflength );
@@ -132,6 +135,7 @@ protected:
 	bool			m_bForceFriendlyFire;	// Ideally this would be a dmg type, but we can't add more
 
 	float			m_flDamageForForce;
+	uint8			m_iHitGroup = 0;
 
 	DECLARE_SIMPLE_DATADESC();
 };
