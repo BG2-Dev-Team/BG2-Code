@@ -39,6 +39,7 @@ commented on the following form:
 //Forward declarations
 class CHL2MP_Player;
 class CTakeDamageInfo;
+
 #endif
 
 //------------------------------------------------------------------------------------
@@ -68,7 +69,7 @@ public:
 		NUM_EVENTS // <-- useful, tells us how many event there are
 	};
 
-	//disable instatiation on client
+	//disable instantiation on client
 #ifdef CLIENT_DLL
 private:
 	PlayerStatTracker() {}
@@ -83,7 +84,7 @@ private:
 	//--------------------------------------------------------------------------------
 	//Per-life stats; reset these on respawn
 	CUtlVector<uint16>	m_aAttackers; //array of indexes of players who have hit us, used to keep track of how many have hit us
-	uint16				m_flDamageDealt; //how much damage have we done to enemies?
+	uint16				m_iDamageDealt; //how much damage have we done to enemies?
 	uint16				m_iEnemiesKilled; //how many enemies have we killed?
 	uint16				m_iNumHeadshots; //how many times have we killed enemies by hitting them in the head with bullet or blade?
 
@@ -91,6 +92,7 @@ private:
 	bool				m_bSurivivedHeadshot; //have we been hit in the head by a bullet and survived?
 	uint8				m_iMaxNumAttackers; //among all of our lives, what was the highest number of enemies who have hit us?
 	uint16				m_flMaxDamageDealt; //among all of our lives, what was the most damage we dealt in a single life?
+	uint16				m_iMaxEnemiesKilled; //among all of our lives, what was the highest number of enemies killed?
 	uint16				m_iMaxNumHeadshots; //among all of our lives, what was the highest number of lethal headshots or headstabs we have delivered?
 	uint16				m_iMaxLifetime; //Among all our lives, what was our longest life time, in seconds?
 	uint16				m_iNumRespawns; //How many times have we respawned? Could be useful info in ticket mode
@@ -111,8 +113,11 @@ private:
 	//Called when our player deals damage to another player
 	void OnPlayerDamageDealt(const CTakeDamageInfo& info);
 
-	//Called when our receives damage from another player
+	//Called when our player receives damage from another player
 	void OnPlayerDamageReceived(const CTakeDamageInfo& info);
+
+	//Separate the death/round end event from the respawn
+	void OnPlayerEndControl(CHL2MP_Player* pPlayer);
 
 	//Called to determine how "interesting" this player's most interesting stat is; 
 	//this is used to determine whether or not this player's stat tracker is used 
