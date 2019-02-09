@@ -14,6 +14,8 @@
 #include "filesystem.h"
 #include "iinput.h"
 #include "../shared/bg3/bg3_buffs.h"
+#include "bg2/commmenu.h"
+#include "bg2/commmenu2.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -404,21 +406,35 @@ bool CBaseHudWeaponSelection::IsHudMenuPreventingWeaponSelection()
 //-----------------------------------------------------------------------------
 // Purpose: Menu Selection Code
 //-----------------------------------------------------------------------------
-void CBaseHudWeaponSelection::SelectSlot( int iSlot )
+bool CBaseHudWeaponSelection::SelectSlot( int iSlot )
 {
 	// A menu may be overriding weapon selection commands
 	if ( HandleHudMenuInput( iSlot ) )
 	{
-		return;
+		return true;
 	}
 
-	//BG3 - weapon selection keys replaced with officer command menu
-	//TODO find a better entry point!
-	C_HL2MP_Player* pPlayer = ToHL2MPPlayer(C_HL2MP_Player::GetLocalPlayer());
-	if (iSlot > 0 && iSlot <= RALLY_NUM_RALLIES && BG3Buffs::PlayersClassHasRallyAbility(pPlayer))
-		BG3Buffs::SendRallyRequestFromSlot(iSlot);
+	//check for commmenu input
+	if (g_pCommMenu->IsVisible()) {
+		g_pCommMenu->PlayVcommBySlot(iSlot);
+		return true;
+	}
+	else if (g_pCommMenu2->IsVisible()) {
+		g_pCommMenu2->PlayVcommBySlot(iSlot);
+		return true;
+	}
+	/*else {
+		//BG3 - weapon selection keys replaced with officer command menu
+		//TODO find a better entry point!
 
-	
+		C_HL2MP_Player* pPlayer = ToHL2MPPlayer(C_HL2MP_Player::GetLocalPlayer());
+		if (iSlot > 0 && iSlot <= RALLY_NUM_RALLIES && BG3Buffs::PlayersClassHasRallyAbility(pPlayer)) {
+			BG3Buffs::SendRallyRequestFromSlot(iSlot);
+			return true;
+		}
+	}*/
+
+	return false;
 	// If we're not allowed to draw, ignore weapon selections
 	/*if ( !BaseClass::ShouldDraw() )
 	{

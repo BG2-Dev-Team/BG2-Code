@@ -20,7 +20,7 @@ Contact information:
 Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
 
 You may also contact the (future) team via the Battle Grounds website and/or forum at:
-www.bg2mod.com
+battlegrounds3.com
 
 Note that because of the sheer volume of files in the Source SDK this
 notice cannot be put in all of them, but merely the ones that have any
@@ -40,15 +40,15 @@ extern ConVar bot_minplayers_mode;
 #define NUM_BOT_BUTTONS 5
 
 static void JoinMapFromCurrentButton() {
-	if (!g_pSelectedMapButton)
+	/*if (!g_pSelectedMapButton)
 		return;
-	uint16 cmdlen = strlen(g_pSelectedMapButton->GetMapName()) + 6;
+	uint16 cmdlen = strlen(g_pSelectedMapButton->m_pMapInfo->m_pszMapName) + 6;
 	char* cmd = new char[cmdlen];
 
-	Q_snprintf(cmd, cmdlen, "map %s\0", g_pSelectedMapButton->GetMapName());
+	Q_snprintf(cmd, cmdlen, "map %s\0", g_pSelectedMapButton->m_pMapInfo->m_pszMapName);
 	engine->ClientCmd(cmd);
 
-	delete[] cmd;
+	delete[] cmd;*/
 }
 
 namespace vgui {
@@ -206,7 +206,7 @@ namespace vgui {
 	}
 
 	void CCreateMapDialog::RefreshMapList() {
-		LoadMaplistFromFilesystem(m_aMapNames);
+		//LoadMaplistFromFilesystem(m_aMapNames);
 	}
 
 	void CCreateMapDialog::LoadMaplistFromFilesystem(CUtlVector<char*>& mapList) {
@@ -281,7 +281,7 @@ namespace vgui {
 	}
 
 	void CCreateMapDialog::LoadMapButtonImagesForCurrentPage() {
-		IImage* defaultImage = scheme()->GetImage("maps/default", false);
+		/*IImage* defaultImage = scheme()->GetImage("maps/default", false);
 
 		char buffer[128] = "maps/";
 		char* start = buffer + 5;
@@ -298,7 +298,7 @@ namespace vgui {
 			if (!b->m_pMapImage) {
 				b->m_pMapImage = defaultImage;
 			}
-		}
+		}*/
 	}
 
 #define MAPDIALOG_MIN_BUTTON_SIZE 
@@ -325,7 +325,7 @@ namespace vgui {
 	void CMapButton::Select() {
 		g_pSelectedMapButton = this;
 		g_pHoveredMapButton = this;
-		cl_default_mapname.SetValue(m_pszMapName);
+		//cl_default_mapname.SetValue(m_pMapInfo->m_pszMapName);
 	}
 
 	void CMapButton::OnCursorEntered() {
@@ -345,13 +345,10 @@ namespace vgui {
 		int w, h, x, y;
 		GetPos(x, y);
 		GetSize(w, h);
-		m_pMapImage->SetPos(x, y);
-		m_pMapImage->SetSize(w, h);
-		m_pMapImage->Paint();
-	}
-
-	const char* CMapButton::GetMapName() const {
-		return m_pszMapName;
+		/*IImage* image = m_pMapInfo->m_pMapImage;
+		image->SetPos(x, y);
+		image->SetSize(w, h);
+		image->Paint();*/
 	}
 
 	CMapButton* CMapButton::ButtonForMap(const char* pszMapName) {
@@ -379,4 +376,32 @@ namespace vgui {
 
 	CUtlDict<CMapButton*> CMapButton::s_mMapButtonDict;
 	
+}
+
+static KeyValues* kv = NULL;
+
+CON_COMMAND(keyvalues_report, "") {
+	if (args.ArgC() < 1)
+		return;
+	if (!kv)
+		kv = new KeyValues("kv");
+	
+	kv->Clear();
+	kv->LoadFromFile(filesystem, args[1]);
+	for (KeyValues *pKey = kv->GetFirstSubKey(); pKey; pKey = pKey->GetNextKey()) {
+		Msg( "Key name: %s\n", pKey->GetName() );
+	}
+}
+
+CON_COMMAND(searchfile, "Given a search path, lists all files matching that path.") {
+
+
+	FileFindHandle_t fileSearch;
+	const char* str = filesystem->FindFirst(args[1], &fileSearch);
+	Msg("%s\n", str);
+	while (str) {
+		str = filesystem->FindNext(fileSearch);
+		Msg("%s\n", str);
+	}
+	filesystem->FindClose(fileSearch);
 }

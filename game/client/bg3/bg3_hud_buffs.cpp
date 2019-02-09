@@ -19,6 +19,9 @@ BG3 - simple icon display of the buff currently applied to the local player
 
 #include "../../shared/bg3/bg3_buffs.h"
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 #define ICON_WIDTH_HEIGHT 64
 #define ICON_VIBRATE_DURATION 2
 

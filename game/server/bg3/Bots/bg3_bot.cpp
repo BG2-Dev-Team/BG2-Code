@@ -20,7 +20,7 @@ Contact information:
 Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
 
 You may also contact the (future) team via the Battle Grounds website and/or forum at:
-www.bg2mod.com
+battlegrounds3.com
 
 Note that because of the sheer volume of files in the Source SDK this
 notice cannot be put in all of them, but merely the ones that have any
@@ -58,6 +58,7 @@ in separate files for bot communication, map navigation, etc.
 #include "bg3_bot_navpoint.h"
 #include "bg3_bot_vcomms.h"
 #include "bg3_bot_debug.h"
+#include <chrono>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -92,20 +93,20 @@ BotDifficulty BotDiffNorm(7.f,		0.1f,	0.65f,		0.45f,		0.5f,	15.f,				0.35f);
 BotDifficulty BotDiffHard(5.f,		0.03f,	0.45f,		0.55f,		0.8f,	8.f,				0.40f);
 
 #define DEF_THINKER(name, interval) \
-	BotThinker name (&CSDKBot::Think##name##_Begin, &CSDKBot::Think##name##_Check, &CSDKBot::Think##name, &CSDKBot::Think##name##_End, interval, #name)
+	BotThinker name (&CSDKBot::Think##name##_Begin, &CSDKBot::Think##name##_Check, &CSDKBot::Think##name, &CSDKBot::Think##name##_End, interval, #name " Think")
 //Bot Thinkers - artificial BRAINS these are
 //the floats are the times between thinks
 namespace BotThinkers{
-	BotThinker Waypoint	(&CSDKBot::ThinkWaypoint_Begin,		&CSDKBot::ThinkWaypoint_Check,	&CSDKBot::ThinkWaypoint,	&CSDKBot::ThinkWaypoint_End,	0.3f, "Waypoint Think");
-	BotThinker Flag		(&CSDKBot::ThinkFlag_Begin,			&CSDKBot::ThinkFlag_Check,		&CSDKBot::ThinkFlag,		&CSDKBot::ThinkFlag_End,		0.4f, "Flag Think");
+	DEF_THINKER(Waypoint, 0.3f);
+	DEF_THINKER(Flag, 0.4f);
 	DEF_THINKER(Follow, 0.18f);
-	BotThinker LongRange(&CSDKBot::ThinkLongRange_Begin,	&CSDKBot::ThinkLongRange_Check, &CSDKBot::ThinkLongRange,	&CSDKBot::ThinkLongRange_End,	0.4f, "Long Range Think");
-	BotThinker MedRange	(&CSDKBot::ThinkMedRange_Begin,		&CSDKBot::ThinkMedRange_Check,	&CSDKBot::ThinkMedRange,	&CSDKBot::ThinkMedRange_End,	0.18f, "Med Range Think");
-	BotThinker Melee	(&CSDKBot::ThinkMelee_Begin,		&CSDKBot::ThinkMelee_Check,		&CSDKBot::ThinkMelee,		&CSDKBot::ThinkMelee_End,		0.07f, "Melee Think");
-	BotThinker Retreat	(&CSDKBot::ThinkRetreat_Begin,		&CSDKBot::ThinkRetreat_Check,	&CSDKBot::ThinkRetreat,		&CSDKBot::ThinkRetreat_End,		0.3f, "Retreat Think");
-	BotThinker PointBlank(&CSDKBot::ThinkPointBlank_Begin,	&CSDKBot::ThinkPointBlank_Check,&CSDKBot::ThinkPointBlank,	&CSDKBot::ThinkPointBlank_End,	0.1f, "PointBlank Think");
+	DEF_THINKER(LongRange, 0.4f);
+	DEF_THINKER(MedRange, 0.18f);
+	DEF_THINKER(Melee, 0.07f);
+	DEF_THINKER(Retreat, 0.3f);
+	DEF_THINKER(PointBlank, 0.1f);
 	DEF_THINKER(Reload, 0.2f);
-	BotThinker Death	(&CSDKBot::ThinkDeath_Begin,		&CSDKBot::ThinkDeath_Check,		&CSDKBot::ThinkDeath,		&CSDKBot::ThinkDeath_End,		1.0f, "Death Think");
+	DEF_THINKER(Death, 1.0f);
 }
 //Default thinker is death
 BotThinker* CSDKBot::s_pDefaultThinker = &BotThinkers::Death;
@@ -1054,6 +1055,9 @@ void Bot_RunAll(void)
 	if (bot_mimic.GetBool())
 		return;
 
+#ifdef PROFILE_BOT_PERFORMANCE
+	auto preThinkTime = std::chrono::system_clock::now();
+#endif
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPlayer = UTIL_PlayerByIndex(i);// );
@@ -1066,6 +1070,16 @@ void Bot_RunAll(void)
 			}
 		}
 	}
+#ifdef PROFILE_BOT_PERFORMANCE
+	auto postThinkTime = std::chrono::system_clock::now();
+	int deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(postThinkTime - preThinkTime).count();
+	static int counter = 0;
+	counter++;
+	if (counter == 500) {
+		counter = 0;
+		Msg("%i\n", deltaTime);
+	}
+#endif
 }
 
 

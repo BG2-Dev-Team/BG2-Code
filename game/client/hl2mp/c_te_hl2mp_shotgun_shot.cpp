@@ -11,6 +11,9 @@
 #include "c_te_effect_dispatch.h"
 #include "shot_manipulator.h"
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 class C_TEHL2MPFireBullets : public C_BaseTempEntity
 {
 public:

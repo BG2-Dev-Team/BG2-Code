@@ -20,7 +20,7 @@ Contact information:
 Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
 
 You may also contact the (future) team via the Battle Grounds website and/or forum at:
-www.bg2mod.com
+battlegrounds3.com
 
 Note that because of the sheer volume of files in the Source SDK this
 notice cannot be put in all of them, but merely the ones that have any
@@ -54,6 +54,7 @@ commented on the following form:
 
 ConVar bot_minplayers("bot_minplayers", "8", FCVAR_GAMEDLL, "");
 ConVar bot_maxplayers("bot_maxplayers", "0", FCVAR_GAMEDLL, "Kicks bots to ensure that bot population will not inflate player count beyond this number");
+ConVar bot_maxplayers_cap("bot_maxplayers_cap", "1", FCVAR_GAMEDLL, "If non-zero, ensures that bots will never be added to the point of filling up the server.");
 ConVar bot_minplayers_map("bot_minplayers_map", "0", FCVAR_GAMEDLL, "Map-defined minimum bot players. Whether or not this is used depends on bot_minplayers_mode");
 
 
@@ -65,6 +66,8 @@ extern CSDKBot gBots[];
 //-------------------------------------------------------------------------------------------------
 float CBotManager::s_flNextThink = 0.f;
 float CBotManager::s_flThinkInterval = 10.0f;
+int CBotManager::s_iDelayedAmerBotsToAdd = 0;
+int CBotManager::s_iDelayedBritBotsToAdd = 0;
 
 
 //-------------------------------------------------------------------------------------------------
@@ -126,6 +129,14 @@ int CBotManager::CountBotsOfTeam(int iTeam) {
 
 //Adds bot of team to server. Requires that the server be ready.
 void CBotManager::AddBotOfTeam(int iTeam, int count) {
+	//check if we don't have enough slots
+	int currentPlayerCount = HL2MPRules()->NumConnectedClients();
+	int numSlots = gpGlobals->maxClients - bot_maxplayers_cap.GetBool();
+	int available = numSlots - currentPlayerCount;
+	
+	//clamp count to number available
+	count = min(available, count);
+
 	extern int g_iNextBotTeam;
 	extern CBasePlayer* BotPutInServer(int iAmount, bool bFrozen);
 	g_iNextBotTeam = iTeam;
@@ -138,6 +149,16 @@ void CBotManager::AddBotOfTeam(int iTeam, int count) {
 	else
 		pComms = &g_BotAmerComms;
 	pComms->ResetThinkTime(bot_randfloat(4.0, 8.0));
+}
+
+//Adds bot of team to server. Requires that the server be ready.
+void CBotManager::AddBotOfTeamDelayed(int iTeam, int count) {
+	extern int g_iNextBotTeam;
+	extern CBasePlayer* BotPutInServer(int iAmount, bool bFrozen);
+	
+	//mark for future addition
+	int* pCounter = iTeam == TEAM_AMERICANS ? &s_iDelayedAmerBotsToAdd : &s_iDelayedBritBotsToAdd;
+	*pCounter += count;
 }
 
 void CBotManager::RemoveBotOfTeam(int iTeam) {
@@ -192,15 +213,19 @@ void CBotManager::Think() {
 		if (iPlayersToAdd > 0) {
 			for (; iPlayersToAdd > 0; iPlayersToAdd--) {
 				//update the values on each iteration
-				iAmerPlayers = CountPlayersOfTeam(TEAM_AMERICANS);
-				iBritPlayers = CountPlayersOfTeam(TEAM_BRITISH);
+				//iAmerPlayers = CountPlayersOfTeam(TEAM_AMERICANS);
+				//iBritPlayers = CountPlayersOfTeam(TEAM_BRITISH);
+				//we're only incrementing one at a time, just use pointer instead...
 
 				int iTeam = iAmerPlayers < iBritPlayers ? TEAM_AMERICANS : TEAM_BRITISH;
+				int* pIncrementMe = iTeam == TEAM_AMERICANS ? &iAmerPlayers : &iBritPlayers;
+				(*pIncrementMe)++;
 				AddBotOfTeam(iTeam);
 			}
 		} 
 		//check if we need to remove bots
-		else if (bot_maxplayers.GetBool() && bot_maxplayers.GetInt() < iTotalPlayers) {
+		else if ((bot_maxplayers.GetBool() && bot_maxplayers.GetInt() < iTotalPlayers)
+			|| (gpGlobals->maxClients == iTotalPlayers && bot_maxplayers_cap.GetBool())) {
 			int iBritBots = CountBotsOfTeam(TEAM_BRITISH);
 			int iAmerBots = CountBotsOfTeam(TEAM_AMERICANS);
 			//int iTotalBots = iAmerBots + iBritBots;
@@ -215,6 +240,16 @@ void CBotManager::Think() {
 				}
 				RemoveBotOfTeam(iTeam);
 			}
+		}
+
+		//Delayed additions
+		if (s_iDelayedAmerBotsToAdd) { 
+			AddBotOfTeam(TEAM_AMERICANS, s_iDelayedAmerBotsToAdd);
+			s_iDelayedAmerBotsToAdd = 0;
+		}
+		if (s_iDelayedBritBotsToAdd) {
+			AddBotOfTeam(TEAM_BRITISH, s_iDelayedBritBotsToAdd);
+			s_iDelayedBritBotsToAdd = 0;
 		}
 
 		s_flNextThink += s_flThinkInterval;

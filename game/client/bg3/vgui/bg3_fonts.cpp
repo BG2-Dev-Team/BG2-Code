@@ -20,7 +20,7 @@ Contact information:
 Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
 
 You may also contact the (future) team via the Battle Grounds website and/or forum at:
-www.bg2mod.com
+battlegrounds3.com
 
 Note that because of the sheer volume of files in the Source SDK this
 notice cannot be put in all of them, but merely the ones that have any
@@ -64,7 +64,7 @@ namespace vgui {
 		if (numChars > 0) {
 			int pixelsPerChar = width / numChars;
 
-			float scale = 1.0f * pixelsPerChar / g_iGlobalTextScale;
+			float scale = 0.8f * pixelsPerChar / g_iGlobalTextScale;
 			int baseSize = BG3_MIN_FONT_INDEX + (scale * BG3_NUM_FONTS + 0.1f);
 
 			//clamp sizes

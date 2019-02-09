@@ -20,7 +20,7 @@ Contact information:
 Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
 
 You may also contact the (future) team via the Battle Grounds website and/or forum at:
-www.bg2mod.com
+battlegrounds3.com
 
 Note that because of the sheer volume of files in the Source SDK this
 notice cannot be put in all of them, but merely the ones that have any
@@ -536,7 +536,7 @@ DEC_BG3_PLAYER_CLASS(BGrenadier, gre, b) {
 	m_pszSecondaryAmmo = "Grenade";
 	m_iDefaultSecondaryAmmoCount = AMMO_GRENADE;
 
-	m_iSkinDepth = 1;
+	m_iSkinDepth = 8;
 	m_iSleeveBase = SLEEVE_BGRENADIER;
 	m_iNumUniforms = 1;
 
@@ -644,7 +644,7 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 
 	m_iDefaultPrimaryAmmoCount = AMMO_SKIRMISHER;
 
-	m_iSkinDepth = 2;
+	m_iSkinDepth = 24;
 	m_iSleeveBase = SLEEVE_AMILITIA;
 	m_iNumUniforms = 1;
 

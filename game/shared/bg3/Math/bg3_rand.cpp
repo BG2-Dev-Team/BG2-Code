@@ -1,6 +1,9 @@
 #include "cbase.h"
 #include "bg3_rand.h"
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 #ifdef CLIENT_DLL
 int a = 9158152, b = 14257153;
 #else
@@ -40,9 +43,5 @@ float RndFloat(float min, float max) {
 	return result;
 }
 
-CON_COMMAND(rng_gen, "Generates some random numbers") {
-	for (int i = 0; i < 10; i++) {
-		float rng = RndFloat();
-		Msg("%.2f %i\n", rng, rng < 0.5f);
-	}
-}
+
+

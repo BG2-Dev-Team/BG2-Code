@@ -1,3 +1,36 @@
+/*
+The Battle Grounds 3 - A Source modification
+Copyright (C) 2017, The Battle Grounds 3 Team and Contributors
+
+The Battle Grounds 3 free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+The Battle Grounds 3 is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+Contact information:
+Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
+
+You may also contact the (future) team via the Battle Grounds website and/or forum at:
+battlegrounds3.com
+
+Note that because of the sheer volume of files in the Source SDK this
+notice cannot be put in all of them, but merely the ones that have any
+changes from the original SDK.
+In order to facilitate easy searching, all changes are and must be
+commented on the following form:
+
+//BG3 - <name of contributer>[ - <small description>]
+*/
+
 #ifndef BG3_CREATE_SERVER_DIALOG_H
 #define BG3_CREATE_SERVER_DIALOG_H
 
@@ -23,6 +56,8 @@
 //		used in the dialog which creates a new local server
 //---------------------------------------------------------------
 namespace vgui {
+
+	
 
 	//---------------------------------------------------------------
 	// Purpose: These buttons control the bot settings which are loaded
@@ -79,7 +114,7 @@ namespace vgui {
 		//calls CreateLayoutForResolution()
 		CCreateMapDialog(Panel* pParent, const char* panelName);
 
-		//Refreshes the map list, nothing more (does no GUI operations)
+		//Refreshes the map list according to current settings, nothing more (does no GUI operations)
 		void RefreshMapList();
 
 		//loads the positions and sizes of everything, calls SetupPages(), and sets current page to the first page
@@ -104,7 +139,7 @@ namespace vgui {
 		CBotButton**		m_pBotButtons;
 		Label*				m_pBotButtonLabel;
 
-		CUtlVector<char*>	m_aMapNames;
+		//CUtlVector<char*>	m_aMapNames;
 
 		//page system
 		uint8				m_iCurrentPage;
@@ -139,17 +174,14 @@ namespace vgui {
 		
 		void		Paint() override;
 		
-		const char*			GetMapName() const;
-		void				SetMapName(const char* pszMapName) { m_pszMapName = pszMapName; }
 
 		static void			ButtonDictionaryLoad(CUtlVector<char*>& aMapNames, uint8 start, uint8 xEns);
 		static CMapButton*	ButtonForMap(const char* pszMapName); //Finds the button for given map
 		static CMapButton*	ButtonDefaultMap();
 		static void			ButtonDictionaryFlush();
+		
 
 	private:
-		const char* m_pszMapName;
-		IImage*		m_pMapImage;
 		static CUtlDict<CMapButton*> s_mMapButtonDict;
 	};
 }

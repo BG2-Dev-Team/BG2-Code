@@ -11,6 +11,9 @@
 #include "c_team.h"
 #endif
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 extern ConVar mp_autobalanceteams;
 extern ConVar mp_autobalancetolerance;
 extern ConVar mp_limit_mapsize_low;
@@ -177,6 +180,11 @@ namespace NClassQuota {
 	}
 
 	void NotifyPlayerChangedTeamClass(const CHL2MP_Player* pPlayer, const CPlayerClass* pNextClass, uint8 iNextTeam) {
+		if (!pNextClass) {
+			Warning("In " __FUNCTION__ ", pNextClass is NULL");
+			return;
+		}
+
 		//check if we need to decrement the population counter of the player's previous class
 		if (pPlayer->GetTeamNumber() >= TEAM_AMERICANS) {
 			//if true, our previous team was not spectator, so decrement current class

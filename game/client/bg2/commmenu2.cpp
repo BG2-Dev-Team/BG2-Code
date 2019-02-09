@@ -56,14 +56,24 @@ using namespace vgui;
 		return false;
 	}
 }*/
+CCommMenu2* g_pCommMenu2 = NULL;
 
 CCommMenu2::CCommMenu2( IViewPort *pViewPort )
 {	
+	g_pCommMenu2 = this;
 	m_pViewPort = pViewPort;
 
 	m_pLabel = new Label( this, "label", g_pVGuiLocalize->Find("#BG2_VoiceComm_Menu_B") );
 	m_pLabel->SetPos( 50, 50 );
 	m_pLabel->SizeToContents();
+	SetKeyBoardInputEnabled(false);
+}
+
+void CCommMenu2::PlayVcommBySlot(int iSlot) {
+	char buffer[16];
+	sprintf_s(buffer, "voicecomm %i", iSlot + 8);
+	engine->ServerCmd(buffer);
+	ShowPanel(false);
 }
 
 void CCommMenu2::OnKeyCodePressed(KeyCode code)

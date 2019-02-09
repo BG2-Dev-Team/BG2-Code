@@ -88,13 +88,15 @@ public:
 	virtual void Reset( void ) { }
 	virtual void Update( void ) { BaseClass::Update(); }
 	virtual bool NeedsUpdate( void ) { return false; }
-	virtual bool HasInputElements( void ) { return true; }
+	virtual bool HasInputElements( void ) { return false; }
 	virtual void ShowPanel( bool bShow );
 
 	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
 	virtual bool IsVisible() { return BaseClass::IsVisible(); }
 	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }
 	virtual void SetParent(vgui::VPANEL parent) { BaseClass::SetParent(parent); }
+
+	void PlayVcommBySlot(int iSlot);
 
 private:
 	// VGUI2 overrides
@@ -107,5 +109,7 @@ private:
 
 	vgui::Label	*m_pLabel;
 };
+
+extern CCommMenu* g_pCommMenu;
 
 #endif // COMMMENU_H

@@ -76,7 +76,7 @@ public:
 	void UserCmd_LastWeapon( void );
 	void UserCmd_DropPrimary( void );
 
-	virtual void		SelectSlot( int iSlot );
+	virtual bool		SelectSlot( int iSlot );
 
 	virtual bool IsHudMenuTakingInput();
 	virtual bool IsHudMenuPreventingWeaponSelection();

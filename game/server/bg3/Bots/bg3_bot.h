@@ -47,6 +47,7 @@ commented on the following form:
 inline Vector LerpVector(const Vector& v0, const Vector& v1, float lerp);
 
 class CSDKBot;
+//#define PROFILE_BOT_PERFORMANCE
 
 /*
 BotThinker contexts are used for bot's vcomms

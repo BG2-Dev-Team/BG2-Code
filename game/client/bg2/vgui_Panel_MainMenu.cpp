@@ -50,6 +50,7 @@ public:
 	{
 		BaseClass::ApplySchemeSettings( pScheme );
 
+//#define set(a) a->SetFont(GetDefaultBG3FontScaledHorizontal(pScheme, a))
 #define set(a) a->SetFont(GetDefaultBG3FontScaledHorizontal(pScheme, a))
 		set(m_pButtonBegin);
 		set(m_pButtonCreateDisconnect);
@@ -125,6 +126,11 @@ public:
 
 		m_pCommunity->SetSize(this->GetWide() - communityBorderX * 2, this->GetTall() - (communityY + communityBorderY));
 		m_pCommunity->SetPos(communityBorderX, communityY);
+
+		if (InGame())
+			m_pButtonCreateDisconnect->SetText("#BG3_Main_Disconnect");
+		else
+			m_pButtonCreateDisconnect->SetText("#BG3_Main_Create_Server");
 	}
  
 	virtual void OnThink()
@@ -150,11 +156,6 @@ public:
 		int fx,fy; // frame xpos, ypos
  
 		GetPos(fx,fy);
- 
-		if (InGame())
-			m_pButtonCreateDisconnect->SetText("#BG3_Main_Disconnect");
-		else
-			m_pButtonCreateDisconnect->SetText("#BG3_Main_Create_Server");
 
 		/*CheckRolloverBegin(x,y,fx,fy);
 		CheckRolloverCreateDisconnect(x,y,fx,fy);

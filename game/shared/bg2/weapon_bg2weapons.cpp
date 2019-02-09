@@ -90,7 +90,8 @@ const int JAEGER_FIRE_DAMAGE = 116;			//63 * 1.85
 
 const int PISTOL_FIRE_DAMAGE = 101;			//55 * 1.85
 
-const int KNIFE_DAMAGE = 45;				//was 55, but lowered to 45 to balance with making knife faster
+const int KNIFE_DAMAGE = 55;
+const int KNIFE_DAMAGE_ALT = 45;
 const int SABRE_DAMAGE = 74;				//40 * 1.85
 const int TOMAHAWK_DAMAGE = 79;				//43 * 1.85
 const int CLUB_DAMAGE		= 82;
@@ -567,18 +568,28 @@ DECLARE_BG2_WEAPON( knife )
 	m_bWeaponHasSights = false; 
 
 	//primary
-	m_Attackinfos[0].m_iAttacktype			= ATTACKTYPE_SLASH;
-	m_Attackinfos[0].m_iDamage				= KNIFE_DAMAGE;//60;
-	m_Attackinfos[0].m_flAttackrate			= 0.7f;//-0.7f;
-	m_Attackinfos[0].m_flRange				= KNIFE_RANGE;
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
+	m_Attackinfos[0].m_iDamage = KNIFE_DAMAGE;//60;
+	m_Attackinfos[0].m_flAttackrate = 1.1f;//1.1f;
+	m_Attackinfos[0].m_flRange = KNIFE_RANGE;
 	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
-	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
-	m_Attackinfos[0].m_flCosAngleTolerance  = KNIFE_COS_TOLERANCE;
-	m_Attackinfos[0].m_flRetraceDuration    = KNIFE_RETRACE_DURATION;
-	m_Attackinfos[0].m_iStaminaDrain		= MELEE_STAMINA_DRAIN / 1.4f;
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
+	m_Attackinfos[0].m_flCosAngleTolerance = KNIFE_COS_TOLERANCE;
+	m_Attackinfos[0].m_flRetraceDuration = KNIFE_RETRACE_DURATION;
+	m_Attackinfos[0].m_iStaminaDrain = MELEE_STAMINA_DRAIN;
 
 	//secondary
-	m_Attackinfos[1] = m_Attackinfos[0];
+	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_SLASH;
+	m_Attackinfos[1].m_iDamage				= KNIFE_DAMAGE_ALT;//60;
+	m_Attackinfos[1].m_flAttackrate			= 0.7f;//1.1f;
+	m_Attackinfos[1].m_flRange				= KNIFE_RANGE;
+	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
+	m_Attackinfos[1].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
+	m_Attackinfos[1].m_flCosAngleTolerance  = KNIFE_COS_TOLERANCE;
+	m_Attackinfos[1].m_flRetraceDuration    = KNIFE_RETRACE_DURATION;
+	m_Attackinfos[1].m_iStaminaDrain		= MELEE_STAMINA_DRAIN / 1.4f;
+
+	//secondary
 }
 
 #ifndef CLIENT_DLL

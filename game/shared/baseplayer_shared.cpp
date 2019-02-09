@@ -798,6 +798,8 @@ void CBasePlayer::GetStepSoundVelocities( float *velwalk, float *velrun )
 //-----------------------------------------------------------------------------
 void CBasePlayer::SetStepSoundTime( stepsoundtimes_t iStepSoundTime, bool bWalking )
 {
+	//BG3 - Awesome - dunno why m_flStepSoundTime would ever be set to a constant
+
 	switch ( iStepSoundTime )
 	{
 	case STEPSOUNDTIME_NORMAL:

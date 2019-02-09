@@ -32,8 +32,15 @@ commented on the following form:
 */
 
 #include "cbase.h"
-#include "hl2mp/hl2mp_player.h"
 #include "bg3_stat_tracker.h"
+
+
+#ifndef CLIENT_DLL
+#include "hl2mp/hl2mp_player.h"
+#endif
+
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
 
 #ifndef CLIENT_DLL
 
@@ -118,7 +125,7 @@ void PlayerStatTracker::OnPlayerDamageReceived(const CTakeDamageInfo& info)
 		m_aAttackers.AddToTail(eindex); //If not, add it to the list
 	}
 
-	if (info.GetHitGroup() == HITGROUP_HEAD && info.GetAttacker()->GetDamage < info.GetInflictor()->GetHealth()) /*If the player was hit in the head
+	if (info.GetHitGroup() == HITGROUP_HEAD && info.GetAttacker()->GetDamage() < info.GetInflictor()->GetHealth()) /*If the player was hit in the head
 	and the damage dealt by the attacker was less than the player's current health...*/
 	{
 		m_bSurivivedHeadshot = true; //Set survived a headshot to true
@@ -131,7 +138,7 @@ void PlayerStatTracker::OnPlayerDamageReceived(const CTakeDamageInfo& info)
 //interesting, updates the ETrackedEvent pointed to by the given pointer.
 uint16 PlayerStatTracker::CalculateInterestScore(ETrackedEvent* pOutEvent)
 {
-	uint16 resultScore = -1;
+	uint16 resultScore = 0;
 
 	//Lambda function to assist us with comparing scores
 	auto checkScore = [&](uint16 score, ETrackedEvent e)

@@ -1252,6 +1252,9 @@ void CHL2MP_Player::PlayermodelTeamClass()
 //Looks at our member variables to determine what our player model's skin should be
 int CHL2MP_Player::GetAppropriateSkin()
 {
+	//clamp in case of strange class switches
+	m_iClassSkin = max(0, m_pCurClass->m_iNumUniforms - 1);
+
 	//if we're a bot, randomize our uniform
 	if (IsFakeClient()) {
 		m_iClassSkin = RandomInt(0, m_pCurClass->m_iNumUniforms - 1);
@@ -1341,11 +1344,11 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass)
 		//the bot either switches the class we were, or an infinite class on the other team
 		const CPlayerClass* pBotSwitchClass = GetNextPlayerClass();
 
-		//don't switch to our current class if we're not even in the game yet...
+		//don't switch to our next class if we're not even in the game yet...
 		if (GetTeamNumber() < TEAM_AMERICANS) {
 			pBotSwitchClass = NClassQuota::FindInfiniteClassForTeam(iEnemyTeam);
 		}
-		pBotToSwitch->ForceJoin(GetNextPlayerClass(), iEnemyTeam, pBotSwitchClass->m_iClassNumber);
+		pBotToSwitch->ForceJoin(pBotSwitchClass, iEnemyTeam, pBotSwitchClass->m_iClassNumber);
 	}
 	ForceJoin(pDesiredClass, iTeam, iClass);
 
@@ -1397,6 +1400,7 @@ void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass)
 			classSwitchTime *= sv_class_switch_time_lb_multiplier.GetFloat();
 		}
 
+		//Fast class switch
 		if (m_bInSpawnRoom
 			&& IsAlive()
 			&& GetHealth() == 100
@@ -1406,7 +1410,7 @@ void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass)
 			Spawn();
 
 			//HACK HACK this prevents players from class-switching more than once, until they spawn for some other reason
-			m_fLastRespawn = 0.f;
+			m_fLastRespawn = -FLT_MAX;
 		}
 	}
 

@@ -17,6 +17,7 @@
 
 #else
 
+	#include "basegrenade_shared.h"
 	#include "player.h"
 	#include "teamplay_gamerules.h"
 	#include "game.h"
@@ -385,6 +386,10 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 		float flBlockedDamagePercent = 0.0f;
 
 		if ( pEntity == pEntityIgnore )
+			continue;
+
+		//ignore grenades!
+		if (dynamic_cast<CBaseGrenade*>(pEntity))
 			continue;
 
 		if ( pEntity->m_takedamage == DAMAGE_NO )

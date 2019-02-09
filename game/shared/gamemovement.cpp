@@ -4084,7 +4084,7 @@ void CGameMovement::PlayerRoughLandingEffects( float fvol )
 	{
 		//
 		// Play landing sound right away.
-		player->m_flStepSoundTime = 400;
+		player->m_flStepSoundTime = -FLT_MAX;//400; //BG3 - Awesome - changed to -FLT_MAX
 
 		// Play step sound for current texture.
 		player->PlayStepSound( (Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, fvol, true );

@@ -21,6 +21,9 @@
 #include "shake.h"
 //
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 // Don't alias here
 #if defined( CHL2MP_Player )
 #undef CHL2MP_Player	

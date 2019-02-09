@@ -101,7 +101,7 @@ AMMO AMOUNTS - used in hl2mp_gamerules.h
 #if 1
 #define AMMO_INFANTRY		10
 #define AMMO_OFFICER		10
-#define AMMO_SNIPER			12
+#define AMMO_SNIPER			16
 #define AMMO_SKIRMISHER		12
 #define AMMO_LIGHT_INFANTRY	12
 #define AMMO_GRENADIER		16

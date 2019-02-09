@@ -20,7 +20,7 @@ Contact information:
 Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
 
 You may also contact the (future) team via the Battle Grounds website and/or forum at:
-www.bg2mod.com
+battlegrounds3.com
 
 Note that because of the sheer volume of files in the Source SDK this
 notice cannot be put in all of them, but merely the ones that have any
@@ -205,11 +205,15 @@ CON_COMMAND_SERVER(bot_add_a, "Creates bot(s)in the server. <Bot Count>")
 	int iCount = pVar->GetInt();
 	if (iCount <= 0)
 		return;
-
 	g_iNextBotTeam = TEAM_AMERICANS;
 
-	if (g_bServerReady) //Server is already loaded, just do it.
+	if (g_bServerReady) { //Server is already loaded, just do it.	
 		CBotManager::AddBotOfTeam(g_iNextBotTeam, iCount);
+	}
+	else {
+		//do a delayed add
+		CBotManager::AddBotOfTeamDelayed(g_iNextBotTeam, iCount);
+	}
 }
 
 CON_COMMAND_SERVER(bot_add_b, "Creates bot(s)in the server. <Bot Count>")
@@ -217,11 +221,15 @@ CON_COMMAND_SERVER(bot_add_b, "Creates bot(s)in the server. <Bot Count>")
 	int iCount = pVar->GetInt();
 	if (iCount <= 0)
 		return;
-
 	g_iNextBotTeam = TEAM_BRITISH;
 
-	if (g_bServerReady) //Server is already loaded, just do it.
+	if (g_bServerReady) { //Server is already loaded, just do it.
 		CBotManager::AddBotOfTeam(g_iNextBotTeam, iCount);
+	}
+	else {
+		//do a delayed add
+		CBotManager::AddBotOfTeamDelayed(g_iNextBotTeam, iCount);
+	}
 }
 
 //called when game server is created

@@ -50,7 +50,7 @@ public:
 	virtual void Reset( void ) { }
 	virtual void Update( void ) { BaseClass::Update(); }
 	virtual bool NeedsUpdate( void ) { return false; }
-	virtual bool HasInputElements( void ) { return true; }
+	virtual bool HasInputElements( void ) { return false; }
 	virtual void ShowPanel( bool bShow );
 
 	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
@@ -58,6 +58,7 @@ public:
 	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }
 	virtual void SetParent(vgui::VPANEL parent) { BaseClass::SetParent(parent); }
 
+	void PlayVcommBySlot(int iSlot0);
 private:
 	// VGUI2 overrides
 	virtual void OnKeyCodePressed(vgui::KeyCode code);
@@ -69,5 +70,7 @@ private:
 
 	vgui::Label	*m_pLabel;
 };
+
+extern CCommMenu2* g_pCommMenu2;
 
 #endif // COMMMENU2_H

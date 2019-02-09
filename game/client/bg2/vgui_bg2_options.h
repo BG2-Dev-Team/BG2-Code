@@ -3,6 +3,7 @@
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/Slider.h>
 #include <vgui_controls/CheckButton.h>
+#include "BG3/vgui/bg3_fonts.h"
 
 extern ConVar	cl_crosshair,
 
@@ -214,6 +215,8 @@ protected:
 	//virtual void OnCommand(const char *pCommand);
 	/*void OnThink( void )
 	{
+		
+		
 	}*/
 };
 

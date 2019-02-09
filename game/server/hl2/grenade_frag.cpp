@@ -337,6 +337,13 @@ void CGrenadeFrag::DelayThink()
 		m_bHasWarnedAI = true;
 	}
 	
+	//Destroy ourselves if we go underwater
+	if (GetWaterLevel() != 0) {
+		SetNextThink(gpGlobals->curtime);
+		StopSound(this->entindex(), GRENADE_FUSE_SOUND); //BG3 - stop fuse sound!
+		SetThink(&CBaseGrenade::SUB_Remove);
+	}
+
 	/*if( gpGlobals->curtime > m_flNextBlipTime )
 	{
 		BlipSound();

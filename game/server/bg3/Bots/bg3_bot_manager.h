@@ -20,7 +20,7 @@ Contact information:
 Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
 
 You may also contact the (future) team via the Battle Grounds website and/or forum at:
-www.bg2mod.com
+battlegrounds3.com
 
 Note that because of the sheer volume of files in the Source SDK this
 notice cannot be put in all of them, but merely the ones that have any
@@ -46,6 +46,7 @@ Console Variables
 */
 extern ConVar bot_minplayers;
 extern ConVar bot_maxplayers; //Kicks bots to ensure that bots will not fill up a team to be larger than this
+extern ConVar bot_maxplayers_cap;
 extern ConVar bot_minplayers_map; //potential override for bot_minplayers
 extern ConVar bot_minplayers_mode; //0 bots disabled, 1 use bot_minplayers, 2 let bot_minplayers_map override, 3 use only bot_minplayers_map
 
@@ -56,6 +57,9 @@ private:
 	*/
 	static float s_flNextThink; //so that we don't have to the calculations every frame
 	static float s_flThinkInterval; //amount of time between thinks
+
+	static int s_iDelayedBritBotsToAdd;
+	static int s_iDelayedAmerBotsToAdd;
 
 	/*
 	Private helper functions
@@ -72,6 +76,7 @@ public:
 	Public procedures for manipulating the bot population
 	*/
 	static void AddBotOfTeam(int iTeam, int count = 1);
+	static void AddBotOfTeamDelayed(int iTeam, int count = 1); //safe to call this when server isn't ready.
 	static void Think(); //wraps this class's functionality into one function
 	static void SetNextThink(float thinkTime) { s_flNextThink = thinkTime; }
 	static void KickAllBots(); //removes all bots from the server

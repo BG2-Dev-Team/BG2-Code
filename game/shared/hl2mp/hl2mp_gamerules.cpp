@@ -15,6 +15,8 @@
 
 #ifdef CLIENT_DLL
 	#include "c_hl2mp_player.h"
+	// memdbgon must be the last include file in a .cpp file!!!
+	#include "tier0/memdbgon.h"
 #else
 
 	#include "eventqueue.h"
@@ -48,6 +50,8 @@
 #include "../bg3/Bots/bg3_bot_vcomms.h"
 #include "../bg3/bg3_scorepreserve.h"
 #include "../shared/bg3/bg3_class_quota.h"
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
 #ifdef DEBUG	
 	#include "hl2mp_bot_temp.h"
 #endif
@@ -1492,7 +1496,7 @@ int CHL2MPRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget 
 const char *CHL2MPRules::GetGameDescription( void )
 { 
 	//BG2 - Tjoppen - our game descriptions - putting the current version number in these might be a good idea
-	return "Battle Grounds III Beta DEV";
+	return "Battle Grounds III Beta";
 	// 
 } 
 

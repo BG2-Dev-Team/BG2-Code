@@ -1,4 +1,4 @@
-/*
+﻿/*
 The Battle Grounds 3 - A Source modification
 Copyright (C) 2017, The Battle Grounds 3 Team and Contributors
 
@@ -20,7 +20,7 @@ Contact information:
 Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
 
 You may also contact the (future) team via the Battle Grounds website and/or forum at:
-www.bg2mod.com
+battlegrounds3.com
 
 Note that because of the sheer volume of files in the Source SDK this
 notice cannot be put in all of them, but merely the ones that have any
@@ -145,8 +145,9 @@ namespace vgui {
 	}
 
 	void FancyButton::SetText(const char* text) {
-		wchar * wtext = g_pVGuiLocalize->Find(text);
-		BaseClass::SetText(wtext);
+		const char * ctext = g_pVGuiLocalize->FindAsUTF8(text);
+
+		BaseClass::SetText(ctext);
 		//m_pShadowText->SetText(wtext);
 	}
 

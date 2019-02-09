@@ -29,6 +29,8 @@
 //BG2 - HairyPotter
 //#include "classmenu.h"
 #include "bg3/bg3_classmenu.h"
+#include "bg3_vgui_shared.h"
+#include "weapon_selection.h"
 //
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -190,20 +192,31 @@ void CCommBase::ShowPanel( bool bShow )
 	else
 		SetVisible( false );
 
-	SetKeyBoardInputEnabled( bShow );
+	//BG3 - instead of getting input from menu code, getting it from weapon code lets us still press other keys...
+	//SetKeyBoardInputEnabled( bShow );
 }
 
 //------------------------------------------------------------------------------------------------------------------------
 // Begin first comm menu code.
 //------------------------------------------------------------------------------------------------------------------------
 
+CCommMenu* g_pCommMenu = NULL;
 CCommMenu::CCommMenu( IViewPort *pViewPort ) : CCommBase()
 {	
+	g_pCommMenu = this;
 	m_pViewPort = pViewPort;
 
 	m_pLabel = new Label( this, "label", g_pVGuiLocalize->Find("#BG2_VoiceComm_Menu_A") );
 	m_pLabel->SetPos( 50, 50 );
 	m_pLabel->SizeToContents();
+	SetKeyBoardInputEnabled(false);
+}
+
+void CCommMenu::PlayVcommBySlot(int iSlot) {
+	char buffer[15];
+	sprintf_s(buffer, "voicecomm %i", iSlot - 1);
+	engine->ServerCmd(buffer);
+	ShowPanel(false);
 }
 
 void CCommMenu::OnKeyCodePressed(KeyCode code)
@@ -212,6 +225,8 @@ void CCommMenu::OnKeyCodePressed(KeyCode code)
 	// to vgui key codes is not 1:1. Get the engine version of the key for the binding
 	// and the actual pressed key, and compare those..
 	int iLastTrappedKey = code;	
+
+	Msg("Key %i pressed for commmenu\n", iLastTrappedKey);
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
@@ -228,12 +243,47 @@ void CCommMenu::OnKeyCodePressed(KeyCode code)
 	else	ifkey( 7, 6 )
 	else	ifkey( 8, 7 )
 	else	ifkey( 9, 8 )
-	else
-		BaseClass::OnKeyCodePressed( code );
+	else {
+		//SimulateKeyCodePressed(code);
+		BaseClass::OnKeyCodePressed(code);
+	}
 }
 
 void CCommMenu::ShowPanel(bool bShow)
 {
 	BaseClass::ShowPanel( bShow );
 	m_pLabel->SetVisible( bShow );
+}
+
+ConVar cl_forward_vcomm_binds_to_slots("cl_forward_vcomm_binds_to_slots", "1", FCVAR_ARCHIVE, 
+	"If non-zero, then keys pressed for explicity bot-controlling vcomms will be forward to menus as slot keys. Ex. vcomm_advance -> slot1");
+
+CON_COMMAND_F(vcomm_advance, "Fires off a \"Charge!\" voice command, influencing bots; or otherwise passed to menus as slot1 if cl_forward_vcomm_binds_to_slots is true", FCVAR_ARCHIVE) {
+	if (cl_forward_vcomm_binds_to_slots.GetBool() && !GetHudWeaponSelection()->SelectSlot(1))
+		engine->ServerCmd("vcomm_advance");
+}
+
+CON_COMMAND_F(vcomm_fire, "Fires off a \"Fire!\" voice command, influencing bots; or otherwise passed to menus as slot2 if cl_forward_vcomm_binds_to_slots is true", FCVAR_ARCHIVE) {
+	if (cl_forward_vcomm_binds_to_slots.GetBool() && !GetHudWeaponSelection()->SelectSlot(2))
+		engine->ServerCmd("vcomm_fire");
+}
+
+CON_COMMAND_F(vcomm_rally, "Fires off a \"Rally Round!\" voice command, influencing bots; or otherwise passed to menus as slot3 if cl_forward_vcomm_binds_to_slots is true", FCVAR_ARCHIVE) {
+	if (cl_forward_vcomm_binds_to_slots.GetBool() && !GetHudWeaponSelection()->SelectSlot(3))
+		engine->ServerCmd("vcomm_rally");
+}
+
+CON_COMMAND_F(vcomm_retreat, "Fires off a \"Retreat!\" voice command, influencing bots; or otherwise passed to menus as slot4 if cl_forward_vcomm_binds_to_slots is true", FCVAR_ARCHIVE) {
+	if (cl_forward_vcomm_binds_to_slots.GetBool() && !GetHudWeaponSelection()->SelectSlot(4))
+		engine->ServerCmd("vcomm_retreat");
+}
+
+CON_COMMAND_F(vcomm_follow, "Fires off a \"Follow!\" voice command, influencing bots; or otherwise passed to menus as slot5 if cl_forward_vcomm_binds_to_slots is true", FCVAR_ARCHIVE) {
+	if (cl_forward_vcomm_binds_to_slots.GetBool() && !GetHudWeaponSelection()->SelectSlot(5))
+		engine->ServerCmd("vcomm_follow");
+}
+
+CON_COMMAND_F(vcomm_halt, "Fires off a \"Halt!\" voice command, influencing bots; or otherwise passed to menus as slot6 if cl_forward_vcomm_binds_to_slots is true", FCVAR_ARCHIVE) {
+	if (cl_forward_vcomm_binds_to_slots.GetBool() && !GetHudWeaponSelection()->SelectSlot(6))
+		engine->ServerCmd("vcomm_halt");
 }

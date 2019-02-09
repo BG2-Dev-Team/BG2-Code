@@ -20,7 +20,7 @@ Contact information:
 Chel "Awesome" Trunk		mail, in reverse: com . gmail @ latrunkster
 
 You may also contact the (future) team via the Battle Grounds website and/or forum at:
-www.bg2mod.com
+battlegrounds3.com
 
 Note that because of the sheer volume of files in the Source SDK this
 notice cannot be put in all of them, but merely the ones that have any
@@ -98,6 +98,7 @@ PLAYER_COMMAND(class) {
 PLAYER_COMMAND(voicecomm) {
 	if (args.ArgC() < 2)
 		return;
+	
 	int comm = atoi(args[1]);
 	pPlayer->HandleVoicecomm(comm);
 
@@ -139,11 +140,11 @@ PLAYER_COMMAND(vcomm_retreat) {
 PLAYER_COMMAND(vcomm_follow) {
 	uint8 comm = VCOMM_FOLLOW;
 	pPlayer->HandleVoicecomm(comm);
-	BG3Buffs::RallyRequest(comm, pPlayer);
+	//BG3Buffs::RallyRequest(comm, pPlayer);
 }
 
 PLAYER_COMMAND(vcomm_halt) {
 	uint8 comm = VCOMM2_HALT;
 	pPlayer->HandleVoicecomm(comm);
-	BG3Buffs::RallyRequest(comm, pPlayer);
+	//BG3Buffs::RallyRequest(comm, pPlayer);
 }
