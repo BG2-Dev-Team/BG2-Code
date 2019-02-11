@@ -29,7 +29,7 @@
 //BG2 - HairyPotter
 //#include "classmenu.h"
 #include "bg3/bg3_classmenu.h"
-#include "bg3_vgui_shared.h"
+#include "bg3/vgui/bg3_vgui_shared.h"
 #include "weapon_selection.h"
 //
 
