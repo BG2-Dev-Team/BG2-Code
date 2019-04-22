@@ -355,7 +355,15 @@ public:
 			{
 				if ( m_pHudChat )
 				{
-					PostMessage( m_pHudChat, new KeyValues("ChatEntrySend") );
+					//BG3 - if command begins with / character, send it to console instead
+					char buffer[128];
+					GetText(buffer, sizeof(buffer));
+					if (buffer[0] != '/') {
+						PostMessage(m_pHudChat, new KeyValues("ChatEntrySend"));
+					}
+					if (buffer[0] == '/' || buffer[0] == '!') {
+						engine->ServerCmd(buffer + 1);
+					}
 				}
 			}
 		

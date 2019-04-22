@@ -567,6 +567,7 @@ void CHudCrosshair::Paint( void )
 				cx + scale * 0.25f, cy + scale * 0.25f);
 		}
 
+		//three lines
 		if (cl_crosshair.GetInt() & 2)
 		{
 			float	scale = cl_crosshair_scale.GetFloat() * min(w, h) / 300.f;/*,
@@ -575,18 +576,25 @@ void CHudCrosshair::Paint( void )
 			surface()->DrawSetColor(Color(cl_crosshair_r.GetInt(), cl_crosshair_g.GetInt(),
 				cl_crosshair_b.GetInt(), cl_crosshair_a.GetInt()));
 
+			//BG3 - accuracy indicator for when none other available
+			float accuracyShift = 0;
+			bool nocircleOtherwise = !(cl_crosshair.GetInt() & (1 | 8));
+			if (nocircleOtherwise && drawCircle)
+				accuracyShift = r;
+
 			//without expansion
 			//left
-			surface()->DrawFilledRect(cx - scale * 3.f, cy - scale * 0.25f,
-				cx - scale, cy + scale * 0.25f);
+			surface()->DrawFilledRect(cx - scale * 3.f - accuracyShift, cy - scale * 0.25f,
+				cx - scale - accuracyShift, cy + scale * 0.25f);
 			//right
-			surface()->DrawFilledRect(cx + scale, cy - scale * 0.25f,
-				cx + scale * 3.f, cy + scale * 0.25f);
+			surface()->DrawFilledRect(cx + scale + accuracyShift, cy - scale * 0.25f,
+				cx + scale * 3.f + accuracyShift, cy + scale * 0.25f);
 			//bottom
 			surface()->DrawFilledRect(cx - scale * 0.25f, cy + scale,
 				cx + scale * 0.25f, cy + scale * 3.f);
 		}
 
+		//circle
 		if (circlealpha > 0 && cl_crosshair.GetInt() & 1)
 		{
 			int step = 10;
@@ -641,6 +649,7 @@ void CHudCrosshair::Paint( void )
 			}
 		}
 
+		//texture
 		if (drawCircle && cl_crosshair.GetInt() & 8)
 		{
 			Color iconColor(255, 80, 0, 255);

@@ -40,6 +40,7 @@
 #include "team.h"
 #include "engine/IEngineSound.h"
 #include "bg2/spawnpoint.h"
+#include "../shared/bg3/bg3_buffs.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -855,6 +856,20 @@ void CFlag::ChangeTeam( int iTeamNum )
 	}
 
 	BaseClass::ChangeTeam( iTeamNum );
+
+	//set out rally buff
+	int buffIndex = GetTeamNumber() == TEAM_AMERICANS ? m_iAmericanBuff : m_iBritishBuff;
+	if (buffIndex > 0 && buffIndex < 5) {
+		const int buffs[] = {
+			0,
+			VCOMM2_ADVANCE,
+			VCOMM2_RALLY_ROUND,
+			VCOMM2_FIRE,
+			VCOMM2_RETREAT
+		};
+		int buff = buffs[buffIndex];
+		BG3Buffs::RallyRequest(buff, this, m_flCaptureRadius);
+	}
 }
 
 int CFlag::UpdateTransmitState()
@@ -958,6 +973,8 @@ BEGIN_DATADESC( CFlag )
 	DEFINE_KEYFIELD( m_bInvisible, FIELD_BOOLEAN, "Invisible" ), //This is used in the CheckFullcap function in hl2mp_gamerules.cpp -HairyPotter
 	DEFINE_KEYFIELD( m_flBotNoticeRange, FIELD_FLOAT, "BotNoticeRange" ),
 
+	DEFINE_KEYFIELD( m_iAmericanBuff, FIELD_INTEGER, "CaptureBuffAmer"),
+	DEFINE_KEYFIELD( m_iBritishBuff, FIELD_INTEGER, "CaptureBuffBrit"),
 #ifndef CLIENT_DLL
 	DEFINE_THINKFUNC( Think ),
 #endif

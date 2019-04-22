@@ -37,6 +37,7 @@ commented on the following form:
 #include "effect_dispatch_data.h"
 #ifndef CLIENT_DLL
 #include "te_effect_dispatch.h"
+#include "../shared/bg3/vgui/bg3_buff_sprite.h"
 #endif
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -70,12 +71,30 @@ char flBuffer[MAX_LEN_FLOAT];
 
 namespace BG3Buffs {
 #ifndef CLIENT_DLL
+
+	void	CreateRallyEffectAtEntity(CBaseEntity* pParent, int iForTeam) {
+//		Msg(__FUNCTION__ "\n");
+		//Create the buff sprite
+		CBaseEntity* pEntity = CreateEntityByName("buff_sprite");
+		CBuffSprite* pBuffSprite = static_cast<CBuffSprite*>(pEntity);
+		if (pEntity && pBuffSprite) {
+			pBuffSprite->m_iForTeam = iForTeam;
+			Vector offset = pParent->IsPlayer() ? Vector(0, 0, 30) : Vector(0, 0, 60);
+			//Msg("offset %f\n", offset.z);
+			pBuffSprite->SetAbsOrigin(pParent->GetAbsOrigin() + offset);
+			pBuffSprite->SetParent(pParent);
+			pBuffSprite->Spawn();
+			//Msg(" Created sprite entity!\n");
+		}
+	}
+
 //-----------------------------------------------------------------------------
 // Purpose: Interprets and handles a player's voice command for rallying ability
 //-----------------------------------------------------------------------------
-	bool RallyRequest(int vcommCommand, CHL2MP_Player* pRequester) {
+	bool RallyRequest(int vcommCommand, CBaseEntity* pRequester, float flRadiusOverride) {
 		//first check whether or not we're currently allowed to rally
-		if (!PlayerCanRally(pRequester)) {
+		CHL2MP_Player* pPlayer = dynamic_cast<CHL2MP_Player*>(pRequester);
+		if (pPlayer && !PlayerCanRally(pPlayer)) {
 			return false;
 		}
 
@@ -88,7 +107,9 @@ namespace BG3Buffs {
 		//First determine our buff radius
 		extern ConVar mp_respawnstyle;
 		float buffRadius;
-		if (IsLinebattle())
+		if (flRadiusOverride)
+			buffRadius = flRadiusOverride;
+		else if (IsLinebattle())
 			buffRadius = RALLY_RADIUS_LINEBATTLE;
 		else
 			buffRadius = RALLY_RADIUS_SKIRM;
@@ -121,18 +142,25 @@ namespace BG3Buffs {
 			return false;
 		} else {
 			//if we've rallied other players, rally ourselves to
-			RallyPlayer(newRallyFlags, pRequester);
-			filter.AddRecipient(pRequester);
+			if (pPlayer) {
+				RallyPlayer(newRallyFlags, pPlayer);
+				filter.AddRecipient(pPlayer);
+			}
+			
 
 			//Set end and next rally times
 			ConVar* pcvEndTime = EndRallyTimeCvarFor(iTeam);
 			pcvEndTime->SetValue(gpGlobals->curtime + GetRallyDuration(newRallyFlags));
 
-			SetNextRallyTime(iTeam, gpGlobals->curtime + RALLY_INTERVAL);
+			//If our requester was a player, reset the next time
+			if (pPlayer)
+				SetNextRallyTime(iTeam, gpGlobals->curtime + RALLY_INTERVAL);
 
 			//notify clients of rallying, activating HUD events
 			CEffectData data;
 			DispatchEffect("RalEnab", data, filter);
+
+			CreateRallyEffectAtEntity(pRequester, iTeam);
 		}
 
 		//return true to indicate request as succesful
@@ -146,6 +174,7 @@ namespace BG3Buffs {
 		//First see if we're just clearing out rally flags
 		if (rallyFlags == 0){
 			pPlayer->m_iCurrentRallies = 0;
+			pPlayer->m_flEndRallyTime = -FLT_MAX;
 			return;
 		}
 
@@ -155,6 +184,7 @@ namespace BG3Buffs {
 
 		//Okay now actually set the rally flags
 		pPlayer->m_iCurrentRallies = rallyFlags;
+		pPlayer->m_flEndRallyTime = gpGlobals->curtime + BG3Buffs::GetRallyDuration(rallyFlags);
 
 		pPlayer->OnRallyEffectEnable();
 	}
@@ -329,3 +359,16 @@ namespace BG3Buffs {
 		return newRallyFlags;
 	}
 }
+
+#ifndef CLIENT_DLL
+CON_COMMAND_F(rallyme, "", FCVAR_CHEAT | FCVAR_HIDDEN) {
+	CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_GetCommandClient());
+	if (pPlayer) {
+		BG3Buffs::RallyPlayer(RALLY_ADVANCE, pPlayer);
+
+		//Set end and next rally times
+		ConVar* pcvEndTime = EndRallyTimeCvarFor(pPlayer->GetTeamNumber());
+		pcvEndTime->SetValue(gpGlobals->curtime + BG3Buffs::GetRallyDuration(RALLY_ADVANCE));
+	}
+}
+#endif

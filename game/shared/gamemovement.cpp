@@ -1946,6 +1946,7 @@ void CGameMovement::Accelerate( Vector& wishdir, float wishspeed, float accel )
 void CGameMovement::StayOnGround( void )
 {
 	trace_t trace;
+	Vector origStart = mv->GetAbsOrigin();
 	Vector start( mv->GetAbsOrigin() );
 	Vector end( mv->GetAbsOrigin() );
 	start.z += 2;
@@ -1967,6 +1968,7 @@ void CGameMovement::StayOnGround( void )
 		trace.plane.normal[2] >= 0.7 )		// can't hit a steep slope that we can't stand on anyway
 	{
 		float flDelta = fabs(mv->GetAbsOrigin().z - trace.endpos.z);
+		player->m_vPreviousGroundNormal = trace.plane.normal;
 
 		//This is incredibly hacky. The real problem is that trace returning that strange value we can't network over.
 		if ( flDelta > 0.5f * COORD_RESOLUTION)
@@ -1979,6 +1981,7 @@ void CGameMovement::StayOnGround( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+const static float MAX_SPEED_SCALE_FROM_SLOPE_NORMAL = 0.05f;
 void CGameMovement::WalkMove( void )
 {
 	int i;
@@ -2037,11 +2040,17 @@ void CGameMovement::WalkMove( void )
 	//
 	// Clamp to server defined max speed
 	//
-	if ((wishspeed != 0.0f) && (wishspeed > mv->m_flMaxSpeed))
+	float maxSpeed = mv->m_flMaxSpeed;// *(1.0f + MAX_SPEED_SCALE_FROM_SLOPE_NORMAL);
+	if ((wishspeed != 0.0f) && (wishspeed > maxSpeed))
 	{
-		VectorScale (wishvel, mv->m_flMaxSpeed/wishspeed, wishvel);
-		wishspeed = mv->m_flMaxSpeed;
+		VectorScale (wishvel, maxSpeed/wishspeed, wishvel);
+		wishspeed = maxSpeed;
 	}
+
+	//Msg("Wishspeed %f ->", wishspeed);
+
+	ScaleWalkSpeedBySlope(player->m_vPreviousGroundNormal, wishspeed); //BG3 - scale wishspeed by slope
+	//Msg("%f\n", wishspeed);
 
 	// Set pmove velocity
 	mv->m_vecVelocity[2] = 0;
@@ -2104,6 +2113,45 @@ void CGameMovement::WalkMove( void )
 	VectorSubtract( mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
 
 	StayOnGround();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Scales horizontal walk velocity based on the ground's slope and player's direction.
+//-----------------------------------------------------------------------------
+void CGameMovement::ScaleWalkSpeedBySlope(const Vector& slopeNormal, float& wishSpeed) 
+{
+	//Don't bother if our terrain is nearly flat
+	if (slopeNormal.z > 0.98f) return; // 1.0f;
+
+	//const Vector& n = slopeNormal;
+	const float& nx = slopeNormal.x;
+	const float& ny = slopeNormal.y;
+	const float& nz = slopeNormal.z;
+
+	const float& vx = mv->m_vecVelocity.x;
+	const float& vy = mv->m_vecVelocity.y;
+	//const float& vz = mv->m_vecVelocity.z;
+
+	/*
+	//Find the downward selection of the slope
+	Vector downwardDirection = slopeNormal; downwardDirection.z = 0;
+	downwardDirection.NormalizeInPlace();
+	Vector normalizedVelocity = mv->m_vecVelocity.Normalized();
+
+	//As both lengths are 1, dot product gives us cosine
+	float cos = DotProduct(downwardDirection, normalizedVelocity);
+
+	//if cos == 1, we are moving downward on the slope. If cos == -1, we are going straight up the slope
+	return 1.0f + MAX_SPEED_SCALE_FROM_SLOPE_NORMAL * cos;
+	*/
+
+	//Calculate the actual Z component of the velocity, using the equation of a plane
+	float zVelocity = -(nx * vx + ny * vy) / nz;
+
+	if (wishSpeed < abs(zVelocity) || zVelocity < 0) return;
+
+	//Calculate our ideal horizontal wishspeed
+	wishSpeed = sqrtf(Sqr(wishSpeed) - Sqr(zVelocity));
 }
 
 //-----------------------------------------------------------------------------
@@ -2204,10 +2252,17 @@ void CGameMovement::FullWalkMove( )
 		CheckVelocity();
 
 		// Add any remaining gravitational component.
-		if ( !CheckWater() )
+		//BG3 - Awesome - don't calculate gravity if we're on the ground (this is also checked later, but we can be more efficient this way)!
+		if (!CheckWater() && player->GetGroundEntity() == NULL)
 		{
 			FinishGravity();
 		}
+
+		/*static int counter = 0;
+		if (counter++ == 300) {
+			counter = 0;
+			Msg("(%fm %fm %f)\n", mv->m_vecVelocity[0], mv->m_vecVelocity[1], mv->m_vecVelocity[2]);
+		}*/
 
 		// If we are on ground, no downward velocity.
 		if ( player->GetGroundEntity() != NULL )

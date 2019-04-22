@@ -206,7 +206,7 @@ CCommMenu::CCommMenu( IViewPort *pViewPort ) : CCommBase()
 	g_pCommMenu = this;
 	m_pViewPort = pViewPort;
 
-	m_pLabel = new Label( this, "label", g_pVGuiLocalize->Find("#BG2_VoiceComm_Menu_A") );
+	m_pLabel = new Label( this, "label", g_pVGuiLocalize->Find("#BG3_VoiceComm_Menu_A") );
 	m_pLabel->SetPos( 50, 50 );
 	m_pLabel->SizeToContents();
 	SetKeyBoardInputEnabled(false);

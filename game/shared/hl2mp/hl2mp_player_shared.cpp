@@ -183,15 +183,43 @@ int CHL2MP_Player::GetCurrentSpeed(void) const
 	}
 	else
 	{
-		base = m_pCurClass->m_flBaseSpeed;
+		base = m_pCurClass->m_flBaseSpeed * 1.1f; //* sv_speedmod.GetFloat();
 	}
-	
+
 	//Check for speed buff, but don't stack the effects
-	if ((m_iCurrentRallies & RALLY_SPEED) && pWeapon && !pWeapon->m_bInReload && !pWeapon->m_bIsIronsighted ) {
+	if ((m_iCurrentRallies & RALLY_SPEED) && pWeapon && !pWeapon->m_bInReload && !pWeapon->m_bIsIronsighted) {
 		scale *= RALLY_SPEED_MOD;
 	}
 
+//#define SLOPE_SPEED_SCALE
+#ifdef SLOPE_SPEED_SCALE
+	//scale speed based on velocity direction
+	float terrainScale = 1.0f;
+	if (GetFlags() & FL_ONGROUND) {
+		Vector vel = GetAbsVelocity();
+		vel.z = (m_flPreviousZ - GetAbsOrigin().z) / gpGlobals->frametime;
+		vel.NormalizeInPlace();
+		terrainScale += vel.z / 10;
+		m_flPreviousZ = GetAbsOrigin().z;
+
+		//float spd = ((GetAbsOrigin() - m_vPreviousPos) / gpGlobals->frametime).Length();
+		
+
+		static int counter = 0;
+		/*if (counter++ == 300) {
+			counter = 0;
+			Msg("%f\n", spd);
+			//Msg("(%fm %fm %f) -> %f\n", vel.x, vel.y, vel.z, terrainScale);
+		}*/
+	}
+
+	
+
+	return (base + m_iSpeedModifier) * scale * terrainScale;
+
+#else
 	return (base + m_iSpeedModifier) * scale;
+#endif
 }
 
 void CHL2MP_Player::UpdatePlayerClass(void) {

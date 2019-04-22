@@ -117,7 +117,7 @@ Label*			g_pWeaponDescLabel;
 
 #define NUM_CLASS_BUTTONS 6
 #define NUM_AMMO_BUTTONS 2
-#define NUM_UNIFORM_BUTTONS 3
+#define NUM_UNIFORM_BUTTONS 4
 
 int g_iCurrentTeammenuTeam = TEAM_INVALID;
 
@@ -299,16 +299,23 @@ int CClassButton::s_iSize = DEFAULT_ICON_SIZE;
 // Purpose: Looks at the currently selected stuff and sends message to server
 //-----------------------------------------------------------------------------
 void JoinRequest(int iGun, int iAmmo, int iSkin, int iTeam, int iClass) {
+	//BG3 - we've merged the class and kit commands into a single command, classkit, to simplify
+	//ordering dependencies on server side
+
 	char cmd[32];
-	Q_snprintf(cmd, sizeof(cmd), "kit %i %i %i \n", iGun, iAmmo, iSkin);
+	Q_snprintf(cmd, sizeof(cmd), "classkit %i %i %i %i %i\n", iTeam, iClass, iGun, iAmmo, iSkin);
 	engine->ServerCmd(cmd);
+
+	/*
+	Q_snprintf(cmd, sizeof(cmd), "kit %i %i %i \n", iGun, iAmmo, iSkin);
+	engine->ServerCmd(cmd);*/
 
 	// deprecated
 	//Q_snprintf( cmd, sizeof( cmd ), "classskin %i \n", skinId );
 	//engine->ServerCmd( cmd );
 
-	Q_snprintf(cmd, sizeof(cmd), "class %i %i \n", iTeam, iClass);
-	engine->ServerCmd(cmd); //Send the class AFTER we've selected a gun, otherwise you won't spawn with the right kit.
+	/*Q_snprintf(cmd, sizeof(cmd), "class %i %i \n", iTeam, iClass);
+	engine->ServerCmd(cmd);*/ //Send the class AFTER we've selected a gun, otherwise you won't spawn with the right kit.
 }
 
 
@@ -541,11 +548,38 @@ namespace NClassWeaponStats {
 			//calc accuracy
 			float accuracy;
 			if (!buckshot) {
-				accuracy = 1 / Sqr(bullet->m_flStandAimStill);
-				float maxAccuracy = 1 / Sqr(CWeaponDef::GetDefForWeapon("weapon_pennsylvania")->m_Attackinfos[0].m_flStandAimStill);
+				
+				//this weird function was designed to emphasize differences around 2.3, where most muskets live, 
+				//and around 0.8 where rifles live, but otherwise still
+				//leave the function strictly increasing
+				//graph it if you'd like
+				//(6 * arctan(8r - 18.4))/max(9, abs(8r - 18.4))     + 0.8 * arctan(20r - 16))/max(8, abs(20r - 16)) + r + 0.2
+				//hint: 18.4 = 2.3 * 8, 16 = 0.8 * 20
+				auto effectiveAccuracy = [](float r) {
+					return 
+						(6 * atan(8 * r - 18.4)) / max(9, abs(8 * r - 18.4)) + //focuses around 2.3
+						(1.6 * atan(20*r - 16)) / max(8, abs(20*r - 16)) + //focuses around 0.8
+						r + 0.2;
+				};
 
-				accuracy = accuracy / maxAccuracy;
-				accuracy = FLerp(0.3f, 1.0f, accuracy);
+				/*if (pWeapon->m_bWeaponHasSights)
+					accuracy = 1 / (bullet->m_flCrouchAimStill);
+				else
+					accuracy = 1 / (bullet->m_flStandStill);
+				float maxAccuracy = 1 / (CWeaponDef::GetDefForWeapon("weapon_pennsylvania")->m_Attackinfos[0].m_flCrouchAimStill);*/
+
+				if (pWeapon->m_bWeaponHasSights)
+					accuracy = effectiveAccuracy(bullet->m_flCrouchAimStill);
+				else
+					accuracy = (bullet->m_flStandStill);
+				float maxAccuracy = effectiveAccuracy(CWeaponDef::GetDefForWeapon("weapon_pennsylvania")->m_Attackinfos[0].m_flCrouchAimStill);
+
+				float diff = accuracy - maxAccuracy; //positive number, because maxAccuracy < accuracy
+				float lerp = 1 - (diff / 6.5f);
+				accuracy = lerp;
+
+				//the negative value pulls lower accuracies farther to the left, enhancing differentiation
+				//accuracy = FLerp(-0.2f, 1.0f, accuracy);
 			}
 			else {
 				accuracy = 1 / pWeapon->m_flShotSpread; //really inaccurate
@@ -630,7 +664,7 @@ namespace NClassWeaponStats {
 	void CreateLayout() {
 		int offset = yBase - g_iRowSpacing;
 
-#define set(a)  offset += g_iRowSpacing; a->SetPos(xBase, offset); a->SetSize(g_iBarWidth, g_iBarHeight);
+#define set(a)  offset += g_iRowSpacing; a->SetPos(xBase, offset); a->SetSize(g_iBarWidth * 1.5, g_iBarHeight);
 #define setn(a) a->SetPos(xBase + g_iBarWidth + 3, offset + g_iBarHeight); a->SetSize(80, g_iBarHeight);
 
 		set(g_pClassSpeed);
@@ -898,8 +932,8 @@ void CUniformButton::UpdateToMatchClass(const CPlayerClass* pClass) {
 	int idealUniform = pClass->GetDefaultUniform();
 
 	//clamp value
-	if (idealUniform >= pClass->m_iNumUniforms)
-		idealUniform = pClass->m_iNumUniforms;
+	if (idealUniform >= pClass->numChooseableUniforms())
+		idealUniform = pClass->numChooseableUniforms();
 	if (idealUniform < 0)
 		idealUniform = 0;
 
@@ -909,7 +943,7 @@ void CUniformButton::UpdateToMatchClass(const CPlayerClass* pClass) {
 	//hide/show buttons based on uniform count
 	char buffer[32];
 	for (int i = 0; i < NUM_UNIFORM_BUTTONS; i++) {
-		bool bVisible = i < pClass->m_iNumUniforms;
+		bool bVisible = i < pClass->numChooseableUniforms();
 		CUniformButton* bt = g_ppUniformButtons[i];
 		bt->SetVisible(bVisible);
 		if (bVisible) {
@@ -920,7 +954,7 @@ void CUniformButton::UpdateToMatchClass(const CPlayerClass* pClass) {
 	}
 
 	//don't show 1 button if there's only 1 uniform
-	g_ppUniformButtons[0]->SetVisible(pClass->m_iNumUniforms > 1);
+	g_ppUniformButtons[0]->SetVisible(pClass->numChooseableUniforms() > 1);
 }
 
 
@@ -1194,6 +1228,10 @@ void CClassMenu::OnKeyCodePressed(KeyCode code) {
 	int index = code - KEY_1; //so that KEY_1 has index 0
 	if (index >= 0 && index < NUM_CLASS_BUTTONS)
 		g_ppClassButtons[index]->SimulateMousePressed();
+
+	Msg("Key %i pressed!\n", code);
+	if (code == KEY_ESCAPE)
+		ShowPanel(false);
 
 	if (code == KEY_N)
 		engine->ClientCmd("teammenu");

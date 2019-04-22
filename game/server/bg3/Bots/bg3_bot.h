@@ -178,6 +178,7 @@ public:
 
 	CHL2MP_Player	*m_pPlayer;
 	CBaseCombatWeapon	*m_pWeapon;
+	bool			m_bWeaponHasPrimaryMelee;
 	EHANDLE			m_hFollowedPlayer;
 	float			m_flLastFollowTime;
 	bool			m_bHasVcommPriority;
@@ -250,6 +251,7 @@ public:
 	static const int MELEE_RANGE_START = 140;
 	static const int RETREAT_STOP_RANGE = 125; //retreat stops when we are this close to friend
 	static const int HELP_START_RANGE = 200; //teammates will rush forward to other teammates who are this close to the enemy
+#define WAYPOINT_RECHECK_INTERVAL  5
 
 	/*
 	Master think functions

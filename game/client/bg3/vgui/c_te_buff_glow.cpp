@@ -142,19 +142,28 @@ void TE_BuffSprite(
 {
 	float a = (1.0 / 255.0) * brightness;
 	tempents->TempSprite(*pos, vec3_origin, size, modelindex, kRenderTransAdd, 0, a, 0, FTENT_SPRANIMATE);
-	RecordSprite(*pos, modelindex, size, brightness);
+	RecordSprite(modelindex, size, brightness);
 }
 
 void TE_BuffSprite(KeyValues *pKeyValues)
 {
-	Vector vecOrigin, vecDirection;
+	/*Vector vecOrigin, vecDirection;
 	vecOrigin.x = pKeyValues->GetFloat("originx");
 	vecOrigin.y = pKeyValues->GetFloat("originy");
 	vecOrigin.z = pKeyValues->GetFloat("originz");
 	const char *pModelName = pKeyValues->GetString("model");
 	int nModelIndex = pModelName[0] ? modelinfo->GetModelIndex(pModelName) : 0;
 	float flScale = pKeyValues->GetFloat("scale");
-	int nBrightness = pKeyValues->GetInt("brightness");
+	int nBrightness = pKeyValues->GetInt("brightness");*/
 
-	TE_BuffSprite(filter, delay, &vecOrigin, nModelIndex, flScale, nBrightness);
+	//TE_BuffSprite(filter, delay, &vecOrigin, nModelIndex, flScale, nBrightness);
 }
+
+/*CON_COMMAND(createsprite, "") {
+	int model = CBaseEntity::PrecacheModel("effects/buff_sprite.mdl");
+	CBasePlayer* pPlayer = CBasePlayer::GetLocalPlayer();
+	C_LocalTempEntity* pEnt = tempents->TempSprite(pPlayer->GetAbsOrigin(), Vector(0, 0, 1), 30, model, RenderMode_t::kRenderTransAdd, 0, 1.0f, 5, 0);
+	if (!pEnt)
+		Warning("failed\n");
+	//pEnt->SetAbsAngles(QAngle(0, 0, 1));
+}*/

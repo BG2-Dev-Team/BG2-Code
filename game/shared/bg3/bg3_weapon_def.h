@@ -62,6 +62,7 @@ struct attackinfo
 			// - melee only
 			m_flCosAngleTolerance,	//tolerance of melee hits(sqrt(0.5) for crowbar, or 45 degrees)
 			m_flRetraceDuration,
+			m_flRetraceDelay,
 			m_flAttackrate;
 	int		m_iStaminaDrain;			//stamina drained by attack
 

@@ -43,7 +43,17 @@ commented on the following form:
 class CLineSpawn : public CServerOnlyPointEntity {
 	DECLARE_CLASS(CLineSpawn, CServerOnlyPointEntity);
 	DECLARE_DATADESC();
+public:
+	CLineSpawn() {
+		Warning(__FUNCTION__ "\n");
+	}
+
 private:
+	
+
+	CLineSpawn(const CLineSpawn& rhs);
+	CLineSpawn& operator=(const CLineSpawn& rhs);
+
 	int		m_iForTeam				= 0; //which team can use this spawn?
 	float	m_flWeight				= 1.0f;//what is the relative likelihood of using this spawn?
 	float	m_flSeparationDistance	= 64.0f; //how far to separate spawned players?

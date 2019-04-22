@@ -127,7 +127,7 @@ public:
 	void UpdatePlayers();
 	void UpdateFlags();
 
-	void UpdateNavpoint(); //checks if we need to move to the next navpoint
+	bool UpdateNavpoint(); //checks if we need to move to the next navpoint
 	void UpdateNavpointFirst(); //updates our navpoint when we first enter navpoint mode
 };
 

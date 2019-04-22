@@ -135,9 +135,9 @@ void CClassButton::OnCursorEntered( void )
 		case CLASS_OFFICER:
 			{
 				if( pThisMenu->m_iTeamSelection == TEAM_AMERICANS )
-					ResolveLocalizedPath( "#BG2_InfoHTML_A_Off_Path", pANSIPath, sizeof pANSIPath );
+					ResolveLocalizedPath( "#BG3_InfoHTML_A_Off_Path", pANSIPath, sizeof pANSIPath );
 				else
-					ResolveLocalizedPath( "#BG2_InfoHTML_B_Off_Path", pANSIPath, sizeof pANSIPath );
+					ResolveLocalizedPath( "#BG3_InfoHTML_B_Off_Path", pANSIPath, sizeof pANSIPath );
 				//else
 					//return;
 			}
@@ -145,9 +145,9 @@ void CClassButton::OnCursorEntered( void )
 		case CLASS_INFANTRY:
 			{
 				if( pThisMenu->m_iTeamSelection == TEAM_AMERICANS )
-					ResolveLocalizedPath( "#BG2_InfoHTML_A_Inf_Path", pANSIPath, sizeof pANSIPath );
+					ResolveLocalizedPath( "#BG3_InfoHTML_A_Inf_Path", pANSIPath, sizeof pANSIPath );
 				else
-					ResolveLocalizedPath( "#BG2_InfoHTML_B_Inf_Path", pANSIPath, sizeof pANSIPath );
+					ResolveLocalizedPath( "#BG3_InfoHTML_B_Inf_Path", pANSIPath, sizeof pANSIPath );
 				//else
 					//return;
 			}
@@ -155,9 +155,9 @@ void CClassButton::OnCursorEntered( void )
 		case CLASS_SNIPER:
 			{
 				if( pThisMenu->m_iTeamSelection == TEAM_AMERICANS )
-					ResolveLocalizedPath( "#BG2_InfoHTML_A_Rif_Path", pANSIPath, sizeof pANSIPath );
+					ResolveLocalizedPath( "#BG3_InfoHTML_A_Rif_Path", pANSIPath, sizeof pANSIPath );
 				else
-					ResolveLocalizedPath( "#BG2_InfoHTML_B_Rif_Path", pANSIPath, sizeof pANSIPath );
+					ResolveLocalizedPath( "#BG3_InfoHTML_B_Rif_Path", pANSIPath, sizeof pANSIPath );
 				//else
 				//	return;
 			}
@@ -165,9 +165,9 @@ void CClassButton::OnCursorEntered( void )
 		case CLASS_SKIRMISHER:
 			{
 				if( pThisMenu->m_iTeamSelection == TEAM_AMERICANS )
-					ResolveLocalizedPath( "#BG2_InfoHTML_A_Ski_Path", pANSIPath, sizeof pANSIPath );
+					ResolveLocalizedPath( "#BG3_InfoHTML_A_Ski_Path", pANSIPath, sizeof pANSIPath );
 				else
-					ResolveLocalizedPath( "#BG2_InfoHTML_B_Ski_Path", pANSIPath, sizeof pANSIPath );
+					ResolveLocalizedPath( "#BG3_InfoHTML_B_Ski_Path", pANSIPath, sizeof pANSIPath );
 				//else
 					//return;
 			}
@@ -175,17 +175,17 @@ void CClassButton::OnCursorEntered( void )
 		case CLASS_LIGHT_INFANTRY:
 			{
 				if( pThisMenu->m_iTeamSelection == TEAM_BRITISH )
-					ResolveLocalizedPath( "#BG2_InfoHTML_B_Linf_Path", pANSIPath, sizeof pANSIPath );
+					ResolveLocalizedPath( "#BG3_InfoHTML_B_Linf_Path", pANSIPath, sizeof pANSIPath );
 				else
-					ResolveLocalizedPath("#BG2_InfoHTML_A_Linf_Path", pANSIPath, sizeof pANSIPath);
+					ResolveLocalizedPath("#BG3_InfoHTML_A_Linf_Path", pANSIPath, sizeof pANSIPath);
 			}
 			break;
 		case CLASS_GRENADIER:
 			{
 				if (pThisMenu->m_iTeamSelection == TEAM_AMERICANS)
-					ResolveLocalizedPath("#BG2_InfoHTML_A_Gre_Path", pANSIPath, sizeof pANSIPath);
+					ResolveLocalizedPath("#BG3_InfoHTML_A_Gre_Path", pANSIPath, sizeof pANSIPath);
 				else
-					ResolveLocalizedPath("#BG2_InfoHTML_B_Gre_Path", pANSIPath, sizeof pANSIPath);
+					ResolveLocalizedPath("#BG3_InfoHTML_B_Gre_Path", pANSIPath, sizeof pANSIPath);
 			}
 			break;
 		default:
@@ -326,16 +326,16 @@ void CTeamButton::OnCursorEntered( void )
 	switch ( m_iCommand )
 	{
 		case TEAM_AMERICANS:
-			ResolveLocalizedPath( "#BG2_InfoHTML_Americans_Path", pANSIPath, sizeof pANSIPath );
+			ResolveLocalizedPath( "#BG3_InfoHTML_Americans_Path", pANSIPath, sizeof pANSIPath );
 			break;
 		case TEAM_BRITISH:
-			ResolveLocalizedPath( "#BG2_InfoHTML_British_Path", pANSIPath, sizeof pANSIPath );
+			ResolveLocalizedPath( "#BG3_InfoHTML_British_Path", pANSIPath, sizeof pANSIPath );
 			break;
 		case TEAM_UNASSIGNED:	//Spectate
-			ResolveLocalizedPath( "#BG2_InfoHTML_Spectate_Path", pANSIPath, sizeof pANSIPath );
+			ResolveLocalizedPath( "#BG3_InfoHTML_Spectate_Path", pANSIPath, sizeof pANSIPath );
 			break;
 		case -1:				//Autoassign
-			ResolveLocalizedPath( "#BG2_InfoHTML_Autoassign_Path", pANSIPath, sizeof pANSIPath );
+			ResolveLocalizedPath( "#BG3_InfoHTML_Autoassign_Path", pANSIPath, sizeof pANSIPath );
 			break;
 		default:
 			return;
@@ -465,7 +465,7 @@ CClassMenu::CClassMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_CLASSES )
 	m_pGrenadierButton->SetCommand(CLASS_GRENADIER);
 
 	char pANSIPath[512];
-	ResolveLocalizedPath( "#BG2_InfoHTML_Blank_Path", pANSIPath, sizeof pANSIPath );
+	ResolveLocalizedPath( "#BG3_InfoHTML_Blank_Path", pANSIPath, sizeof pANSIPath );
 	ShowFile( pANSIPath );
 
 	ToggleButtons( 1 );
@@ -737,7 +737,7 @@ void CClassMenu::ShowPanel(bool bShow)
 	{
 		Activate();
 		
-		ResolveLocalizedPath( "#BG2_InfoHTML_Blank_Path", pANSIPath, sizeof pANSIPath );
+		ResolveLocalizedPath( "#BG3_InfoHTML_Blank_Path", pANSIPath, sizeof pANSIPath );
 
 		ShowFile( pANSIPath );
 
@@ -795,13 +795,13 @@ void CClassMenu::OnThink()
 	wchar_t tmp[32];
 	if( g_Teams[TEAM_BRITISH] )		//check just in case..
 	{
-		_snwprintf(tmp, sizeof( tmp ), L"%s (%i)", g_pVGuiLocalize->Find( "#BG2_Spec_British_Score" ), g_Teams[TEAM_BRITISH]->Get_Number_Players() );
+		_snwprintf(tmp, sizeof( tmp ), L"%s (%i)", g_pVGuiLocalize->Find( "#BG3_Spec_British_Score" ), g_Teams[TEAM_BRITISH]->Get_Number_Players() );
 		m_pBritishLabel->SetText( tmp );
 	}
 
 	if( g_Teams[TEAM_AMERICANS] )	//check just in case..
 	{
-		_snwprintf(tmp, sizeof( tmp ), L"%s (%i)", g_pVGuiLocalize->Find( "#BG2_Spec_American_Score" ), g_Teams[TEAM_AMERICANS]->Get_Number_Players() );
+		_snwprintf(tmp, sizeof( tmp ), L"%s (%i)", g_pVGuiLocalize->Find( "#BG3_Spec_American_Score" ), g_Teams[TEAM_AMERICANS]->Get_Number_Players() );
 		m_pAmericanLabel->SetText( tmp );
 	}
 
@@ -1028,7 +1028,7 @@ bool CClassMenu::SetScreen( int m_iScreen, bool m_bVisible, bool m_bUpdate )
 				{
 					if ( iTeam <= TEAM_SPECTATOR )
 					{
-						_snwprintf(msg, sizeof( msg ), L"%s", g_pVGuiLocalize->Find( "#BG2_Deny_Class_Selection" ) );
+						_snwprintf(msg, sizeof( msg ), L"%s", g_pVGuiLocalize->Find( "#BG3_Deny_Class_Selection" ) );
 						internalCenterPrint->Print( msg );
 						return false;
 					}
@@ -1041,7 +1041,7 @@ bool CClassMenu::SetScreen( int m_iScreen, bool m_bVisible, bool m_bUpdate )
 				{
 					if( iTeam <= TEAM_SPECTATOR || iClass == -1 )
 					{
-						_snwprintf(msg, sizeof( msg ), L"%s", g_pVGuiLocalize->Find( "#BG2_Deny_Weapon_Selection" ) );
+						_snwprintf(msg, sizeof( msg ), L"%s", g_pVGuiLocalize->Find( "#BG3_Deny_Weapon_Selection" ) );
 						internalCenterPrint->Print( msg );
 						return false;	
 					}

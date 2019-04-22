@@ -138,6 +138,8 @@ CBaseBG2Weapon::CBaseBG2Weapon( void )
 
 	m_bShouldSampleForward = false;
 	m_bShouldFireDelayed = false;
+	m_flStartAttemptingSwing = -FLT_MAX;
+	m_bFirstRetraceFrame = false;
 	
 
 	//m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_NONE;
@@ -162,7 +164,7 @@ bool CBaseBG2Weapon::Deploy( void )
 
 	//Awesome - make sure ironsights are disabled
 	m_bIsIronsighted = false;
-	UpdateBodyGroups();
+	//UpdateBodyGroups();
 
 	return deploySuccess;
 }
@@ -191,10 +193,13 @@ void CBaseBG2Weapon::DoAttack( int iAttack )
 	if( pOwner == NULL || pOwner->m_nButtons & IN_RELOAD || m_bInReload )
 		return;
 
+	//Don't allow attack if we already have one scheduled
+	if (m_flStartAttemptingSwing > gpGlobals->curtime)
+		return;
+
 	m_iLastAttack = iAttack;
 
-	//store forward eye vector
-	AngleVectors( pOwner->EyeAngles(), &m_vLastForward, NULL, NULL );
+	AngleVectors(pOwner->EyeAngles(), &m_vLastForward, NULL, NULL);
 
 //BG2 - Pretend this doesn't exist. -HairyPotter
 #ifndef CLIENT_DLL
@@ -209,15 +214,20 @@ void CBaseBG2Weapon::DoAttack( int iAttack )
 		if( mp_disable_melee.GetInt() )
 			return;
 
+		//mark our first retrace as the first one
+		m_bFirstRetraceFrame = true;
+
 		//do tracelines for so many seconds
 		if( sv_retracing_melee.GetBool() )
 		{
-			m_flStartDemotingHeadhits = m_flStopAttemptingSwing = gpGlobals->curtime + GetRetraceDuration( iAttack );
+			m_flStartDemotingHeadhits = m_flStopAttemptingSwing = gpGlobals->curtime + GetRetraceDuration(iAttack) + GetRetraceDelay(iAttack);
+			m_flStartAttemptingSwing = gpGlobals->curtime + GetRetraceDelay(iAttack);
 
 			if( GetAttackType( iAttack ) == ATTACKTYPE_SLASH )
 				m_flStartDemotingHeadhits = gpGlobals->curtime + 0.1f;
 		}
 
+		//if (m_flStartAttemptingSwing == gpGlobals->curtime)
 		Swing( iAttack, true );
 	}
 	else if( GetAttackType( iAttack ) == ATTACKTYPE_FIREARM )
@@ -560,55 +570,59 @@ void CBaseBG2Weapon::Swing( int iAttack, bool bIsFirstAttempt )
 	if ( m_bIsIronsighted ) //No melee with ironsights.
 		return;
 
+	//Only do retracing if our attack as started yet
+	if (gpGlobals->curtime > m_flStartAttemptingSwing) {
 #ifndef CLIENT_DLL
-	//only the server can do lag compensation
-	lagcompensation->StartLagCompensation( pOwner, pOwner->GetCurrentCommand() );
+		//only the server can do lag compensation
+		lagcompensation->StartLagCompensation(pOwner, pOwner->GetCurrentCommand());
 #endif
 
-	m_bLastAttackStab = GetAttackType(iAttack) == ATTACKTYPE_STAB;
+		m_bLastAttackStab = GetAttackType(iAttack) == ATTACKTYPE_STAB;
 
-	Vector swingStart = pOwner->Weapon_ShootPosition( );
-	Vector forward;
+		Vector swingStart = pOwner->Weapon_ShootPosition();
+		Vector forward;
 
-	pOwner->EyeVectors( &forward, NULL, NULL );
+		pOwner->EyeVectors(&forward, NULL, NULL);
 
-	Vector swingEnd = swingStart + forward * GetRange(iAttack);
-	UTIL_TraceLine( swingStart, swingEnd, MASK_SHOT, pOwner, COLLISION_GROUP_NONE, &traceHit );
+		Vector swingEnd = swingStart + forward * GetRange(iAttack);
+		UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT, pOwner, COLLISION_GROUP_NONE, &traceHit);
 
 #ifndef CLIENT_DLL
-	// Like bullets, bludgeon traces have to trace against triggers.
-	CTakeDamageInfo triggerInfo( GetOwner(), GetOwner(), this, GetDamage(iAttack), DMG_CLUB );
+		// Like bullets, bludgeon traces have to trace against triggers.
+		CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), this, GetDamage(iAttack), DMG_CLUB);
 
-	TraceAttackToTriggers( triggerInfo, traceHit.startpos, traceHit.endpos, vec3_origin );
+		TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, vec3_origin);
 #endif //Keep the following code with the client.dll
 
-	//only allow slashing weapons to hit to head on the first frame
-	//any subsequent hit to the head gets demoted a hit to the chest
-	if( GetAttackType( iAttack ) == ATTACKTYPE_SLASH && traceHit.hitgroup == HITGROUP_HEAD &&
-			gpGlobals->curtime >= m_flStartDemotingHeadhits && !bIsFirstAttempt )
-		traceHit.hitgroup = HITGROUP_CHEST;
+		//only allow slashing weapons to hit to head on the first frame
+		//any subsequent hit to the head gets demoted a hit to the chest
+		if (GetAttackType(iAttack) == ATTACKTYPE_SLASH && traceHit.hitgroup == HITGROUP_HEAD &&
+			gpGlobals->curtime >= m_flStartDemotingHeadhits && !bIsFirstAttempt)
+			traceHit.hitgroup = HITGROUP_CHEST;
 
-	if ( traceHit.fraction == 1.0f )
-	{
-		//miss, do any waterimpact stuff
-		if( bIsFirstAttempt )
+		if (traceHit.fraction == 1.0f)
 		{
-			Vector testEnd = swingStart + forward * GetRange(iAttack);
-			ImpactWater( swingStart, testEnd );
-
-			WeaponSound( SPECIAL1 );	//miss
+			//miss, do any waterimpact stuff
+			if (bIsFirstAttempt)
+			{
+				Vector testEnd = swingStart + forward * GetRange(iAttack);
+				ImpactWater(swingStart, testEnd);
+			}
 		}
-	}
-	else
-	{
-		//stop attempting more swings (don't cut through masses of people or hit the same person ten times)
-		m_flStopAttemptingSwing = 0;
+		else
+		{
+			//stop attempting more swings (don't cut through masses of people or hit the same person ten times)
+			m_flStopAttemptingSwing = 0;
 
-		Hit( traceHit, iAttack );
+			Hit(traceHit, iAttack);
+		}
+		m_bFirstRetraceFrame = false;
 	}
+
 	// Send the anim
 	if( bIsFirstAttempt )
 	{
+		WeaponSound(SPECIAL1);	//miss
 		SendWeaponAnim( GetActivity( iAttack ) );
 		pOwner->SetAnimation( PLAYER_ATTACK2 );
 
@@ -691,21 +705,29 @@ void CBaseBG2Weapon::ItemPostFrame( void )
 	if( pOwner == NULL )
 		return;
 
-	if( m_flStopAttemptingSwing > gpGlobals->curtime )
+	if( m_flStopAttemptingSwing > gpGlobals->curtime && m_flStartAttemptingSwing <= gpGlobals->curtime)
 	{
-		//we're attempting another swing. do. but don't play any animation or swing sound. just hit sound
-		//check to see that we're not flailing around. only allow a few angles of movement
-		Vector vForward;
-		AngleVectors( pOwner->EyeAngles(), &vForward, NULL, NULL );
+		bool bSwing = true;
+		
+		//if it's our first retrace frame, recalculate eye vectors
+		if (m_bFirstRetraceFrame)
+			AngleVectors(pOwner->EyeAngles(), &m_vLastForward, NULL, NULL);
+		else {
+			//we're attempting another swing. do. but don't play any animation or swing sound. just hit sound
+			//check to see that we're not flailing around. only allow a few angles of movement
+			Vector vForward;
+			AngleVectors(pOwner->EyeAngles(), &vForward, NULL, NULL);
 
-		if( m_vLastForward.Dot( vForward ) < GetCosAngleTolerance() )
-		{
-			//flailing too much. stop
-			m_flStopAttemptingSwing = 0;
+			if (m_vLastForward.Dot(vForward) < GetCosAngleTolerance())
+			{
+				//flailing too much. stop
+				m_flStopAttemptingSwing = -FLT_MAX;
+				bSwing = false;
+			}
 		}
-		else
+		if (bSwing)
 		{
-			Swing( m_iLastAttack, false );
+			Swing(m_iLastAttack, false);
 		}
 	}
 
@@ -796,11 +818,7 @@ void CBaseBG2Weapon::Equip( CBaseCombatCharacter *pOwner )
 	BaseClass::Equip(pOwner);
 
 
-	//pick correct sleeve texture based on our class
-	//Msg("Setting sleeve skin to ");
-#ifndef CLIENT_DLL
-	UpdateSkinToMatchOwner(pOwner);
-#endif
+	
 }
 
 float CBaseBG2Weapon::GetGrenadeDamage()

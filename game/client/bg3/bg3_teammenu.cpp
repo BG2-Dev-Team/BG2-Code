@@ -250,6 +250,12 @@ void CTeamMenu::Update(void) {
 	s_pAmericanButton->UpdateGameRulesData();
 	s_pBritishButton->UpdateGameRulesData();
 
+	if (!s_pAmericanButton->m_bEnabled && !s_pBritishButton->m_bEnabled) {
+		Warning("Both team buttons in teammenu were disabled, enabling...\n");
+		s_pAmericanButton->m_bEnabled = true;
+		s_pBritishButton->m_bEnabled = true;
+	}
+
 	if (g_Teams.Count()) {
 		wchar buffer[32];
 		V_snwprintf(buffer, ARRAYSIZE(buffer), L"(%i) : %s", g_Teams[TEAM_BRITISH]->GetNumPlayers(), g_pVGuiLocalize->Find("#BG3_Team_British"));

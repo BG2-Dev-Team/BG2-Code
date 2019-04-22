@@ -72,7 +72,7 @@ namespace NClassQuota {
 
 
 	void CheckForForcedClassChange(CHL2MP_Player* pPlayer) {
-		ConVar * pLimiter;
+		/*ConVar * pLimiter;
 		if (pPlayer->GetTeamNumber() == TEAM_AMERICANS)
 			pLimiter = &lb_enforce_class_amer;
 		else
@@ -87,7 +87,7 @@ namespace NClassQuota {
 			int max = CPlayerClass::numClassesForTeam(pPlayer->GetTeamNumber()) - 1;
 			classCopy = Clamp(classCopy, 0, max);
 			pPlayer->SetNextClass(classCopy);
-		}
+		}*/
 	}
 
 	void CheckBotSwitchClass(CHL2MP_Player* pBot) {

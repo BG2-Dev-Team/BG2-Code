@@ -128,6 +128,9 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 	m_bIsIronsighted = false;
 	m_flIronsightedTime = 0.0f;
 	m_flNextDisableIronsights = 0;
+#ifndef CLIENT_DLL
+	m_bFirstDeploy = false;
+#endif
 	//
 
 	m_bReloadsSingly	= false;
@@ -744,6 +747,10 @@ void CBaseCombatWeapon::EnableIronsights(void)
 	m_flIronsightedTime = gpGlobals->curtime;
 #endif
 
+	//update viewmodel sway scale
+	CBaseViewModel *vm = pOwner->GetViewModel(m_nViewModelIndex, false);
+	if (vm) vm->m_flSwayMultiplier = 1;
+
 	//delay both attacks, but make sure we don't roll back the attack times
 	m_flNextPrimaryAttack = max(m_flNextPrimaryAttack, gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_IN);
 	m_flNextSecondaryAttack = max(m_flNextSecondaryAttack, gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_IN);
@@ -768,6 +775,10 @@ void CBaseCombatWeapon::DisableIronsights(void)
 	m_bIsIronsighted = false;
 	m_flIronsightedTime = gpGlobals->curtime;
 #endif
+
+	//update viewmodel sway scale
+	CBaseViewModel *vm = pOwner->GetViewModel(m_nViewModelIndex, false);
+	if (vm) vm->m_flSwayMultiplier = DEFAULT_VIEWMODEL_SWAY;
 
 	//delay both attacks, but make sure we don't roll back the attack times
 	m_flNextPrimaryAttack = max(m_flNextPrimaryAttack, gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_OUT);
@@ -875,7 +886,7 @@ void CBaseCombatWeapon::OnPickedUp( CBaseCombatCharacter *pNewOwner )
 #ifdef HL2MP
 	HL2MPRules()->RemoveLevelDesignerPlacedObject( this );
 #endif
-	UpdateBodyGroups(); //BG3 - call it here too
+	
 	// Someone picked me up, so make it so that I can't be removed.
 	SetRemoveable( false );
 #endif
@@ -936,8 +947,19 @@ void CBaseCombatWeapon::UpdateSkinToMatchOwner(CBaseCombatCharacter* pOwner) {
 	int8 skinOverride = player->GetPlayerClass()->m_aWeapons[player->m_iGunKit].m_iSleeveSkinOverride;
 	if (skinOverride != -1)
 		m_nSkin = skinOverride;
-	else
-		m_nSkin = player->GetPlayerClass()->m_iSleeveBase + player->m_iClassSkin;
+	else {
+		int iClassSkin;
+		if (player->GetPlayerClass()->m_bForceRandomUniform) {
+			//HACKHACK - assuming 3 random uniform options
+			iClassSkin = player->m_nSkin / (player->GetPlayerClass()->m_iSkinDepth / player->GetPlayerClass()->numUniforms());
+		}
+		else {
+			iClassSkin = player->m_iClassSkin;
+		}
+
+		m_nSkin = player->GetPlayerClass()->m_iSleeveBase + iClassSkin;
+	}
+		
 #endif
 }
 
@@ -1348,6 +1370,11 @@ void CBaseCombatWeapon::SetViewModel()
 		return;
 	CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex, false );
 	int WeaponSkin = 0;
+#ifndef CLIENT_DLL
+	UpdateBodyGroups(); //BG3 - call it here too
+	//pick correct sleeve texture based on our class
+	//Msg("Setting sleeve skin to ");
+#endif
 	if (pOwner->GetActiveWeapon()) WeaponSkin = pOwner->GetActiveWeapon()->m_nSkin; //BG2 - HACKHACK Sets the weapon skin for viewmodel -HairyPotter
 
 	if (vm == NULL)
@@ -1590,8 +1617,17 @@ bool CBaseCombatWeapon::DefaultDeploy( char *szViewModel, char *szWeaponModel, i
 
 		pOwner->SetAnimationExtension( szAnimExt );
 
+#ifndef CLIENT_DLL
+		if (!m_bFirstDeploy) {
+			m_bFirstDeploy = true;
+			UpdateSkinToMatchOwner(pOwner);
+		}
+#endif
+
 		SetViewModel();
 		SendWeaponAnim( iActivity );
+
+
 
 		pOwner->SetNextAttack( gpGlobals->curtime + SequenceDuration() );
 	}
@@ -1664,7 +1700,7 @@ bool CBaseCombatWeapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 
 	//BG2 -Added for Iron Sights Testing. Credits to z33ky for the code. -HairyPotter
 	DisableIronsights();
-	UpdateBodyGroups();
+	//UpdateBodyGroups();
 	//
 
 	CBaseCombatCharacter *pOwner = GetOwner();
@@ -1701,7 +1737,7 @@ bool CBaseCombatWeapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 
 		//call this in holster because sometimes after spawning,
 		//our weapons autoswitch and the skins are wrong
-		UpdateSkinToMatchOwner(pOwner);
+		//UpdateSkinToMatchOwner(pOwner);
 	}
 #endif
 
@@ -1852,7 +1888,7 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	// so all earlier function calls don't work.
 	// so I'm putting it here... ugh
 	// TODO find a more efficient way to do this
-	UpdateBodyGroups();
+	//UpdateBodyGroups();
 
 	//Track the duration of the fire
 	//FIXME: Check for IN_ATTACK2 as well?

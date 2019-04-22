@@ -76,13 +76,14 @@ void CTeamplayRules::Think ( void )
 		return;
 	}
 
-	float flTimeLimit = mp_timelimit.GetFloat() * 60;
+	//BG3 - Awesome - we'll handle this upstream
+	/*float flTimeLimit = mp_timelimit.GetFloat() * 60;
 	
 	if ( flTimeLimit != 0 && gpGlobals->curtime >= flTimeLimit )
 	{
 		ChangeLevel();
 		return;
-	}
+	}*/
 
 	//float flFragLimit = fraglimit.GetFloat();
 	/*if ( flFragLimit )

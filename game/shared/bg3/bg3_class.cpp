@@ -155,18 +155,17 @@ const char* g_ppszAmericanPlayerModels[NUM_AMER_PLAYERMODELS];
 void CPlayerClass::postClassConstruct(CPlayerClass* pClass) {
 	int index = pClass->m_iClassNumber;
 
+	//BG3 - Awesome - increase general class speed?
+	//pClass->m_flBaseSpeed *= 1.1f;
+
 	//count number of chooseable weapons
-	if (pClass->m_aWeapons[1].m_pszWeaponPrimaryName) {
-		if (pClass->m_aWeapons[2].m_pszWeaponPrimaryName) {
-			pClass->m_iChooseableKits = 3;
-		}
-		else {
-			pClass->m_iChooseableKits = 2;
-		}
+	const CGunKit* pKit = pClass->m_aWeapons;
+	int chooseable = 0;
+	for (int i = 0; i < NUM_POSSIBLE_WEAPON_KITS; i++) {
+		if (pKit[i].m_pszWeaponPrimaryName)
+			chooseable++;
 	}
-	else {
-		pClass->m_iChooseableKits = 1;
-	}
+	pClass->m_iChooseableKits = chooseable;
 
 	//this will make it so that british classes come first in the list
 	if (pClass->m_iDefaultTeam == TEAM_AMERICANS)
@@ -298,6 +297,18 @@ const CPlayerClass* CPlayerClass::fromNums(int iTeam, int iClass) {
 	return g_ppClasses[iTeam == TEAM_AMERICANS ? iClass + TOTAL_BRIT_CLASSES : iClass];
 }
 
+const CPlayerClass* CPlayerClass::fromAbbreviation(int iTeam, const char* pszAbbreviation) {
+	const CPlayerClass* pResult = NULL;
+	int numClasses = numClassesForTeam(iTeam);
+	for (int i = 0; i < numClasses; i++) {
+		if (Q_strcmp(pszAbbreviation, fromNums(iTeam, i)->m_pszAbbreviation) == 0) {
+			pResult = fromNums(iTeam, i);
+			break;
+		}
+	}
+	return pResult;
+}
+
 ConVar mp_limit_mapsize_low("mp_limit_mapsize_low", "16", CVAR_FLAGS, "Servers with player counts <= this number are small, above it are medium or large");
 ConVar mp_limit_mapsize_high("mp_limit_mapsize_high", "32", CVAR_FLAGS, "Servers with player counts <= this number are small or medium, above it are large");
 
@@ -364,8 +375,8 @@ PLAYER MODEL PATHS AND NAMES - these are used repeatedly for precacheing the mod
 #define SLEEVE_AINFANTRY		16
 #define SLEEVE_AOFFICER			16
 #define SLEEVE_AFRONTIERSMAN	20
-#define SLEEVE_AMILITIA			22
-#define SLEEVE_ASTATEMILITIA	24
+#define SLEEVE_AMILITIA			23
+#define SLEEVE_ASTATEMILITIA	26
 #define SLEEVE_AFRENCH			0
 
 
@@ -439,10 +450,10 @@ DEC_BG3_PLAYER_CLASS(BOfficer, off, b) {
 	m_bCanDoVcommBuffs = true;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_pistol_b";
-	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_sabre_b";
+	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_sabre";
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_brownbess_carbine_nobayo";
-	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_sabre_b";
-	//m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_spontoon";
+	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_sabre";
+	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_spontoon";
 
 	postClassConstruct(this);
 }
@@ -517,6 +528,9 @@ DEC_BG3_PLAYER_CLASS(BLinf, linf, b) {
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess_carbine";
 	m_aWeapons[0].m_bAllowBuckshot = true;
 
+	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_pattern1776";
+	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_smallsword";
+
 	postClassConstruct(this);
 }
 
@@ -544,10 +558,18 @@ DEC_BG3_PLAYER_CLASS(BGrenadier, gre, b) {
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_frag";
 	m_aWeapons[0].m_pszWeaponTertiaryName = "weapon_hanger";
 
+	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_longpattern_nobayo";
+	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_frag";
+	m_aWeapons[1].m_pszWeaponTertiaryName = "weapon_hanger";
+
 #ifdef CLIENT_DLL
 	m_aWeapons[0].SetLocalizedName("weapon_brownbess_gre");
 	m_aWeapons[0].SetLocalizedDesc("i_weapon_brownbess_gre");
+
+	m_aWeapons[1].SetLocalizedName("weapon_longpattern_gre");
+	m_aWeapons[1].SetLocalizedDesc("i_weapon_longpattern_gre");
 #endif
+
 
 	/*m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_frag";
 	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_hanger";
@@ -571,13 +593,14 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 
 	m_iSkinDepth = 8;
 	m_iSleeveBase = SLEEVE_AINFANTRY;
-	m_iNumUniforms = 3;
+	m_iNumUniforms = 4;
 	m_pszDroppedHat = "models/player/american/infantry/american_hat.mdl";
 	//m_bAllowUniformSelection = true;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_longpattern";
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_charleville";
 	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_miquelet";
+	//m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_old_model_charleville";
 
 	postClassConstruct(this);
 }
@@ -601,11 +624,11 @@ DEC_BG3_PLAYER_CLASS(AOfficer, off, a) {
 	m_bCanDoVcommBuffs = true;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_pistol_a";
-	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_sabre_a";
+	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_sabre";
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_brownbess_carbine_nobayo";
-	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_sabre_a";
+	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_sabre";
 
-	//m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_spontoon";
+	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_spontoon";
 
 	postClassConstruct(this);
 }
@@ -622,9 +645,10 @@ DEC_BG3_PLAYER_CLASS(AFrontiersman, rif, a) {
 
 	m_iDefaultPrimaryAmmoCount = AMMO_SNIPER;
 
-	m_iSkinDepth = 16;
+	m_iSkinDepth = 24;
 	m_iSleeveBase = SLEEVE_AFRONTIERSMAN;
-	m_iNumUniforms = 1;
+	m_iNumUniforms = 3;
+	m_bForceRandomUniform = true;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_pennsylvania";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_knife";
@@ -646,7 +670,8 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 
 	m_iSkinDepth = 24;
 	m_iSleeveBase = SLEEVE_AMILITIA;
-	m_iNumUniforms = 1;
+	m_iNumUniforms = 3;
+	m_bForceRandomUniform = true;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_fowler";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_beltaxe";

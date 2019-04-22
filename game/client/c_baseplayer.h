@@ -448,6 +448,9 @@ public:
 	float			m_flConstraintWidth;
 	float			m_flConstraintSpeedFactor;
 
+	//BG3 - Awesome - added this for scaling velocity based on terrain
+	Vector m_vPreviousGroundNormal;
+
 	//BG2 - Tjoppen - GetClientIndex()
 	// Get the client index (entindex-1).
 	int						GetClientIndex()	{ return entindex() - 1; }

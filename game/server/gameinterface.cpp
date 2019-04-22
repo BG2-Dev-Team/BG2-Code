@@ -93,6 +93,7 @@
 //BG2 - Tjoppen - #includes
 #ifndef CLIENT_DLL
 #include "hl2mp_gamerules.h"
+#include "bg3/bg3_line_spawn.h"
 #include "bg3/Bots/bg3_bot.h"
 #include "bg3/Bots/bg3_bot_influencer.h"
 #include "../shared/bg3/bg3_class_quota.h"
@@ -645,6 +646,9 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 
 	// init the cvar list first in case inits want to reference them
 	InitializeCvars();
+
+	// initialize the permissions list before any players join
+	Permissions::RefreshPermissionsFromFile();
 	
 	// Initialize the particle system
 	if ( !g_pParticleSystemMgr->Init( g_pParticleSystemQuery ) )
@@ -1063,19 +1067,24 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 
 	//BG2 - Tjoppen - exec <mapname>.cfg
 	//first reset relevant cvars to their default values
-#define LIMIT_REVERT( size )\
-	extern ConVar mp_limit_inf_a_##size, mp_limit_off_a_##size, mp_limit_rif_a_##size, mp_limit_ski_a_##size,\
-					mp_limit_inf_b_##size, mp_limit_off_b_##size, mp_limit_rif_b_##size, mp_limit_ski_b_##size, mp_limit_linf_b_##size;\
-	mp_limit_inf_a_##size.Revert(); mp_limit_off_a_##size.Revert(); mp_limit_rif_a_##size.Revert(); mp_limit_ski_a_##size.Revert(); \
-	mp_limit_inf_b_##size.Revert(); mp_limit_off_b_##size.Revert(); mp_limit_rif_b_##size.Revert(); mp_limit_ski_b_##size.Revert(); mp_limit_linf_b_##size.Revert();	
+	//BG3 - loop through them instead
+	for (int i = 0; i < CPlayerClass::numClassesForTeam(TEAM_AMERICANS); i++) {
+		const CPlayerClass& pc = *CPlayerClass::fromNums(TEAM_AMERICANS, i);
+		if (!pc.GetLimitsAreInitialized()) pc.InitLimits();
+		pc.m_pcvLimit_sml->Revert();
+		pc.m_pcvLimit_med->Revert();
+		pc.m_pcvLimit_lrg->Revert();
+	}
+	for (int i = 0; i < CPlayerClass::numClassesForTeam(TEAM_BRITISH); i++) {
+		const CPlayerClass& pc = *CPlayerClass::fromNums(TEAM_BRITISH, i);
+		if (!pc.GetLimitsAreInitialized()) pc.InitLimits();
+		pc.m_pcvLimit_sml->Revert();
+		pc.m_pcvLimit_med->Revert();
+		pc.m_pcvLimit_lrg->Revert();
+	}
 
-	//class limits..
-	LIMIT_REVERT(sml)
-		LIMIT_REVERT(med)
-		LIMIT_REVERT(lrg)
-
-		//other game related cvars
-		extern ConVar mp_winbonus, mp_respawnstyle, mp_respawntime;
+	//other game related cvars
+	extern ConVar mp_winbonus, mp_respawnstyle, mp_respawntime;
 	extern ConVar mp_rounds, mp_roundtime, mp_tickets_a, mp_tickets_b;
 	extern ConVar mp_tickets_drain_a, mp_tickets_drain_b;
 	extern ConVar mp_limit_mapsize_low, mp_limit_mapsize_high;
@@ -1090,6 +1099,8 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	mp_tickets_drain_b.Revert();
 	mp_limit_mapsize_low.Revert();
 	mp_limit_mapsize_high.Revert();
+	lb_enforce_weapon_amer.Revert();
+	lb_enforce_weapon_brit.Revert();
 
 	//done. we can now exec the map config
 	char	szExec[256];
@@ -1115,6 +1126,9 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	//we need to call CTeam::ResetTickets() here rather than in CTeam::Init() since the teams get inited before the map config is loaded
 	g_Teams[TEAM_AMERICANS]->ResetTickets();
 	g_Teams[TEAM_BRITISH]->ResetTickets();
+
+	//BG3- calculate line spawn positions befor players get in the way
+	CLineSpawn::RecalculateSpawns();
 
 	return true;
 }

@@ -695,6 +695,8 @@ protected:
 	COutputEvent			m_OnNPCPickup;		// Fired when an NPC picks up the weapon.
 	COutputEvent			m_OnCacheInteraction;	// For awarding lambda cache achievements in HL2 on 360. See .FGD file for details 
 
+	bool					m_bFirstDeploy;
+
 #else // Client .dll only
 	bool					m_bJustRestored;
 

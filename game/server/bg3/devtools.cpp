@@ -66,3 +66,8 @@ CON_COMMAND_F(ent_adjust_angle, "Sets angle of adjusted entity given an xyz dire
 		g_pAdjustedEntity->SetAbsAngles(angle);
 	}
 }
+
+CON_COMMAND_F(crash, "crashes the game", FCVAR_CHEAT) {
+	int* pInt = NULL;
+	Msg("%i", *pInt);
+}

@@ -115,15 +115,18 @@ public:
 	const char* m_pszPlayerModel;
 	const char* m_pszJoinName = nullptr;
 
-#define NUM_POSSIBLE_WEAPON_KITS 3
+#define NUM_POSSIBLE_WEAPON_KITS 4
 	CGunKit		m_aWeapons[NUM_POSSIBLE_WEAPON_KITS];
 private:
 	mutable uint8		m_iChooseableKits;
 public:
 
 	uint8			m_iSkinDepth = 1; //how many skin variations per uniform
+protected:
 	uint8			m_iNumUniforms = 1; //how many uniforms?
+public:
 	uint8			m_iSleeveBase = 0; //chosen sleeve skin is m_iSleeveBase + pOwner->m_iClassSkin - 1
+	bool			m_bForceRandomUniform = false;
 	const char*		m_pszDroppedHat = 0;
 	//bool			m_bAllowUniformSelection = false; //allow uniform selection in the menu?
 
@@ -135,6 +138,8 @@ public:
 	inline bool isBritish() const { return m_iDefaultTeam == TEAM_BRITISH; }
 
 	inline uint8		numChooseableWeapons() const { return m_iChooseableKits; }
+	inline uint8		numChooseableUniforms() const { return m_bForceRandomUniform ? 1 : m_iNumUniforms; }
+	inline uint8		numUniforms() const { return m_iNumUniforms; }
 	const CWeaponDef*	getWeaponDef(byte iKit) const;
 	void				getWeaponDef(byte iKit, const CWeaponDef** ppPrimary, const CWeaponDef** ppSecondary, const CWeaponDef** ppTertiary) const;
 	const CGunKit*		getWeaponKitChooseable(byte iWeapon) const; //indexes choosable weapons, skipping over non-choosable ones.
@@ -171,9 +176,10 @@ public:
 	mutable const wchar* m_pLocalizedDesc;
 #endif
 	static const CPlayerClass* fromNums(int iTeam, int iClass); //for backwards-compatability with old numbering system
+	static const CPlayerClass* fromAbbreviation(int iTeam, const char* pszAbbreviation);
 	bool GetLimitsAreInitialized() const { return m_pcvLimit_sml != NULL; }
 	void InitLimits() const;
-private:
+public:
 	mutable ConVar* m_pcvLimit_lrg = nullptr;
 	mutable ConVar* m_pcvLimit_med = nullptr;
 	mutable ConVar* m_pcvLimit_sml = nullptr;

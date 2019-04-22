@@ -23,6 +23,7 @@ class CHL2MP_Player;
 #include "hl2mp_gamerules.h"
 #include "utldict.h"
 #include "bg3/Math/bg3_speedmod_list.h"
+#include "bg3/Permissions/Permissions.h"
 
 //=============================================================================
 // >> HL2MP_Player
@@ -93,8 +94,8 @@ public:
 	virtual void DeathSound( const CTakeDamageInfo &info );
 	virtual CBaseEntity* EntSelectSpawnPoint( void );
 	//BG2 - Tjoppen - virtuals in CHL2MP_Player
-	virtual bool			MayRespawn(void);
-	void  HandleSpeedChanges(void);
+			bool MayRespawnOnTeamChange(int previousTeam); //BG3 - specialized this function to team changes - Awesome
+			void HandleSpeedChanges(void);
 	//
 		
 	int FlashlightIsOn( void );
@@ -117,6 +118,7 @@ public:
 	bool HasLoadedWeapon() const;
 	void NoteWeaponFired( void );
 	CBaseCombatWeapon* Weapon_FindMeleeWeapon() const;
+	void UpdateToMatchClassWeaponAmmoUniform(); //master class/kit updater
 
 	void ResetAnimation( void );
 	void SetPlayerModel( void );
@@ -185,6 +187,7 @@ public:
 	//int			GetLimitTeamClass(int iTeam, int iClass);
 	bool		AttemptJoin(int iTeam, int iClass);
 	void		ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass);
+	void		CheckQuickRespawn();
 	//bool		PlayerMayJoinTeam(int iTeam) const;
 	const char* GetHitgroupPainSound(int hitgroup, int team);
 	void		HandleVoicecomm(int comm);
@@ -213,11 +216,13 @@ private:
 public:
 	CNetworkVar(int, m_iCurrentRallies); //BG3 - Awesome - bitfield of rallies which are currently affecting this player - controlled by the server
 	inline int RallyGetCurrentRallies() { return m_iCurrentRallies; }
+	float	m_flEndRallyTime;
+
 private:
 	//int		m_iClass;					//BG2 - Tjoppen - class system
 	//int		m_iNextClass;					//BG2 - Tjoppen - which class will we become on our next respawn?
 	float	m_flNextVoicecomm,				//BG2 - Tjoppen - voice comms
-		m_flNextGlobalVoicecomm;		//BG2 - Tjoppen - only battlecries for now
+			m_flNextGlobalVoicecomm;		//BG2 - Tjoppen - only battlecries for now
 	float	m_fNextStamRegen;				//BG2 - Draco - stamina regen timer
 
 	//BG2 - Tjoppen - tickets. sometimes we don't want to remove tickets on spawn, such as when first joining a team
@@ -262,6 +267,9 @@ public:
 
 	// BG2 - VisualMelon - When true, cancel the next "is going to fight as" message
 	bool m_bNoJoinMessage;
+
+	//BG3 - permissions
+	Permissions* m_pPermissions;
 };
 
 //BG2 - Tjoppen - ammo kit definitions
@@ -277,6 +285,28 @@ inline CHL2MP_Player *ToHL2MPPlayer( CBaseEntity *pEntity )
 		return NULL;
 
 	return dynamic_cast<CHL2MP_Player*>( pEntity );
+}
+
+inline bool verifyBotPermissions(const char* pszFunctionName) {
+	if (UTIL_IsCommandIssuedByServerAdmin())
+		return true;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	if (pPlayer) {
+		return verifyPermissions(pPlayer, pPlayer->m_pPermissions->m_bBotManage, pszFunctionName);
+	}
+	return false;
+}
+
+inline bool verifyMapModePermissions(const char* pszFunctionName) {
+	if (UTIL_IsCommandIssuedByServerAdmin())
+		return true;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	if (pPlayer) {
+		return verifyPermissions(pPlayer, pPlayer->m_pPermissions->m_bBotManage, pszFunctionName);
+	}
+	return false;
 }
 
 #endif //HL2MP_PLAYER_H

@@ -44,6 +44,7 @@
 #include "bg3/Bots/bg3_bot_vcomms.h"
 #include "../shared/bg3/bg3_buffs.h"
 #include "../shared/bg3/bg3_class_quota.h"
+#include "../shared/bg3/math/bg3_rand.h"
 #include "bg3/bg3_scorepreserve.h"
 #include "bg3/Bots/bg3_bot_influencer.h"
 //
@@ -60,6 +61,9 @@ ConVar sv_saferespawntime("sv_saferespawntime", "2.5f", FCVAR_GAMEDLL | FCVAR_NO
 //BG2 - Spawn point optimization test - HairyPotter
 CUtlVector<CBaseEntity *> m_MultiSpawns, m_AmericanSpawns, m_BritishSpawns;
 //
+
+ConVar weapon_test("weapon_test", "0", FCVAR_HIDDEN | FCVAR_GAMEDLL);
+ConVar weapon_test_team("weapon_test_team", "2", FCVAR_HIDDEN | FCVAR_GAMEDLL);
 
 int g_iLastCitizenModel = 0;
 int g_iLastCombineModel = 0;
@@ -160,6 +164,8 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 	//
 	//BG3 - Awesome - default rallying info
 	m_iCurrentRallies = 0;
+
+	m_pPermissions = NULL;
 
 	BaseClass::ChangeTeam(0);
 
@@ -303,50 +309,44 @@ void CHL2MP_Player::GiveDefaultItems(void)
 	m_iCurrentAmmoKit = m_iAmmoKit;
 
 	//if we're a bot, randomize our gun kit
-	if (IsFakeClient()) {
+	ConVar* pWeaponKitEnforcer = GetTeamNumber() == TEAM_AMERICANS ? &lb_enforce_weapon_amer : &lb_enforce_weapon_brit;
+	if (IsFakeClient() && !pWeaponKitEnforcer->GetBool()) {
 		m_iGunKit = RandomInt(0, m_pCurClass->numChooseableWeapons() - 1);;
 	}
 
-	//check for forced weapon change
-	if (GetClass() == CLASS_INFANTRY) {
-		ConVar* m_pWeaponKitEnforcer = GetTeamNumber() == TEAM_AMERICANS ? &lb_enforce_weapon_amer : &lb_enforce_weapon_brit;
-		int forcedKit = m_pWeaponKitEnforcer->GetInt();
-		forcedKit = Clamp(forcedKit, 0, 2);
-
-		if (forcedKit)
-			m_iGunKit = forcedKit;
-
+	if (weapon_test.GetBool() && weapon_test_team.GetInt() == GetTeamNumber()) {
+		GiveNamedItem("weapon_spontoon");
 	}
+	else {
 
-	
-
-	//give the chosen weapons
-	const CGunKit& k = m_pCurClass->m_aWeapons[m_iGunKit];
-	GiveNamedItem(k.m_pszWeaponPrimaryName);
-	if (k.m_pszWeaponSecondaryName) {
-		GiveNamedItem(k.m_pszWeaponSecondaryName);
-		if (k.m_pszWeaponTertiaryName) {
-			GiveNamedItem(k.m_pszWeaponTertiaryName);
+		//give the chosen weapons
+		const CGunKit& k = m_pCurClass->m_aWeapons[m_iGunKit];
+		GiveNamedItem(k.m_pszWeaponPrimaryName);
+		if (k.m_pszWeaponSecondaryName) {
+			GiveNamedItem(k.m_pszWeaponSecondaryName);
+			if (k.m_pszWeaponTertiaryName) {
+				GiveNamedItem(k.m_pszWeaponTertiaryName);
+			}
 		}
-	}
-	
 
-	//Apply kit-specific speed modifier
-	AddSpeedModifier(k.m_iMovementSpeedModifier, ESpeedModID::Weapon);
+		//Apply kit-specific speed modifier
+		AddSpeedModifier(k.m_iMovementSpeedModifier, ESpeedModID::Weapon);
 
-	//Give primary and secondary ammo
-	int ammoCount = IsLinebattle() ? m_pCurClass->m_iDefaultPrimaryAmmoCount : m_pCurClass->m_iDefaultPrimaryAmmoCount; //* 2;
-	CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
-	if (m_pCurClass->m_pszSecondaryAmmo)
-		CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
+		//Give primary and secondary ammo
+		int ammoCount = IsLinebattle() ? m_pCurClass->m_iDefaultPrimaryAmmoCount : m_pCurClass->m_iDefaultPrimaryAmmoCount; //* 2;
+		CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
+		if (m_pCurClass->m_pszSecondaryAmmo)
+			CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
 
-	//Give extra ammo from kit
-	if (k.m_pszAmmoOverrideName) {
-		CBasePlayer::SetAmmoCount(k.m_iAmmoOverrideCount, GetAmmoDef()->Index(k.m_pszAmmoOverrideName));
+		//Give extra ammo from kit
+		if (k.m_pszAmmoOverrideName) {
+			CBasePlayer::SetAmmoCount(k.m_iAmmoOverrideCount, GetAmmoDef()->Index(k.m_pszAmmoOverrideName));
+		}
 	}
 }
 
 void CHL2MP_Player::SetDefaultAmmoFull(bool bPlaySound) {
+	//Msg("Filling ammo for %s\n", GetPlayerName());
 	if (!HasDefaultAmmoFull()) {
 		//Set primary and secondary ammo
 		int ammoCount = m_pCurClass->m_iDefaultPrimaryAmmoCount;
@@ -431,26 +431,20 @@ void CHL2MP_Player::Spawn(void)
 
 
 	//BG2 - Tjoppen - reenable spectators
-	if (GetTeamNumber() == TEAM_SPECTATOR)
-		return;	//we're done
+	//if (GetTeamNumber() == TEAM_SPECTATOR)
+	//	return;	//we're done
 	//
 
 	PickDefaultSpawnTeam(); //All this does is sends the player to info_intermission if they aren't on a team.
 
 	//BG2 - Tjoppen - reenable spectators
-	if (GetTeamNumber() <= TEAM_SPECTATOR)
+	if (GetTeamNumber() <= TEAM_SPECTATOR) {
+		// Initialize the fog and postprocess controllers.
+		InitFogController();
 		return;	//we're done
-	//
-	//reset speed modifier
-	ClearSpeedModifier();
-
-	//fpr class enforcement in linebattle
-	NClassQuota::CheckForForcedClassChange(this);
-
-	//BG2 - Tjoppen - pick correct model
-	m_iClass = m_iNextClass;				//BG2 - Tjoppen - sometimes these may not match
-	UpdatePlayerClass();
-	VerifyKitAmmoUniform();
+	}
+		
+	
 	
 
 	BaseClass::Spawn();
@@ -470,8 +464,7 @@ void CHL2MP_Player::Spawn(void)
 
 	m_flStepSoundTime = gpGlobals->curtime + 0.1f; //BG3 - Awesome - make sure 100% that step time resets
 
-	GiveDefaultItems();
-	PlayermodelTeamClass(); //BG2 - Just set the player models on spawn. We have the technology. -HairyPotter
+	UpdateToMatchClassWeaponAmmoUniform();
 
 	RemoveEffects(EF_NOINTERP);
 
@@ -733,12 +726,11 @@ void CHL2MP_Player::PostThink(void)
 		m_iStamina = 100;	//cap if for some reason it went over 100
 	
 	//check if our rallying time has ended
-	if (m_iCurrentRallies && BG3Buffs::GetEndRallyTime(GetTeamNumber()) < gpGlobals->curtime) {
+	if (m_iCurrentRallies && m_flEndRallyTime < gpGlobals->curtime) {
 		BG3Buffs::RallyPlayer(0, this);
 		OnRallyEffectDisable();
 		
 	}
-		
 
 	if (GetFlags() & FL_DUCKING) {
 		SetCollisionBounds(VEC_CROUCH_TRACE_MIN, VEC_CROUCH_TRACE_MAX);
@@ -815,6 +807,23 @@ CBaseCombatWeapon* CHL2MP_Player::Weapon_FindMeleeWeapon() const {
 		}
 	}
 	return NULL;
+}
+
+void CHL2MP_Player::UpdateToMatchClassWeaponAmmoUniform() {
+	//
+	//reset speed modifier
+	ClearSpeedModifier();
+
+	//fpr class enforcement in linebattle
+	NClassQuota::CheckForForcedClassChange(this);
+
+	//BG2 - Tjoppen - pick correct model
+	m_iClass = m_iNextClass;				//BG2 - Tjoppen - sometimes these may not match
+	UpdatePlayerClass();
+	VerifyKitAmmoUniform();
+	PlayermodelTeamClass(); //BG2 - Just set the player models on spawn. We have the technology. -HairyPotter
+	//Sleeve skins dependent on player's skin, so give weapons second
+	GiveDefaultItems();
 }
 
 extern ConVar sv_maxunlag;
@@ -1253,22 +1262,21 @@ void CHL2MP_Player::PlayermodelTeamClass()
 int CHL2MP_Player::GetAppropriateSkin()
 {
 	//clamp in case of strange class switches
-	m_iClassSkin = max(0, m_pCurClass->m_iNumUniforms - 1);
+	m_iClassSkin = Clamp(m_iClassSkin, 0, m_pCurClass->numChooseableUniforms() - 1);
 
 	//if we're a bot, randomize our uniform
 	if (IsFakeClient()) {
-		m_iClassSkin = RandomInt(0, m_pCurClass->m_iNumUniforms - 1);
+		m_iClassSkin = RndInt(0, m_pCurClass->numChooseableUniforms() - 1);
 	}
 
-	return m_iClassSkin * m_pCurClass->m_iSkinDepth + RandomInt(0, m_pCurClass->m_iSkinDepth - 1);
+	return m_iClassSkin * m_pCurClass->m_iSkinDepth + RndInt(0, m_pCurClass->m_iSkinDepth - 1);
 }
 
 //BG2 - Tjoppen - CHL2MP_Player::MayRespawn()
-bool CHL2MP_Player::MayRespawn(void)
+bool CHL2MP_Player::MayRespawnOnTeamChange(int previousTeam)
 {
 	//note: this function only checks if we MAY respawn. not if we can(due to crowded spawns perhaps)
-	if (GetTeamNumber() <= TEAM_SPECTATOR)
-		return false;
+	//we could have a truth table here governing all specific cases, but let's not go there.
 
 	CTeam	*pAmer = g_Teams[TEAM_AMERICANS],
 		*pBrit = g_Teams[TEAM_BRITISH];
@@ -1276,35 +1284,29 @@ bool CHL2MP_Player::MayRespawn(void)
 	if (!pAmer || !pBrit)
 		return false;
 
-	if (pAmer->GetNumPlayers() <= 0 || pBrit->GetNumPlayers() <= 0)
-		return true;
-
-	extern ConVar	mp_respawnstyle,
-		mp_respawntime;
-
-	switch (mp_respawnstyle.GetInt())
-	{
-	case 1:
-		//waves - we're not allowed to respawn by ourselves. the gamerules decide for us
-		return false;
-		break;
-	case 2:
-		//rounds - we're not allowed to respawn by ourselves. the gamerules decide for us
-		return false;
-		break;
-	case 3:
-		//rounds - we're not allowed to respawn by ourselves. the gamerules decide for us
-		return false;
-		break;
-	case 4:
-		return false;
-		break;
-	default:
-		if (gpGlobals->curtime > GetDeathTime() + DEATH_ANIMATION_TIME)
+	//always allow us to join if one team is empty
+	CTeam* pTeam = GetTeamNumber() == TEAM_AMERICANS ? pAmer : pBrit;
+	if (GetTeamNumber() >= TEAM_AMERICANS) {
+		CTeam* pEnemyTeam = pTeam == pAmer ? pBrit : pAmer;
+		if (pTeam->GetNumPlayers() <= 1 || pEnemyTeam->GetNumPlayers() <= 0)
 			return true;
-		else
-			return false;
 	}
+
+	//if we're spectator, do false in order to prevent team change abuse //don't need, redundant
+	//if (previousTeam == TEAM_SPECTATOR)
+		//return false;
+
+	//be kind to skirmish players who just joined
+	if (previousTeam == TEAM_UNASSIGNED && (IsSkirmish() || (IsTicketMode() && pTeam->GetTicketsLeft() > 0)))
+		return mp_respawntime.GetFloat() < 30;
+
+	//otherwise default to false for safety
+	return false;
+
+	/*if (gpGlobals->curtime > GetDeathTime() + DEATH_ANIMATION_TIME)
+		return true;
+	else
+		return false;*/
 }
 //
 
@@ -1358,6 +1360,8 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass)
 void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass) {
 	//Warning("Player forcing join %s %i %i\n", pClass->m_pszAbbreviation, iTeam, iClass);
 
+	int previousTeam = GetTeamNumber();
+
 	//The following line prevents anyone else from stealing our spot..
 	//Without this line several teamswitching/new players can pick a free class, so there can be for instance 
 	// two loyalists even though the limit is one.
@@ -1382,36 +1386,15 @@ void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass)
 		//let Spawn() figure the model out
 		CommitSuicide();
 
-		if (GetTeamNumber() <= TEAM_SPECTATOR)
-		{
-			ChangeTeam(iTeam);
-			if (MayRespawn())
-				Spawn();
+		ChangeTeam(iTeam);
+		
+			
+		if (MayRespawnOnTeamChange(previousTeam)) {
+			Spawn();
 		}
-		else
-			ChangeTeam(iTeam);
 	}
 	else {
-		//BG3 if we're not switching teams and we're in a spawn room, just respawn instantly
-		extern ConVar sv_class_switch_time;
-		extern ConVar sv_class_switch_time_lb_multiplier;
-		float classSwitchTime = sv_class_switch_time.GetFloat();
-		if (IsLinebattle()) {
-			classSwitchTime *= sv_class_switch_time_lb_multiplier.GetFloat();
-		}
-
-		//Fast class switch
-		if (m_bInSpawnRoom
-			&& IsAlive()
-			&& GetHealth() == 100
-			&& HasLoadedWeapon()
-			&& m_fLastRespawn + classSwitchTime > gpGlobals->curtime) {
-			m_bDontRemoveTicket = true;
-			Spawn();
-
-			//HACK HACK this prevents players from class-switching more than once, until they spawn for some other reason
-			m_fLastRespawn = -FLT_MAX;
-		}
+		CheckQuickRespawn();
 	}
 
 	CTeam *team = GetTeam();
@@ -1442,6 +1425,33 @@ void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass)
 	//BG3 - use this as an entry point to check if we have a preserved score available
 	if (!DeathCount()) {
 		NScorePreserve::NotifyConnected(this->entindex());
+	}
+	//ensure permissions are up-to-date
+	Permissions::LoadPermissionsForPlayer(this);
+}
+
+void CHL2MP_Player::CheckQuickRespawn() {
+	//BG3 if we're not switching teams and we're in a spawn room, just respawn instantly
+	extern ConVar sv_class_switch_time;
+	extern ConVar sv_class_switch_time_lb_multiplier;
+	float classSwitchTime = sv_class_switch_time.GetFloat();
+	if (IsLinebattle()) {
+		classSwitchTime *= sv_class_switch_time_lb_multiplier.GetFloat();
+	}
+
+	//Fast class switch
+	if (GetTeamNumber() >= TEAM_AMERICANS
+		&& (m_bInSpawnRoom || IsLinebattle()) //be more generous in linebattle
+		&& IsAlive()
+		&& GetHealth() == 100
+		&& (HasLoadedWeapon() || IsLinebattle()) //in linebattle, forgive players who accidentally shoot in spawn
+		&& (m_fLastRespawn + classSwitchTime > gpGlobals->curtime)) {
+		m_bDontRemoveTicket = true;
+		UpdateToMatchClassWeaponAmmoUniform();
+
+		//HACK HACK this prevents players from class-switching more than once, until they spawn for some other reason
+		if (!IsLinebattle())
+			m_fLastRespawn = -FLT_MAX;
 	}
 }
 
@@ -1577,11 +1587,24 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 }
 
 void CHL2MP_Player::VerifyKitAmmoUniform() {
+
+
+	//check for forced weapon change
+	//if (GetClass() == CLASS_INFANTRY) {
+	ConVar* m_pWeaponKitEnforcer = GetTeamNumber() == TEAM_AMERICANS ? &lb_enforce_weapon_amer : &lb_enforce_weapon_brit;
+	int forcedKit = m_pWeaponKitEnforcer->GetInt();
+	forcedKit = Clamp(forcedKit, 0, (int)m_pCurClass->numChooseableWeapons());
+
+	if (forcedKit)
+		m_iGunKit = forcedKit - 1;
+
+	//}
+
 	//Clamp kit number to number of available kits
 	m_iGunKit = Clamp(m_iGunKit, 0, m_pCurClass->numChooseableWeapons() - 1);
 
 	//clamp skin to valid value
-	m_iClassSkin = Clamp(m_iClassSkin, 0, (int)m_pCurClass->m_iNumUniforms);
+	m_iClassSkin = Clamp(m_iClassSkin, 0, (int)m_pCurClass->numChooseableUniforms());
 
 	//clamp ammo kit, then verify that our weapon allows for it
 	m_iAmmoKit = Clamp(m_iAmmoKit, AMMO_KIT_BALL, AMMO_KIT_BUCKSHOT);
@@ -1658,12 +1681,6 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 		pcf(this, args);
 		return true;
 	}
-
-	//Check if command is server-only
-	//Ex. not just any player should be able to add bots
-	/*ConCommand* pCommand = g_pCVar->FindCommand(cmd);
-	if (pCommand && (pCommand->IsFlagSet(FCVAR_GAMEDLL)))
-		return true;*/
 
 	return BaseClass::ClientCommand(args);
 

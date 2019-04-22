@@ -135,8 +135,8 @@ ConVar mp_autobalancetolerance("mp_autobalancetolerance", "2", FCVAR_GAMEDLL | F
 extern ConVar mp_limit_mapsize_low;
 extern ConVar mp_limit_mapsize_high;
 
-ConVar mp_respawnstyle("mp_respawnstyle", "1", CVAR_FLAGS, "0 = regular dm, 1 = waves (skirmish), 2 = last man standing, 3 = ticket mode, 4 = LMS with linebattle extensions");
-ConVar mp_respawntime("mp_respawntime", "14", CVAR_FLAGS, "Time between waves, or the maximum length of the round with mp_respawnstyle 2");
+ConVar mp_respawnstyle("mp_respawnstyle", "1", CVAR_FLAGS, "0 = regular dm, 1 = waves (skirmish), 2 = last man standing, 3 = ticket mode, 4 = LMS with linebattle extensions", true, 1, true, 4);
+ConVar mp_respawntime("mp_respawntime", "14", CVAR_FLAGS, "Time between waves, or the maximum length of the round with mp_respawnstyle 2 or 3");
 
 //For punishing officers who waste the buff during skirmish
 ConVar mp_punish_bad_officer("mp_punish_bad_officer", "1", CVAR_FLAGS, "Whether or not to auto-switch officers who use the buff ability with none of their teammates around off of the officer class. They can switch back after spending one life as a non-officer.");
@@ -153,8 +153,8 @@ ConVar mp_tickets_drain_b("mp_tickets_drain_b", "12.5", CVAR_FLAGS, "Number of t
 //BG3 - Awesome - linebattle cvars
 ConVar lb_enforce_weapon_amer("lb_enforce_weapon_amer", "0", CVAR_FLAGS_HIDDEN, "How to enforce continental soldier's weapon in linebattle mode. 0 is disabled, 1 is enforce first weapon, 2 is enforce second weapon");
 ConVar lb_enforce_weapon_brit("lb_enforce_weapon_brit", "0", CVAR_FLAGS_HIDDEN, "How to enforce royal infantry's weapon in linebattle mode. 0 is disabled, 1 is enforce first weapon, 2 is enforce second weapon");
-ConVar lb_enforce_class_amer("lb_enforce_class_amer", "0", CVAR_FLAGS_HIDDEN, "How to force class change on a new linebattle round. Excludes officers. 0 is disabled, 1-6 is inf, off, sniper, skirm, linf, grenadier");
-ConVar lb_enforce_class_brit("lb_enforce_class_brit", "0", CVAR_FLAGS_HIDDEN, "How to force class change on a new linebattle round. Excludes officers. 0 is disabled, 1-6 is inf, off, sniper, skirm, linf, grenadier");
+//ConVar lb_enforce_class_amer("lb_enforce_class_amer", "0", CVAR_FLAGS_HIDDEN, "How to force class change on a new linebattle round. Excludes officers. 0 is disabled, 1-6 is inf, off, sniper, skirm, linf, grenadier");
+//ConVar lb_enforce_class_brit("lb_enforce_class_brit", "0", CVAR_FLAGS_HIDDEN, "How to force class change on a new linebattle round. Excludes officers. 0 is disabled, 1-6 is inf, off, sniper, skirm, linf, grenadier");
 ConVar lb_enforce_no_buckshot("lb_enforce_no_buckshot", "0", CVAR_FLAGS, "Whether or not to allow buckshot during linebattle mode");
 
 ConVar lb_officer_protect("lb_officer_protect", "2", CVAR_FLAGS, "Whether or not to protect officers during early-round long-range linebattle shooting. 0 is off, 1 is first officer only, 2 is both officers.");
@@ -587,10 +587,15 @@ int CHL2MPRules::CountAlivePlayersAndTickets(int iTeamNumber)
 }
 void CHL2MPRules::SwapPlayerTeam(CHL2MP_Player *pPlayer, bool skipAlive)
 {
-	if (!pPlayer || (pPlayer->IsAlive() && skipAlive))
+	if (!pPlayer 
+		|| (pPlayer->IsAlive() && skipAlive) 
+		|| pPlayer->GetTeamNumber() < TEAM_AMERICANS
+		|| pPlayer->GetTeamNumber() > TEAM_BRITISH)
 		return;
 
-	int edict = engine->IndexOfEdict(pPlayer->edict());
+	//BG3 - this code is so old and horrible, I'll do something simpler for now.
+	//Also, I suspect the crash on team switch originates from in here...
+	/*int edict = engine->IndexOfEdict(pPlayer->edict());
 	int iTeam = pPlayer->GetTeamNumber();
 	int iOtherTeam;
 	int playerClass;
@@ -668,11 +673,13 @@ void CHL2MPRules::SwapPlayerTeam(CHL2MP_Player *pPlayer, bool skipAlive)
 	{
 		pPlayer->m_iGunKit = 0;
 		pPlayer->m_iAmmoKit = AMMO_KIT_BALL;
-	}
+	}*/
+
+	int iOtherTeam = pPlayer->GetTeamNumber() == TEAM_AMERICANS ? TEAM_BRITISH : TEAM_AMERICANS;
 
 	pPlayer->m_bNoJoinMessage = true;
-	const CPlayerClass* pClass = CPlayerClass::fromNums(iOtherTeam, playerClass);
-	pPlayer->ForceJoin(pClass, iOtherTeam, playerClass);
+	const CPlayerClass* pClass = NClassQuota::FindInfiniteClassForTeam(iOtherTeam);
+	pPlayer->ForceJoin(pClass, iOtherTeam, pClass->m_iClassNumber);
 
 	//don't kill the player
 	//pPlayer->ChangeTeam(iOtherTeam, false);
@@ -919,55 +926,6 @@ void CHL2MPRules::Think( void )
 			HandleScores(m_iTDMTeamThatWon, score, 0, true);
 		}
 	}
-
-	/*if (IsLMS() || UsingTickets())//if line battle all at once spawn style - Draco
-	{		
-		//Tjoppen - start
-		//count alive players in each team
-		int aliveamericans = CountAlivePlayersAndTickets(TEAM_AMERICANS);
-		int alivebritish = CountAlivePlayersAndTickets(TEAM_BRITISH);
-
-		//Tjoppen - End
-		//BG2 - Tjoppen - restart rounds a few seconds after the last person is killed
-		//wins
-		float roundLength = mp_roundtime.GetFloat();
-
-		if (aliveamericans == 0 || alivebritish == 0 || m_fLastRoundRestart + roundLength <= gpGlobals->curtime || m_bIsRestartingRound)
-		{
-			if (!m_bIsRestartingRound)
-			{
-				m_flNextRoundRestart = gpGlobals->curtime + 5;
-				m_bIsRestartingRound = true;
-
-				//print different messages depending on whether the losing has any players left alive
-				if (aliveamericans > alivebritish)
-				{
-					//ClientPrintAll( alivebritish ? AMERICAN_DEFAULT_WIN : AMERICAN_ROUND_WIN );
-					m_iTDMTeamThatWon = TEAM_AMERICANS;
-				}
-				else if (aliveamericans < alivebritish)
-				{
-					//ClientPrintAll( aliveamericans ? BRITISH_DEFAULT_WIN : BRITISH_ROUND_WIN );
-					m_iTDMTeamThatWon = TEAM_BRITISH;
-				}
-				else
-				{
-					//ClientPrintAll( aliveamericans ? DEFAULT_DRAW : ROUND_DRAW );
-					m_iTDMTeamThatWon = TEAM_NONE;
-				}
-			}
-			else if (m_flNextRoundRestart < gpGlobals->curtime)
-			{
-				int score = 0;
-
-				if (m_iTDMTeamThatWon != TEAM_NONE)
-					score = 1;
-
-				HandleScores(m_iTDMTeamThatWon, score, 0, true);
-			}
-		}
-	}*/
-	//BG2 - Draco - End
 
 	if ( gpGlobals->curtime > m_tmNextPeriodicThink )
 	{		
@@ -1295,6 +1253,7 @@ bool CHL2MPRules::ClientConnected(edict_t *pEntity, const char *pszName, const c
 			NScorePreserve::NotifyConnected(pEnt->entindex());
 		}
 	}*/
+
 	return result;
 }
 #endif //CLIENT_DLL

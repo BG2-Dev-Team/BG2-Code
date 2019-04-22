@@ -54,6 +54,7 @@ void CLineSpawn::CalculateSpawnLocations(void) {
 
 		//calc offset between spawn locations
 		m_vSpawnDirection = m_hSpawnDirection->GetAbsOrigin() - GetAbsOrigin();
+		m_vSpawnDirection.z = 0; //zero out Z direction to simplify slopes
 		m_vSpawnDirection.NormalizeInPlace();
 		m_vSpawnDirection *= m_flSeparationDistance;
 		
@@ -63,13 +64,15 @@ void CLineSpawn::CalculateSpawnLocations(void) {
 		Vector nextBaseLocation = GetAbsOrigin();
 		Vector nextLocation;
 		trace_t tr;
-		const Vector VERTICAL_OFFSET(0, 0, -m_flRaycastHeight - 1);
+		const Vector VERTICAL_OFFSET(0, 0, m_flRaycastHeight);
 		const Vector LITTLE_UP(0, 0, m_flGroundSeparation); //so players don't actually spawn in the ground
 		//Keep going 
 		for (int i = 0; i < gpGlobals->maxClients; i++) {
 			nextLocation = nextBaseLocation + VERTICAL_OFFSET;
 			UTIL_TraceLine(nextLocation, nextBaseLocation, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr);
+			DebugDrawLine(nextLocation, tr.endpos, 255, 0, 0, false, 99999);
 			nextLocation = tr.endpos + LITTLE_UP;
+			
 
 			m_aSpawnLocations.AddToTail(nextLocation);
 			
@@ -188,7 +191,7 @@ void CLineSpawn::SpawnTeam(int iTeam, CLineSpawn* pSpawn) {
 }
 
 bool CLineSpawn::SpawnBothTeams() {
-	RecalculateSpawns();
+	//RecalculateSpawns();
 	//we'll make it first-come first-served, but to ensure
 	//that the any-team spawnpoints aren't biased toward one team,
 	//we randomly decide which team can pick first.
@@ -242,11 +245,3 @@ bool CLineSpawn::SpawnBothTeams() {
 
 	return pBritishSpawn && pAmericanSpawn;
 }
-
-/*CON_COMMAND(testspawns, "Blah blah\n") {
-	//CLineSpawn::RecalculateSpawns();
-	CLineSpawn::SpawnBothTeams();
-}*/
-
-
-

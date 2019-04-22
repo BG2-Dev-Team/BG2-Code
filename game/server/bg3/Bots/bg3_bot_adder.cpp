@@ -61,8 +61,8 @@ in separate files for bot communication, map navigation, etc.
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar bot_forceclass("bot_forceclass", "0", FCVAR_GAMEDLL | FCVAR_HIDDEN, "Force bots to spawn as given class. 0 = Infantry, 1 = Officer, 2 = Sniper, 3 = Skirmisher");
-ConVar bot_limitclass("bot_limitclass", "1", 0, "Force bots to conform to class regulations.");
+ConVar bot_forceclass("bot_forceclass", "-1", FCVAR_GAMEDLL | FCVAR_HIDDEN, "Force bots to spawn as given class. 0 = Infantry, 1 = Officer, 2 = Sniper, 3 = Skirmisher");
+//ConVar bot_limitclass("bot_limitclass", "1", 0, "Force bots to conform to class regulations.");
 
 #define RANK_PTE	"Pte."
 #define RANK_LCPL	"LCpl."
@@ -97,11 +97,35 @@ const char* g_ppszBotNames[] = {
 const char* g_ppszBotRareNames[] = {
 	"Karpinsky", "Allen", "Hale", "Revere", "Tallmadge", "Gates", "Morgan",
 	"Arnold", "Greene", "Howe", "Prescott", "Tarleton", "Klif", "Hawke", "Roob",
-	"Chris", "Emosewa", "Fox"
+	"Chris", "Emosewa", "Fox", "Spiers", "Potter"
+
+};
+
+const char* g_ppszFunBotNames[] {
+	"pszName", "JaReD", "Clan Ghost", "Venitian", "Sharpshooter", "BOSS", "*(pszName) = str",
+	"frogs", "NeoPlanet", "Dealler", "DOOMiation", "Spotrumm", "MovieXoxo", "PowerConspiracy",
+	"Singleton", "Pointer", "Reference", "Class", "Struct", "Array", "Mapper", "pWeapon",
+	"Interface", "Object", "RValue", "LValue", "esperantistigantigxu", "PowerCoup",
+	"PowerPlay", "PowerTreason", "PowerMove", "PowerOn", "adu!", "Remote Awesome", "0xffff",
+	"nullptr", "ROBOT #42", "The Answer to Everything", "BarON", "foobar", "case",
+	"switch", "loop", "statement", "Mr. BST", "Mrs. BST", "const char*", "Crackshot", "Potshot",
+	"Turkeyshot", "Buckshot", "Birdshot", "Earshot", "Hipshot", "Headshot", "Bowshot", "Gunshot",
+	"Hotshot", "Scattershot", "Slingshot", "Grapeshot", "Snapshot", "Mugshot", "Ludicrous Speed", 
+	"Flint", "Not-a-Bot v2.1", "THE MAGICIAN", "Philip", "Brutus", "Julius Caesar", "Clocktower",
+	"Battle Droid", ""
+	
+	
+	"Gashmaster 100", "Hackmaster 200", "Sawmaster 300", "Dicemaster 400", "Puncturemaster 500",
+	"Prunemaster 600",
+	"Clubmaster 1000", "Slashmaster 2000", "Stabmaster 3000", "Slicemaster 4000", "Swingmaster 5000",
+	"Cutmaster 6000", "Carvemaster 7000", "Ripmaster 8000", "Beheadmaster 9000", "Cleavemaster 10000",
+	
 
 };
 
 static CUtlDict<char*> g_mUsedBotNames;
+
+ConVar bot_fun_names("bot_fun_names", "0", 0);
 
 void GenerateNameForBot(char* buffer, uint8 bufferSize, const BotDifficulty* pForDifficulty) {
 
@@ -109,27 +133,33 @@ void GenerateNameForBot(char* buffer, uint8 bufferSize, const BotDifficulty* pFo
 	const char* pRank;
 	const char* pName;
 
-	//randomly get a name
-	if (pForDifficulty == &BotDiffEasy) {
-		pRank = g_ppszEasyBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszEasyBotPrefixes) - 1)];
-		pName = g_ppszBotNames[RandomInt(0, ARRAYSIZE(g_ppszBotNames) - 1)];
-	}
-	else if (pForDifficulty == &BotDiffNorm) {
-		pRank = g_ppszMedBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszMedBotPrefixes) - 1)];
-		pName = g_ppszBotNames[RandomInt(0, ARRAYSIZE(g_ppszBotNames) - 1)];
+	if (bot_fun_names.GetBool()) {
+		pName = g_ppszFunBotNames[RandomInt(0, ARRAYSIZE(g_ppszFunBotNames) - 1)];
+		Q_snprintf(buffer, bufferSize, pName);
 	}
 	else {
-		if (RandomFloat() > 0.95f) {
-			pRank = g_ppszRareBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszRareBotPrefixes) - 1)];
-			pName = g_ppszBotRareNames[RandomInt(0, ARRAYSIZE(g_ppszBotRareNames) - 1)];
-		}
-		else {
-			pRank = g_ppszHardBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszHardBotPrefixes) - 1)];
+		//randomly get a name
+		if (pForDifficulty == &BotDiffEasy) {
+			pRank = g_ppszEasyBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszEasyBotPrefixes) - 1)];
 			pName = g_ppszBotNames[RandomInt(0, ARRAYSIZE(g_ppszBotNames) - 1)];
 		}
-	}
+		else if (pForDifficulty == &BotDiffNorm) {
+			pRank = g_ppszMedBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszMedBotPrefixes) - 1)];
+			pName = g_ppszBotNames[RandomInt(0, ARRAYSIZE(g_ppszBotNames) - 1)];
+		}
+		else {
+			if (RandomFloat() > 0.95f) {
+				pRank = g_ppszRareBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszRareBotPrefixes) - 1)];
+				pName = g_ppszBotRareNames[RandomInt(0, ARRAYSIZE(g_ppszBotRareNames) - 1)];
+			}
+			else {
+				pRank = g_ppszHardBotPrefixes[RandomInt(0, ARRAYSIZE(g_ppszHardBotPrefixes) - 1)];
+				pName = g_ppszBotNames[RandomInt(0, ARRAYSIZE(g_ppszBotNames) - 1)];
+			}
+		}
 
-	Q_snprintf(buffer, bufferSize, "%s %s", pRank, pName);
+		Q_snprintf(buffer, bufferSize, "%s %s", pRank, pName);
+	}
 
 	//if we've regenerated an existing name, generate a new one
 	/*if (g_mUsedBotNames.IsValidIndex(g_mUsedBotNames.Find(buffer))) {
@@ -188,47 +218,61 @@ int  g_iWaitingAmount = 0; //This is just a temp int really.
 int  g_iNextBotTeam = TEAM_BRITISH;
 
 //ConCommand  cc_Bot( "bot_add", BotAdd_f, "Add a bot", FCVAR_CHEAT );
-CON_COMMAND_SERVER(bot_add, "Creates bot(s)in the server. <Bot Count>")
+CON_COMMAND(bot_add, "Creates bot(s)in the server. <Bot Count>")
 {
-	int iCount = pVar->GetInt();
-	if (iCount <= 0)
+	if (args.ArgC() < 2)
 		return;
+	if (verifyBotPermissions(__FUNCTION__)) {
+		int iCount = atoi(args[1]);
+		if (iCount <= 0)
+			return;
 
-	g_iNextBotTeam = g_iNextBotTeam == TEAM_AMERICANS ? TEAM_BRITISH : TEAM_AMERICANS;
+		g_iNextBotTeam = g_iNextBotTeam == TEAM_AMERICANS ? TEAM_BRITISH : TEAM_AMERICANS;
 
-	if (g_bServerReady) //Server is already loaded, just do it.
-		CBotManager::AddBotOfTeam(g_iNextBotTeam, iCount);
-}
-
-CON_COMMAND_SERVER(bot_add_a, "Creates bot(s)in the server. <Bot Count>")
-{
-	int iCount = pVar->GetInt();
-	if (iCount <= 0)
-		return;
-	g_iNextBotTeam = TEAM_AMERICANS;
-
-	if (g_bServerReady) { //Server is already loaded, just do it.	
-		CBotManager::AddBotOfTeam(g_iNextBotTeam, iCount);
-	}
-	else {
-		//do a delayed add
-		CBotManager::AddBotOfTeamDelayed(g_iNextBotTeam, iCount);
+		if (g_bServerReady) //Server is already loaded, just do it.
+			CBotManager::AddBotOfTeam(g_iNextBotTeam, iCount);
 	}
 }
 
-CON_COMMAND_SERVER(bot_add_b, "Creates bot(s)in the server. <Bot Count>")
+CON_COMMAND(bot_add_a, "Creates bot(s)in the server. <Bot Count>")
 {
-	int iCount = pVar->GetInt();
-	if (iCount <= 0)
+	if (args.ArgC() < 2)
 		return;
-	g_iNextBotTeam = TEAM_BRITISH;
 
-	if (g_bServerReady) { //Server is already loaded, just do it.
-		CBotManager::AddBotOfTeam(g_iNextBotTeam, iCount);
+	if (verifyBotPermissions(__FUNCTION__)) {
+		int iCount = atoi(args[1]);
+		if (iCount <= 0)
+			return;
+		g_iNextBotTeam = TEAM_AMERICANS;
+
+		if (g_bServerReady) { //Server is already loaded, just do it.	
+			CBotManager::AddBotOfTeam(g_iNextBotTeam, iCount);
+		}
+		else {
+			//do a delayed add
+			CBotManager::AddBotOfTeamDelayed(g_iNextBotTeam, iCount);
+		}
 	}
-	else {
-		//do a delayed add
-		CBotManager::AddBotOfTeamDelayed(g_iNextBotTeam, iCount);
+}
+
+CON_COMMAND(bot_add_b, "Creates bot(s)in the server. <Bot Count>")
+{
+	if (args.ArgC() < 2)
+		return;
+
+	if (verifyBotPermissions(__FUNCTION__)) {
+		int iCount = atoi(args[1]);
+		if (iCount <= 0)
+			return;
+		g_iNextBotTeam = TEAM_BRITISH;
+
+		if (g_bServerReady) { //Server is already loaded, just do it.	
+			CBotManager::AddBotOfTeam(g_iNextBotTeam, iCount);
+		}
+		else {
+			//do a delayed add
+			CBotManager::AddBotOfTeamDelayed(g_iNextBotTeam, iCount);
+		}
 	}
 }
 

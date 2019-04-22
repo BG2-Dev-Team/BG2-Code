@@ -1016,6 +1016,9 @@ protected: //used to be private, but need access for portal mod (Dave Kircher)
 	bool						m_touchedPhysObject;
 	bool						m_bPhysicsWasFrozen;
 
+	//BG3 - Awesome - added this for scaling velocity based on terrain
+	Vector m_vPreviousGroundNormal;
+
 private:
 
 	int						m_iPlayerSound;// the index of the sound list slot reserved for this player

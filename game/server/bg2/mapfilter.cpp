@@ -1,6 +1,7 @@
 #include "cbase.h"
 #include "baseentity.h"
 #include "mapfilter.h"
+#include "../bg3/bg3_line_spawn.h"
  
 /*static const char *s_PreserveEnts[] =
 {
@@ -110,8 +111,9 @@ bool CMapEntityFilter::ShouldCreateEntity( CBaseEntity *pEnt )
 	//All Defines.
 	CBaseHL2MPCombatWeapon *Weapon = dynamic_cast<CBaseHL2MPCombatWeapon *>( pEnt );
 	CSpawnPoint *Spot = dynamic_cast<CSpawnPoint *>( pEnt );
+	CLineSpawn* pLineSpawn = dynamic_cast<CLineSpawn*>(pEnt);
 
-	if ( Spot || Weapon && Weapon->GetPlayerOwner() )
+	if ( Spot || Weapon && Weapon->GetPlayerOwner() || pLineSpawn)
 		return false;
 	//
 

@@ -65,7 +65,7 @@ void CPredictedViewModel::CalcViewModelLag( Vector& origin, QAngle& angles, QAng
 		Vector vForwardDiff = Vector(1,0,0) - vLaggedForward;
 
 		// Now offset the origin using that.
-		vForwardDiff *= cl_wpn_sway_scale.GetFloat();
+		vForwardDiff *= m_flSwayMultiplier; //cl_wpn_sway_scale.GetFloat();
 		origin += forward*vForwardDiff.x + right*-vForwardDiff.y + up*vForwardDiff.z;
 	#endif
 }

@@ -27,6 +27,7 @@ class CVGuiScreen;
 #endif
 
 #define VIEWMODEL_INDEX_BITS 1
+#define DEFAULT_VIEWMODEL_SWAY 3
 
 class CBaseViewModel : public CBaseAnimating, public IHasOwner
 {
@@ -188,6 +189,10 @@ private:
 
 	// soonest time Update will call WeaponIdle
 	float					m_flTimeWeaponIdle;							
+
+public:
+	float					m_flSwayMultiplier;
+private:
 
 	Activity				m_Activity;
 

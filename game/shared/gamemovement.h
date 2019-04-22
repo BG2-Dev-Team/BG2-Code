@@ -109,6 +109,10 @@ protected:
 	// Only used by players.  Moves along the ground when player is a MOVETYPE_WALK.
 	virtual void	WalkMove( void );
 
+	// Scales horizontal walk velocity based on the ground's slope and player's direction.
+	// BG3 - Awesome - added this function and wrote it from scratch
+	void			ScaleWalkSpeedBySlope(const Vector& slopeNormal, float& wishSpeed);
+
 	// Try to keep a walking player on the ground when running down slopes etc
 	void			StayOnGround( void );
 

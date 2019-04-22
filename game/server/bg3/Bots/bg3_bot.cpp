@@ -433,6 +433,7 @@ bool CSDKBot::ThinkWaypoint_Begin() {
 	SendBotVcommContext(CLEAR);
 	m_curCmd.buttons = IN_FORWARD;
 	m_PlayerSearchInfo.UpdateNavpointFirst();
+	m_flNextStrafeTime = gpGlobals->curtime + WAYPOINT_RECHECK_INTERVAL;
 	return true;
 }
 
@@ -443,6 +444,10 @@ bool CSDKBot::ThinkWaypoint_Check() {
 }
 
 bool CSDKBot::ThinkWaypoint() {
+	//check if we're stuck
+	if (m_flNextStrafeTime < gpGlobals->curtime && m_pPlayer->GetAbsVelocity().LengthSqr() < 5)
+		m_PlayerSearchInfo.UpdateNavpointFirst();
+
 	MoveToWaypoint();
 	return true;
 }
@@ -530,7 +535,6 @@ bool CSDKBot::ThinkLongRange_Begin() {
 bool CSDKBot::ThinkLongRange_Check() {
 	return ThinkCheckDeath() && ThinkCheckPointBlank() && ThinkCheckEnterMedRangeCombat()
 		&& ThinkCheckMelee() && ThinkCheckExitCombat();
-	return true;
 }
 
 bool CSDKBot::ThinkLongRange() {
@@ -957,7 +961,8 @@ bool CSDKBot::ThinkDeath_Begin() {
 	SetUpdateFlags(false);
 	m_flNextFireTime = FLT_MAX;
 	m_curCmd.buttons = 0;
-	NClassQuota::CheckBotSwitchClass(m_pPlayer);
+	extern ConVar bot_forceclass; //if we're forcing a class, don't change it around
+	if (bot_forceclass.GetInt() < 0) NClassQuota::CheckBotSwitchClass(m_pPlayer);
 	return true;
 }
 

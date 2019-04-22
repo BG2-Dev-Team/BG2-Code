@@ -54,7 +54,7 @@ enum class EGameMode : unsigned char {
 
 class CMapInfo {
 public:
-	const char*		m_pszMapName;
+	char			m_pszMapName[MAX_MAP_NAME];
 	uint8			m_iIdealNumBots;
 	uint8			m_iModeField;
 #ifdef CLIENT_DLL
@@ -69,9 +69,12 @@ public:
 
 	static void GetNextMapInfo(CMapInfo**);
 
+	static bool MapExists(const char* pszMapName);
 private:
 	//For building our stack representation
 	CMapInfo* m_pNextInfo;
+
+	void SetName(const char* pszName);
 };
 
 

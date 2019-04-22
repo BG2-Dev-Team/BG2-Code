@@ -165,7 +165,7 @@ int C_Team::Get_Number_Players( void )
 	int n = 0;
 	for (int x = 1; x <= gpGlobals->maxClients; x++)
 	{
-		C_BasePlayer *pPlayer = static_cast<C_BasePlayer*>(cl_entitylist->GetEnt(x));
+		C_BasePlayer *pPlayer = UTIL_PlayerByIndex(x);
 
 		if (pPlayer && pPlayer->GetTeamNumber() == GetTeamNumber())
 			n++;

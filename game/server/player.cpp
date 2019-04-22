@@ -4955,7 +4955,9 @@ void CBasePlayer::Spawn( void )
 		g_pGameRules->SetDefaultPlayerTeam( this );
 
 	//BG3 - linebattle rules will handle spawning for us
-	if (!UseLineSpawn())
+	//if (!UseLineSpawn())
+	//extern bool g_bDontMovePlayerOnSpawn;
+	//if (!g_bDontMovePlayerOnSpawn)
 		g_pGameRules->GetPlayerSpawnSpot( this );
 
 	m_Local.m_bDucked = false;// This will persist over round restart if you hold duck otherwise. 

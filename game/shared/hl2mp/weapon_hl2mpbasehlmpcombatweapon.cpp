@@ -216,7 +216,8 @@ void CBaseHL2MPCombatWeapon::WeaponIdle( void )
 #if defined( CLIENT_DLL )
 
 #define	HL2_BOB_CYCLE_MIN	1.0f
-#define	HL2_BOB_CYCLE_MAX	0.45f
+//#define	HL2_BOB_CYCLE_MAX	0.45f
+#define	HL2_BOB_CYCLE_MAX	0.65f
 #define	HL2_BOB			0.002f
 #define	HL2_BOB_UP		0.5f
 
@@ -316,16 +317,18 @@ float CBaseHL2MPCombatWeapon::CalcViewmodelBob( void )
 //-----------------------------------------------------------------------------
 void CBaseHL2MPCombatWeapon::AddViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles )
 {
-	Vector	forward, right;
-	AngleVectors( angles, &forward, &right, NULL );
+	Vector	forward, right, up;
+	AngleVectors( angles, &forward, &right, &up );
 
 	CalcViewmodelBob();
+	
 
 	// Apply bob, but scaled down to 40%
-	VectorMA( origin, g_verticalBob * 0.1f, forward, origin );
+	VectorMA( origin, g_verticalBob * 3.1f, forward, origin );
+	VectorMA(origin, g_verticalBob * 0.2f + g_lateralBob * 0.2f, up, origin);
 	
 	// Z bob a bit more
-	origin[2] += g_verticalBob * 0.1f;
+	//origin[2] += g_verticalBob * 0.3f;
 	
 	// bob the angles
 	angles[ ROLL ]	+= g_verticalBob * 0.5f;

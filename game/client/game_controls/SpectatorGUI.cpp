@@ -737,11 +737,11 @@ void CSpectatorGUI::UpdateTimer()
 	C_Team *pBrit = GetGlobalTeam(TEAM_BRITISH);
 
 	//szText[64] = 0; //BG3 - Awesome - for some reason re-assigning this crashes the game! :(
-	_snwprintf(szText, sizeof(szText), L"%s %d\n", g_pVGuiLocalize->Find("#BG2_Spec_British_Score"), pBrit ? pBrit->Get_Score() : 0);	//BG2 - Tjoppen - avoid NULL
+	_snwprintf(szText, sizeof(szText), L"%s %d\n", g_pVGuiLocalize->Find("#BG3_Spec_British_Score"), pBrit ? pBrit->Get_Score() : 0);	//BG2 - Tjoppen - avoid NULL
 	SetLabelText("BritishScoreLabel", szText);
 
 	//szText[64] = 0;
-	_snwprintf(szText, sizeof(szText), L"%s %d\n", g_pVGuiLocalize->Find("#BG2_Spec_American_Score"), pAmer ? pAmer->Get_Score() : 0);//BG2 - Tjoppen - avoid NULL
+	_snwprintf(szText, sizeof(szText), L"%s %d\n", g_pVGuiLocalize->Find("#BG3_Spec_American_Score"), pAmer ? pAmer->Get_Score() : 0);//BG2 - Tjoppen - avoid NULL
 	SetLabelText("AmericanScoreLabel", szText);
 	//
 }

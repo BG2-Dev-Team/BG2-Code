@@ -999,57 +999,57 @@ void CBaseHudChat::MsgFunc_BG2Events(bf_read &msg)
 	switch (msg_type)
 	{
 	case ROUND_DRAW:
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_Round_Draw"));
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_Round_Draw"));
 		break;
 	case MAP_DRAW:
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_Map_Draw"));
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_Map_Draw"));
 		break;
 	case DEFAULT_DRAW:
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_Default_Draw"));
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_Default_Draw"));
 		break;
 	case BRITISH_ROUND_WIN:
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_British_Round_Win"));
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_British_Round_Win"));
 		break;
 	case AMERICAN_ROUND_WIN:
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_American_Round_Win"));
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_American_Round_Win"));
 		break;
 	case BRITISH_MAP_WIN:
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_British_Map_Win"));
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_British_Map_Win"));
 		break;
 	case AMERICAN_MAP_WIN:
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_American_Map_Win"));
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_American_Map_Win"));
 		break;
 	case BRITISH_DEFAULT_WIN:
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_British_Default_Win"));
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_British_Default_Win"));
 		break;
 	case AMERICAN_DEFAULT_WIN:
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_American_Default_Win"));
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_American_Default_Win"));
 		break;
 	case CTF_DENY_CAPTURE:
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_CTF_Deny_Capture"));
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_CTF_Deny_Capture"));
 		break;
 	case CTF_DENY_PICKUP:
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_CTF_Deny_Pickup"));
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_CTF_Deny_Pickup"));
 		break;
 	case CTF_CAPTURE:
 		if (!szBuf[0] || !szBuf[1]) //Just to be safe
 			break;
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_CTF_Capture"), szBuf[0], szBuf[1]);
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_CTF_Capture"), szBuf[0], szBuf[1]);
 		break;
 	case CTF_PICKUP:
 		if (!szBuf[0] || !szBuf[1]) //Just to be safe
 			break;
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_CTF_Pickup"), szBuf[0], szBuf[1]);
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_CTF_Pickup"), szBuf[0], szBuf[1]);
 		break;
 	case CTF_DROP:
 		if (!szBuf[0] || !szBuf[1]) //Just to be safe
 			break;
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_CTF_Drop"), szBuf[0], szBuf[1]);
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_CTF_Drop"), szBuf[0], szBuf[1]);
 		break;
 	case CTF_RETURNED:
 		if (!szBuf[0]) //Just to be safe
 			break;
-		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG2_CTF_Returned"), szBuf[0]);
+		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_CTF_Returned"), szBuf[0]);
 		break;
 	}
 
@@ -2017,18 +2017,18 @@ void CBaseHudChat::MsgFunc_VoiceComm(bf_read &msg)
 		//first build our search string
 		//BG2 - quick hack for now. Fix this up later. - HairyPotter
 		if (!isamerican && m_iClass == CLASS_SKIRMISHER && (comm + 1 == 19)) //Native battlecry
-			Q_snprintf(searchstring, sizeof searchstring, "#BG2_VoiceComm_N19");
+			Q_snprintf(searchstring, sizeof searchstring, "#BG3_VoiceComm_N19");
 		else {
 			char americanChar = m_iClass == CLASS_LIGHT_INFANTRY ? 'F' : 'A'; //french subtitles for french grenadier
 			char britishChar = m_iClass == CLASS_SNIPER ? 'G' : 'B'; //subtitles for german jaegar
 
-			Q_snprintf(searchstring, sizeof searchstring, "#BG2_VoiceComm_%c%i", isamerican ? americanChar : britishChar, comm + 1);
+			Q_snprintf(searchstring, sizeof searchstring, "#BG3_VoiceComm_%c%i", isamerican ? americanChar : britishChar, comm + 1);
 		}
 			
 
 		//look up our strings
 		wchar_t *resolved = g_pVGuiLocalize->Find(searchstring),				// "Yes"
-			*prefix = g_pVGuiLocalize->Find("#BG2_VoiceComm_Prefix");	// "(Command)"
+			*prefix = g_pVGuiLocalize->Find("#BG3_VoiceComm_Prefix");	// "(Command)"
 
 		if (!resolved || !prefix)
 			return;

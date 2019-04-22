@@ -36,6 +36,9 @@
 #include "basemultiplayerplayer.h"
 #include "voice_gamemgr.h"
 
+//BG3 - Awesome - includes
+#include "hl2mp/hl2mp_player.h"
+
 #ifdef TF_DLL
 #include "tf_player.h"
 #include "tf_gamerules.h"
@@ -1138,49 +1141,42 @@ void EnableNoClip( CBasePlayer *pPlayer )
 	pPlayer->AddEFlags( EFL_NOCLIP_ACTIVE );
 }
 
-void CC_Player_NoClip( void )
-{
-	if ( !sv_cheats->GetBool() )
-		return;
-
-	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
-	if ( !pPlayer )
-		return;
-
+//BG3 - Awesome - moved this out of CC_Player_NoClip in order to separate the functionality from the command
+void Player_NoClip(CBasePlayer* pPlayer) {
 	CPlayerState *pl = pPlayer->PlayerData();
-	Assert( pl );
+	Assert(pl);
 
 	if (pPlayer->GetMoveType() != MOVETYPE_NOCLIP)
 	{
-		EnableNoClip( pPlayer );
+		EnableNoClip(pPlayer);
 		return;
 	}
 
-	pPlayer->RemoveEFlags( EFL_NOCLIP_ACTIVE );
-	pPlayer->SetMoveType( MOVETYPE_WALK );
+	pPlayer->RemoveEFlags(EFL_NOCLIP_ACTIVE);
+	pPlayer->SetMoveType(MOVETYPE_WALK);
 
 	Vector oldorigin = pPlayer->GetAbsOrigin();
-	ClientPrint( pPlayer, HUD_PRINTCONSOLE, "noclip OFF\n");
-	if ( !TestEntityPosition( pPlayer ) )
+	ClientPrint(pPlayer, HUD_PRINTCONSOLE, "noclip OFF\n");
+	if (!TestEntityPosition(pPlayer))
 	{
 		Vector forward, right, up;
 
-		AngleVectors ( pl->v_angle, &forward, &right, &up);
-		
+		AngleVectors(pl->v_angle, &forward, &right, &up);
+
 		// Try to move into the world
-		if ( !FindPassableSpace( pPlayer, forward, 1, oldorigin ) )
+		if (!FindPassableSpace(pPlayer, forward, 1, oldorigin))
 		{
-			if ( !FindPassableSpace( pPlayer, right, 1, oldorigin ) )
+			if (!FindPassableSpace(pPlayer, right, 1, oldorigin))
 			{
-				if ( !FindPassableSpace( pPlayer, right, -1, oldorigin ) )		// left
+				if (!FindPassableSpace(pPlayer, right, -1, oldorigin))		// left
 				{
-					if ( !FindPassableSpace( pPlayer, up, 1, oldorigin ) )	// up
+					if (!FindPassableSpace(pPlayer, up, 1, oldorigin))	// up
 					{
-						if ( !FindPassableSpace( pPlayer, up, -1, oldorigin ) )	// down
+						if (!FindPassableSpace(pPlayer, up, -1, oldorigin))	// down
 						{
-							if ( !FindPassableSpace( pPlayer, forward, -1, oldorigin ) )	// back
+							if (!FindPassableSpace(pPlayer, forward, -1, oldorigin))	// back
 							{
-								Msg( "Can't find the world\n" );
+								Msg("Can't find the world\n");
 							}
 						}
 					}
@@ -1188,11 +1184,25 @@ void CC_Player_NoClip( void )
 			}
 		}
 
-		pPlayer->SetAbsOrigin( oldorigin );
+		pPlayer->SetAbsOrigin(oldorigin);
 	}
 }
 
-static ConCommand noclip("noclip", CC_Player_NoClip, "Toggle. Player becomes non-solid and flies.", FCVAR_CHEAT);
+void CC_Player_NoClip( void )
+{
+	CBasePlayer *pPlayer = ToBasePlayer(UTIL_GetCommandClient());
+	if (!pPlayer)
+		return;
+
+	//BG3 - Awesome - allow noclip for admins
+	if (!sv_cheats->GetBool() && !ToHL2MPPlayer(pPlayer)->m_pPermissions->m_bPlayerManage)
+		return;
+
+	//BG3 - Awesome- moved everything else into this function
+	Player_NoClip(pPlayer);
+}
+
+static ConCommand noclip("noclip", CC_Player_NoClip, "Toggle. Player becomes non-solid and flies.", 0);
 
 
 //------------------------------------------------------------------------------

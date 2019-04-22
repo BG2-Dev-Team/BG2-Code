@@ -47,7 +47,9 @@ I'm moving a lot of the related functions to here - Awesome
 
 namespace BG3Buffs {
 #ifndef CLIENT_DLL
-	bool	RallyRequest(int vcommCommand, CHL2MP_Player* pRequester);
+	void	CreateRallyEffectAtEntity(CBaseEntity* pParent,  int iForTeam);
+
+	bool	RallyRequest(int vcommCommand, CBaseEntity* pRequester, float flRadiusOverride = 0.0f);
 
 	void	RallyPlayer(int rallyFlags, CHL2MP_Player* pPlayer);
 
@@ -71,7 +73,7 @@ namespace BG3Buffs {
 	void SendRallyRequestFromSlot(int iSlot);
 
 #endif //CLIENT_DLL
-	float	GetEndRallyTime(int iTeam);
+	//float	GetEndRallyTime(int iTeam);
 	float	GetNextRallyTime(int iTeam);
 
 	inline float GetTimeUntilNextRally(int iTeam) {

@@ -68,6 +68,7 @@ private:
 	
 };
 
+float g_flLastBuffTime = -FLT_MAX;
 CHudTexture* g_pEmptyDarkIcon;
 Color g_ColourWhite(255, 255, 255, 255);
 
@@ -241,7 +242,7 @@ void CBuffIcons::PaintDefaultView() {
 	x = y = ICON_GROWTH_OFFSET;
 
 	//calculate time for which we've been rallied
-	float flTimeRallied = gpGlobals->curtime - (BG3Buffs::GetEndRallyTime(m_iTeam) - BG3Buffs::GetRallyDuration(m_iRallyFlags));
+	float flTimeRallied = gpGlobals->curtime - g_flLastBuffTime;//gpGlobals->curtime - (BG3Buffs::GetEndRallyTime(m_iTeam) - BG3Buffs::GetRallyDuration(m_iRallyFlags));
 
 	if (flTimeRallied < ICON_VIBRATE_DURATION) {
 		flTimeRallied *= 20;
@@ -301,7 +302,7 @@ void CBuffIcons::PaintOfficerView() {
 	if (pExcluded) {
 
 		//Get time rallied
-		float flTimeRallied = gpGlobals->curtime - (BG3Buffs::GetEndRallyTime(m_iTeam) - BG3Buffs::GetRallyDuration(m_iRallyFlags));
+		float flTimeRallied = gpGlobals->curtime - g_flLastBuffTime;//gpGlobals->curtime - (BG3Buffs::GetEndRallyTime(m_iTeam) - BG3Buffs::GetRallyDuration(m_iRallyFlags));
 		
 		//Vibrate the icon if we were rallied recently
 		if (flTimeRallied < ICON_VIBRATE_DURATION) {
@@ -402,7 +403,7 @@ void RallyEffectCallBack(const CEffectData& data) {
 		g_pBuffIcons->LocalizeEffectLabels(pPlayer->RallyGetCurrentRallies());
 		g_pBuffIcons->PositionEffectLabels();
 	}
-		
+	g_flLastBuffTime = gpGlobals->curtime;
 }
 
 DECLARE_CLIENT_EFFECT("RalEnab", RallyEffectCallBack);

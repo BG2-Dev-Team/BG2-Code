@@ -162,6 +162,13 @@ public:
 	vgui::VPANEL GetVPanel(void) { return BaseClass::GetVPanel(); }
 	virtual void SetParent(vgui::VPANEL parent) { BaseClass::SetParent(parent); }
 
+	virtual void OnKeyCodePressed(vgui::KeyCode code) override {
+		if (code == KEY_ESCAPE)
+			ShowPanel(false);
+		else
+			BaseClass::OnKeyCodePressed(code);
+	}
+
 	inline void	 SwitchToClassmenu() {
 		//ShowPanel(false); //this should be done at the class menu command
 							//because class menu needs to know whether or not the teammenu

@@ -33,6 +33,7 @@ commented on the following form:
 
 #include "cbase.h"
 #include "bg3_map_model.h"
+#include "filesystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -41,7 +42,6 @@ commented on the following form:
 static CMapInfo* g_pTopMapInfo = NULL;
 
 CMapInfo::CMapInfo() {
-	m_pszMapName = NULL;
 	m_iIdealNumBots = 0;
 	m_iModeField = 0;
 #ifdef CLIENT_DLL
@@ -61,6 +61,20 @@ void CMapInfo::RefreshMapInfoList() {
 		g_pTopMapInfo = g_pTopMapInfo->m_pNextInfo;
 		delete deleteMe;
 	}
+
+	FileFindHandle_t fileSearch;
+	const char* pszMapName = filesystem->FindFirst("maps/*.bsp", &fileSearch);
+	g_pTopMapInfo = new CMapInfo();
+	g_pTopMapInfo->SetName(pszMapName);
+	pszMapName = filesystem->FindNext(fileSearch);
+
+	while (pszMapName) {
+		//create new CMapInfo will push itself onto stack
+		CMapInfo* info = new CMapInfo();
+		info->SetName(pszMapName);
+		pszMapName = filesystem->FindNext(fileSearch);
+	}
+	filesystem->FindClose(fileSearch);
 }
 
 CMapInfo* CMapInfo::GetFirstMapInfo() {
@@ -70,4 +84,51 @@ CMapInfo* CMapInfo::GetFirstMapInfo() {
 void CMapInfo::GetNextMapInfo(CMapInfo** ppMapInfo) {
 	CMapInfo* curInfo = *ppMapInfo;
 	*ppMapInfo = curInfo->m_pNextInfo;
+}
+
+bool CMapInfo::MapExists(const char* pszMapName) {
+	CMapInfo::RefreshMapInfoList();
+
+	CMapInfo* pMap = GetFirstMapInfo();
+	bool bFound = false;
+	while (pMap && !bFound) {
+		bFound = Q_strcmp(pszMapName, pMap->m_pszMapName) == 0;
+		CMapInfo::GetNextMapInfo(&pMap);
+	}
+	return bFound;
+}
+
+void CMapInfo::SetName(const char* pszName) {
+	strcpy_s(m_pszMapName, pszName);
+
+	//Find the . and set it to null, simplifies later searches
+	bool bFound = false;
+	for (int i = 0; i < MAX_MAP_NAME && !bFound; i++) {
+		if (m_pszMapName[i] == '.') {
+			m_pszMapName[i] = 0;
+			bFound = true;
+		}
+	}
+
+	//update mode field based on name
+	m_iModeField = 0;
+	if (m_pszMapName[0] == 'b' && m_pszMapName[1] == 'g')
+		m_iModeField |= (uint8)EGameMode::SKIRMISH | (uint8)EGameMode::LMS;
+	else if (m_pszMapName[0] == 'c' && m_pszMapName[1] == 't' && m_pszMapName[2] == 'f')
+		m_iModeField |= (uint8)EGameMode::CAPTURE_THE_FLAG | (uint8)EGameMode::LMS;
+	else if (m_pszMapName[0] == 'l' && m_pszMapName[1] == 'b')
+		m_iModeField |= (uint8)EGameMode::LINEBATTLE;
+	else if (m_pszMapName[0] == 's' && m_pszMapName[1] == 'g')
+		m_iModeField |= (uint8)EGameMode::SIEGE;
+	else
+		m_iModeField |= (uint8)EGameMode::TRAINING;
+}
+
+CON_COMMAND(maplistupdate, "") {
+	CMapInfo::RefreshMapInfoList();
+}
+
+CON_COMMAND(maptest, "") {
+	if (args.ArgC() == 2)
+		Msg("%i\n", CMapInfo::MapExists(args[1]));
 }

@@ -52,7 +52,7 @@ using namespace vgui;
 	}
 	else
 	{
-		internalCenterPrint->Print( vgui::localize()->Find( "#BG2_VoiceComm2_Officer_Only" ) );
+		internalCenterPrint->Print( vgui::localize()->Find( "#BG3_VoiceComm2_Officer_Only" ) );
 		return false;
 	}
 }*/
@@ -63,7 +63,7 @@ CCommMenu2::CCommMenu2( IViewPort *pViewPort )
 	g_pCommMenu2 = this;
 	m_pViewPort = pViewPort;
 
-	m_pLabel = new Label( this, "label", g_pVGuiLocalize->Find("#BG2_VoiceComm_Menu_B") );
+	m_pLabel = new Label( this, "label", g_pVGuiLocalize->Find("#BG3_VoiceComm_Menu_B") );
 	m_pLabel->SetPos( 50, 50 );
 	m_pLabel->SizeToContents();
 	SetKeyBoardInputEnabled(false);

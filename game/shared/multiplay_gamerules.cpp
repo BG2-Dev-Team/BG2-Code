@@ -44,6 +44,9 @@
 	//BG3 - bot population manager
 	#include "bg3/bots/bg3_bot_manager.h"
 
+	//BG3 - map existance checker
+	#include "bg3/bg3_map_model.h"
+
 #ifdef NEXT_BOT
 	#include "NextBotManager.h"
 #endif
@@ -137,7 +140,7 @@ ConVar mp_clan_ready_signal( "mp_clan_ready_signal", "ready", FCVAR_GAMEDLL, "Te
 
 ConVar nextlevel( "nextlevel", 
 				  "", 
-				  FCVAR_GAMEDLL | FCVAR_NOTIFY,
+				  FCVAR_GAMEDLL | FCVAR_NOTIFY | FCVAR_REPLICATED,
 #if defined( CSTRIKE_DLL ) || defined( TF_DLL )
 				  "If set to a valid map name, will trigger a changelevel to the specified map at the end of the round" );
 #else
@@ -375,11 +378,12 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		
 		///// Check game rules /////
 
-		if ( g_fGameOver )   // someone else quit the game already
+		//BG3 - we'll check this in HL2MPGameRules
+		/*if ( g_fGameOver )   // someone else quit the game already
 		{
 			ChangeLevel(); // intermission is over
 			return;
-		}
+		}*/
 
 		float flTimeLimit = mp_timelimit.GetFloat() * 60;
 		//float flFragLimit = fraglimit.GetFloat();
@@ -1368,12 +1372,20 @@ ConVarRef suitcharger( "sk_suitcharger" );
 	void CMultiplayRules::ChangeLevel( void )
 	{
 		char szNextMap[MAX_MAP_NAME];
+		bool customChange = nextlevel.GetString() && *nextlevel.GetString();
+		bool customChangeValid = false;
 
-		if ( nextlevel.GetString() && *nextlevel.GetString() )
+		if ( customChange )
 		{
-			Q_strncpy( szNextMap, nextlevel.GetString(), sizeof( szNextMap ) );
+			customChangeValid = CMapInfo::MapExists(nextlevel.GetString());
+			if (customChangeValid)
+				Q_strncpy( szNextMap, nextlevel.GetString(), sizeof( szNextMap ) );
+
+			//BG3 - Awesome - there's a bug where ChangeLevelToMap won't succesfully change the map
+			nextlevel.SetValue(""); //this ensures we never try changing to the nextlevel twice
 		}
-		else
+		
+		if (!customChangeValid)
 		{
 			GetNextLevelName( szNextMap, sizeof(szNextMap) );
 			IncrementMapCycleIndex();
@@ -1530,12 +1542,15 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 	void CMultiplayRules::ChangeLevelToMap( const char *pszMap )
 	{
+		//prevent immediate successive level changes from overridin each other
+		m_flIntermissionEndTime = gpGlobals->curtime + 10;
+
 		//remove all bots from server
 #if !defined(CLIENT_DLL)
 		CBotManager::KickAllBots();
 #endif
 		g_fGameOver = true;
-		m_flTimeLastMapChangeOrPlayerWasConnected = 0.0f;
+		m_flTimeLastMapChangeOrPlayerWasConnected = gpGlobals->curtime;
 		Msg( "CHANGE LEVEL: %s\n", pszMap );
 		engine->ChangeLevel( pszMap, NULL );
 	}

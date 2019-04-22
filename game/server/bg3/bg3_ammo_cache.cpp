@@ -58,6 +58,7 @@ void CAmmoCache::Think() {
 	vec_t minPlayerDistance = FLT_MAX;
 	int i;
 	CHL2MP_Player* pPlayer;
+	int activatorTeam;
 
 	for (i = 0; i < gpGlobals->maxClients; i++) {
 		pPlayer = static_cast<CHL2MP_Player*>(UTIL_PlayerByIndex(i));
@@ -65,6 +66,7 @@ void CAmmoCache::Think() {
 			vec_t dist = EntDist(*this, *pPlayer);
 			if (dist < minPlayerDistance) {
 				if (dist < m_flRadius) {
+					activatorTeam = pPlayer->GetTeamNumber();
 					goto giveammoloop;
 				}
 				else {
@@ -85,7 +87,10 @@ giveammoloop:
 	//index stays the same as before
 	for (i; i < gpGlobals->maxClients; i++) {
 		pPlayer = static_cast<CHL2MP_Player*>(UTIL_PlayerByIndex(i));
-		if (pPlayer && (m_iForTeam == TEAM_ANY || pPlayer->GetTeamNumber() == m_iForTeam)) {
+		if (pPlayer 
+			&& (m_iForTeam == TEAM_ANY || pPlayer->GetTeamNumber() == m_iForTeam)
+			&& (IsLinebattle() || EntDist(*this, *pPlayer) < m_flRadius)
+			&& pPlayer->GetTeamNumber() == activatorTeam) {
 			pPlayer->SetDefaultAmmoFull(true);
 		}
 	}

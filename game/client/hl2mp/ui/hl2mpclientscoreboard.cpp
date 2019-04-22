@@ -389,7 +389,7 @@ void CHL2MPClientScoreBoardDialog::UpdateTeamInfo()
 
 	for (int j = 1; j <= gpGlobals->maxClients; j++)
 	{
-		if (g_PR->IsConnected(j))
+		if (UTIL_PlayerByIndex(j))
 		{
 			iNumPlayersInGame++;
 		}
@@ -671,7 +671,11 @@ bool CHL2MPClientScoreBoardDialog::GetPlayerScoreInfo(int playerIndex, KeyValues
 	}
 	//
 	kv->SetInt("frags", g_PR->GetPlayerScore(playerIndex));
-	kv->SetString("class", "");
+	//BG2 - Tjoppen - dead column
+	//kv->SetString("class", "");
+	//display for dead participating players
+	kv->SetWString("class", !g_PR->IsAlive(playerIndex) && g_PR->GetTeam(playerIndex) >= TEAM_AMERICANS ? g_pVGuiLocalize->Find("#DEAD") : g_pVGuiLocalize->Find("#ALIVE"));
+	//
 
 	if (g_PR->GetPing(playerIndex) < 1)
 	{

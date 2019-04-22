@@ -128,9 +128,9 @@ bool CSDKBot::DoMelee() {
 			}
 		}
 		if (didMelee) {
-			m_curCmd.buttons |= IN_ATTACK2;
+			m_curCmd.buttons |= m_bWeaponHasPrimaryMelee ? IN_ATTACK : IN_ATTACK2;
 		} else {
-			m_curCmd.buttons &= ~IN_ATTACK2;
+			m_curCmd.buttons &= ~(IN_ATTACK2 | IN_ATTACK);
 		}
 	}
 	return shouldMelee;
@@ -214,6 +214,8 @@ void CSDKBot::UpdateWeaponInfo() {
 	if (m_pWeapon) {
 		m_flMeleeRange = m_pWeapon->Def()->m_Attackinfos[1].m_flRange;
 		m_flAdjustedMeleeRange = m_flMeleeRange - m_pDifficult->m_flMeleeRangeOffset;
+		m_bWeaponHasPrimaryMelee = (m_pWeapon->Def()->m_Attackinfos[0].m_iAttacktype == ATTACKTYPE_SLASH)
+								|| (m_pWeapon->Def()->m_Attackinfos[0].m_iAttacktype == ATTACKTYPE_STAB);
 	}
 }
 
@@ -289,7 +291,11 @@ void CSDKBot::MoveToNearestTeammate() {
 void CSDKBot::MoveToWaypoint() {
 	CBotNavpoint* pPoint = m_PlayerSearchInfo.CurNavpoint();
 	if (pPoint) {
-		m_PlayerSearchInfo.UpdateNavpoint();
+		//if we have a new point, reset strafe time
+		if (m_PlayerSearchInfo.UpdateNavpoint()) {
+			m_flNextStrafeTime = gpGlobals->curtime + WAYPOINT_RECHECK_INTERVAL;
+		}
+
 		pPoint = m_PlayerSearchInfo.CurNavpoint();
 		//a navpoint will always return a reference to a navpoint, so we don't have to check it again
 		float lerp;

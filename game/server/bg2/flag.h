@@ -118,7 +118,9 @@ class CFlag : public CBaseAnimating
 			m_iSavedHUDSlot,     //This is for the flag enable/disable addon. The original Hud Slot value is stored here.
 			m_iFullCap,
 			m_iCaptureSound,
-			m_iStartingTeam;
+			m_iStartingTeam,
+			m_iAmericanBuff = 0,
+			m_iBritishBuff = 0;
 
 	float	m_flNextTeamBonus;
 

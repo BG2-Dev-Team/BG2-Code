@@ -173,13 +173,13 @@ void CPlayerSearch::UpdatePlayers() {
 	for (int i = 1; i <= gpGlobals->maxClients; i++) {
 		curPlayer = UTIL_PlayerByIndex(i);
 		//check only valid alive players
-		if (curPlayer && curPlayer != m_pOwner && curPlayer->IsAlive() && IsInSight(m_pOwner, curPlayer)) {
+		if (curPlayer && curPlayer != m_pOwner && curPlayer->IsAlive()) {
 			curDistance = (m_vOwnerLocation - curPlayer->GetAbsOrigin()).Length();
 			//friendlies
 			if (curPlayer->GetTeamNumber() == m_iOwnerTeam) {
 				iNumFriendly++;
 				totalFriendDist += curDistance;
-				if (curDistance < nearestFriendDist) {
+				if (curDistance < nearestFriendDist && IsInSight(m_pOwner, curPlayer)) {
 					nearestFriend = curPlayer;
 					nearestFriendDist = curDistance;
 				}
@@ -187,15 +187,20 @@ void CPlayerSearch::UpdatePlayers() {
 			else if (curPlayer->GetTeamNumber() == m_iEnemyTeam){
 				iNumEnemy++;
 				totalEnemyDist += curDistance;
+				bool bIsVisible = false;
 				if (curDistance < nearestEnemyDist) {
-					nearestEnemy = curPlayer;
-					nearestEnemyDist = curDistance;
-					if (!nearestEnemySecond) {
-						nearestEnemySecond = curPlayer;
-						nearestEnemySecondDist = curDistance;
+					bIsVisible = IsInSight(m_pOwner, curPlayer);
+					if (bIsVisible) {
+						nearestEnemy = curPlayer;
+						nearestEnemyDist = curDistance;
+						if (!nearestEnemySecond) {
+							nearestEnemySecond = curPlayer;
+							nearestEnemySecondDist = curDistance;
+						}
 					}
 				}
-				else if (curDistance < nearestEnemySecondDist) {
+				//if we've already checked visibility, that must have failed, so don't bother testing again
+				else if (curDistance < nearestEnemySecondDist && IsInSight(m_pOwner, curPlayer)) {
 					nearestEnemySecond = curPlayer;
 					nearestEnemySecondDist = curDistance;
 				}
@@ -256,10 +261,12 @@ void CPlayerSearch::UpdateFlags() {
 	m_pCloseFriendFlag = pClosestFriend;
 }
 
-void CPlayerSearch::UpdateNavpoint() {
+bool CPlayerSearch::UpdateNavpoint() {
 	if (m_pCurNavpoint->PlayerWithinRadius(m_pOwner)) {
 		m_pCurNavpoint = m_pCurNavpoint->NextPointForPlayer(m_pOwner);
+		return true;
 	}
+	return false;
 }
 
 void CPlayerSearch::UpdateNavpointFirst() {
@@ -267,8 +274,8 @@ void CPlayerSearch::UpdateNavpointFirst() {
 	m_pCurNavpoint = CBotNavpoint::ClosestPointToPlayer(m_pOwner, true);
 
 	//give a warning to the mapper if the bot couldn't find one
-	if (!m_pCurNavpoint) {
+	/*if (!m_pCurNavpoint) {
 		Warning("\"%s\" couldn't find a visible bot_navpoint! Tell the mapper!\n", m_pOwner->GetPlayerName());
 		m_pCurNavpoint = CBotNavpoint::ClosestPointToPlayer(m_pOwner, false);
-	}
+	}*/
 }

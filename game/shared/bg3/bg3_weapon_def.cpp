@@ -55,6 +55,8 @@ CWeaponDef::CWeaponDef(const char* pszWeaponName) {
 	m_flIronsightFOVOffset = 0.0f;
 	m_bWeaponHasSights = false;
 
+	m_Attackinfos[0].m_flRetraceDelay = m_Attackinfos[1].m_flRetraceDelay = 0;
+
 	m_bFiresUnderwater = false;
 	m_bAltFiresUnderwater = false;
 

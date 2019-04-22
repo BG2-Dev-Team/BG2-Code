@@ -270,9 +270,11 @@ void CBotManager::KickAllBots() {
 	}
 }
 
-CON_COMMAND_SERVER(bot_kick_all, "Removes all bots from the server and sets bot_minplayers_mode to 0") {
-	CBotManager::KickAllBots();
-	bot_minplayers_mode.SetValue("0");
+CON_COMMAND(bot_kick_all, "Removes all bots from the server and sets bot_minplayers_mode to 0") {
+	if (verifyBotPermissions(__FUNCTION__)) {
+		CBotManager::KickAllBots();
+		bot_minplayers_mode.SetValue("0");
+	}
 }
 
 CON_COMMAND_F(bot_debug_report, "Gives status information on all bots, useful for debugging.", FCVAR_GAMEDLL) {
