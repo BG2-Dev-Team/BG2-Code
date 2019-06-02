@@ -74,6 +74,7 @@ commented on the following form:
 
 #include "../shared/bg2/weapon_bg2base.h"
 
+#include "../bg2/vgui_Panel_MainMenu.h"
 #include "bg3_teammenu.h"
 #include "bg3_classmenu.h"
 #include "bg3/vgui/bg3_fonts.h"
@@ -932,8 +933,8 @@ void CUniformButton::UpdateToMatchClass(const CPlayerClass* pClass) {
 	int idealUniform = pClass->GetDefaultUniform();
 
 	//clamp value
-	if (idealUniform >= pClass->numChooseableUniforms())
-		idealUniform = pClass->numChooseableUniforms();
+	if (idealUniform >= pClass->numChooseableUniformsForPlayer(CBasePlayer::GetLocalPlayer()))
+		idealUniform = pClass->numChooseableUniformsForPlayer(CBasePlayer::GetLocalPlayer());
 	if (idealUniform < 0)
 		idealUniform = 0;
 
@@ -943,7 +944,7 @@ void CUniformButton::UpdateToMatchClass(const CPlayerClass* pClass) {
 	//hide/show buttons based on uniform count
 	char buffer[32];
 	for (int i = 0; i < NUM_UNIFORM_BUTTONS; i++) {
-		bool bVisible = i < pClass->numChooseableUniforms();
+		bool bVisible = i < pClass->numChooseableUniformsForPlayer(CBasePlayer::GetLocalPlayer());
 		CUniformButton* bt = g_ppUniformButtons[i];
 		bt->SetVisible(bVisible);
 		if (bVisible) {
@@ -954,7 +955,7 @@ void CUniformButton::UpdateToMatchClass(const CPlayerClass* pClass) {
 	}
 
 	//don't show 1 button if there's only 1 uniform
-	g_ppUniformButtons[0]->SetVisible(pClass->numChooseableUniforms() > 1);
+	g_ppUniformButtons[0]->SetVisible(pClass->numChooseableUniformsForPlayer(CBasePlayer::GetLocalPlayer()) > 1);
 }
 
 
@@ -1229,12 +1230,17 @@ void CClassMenu::OnKeyCodePressed(KeyCode code) {
 	if (index >= 0 && index < NUM_CLASS_BUTTONS)
 		g_ppClassButtons[index]->SimulateMousePressed();
 
-	Msg("Key %i pressed!\n", code);
-	if (code == KEY_ESCAPE)
-		ShowPanel(false);
-
 	if (code == KEY_N)
 		engine->ClientCmd("teammenu");
+}
+
+void CClassMenu::OnKeyCodeTyped(KeyCode code) {
+	if (code == KEY_ESCAPE) {
+		ShowPanel(false);
+		SMenu->Hide();
+	}
+	else
+		BaseClass::OnKeyCodeTyped(code);
 }
 
 void CClassMenu::ApplySchemeSettings(IScheme* pScheme) {
@@ -1443,7 +1449,7 @@ void CClassMenu::UpdateToMatchTeam(int iTeam) {
 }
 
 void CClassMenu::SetBackground(const char* pszImage) {
-	Warning("Setting background to %s\n", pszImage);
+	//Warning("Setting background to %s\n", pszImage);
 	m_pBackground = scheme()->GetImage(pszImage, false);
 	m_pBackground->SetSize(ScreenWidth(), ScreenHeight());
 	m_pBackground->SetPos(0, 0);

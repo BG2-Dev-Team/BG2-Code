@@ -8,159 +8,15 @@
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 #include <KeyValues.h>
-#include <sstream>
-#include <set>
 #include "c_baseplayer.h"
 #include "c_team.h"
 #include "c_hl2mp_player.h"
 #include "hl2mp_gamerules.h"
 
-//BG2 - Tjoppen - used for accumulated damage cauased by or inflicted on the player, over a short period of time (buckshot)
-#define ACCUMULATE_LIMIT	0.5	//accumulate damages for this long. should be enough for all shot to hit
+#include "../bg3/vgui/bg3_hud_damage_accumulator.h"
 
-static const char* HitgroupName( int hitgroup )
-{
-	//BG2 - Tjoppen - TODO: localize
-	switch ( hitgroup )
-	{
-	case HITGROUP_GENERIC:
-		return NULL;
-	case HITGROUP_HEAD:
-		return "head";
-	case HITGROUP_CHEST:
-		return "chest";
-	case HITGROUP_STOMACH:
-		return "stomach";
-	case HITGROUP_LEFTARM:
-		return "left arm";
-	case HITGROUP_RIGHTARM:
-		return "right arm";
-	case HITGROUP_LEFTLEG:
-		return "left leg";
-	case HITGROUP_RIGHTLEG:
-		return "right leg";
-	default:
-		return "unknown default case";
-	}
-}
 
-class CDamagePlayerAccumulator
-{
 
-public:
-
-	bool m_bIsVictim;			//governs what kind of message is produced
-	float m_flLastAttack;
-	int m_iTotalDamage;
-	int m_iHitgroup;			//only used if only one player was hit
-	std::set<int> m_sPlayers;
-
-	std::string GetPlayerName( int player )
-	{
-		player_info_t info;
-
-		if( engine->GetPlayerInfo( player, &info ) )
-			return info.name;
-		else
-			return "";
-	}
-
-	CDamagePlayerAccumulator( bool isVictim )
-	{
-		m_bIsVictim = isVictim;
-		m_flLastAttack = 0;
-		m_iTotalDamage = 0;
-	}
-
-	//accumulates the specified damage and returns a proper message
-	std::string Accumulate( int damage, int player, int hitgroup )
-	{
-		if( m_flLastAttack + ACCUMULATE_LIMIT > gpGlobals->curtime )
-		{
-			//accumulate
-			m_iTotalDamage += damage;
-			m_sPlayers.insert(player);
-
-			//only override hitgroup if it's a headshot
-			if( hitgroup == HITGROUP_HEAD )
-				m_iHitgroup = hitgroup;
-		}
-		else
-		{
-			//reset
-			m_flLastAttack = gpGlobals->curtime;
-			m_iTotalDamage = damage;
-			m_iHitgroup = hitgroup;
-			m_sPlayers.clear();
-			m_sPlayers.insert(player);
-		}
-
-		/**
-		  Generate hit verification message. We have five cases:
-		   * we're the victim and were hit by one attacker in no particular hitgroup
-		   * we're the victim and were hit by one attacker in some hitgroup (head, chest etc.)
-		   * we're the attacker and hit one victim in no particular hitgroup
-		   * we're the attacker and hit one victim in some hitgroup
-		   * we're the attacker and hit multiple victims
-	      
-		  This means we don't care about being hit by multiple attackers (just print the first one)
-		  or things like headshoting multiple victims
-		 */
-		//use m_iHitgroup instead of hitgroup so headshots show even though hitgroup might be something else
-		const char *hitgroupname = HitgroupName( m_iHitgroup );
-		std::ostringstream oss;
-
-		//TODO: localize
-		if( m_bIsVictim )
-		{
-			oss << "You were hit";
-
-			if( hitgroupname )
-			{
-				//specific hitgroup
-				oss << " in the " << hitgroupname;
-			}
-
-			oss << " by " << GetPlayerName(player);
-		}
-		else
-		{
-			oss << "You hit ";
-
-			if( m_sPlayers.size() == 1 )
-			{
-				//single victim
-				oss << GetPlayerName(player);
-
-				if( hitgroupname )
-				{
-					//specific hitgroup
-					oss << " in the " << hitgroupname;
-				}
-			}
-			else
-			{
-				//multiple victims
-				//desired format: "player1[, player2[, player3...]] and playerN"
-				size_t numLeft = m_sPlayers.size() - 1;
-
-				for( std::set<int>::iterator it = m_sPlayers.begin(); it != m_sPlayers.end(); it++, numLeft-- )
-				{
-					oss << GetPlayerName(*it);
-
-					if( numLeft > 1 )
-						oss << ", ";
-					else if( numLeft > 0 )
-						oss << " and ";
-				}
-			}
-		}
-
-		oss << " for " << m_iTotalDamage << " points of damage";
-
-		return oss.str();
-	}
-};
 
 
 //==============================================
@@ -175,7 +31,20 @@ public:
 	void Init( void );
 	void VidInit( void ) override;
 	virtual bool ShouldDraw( void );
-	virtual void Paint( void );
+
+	//Checks whether or not we should draw based on current player/weapon, while also
+	//assigning to the given pointers - Awesome
+	bool ShouldDrawPlayer(C_HL2MP_Player** ppPlayer, C_BaseCombatWeapon** ppWeapon);
+
+	void PaintSwingometer(/*C_HL2MP_Player* pHL2Player,*/ int swingScoreA, int swingScoreB);
+	void PaintBackgroundOnto(Label* pLabel);
+	void PaintTopCenterHUD(/*C_HL2MP_Player* */); //time, new swingomemeter, flags, backgrounds, round scores
+	void PaintBottomLeftHUD(C_HL2MP_Player*, C_BaseCombatWeapon*); //health, ammo
+	void PaintDeathMessage();
+	void PaintClassCounts();
+
+
+	virtual void Paint(void);
 	virtual void ApplySettings(KeyValues *inResourceData);
 	virtual void ApplySchemeSettings( vgui::IScheme *scheme );
 	virtual void OnThink();
@@ -190,7 +59,8 @@ public:
 	void PlayVCommSound ( char snd[512], int playerindex );
 	//
 	
-	void HideShowAll( bool visible );
+	void HideShowAllTeam( bool visible );
+	void HideShowAllPlayer(bool visible); //Awesome - split this so that team/player information can be toggled separately
 
 	CDamagePlayerAccumulator m_IsVictimAccumulator;
 	CDamagePlayerAccumulator m_IsAttackerAccumulator;
@@ -199,15 +69,6 @@ public:
 
 private:
 
-	CHudTexture		* m_Base; 
-	CHudTexture		* m_AmerHealthBase;
-	CHudTexture		* m_AmerHealth;
-	CHudTexture		* m_AmerStamina;
-	CHudTexture		* m_BritHealthBase;
-	CHudTexture		* m_BritHealth;
-	CHudTexture		* m_BritStamina;
-	CHudTexture		* m_SwingometerRed;
-	CHudTexture		* m_SwingometerBlue;
 
 	vgui::Label * m_pLabelBScore; 
 	vgui::Label * m_pLabelAScore; 
@@ -215,11 +76,12 @@ private:
 	vgui::Label * m_pLabelATickets;
 	vgui::Label * m_pLabelCurrentRound;
 	vgui::Label * m_pLabelAmmo; 
-	vgui::Label * m_pLabelWaveTime; 
+	vgui::Label * m_pLabelDeathMessage; 
 	vgui::Label * m_pLabelRoundTime;
 	vgui::Label * m_pLabelDamageTaken;
 	vgui::Label * m_pLabelDamageGiven;
 	vgui::Label * m_pLabelLMS;		//BG2 - Tjoppen - TODO: remove this when hintbox works correctly
+	vgui::Label * m_pLabelHealth;
 
 	float m_flTakenExpireTime;
 	float m_flGivenExpireTime;
@@ -229,12 +91,29 @@ private:
 	int m_iLastSwingA;		//swinga of last frame
 	int m_iLastSwingB;		//swingb of last frame
 
-	int basex, basey, basew, baseh;
-	int swingx, swingy, swingw, swingh;
-	int staminax, staminay, staminaw, staminah;
-	int healthbasex, healthbasey, healthbasew, healthbaseh;
-	int healthx, healthy, healthw, healthh;
+	bool m_bLocalPlayerAlive;
+	float m_flEndClassIconDrawTime;
+	IImage*		m_pAmericanClassIcons[TOTAL_AMER_CLASSES];
+	IImage*		m_pBritishClassIcons[TOTAL_BRIT_CLASSES];
+	Label*		m_pClassCountLabels[6];
 
+
+	CHudTexture* m_pAmerFlagImage;
+	CHudTexture* m_pBritFlagImage;
+
+	IImage*		m_pBlackBackground;
+	IImage*		m_pStaminaBarImage;
+	IImage*		m_pHealthBarImage[4];
+	IImage*		m_pHealthBarOverlayImage;
+	IImage*		m_pHealthSymbolImage[4];
+	IImage*		m_pBottomLeftBackground;
+	IImage*		m_pAmmoBallImage;
+	IImage*		m_pSwingometerRedImage;
+	IImage*		m_pSwingometerBlueImage;
+	float		m_flStartPulseTime; //pulsating health symbol
+	float		m_flEndPulseTime;
+
+	
 protected:
 
 	static CHudBG2 *s_pInstance;

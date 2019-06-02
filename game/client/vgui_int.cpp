@@ -259,8 +259,8 @@ void VGui_CreateGlobalPanels( void )
 
 	//BG2 - Tjoppen - options panel
 	VPANEL GameUiDll = enginevgui->GetPanel( PANEL_GAMEUIDLL );
-	SMenu->Create(GameUiDll); //new Main menu
 	bg2options = new CBG2OptionsPanel(GameUiDll);	//make into main menu panel
+	SMenu->Create(GameUiDll); //new Main menu
 	//
 }
 

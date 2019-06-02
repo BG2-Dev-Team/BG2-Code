@@ -76,7 +76,7 @@ commented on the following form:
 #include "../shared/bg3/Math/bg3_rand.h"
 #include "../shared/bg3/bg3_class_quota.h"
 #include "bg3/vgui/bg3_fonts.h"
-
+#include "../bg2/vgui_Panel_MainMenu.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -412,6 +412,15 @@ void CTeamMenu::ApplySchemeSettings(IScheme* pScheme) {
 	set(m_pSpectateButton);
 	set(m_pConscriptButton);
 #undef set
+}
+
+void CTeamMenu::OnKeyCodeTyped(KeyCode code) {
+	if (code == KEY_ESCAPE) {
+		ShowPanel(false);
+		SMenu->Hide();
+	}
+	else
+		BaseClass::OnKeyCodeTyped(code);
 }
 
 CTeamButton* CTeamMenu::s_pBritishButton = nullptr;

@@ -29,8 +29,9 @@
 //BG2 - Tjoppen - #includes
 #include "engine/IEngineSound.h"
 #include "../shared/bg2/weapon_bg2base.h"
+#include "../shared/bg3/bg3_class_quota.h"
 #include "bg2_hud_main.h"
-
+#include "bg3/bg3_soft_info.h"
 #include "bg3/bg3_hud_compass.h"
 //
 
@@ -48,6 +49,17 @@ DECLARE_HUD_MESSAGE( CHudBG2, HitVerif );
 DECLARE_HUD_MESSAGE( CHudBG2, WinMusic );
 DECLARE_HUD_MESSAGE( CHudBG2, CaptureSounds ); //HairyPotter
 DECLARE_HUD_MESSAGE( CHudBG2, VCommSounds );
+
+static char g_hudBuffer[512];
+
+static const int g_iFlagOffset = 100; //how far should top-center HUD flags be from center?
+static const int g_iClassCountY = 150;
+static const int g_iClassIconSize = 32;
+
+inline Color getColorForHealth(int remainingHealth) {
+	int nonRed = remainingHealth * 255 / 100; //white-to-red scale
+	return Color(255, nonRed, nonRed, 255);
+}
 
 CHudBG2 *CHudBG2::s_pInstance = NULL;
 CHudBG2 *CHudBG2::GetInstance()
@@ -69,94 +81,32 @@ CHudBG2::CHudBG2( const char *pElementName ) :
 
 	SetHiddenBits( HIDEHUD_ALL );//HIDEHUD_MISCSTATUS );
 
-	m_Base = NULL; 
-	m_AmerHealthBase = m_AmerHealth = m_AmerStamina = NULL;
-	m_BritHealthBase = m_BritHealth = m_BritStamina = NULL;
-	m_SwingometerRed = m_SwingometerBlue = NULL;
-	basex = basey = basew = baseh = 0;
-	swingx = swingy = swingw = swingh = 0;
-	staminax = staminay = staminaw = staminah = 0;
-	healthbasex = healthbasey = healthbasew = healthbaseh = 0;
-	healthx = healthy = healthw = healthh = 0;
-
 	Color ColourWhite( 255, 255, 255, 255 );
 
-	m_pLabelBScore = new vgui::Label( this, "RoundState_warmup", "");
-	m_pLabelBScore->SetPaintBackgroundEnabled( false );
-	m_pLabelBScore->SetPaintBorderEnabled( false );
-	m_pLabelBScore->SizeToContents();
-	m_pLabelBScore->SetContentAlignment( vgui::Label::a_west );
-	m_pLabelBScore->SetFgColor( ColourWhite );
+	auto createLabel = [&](Label** ppLabel) {
+		*ppLabel = new vgui::Label(this, "RoundState_warmpup", "");
+		(*ppLabel)->SetPaintBackgroundEnabled(false);
+		(*ppLabel)->SetPaintBorderEnabled(false);
+		(*ppLabel)->SizeToContents();
+		(*ppLabel)->SetContentAlignment(vgui::Label::a_west);
+		(*ppLabel)->SetFgColor(ColourWhite);
+	};
 
-	m_pLabelAScore = new vgui::Label( this, "RoundState_warmup", "");
-	m_pLabelAScore->SetPaintBackgroundEnabled( false );
-	m_pLabelAScore->SetPaintBorderEnabled( false );
-	m_pLabelAScore->SizeToContents();
-	m_pLabelAScore->SetContentAlignment( vgui::Label::a_west );
-	m_pLabelAScore->SetFgColor( ColourWhite );
-
-	m_pLabelBTickets = new vgui::Label( this, "RoundState_warmup", "");
-	m_pLabelBTickets->SetPaintBackgroundEnabled( false );
-	m_pLabelBTickets->SetPaintBorderEnabled( false );
-	m_pLabelBTickets->SizeToContents();
-	m_pLabelBTickets->SetContentAlignment( vgui::Label::a_west );
-	m_pLabelBTickets->SetFgColor( ColourWhite );
-
-	m_pLabelATickets = new vgui::Label( this, "RoundState_warmup", "");
-	m_pLabelATickets->SetPaintBackgroundEnabled( false );
-	m_pLabelATickets->SetPaintBorderEnabled( false );
-	m_pLabelATickets->SizeToContents();
-	m_pLabelATickets->SetContentAlignment( vgui::Label::a_west );
-	m_pLabelATickets->SetFgColor( ColourWhite );
-
-	m_pLabelCurrentRound= new vgui::Label( this, "RoundState_warmup", "");
-	m_pLabelCurrentRound->SetPaintBackgroundEnabled( false );
-	m_pLabelCurrentRound->SetPaintBorderEnabled( false );
-	m_pLabelCurrentRound->SizeToContents();
-	m_pLabelCurrentRound->SetContentAlignment( vgui::Label::a_west );
-	m_pLabelCurrentRound->SetFgColor( ColourWhite );
-
-	m_pLabelAmmo = new vgui::Label( this, "RoundState_warmup", "");
-	m_pLabelAmmo->SetPaintBackgroundEnabled( false );
-	m_pLabelAmmo->SetPaintBorderEnabled( false );
-	m_pLabelAmmo->SizeToContents();
-	m_pLabelAmmo->SetContentAlignment( vgui::Label::a_west );
-	m_pLabelAmmo->SetFgColor( ColourWhite );
-
-	m_pLabelWaveTime = new vgui::Label( this, "RoundState_warmup", "");
-	m_pLabelWaveTime->SetPaintBackgroundEnabled( false );
-	m_pLabelWaveTime->SetPaintBorderEnabled( false );
-	m_pLabelWaveTime->SizeToContents();
-	m_pLabelWaveTime->SetContentAlignment( vgui::Label::a_west );
-	m_pLabelWaveTime->SetFgColor( ColourWhite );
-
-	m_pLabelRoundTime = new vgui::Label( this, "RoundState_warmup", "");
-	m_pLabelRoundTime->SetPaintBackgroundEnabled( false );
-	m_pLabelRoundTime->SetPaintBorderEnabled( false );
-	m_pLabelRoundTime->SizeToContents();
-	m_pLabelRoundTime->SetContentAlignment( vgui::Label::a_west );
-	m_pLabelRoundTime->SetFgColor( ColourWhite );
-
-	m_pLabelDamageTaken = new vgui::Label( pParent, "RoundState_warmup", "");
-	m_pLabelDamageTaken->SetPaintBackgroundEnabled( false );
-	m_pLabelDamageTaken->SetPaintBorderEnabled( false );
-	m_pLabelDamageTaken->SizeToContents();
-	m_pLabelDamageTaken->SetContentAlignment( vgui::Label::a_west );
-	m_pLabelDamageTaken->SetFgColor( ColourWhite );
-
-	m_pLabelDamageGiven = new vgui::Label( pParent, "RoundState_warmup", "");
-	m_pLabelDamageGiven->SetPaintBackgroundEnabled( false );
-	m_pLabelDamageGiven->SetPaintBorderEnabled( false );
-	m_pLabelDamageGiven->SizeToContents();
-	m_pLabelDamageGiven->SetContentAlignment( vgui::Label::a_west );
-	m_pLabelDamageGiven->SetFgColor( ColourWhite );
-
-	m_pLabelLMS = new vgui::Label( this, "RoundState_warmup", "");
-	m_pLabelLMS->SetPaintBackgroundEnabled( false );
-	m_pLabelLMS->SetPaintBorderEnabled( false );
-	m_pLabelLMS->SizeToContents();
-	m_pLabelLMS->SetContentAlignment( vgui::Label::a_west );
-	m_pLabelLMS->SetFgColor( ColourWhite );
+	createLabel(&m_pLabelBScore);
+	createLabel(&m_pLabelAScore);
+	createLabel(&m_pLabelBTickets);
+	createLabel(&m_pLabelATickets);
+	createLabel(&m_pLabelCurrentRound);
+	createLabel(&m_pLabelAmmo);
+	createLabel(&m_pLabelDeathMessage);
+	createLabel(&m_pLabelRoundTime);
+	createLabel(&m_pLabelDamageTaken);
+	createLabel(&m_pLabelDamageGiven);
+	createLabel(&m_pLabelLMS);
+	createLabel(&m_pLabelHealth);
+	for (int i = 0; i < 6; i++) {
+		createLabel(m_pClassCountLabels + i);
+	}
 
 	CBaseEntity::PrecacheScriptSound( "Americans.win" );
 	CBaseEntity::PrecacheScriptSound( "British.win" );
@@ -177,34 +127,58 @@ void CHudBG2::ApplySettings(KeyValues *inResourceData)
 	//since the position and size of the hud is set automagically we need to fix them up here
 	//also, I'm a bit paranoid about parsing ypos myself
 	//hence I simply invented yposr whose value is "80" instead of "r80" and thus easily parsed
-	SetPos(factor * inResourceData->GetInt("xpos"),
-		   ScreenHeight() - factor * inResourceData->GetInt("yposr"));
-	SetWide(factor * inResourceData->GetInt("wide"));
-	SetTall(factor * inResourceData->GetInt("tall"));
+	/*SetPos(factor * inResourceData->GetInt("xpos"),
+		   ScreenHeight() - factor * inResourceData->GetInt("yposr"));*/
+	SetPos(0, 0);
+	//SetWide(factor * inResourceData->GetInt("wide"));
+	//SetTall(factor * inResourceData->GetInt("tall"));
+	SetSize(ScreenWidth(), ScreenHeight());
 
 #define GET_COORD(name) factor * inResourceData->GetInt(#name)
 #define GET(name) name = GET_COORD(name)
 
+	const int halfx = ScreenWidth() / 2;
+	const int secondRowOffset = 35;
+
+	//position round score labels
+	m_pLabelAScore->SetPos(halfx - g_iFlagOffset + 2, secondRowOffset);
+	m_pLabelBScore->SetPos(halfx + 70, secondRowOffset); //leave room on left of flag
+	m_pLabelBScore->SetSize(30, 20);
+	m_pLabelAScore->SetContentAlignment(Label::Alignment::a_west);
+	m_pLabelBScore->SetContentAlignment(Label::Alignment::a_east);
+
+	//position ticket score labels
+	m_pLabelATickets->SetPos(halfx - g_iFlagOffset + 2, 2);
+	m_pLabelBTickets->SetPos(halfx + 50, 2);
+	m_pLabelBTickets->SetSize(50, 20);
+	m_pLabelATickets->SetContentAlignment(Label::Alignment::a_west);
+	m_pLabelBTickets->SetContentAlignment(Label::Alignment::a_east);
+
+	//position round and respawn times
+	m_pLabelRoundTime->SetPos(halfx - 25, secondRowOffset);
+	m_pLabelRoundTime->SetContentAlignment(Label::Alignment::a_center);
+
+	//round counter
+	m_pLabelCurrentRound->SetPos(halfx - 50, m_pLabelRoundTime->GetYPos() + m_pLabelRoundTime->GetTall());
+
+	//health label
+	int marginLeft = 60;
+	int marginBottom = ScreenHeight() - 50;
+	m_pLabelHealth->SetPos(marginLeft, marginBottom);
+
+	//ammo counter
+	m_pLabelAmmo->SetPos(320, marginBottom);
+
+	//death message
+	m_pLabelDeathMessage->SetPos(10, ScreenHeight() * 0.8f);
+
+	//class count labels
+	for (int i = 0; i < 6; i++) {
+		m_pClassCountLabels[i]->SetPos(44, g_iClassCountY + i * 34);
+	}
+
 	//grab and scale coordinates and dimensions
-	m_pLabelAScore      ->SetPos(GET_COORD(ascorex),   GET_COORD(ascorey));
-	m_pLabelBScore      ->SetPos(GET_COORD(bscorex),   GET_COORD(bscorey));
-	m_pLabelATickets    ->SetPos(GET_COORD(aticketsx), GET_COORD(aticketsy));
-	m_pLabelBTickets    ->SetPos(GET_COORD(bticketsx), GET_COORD(bticketsy));
 	m_pLabelLMS         ->SetPos(GET_COORD(lmsx),      GET_COORD(lmsy));
-	m_pLabelCurrentRound->SetPos(GET_COORD(curroundx), GET_COORD(curroundy));
-	m_pLabelRoundTime   ->SetPos(GET_COORD(roundx),    GET_COORD(roundy));
-	m_pLabelWaveTime    ->SetPos(GET_COORD(wavex),     GET_COORD(wavey));
-	m_pLabelAmmo        ->SetPos(GET_COORD(ammox),     GET_COORD(ammoy));
-
-	GET(basex);       GET(basey);       GET(basew);       GET(baseh);
-	GET(swingx);      GET(swingy);      GET(swingw);      GET(swingh);
-	GET(staminax);    GET(staminay);    GET(staminaw);    GET(staminah);
-	GET(healthbasex); GET(healthbasey); GET(healthbasew); GET(healthbaseh);
-	GET(healthx);     GET(healthy);     GET(healthw);     GET(healthh);
-
-	/*NHudCompass::Init();
-	NHudCompass::SetSize(GET_COORD(compassw), GET_COORD(compassh));
-	NHudCompass::SetPos(GET_COORD(compassx), GET_COORD(compassy));*/
 
 	BaseClass::ApplySettings(inResourceData);
 }
@@ -215,7 +189,8 @@ void CHudBG2::ApplySettings(KeyValues *inResourceData)
 //==============================================
 void CHudBG2::ApplySchemeSettings( IScheme *scheme )
 {
-	vgui::HFont font = scheme->GetFont("HudBG2Font");
+	vgui::HFont font = scheme->GetFont("HudBG3Font");
+	vgui::HFont largeFont = scheme->GetFont("HudBG3FontLarge");
 	m_pLabelAScore->SetFont(font);
 	m_pLabelBScore->SetFont(font);
 	m_pLabelATickets->SetFont(font);
@@ -223,8 +198,9 @@ void CHudBG2::ApplySchemeSettings( IScheme *scheme )
 	m_pLabelLMS->SetFont(font);
 	m_pLabelCurrentRound->SetFont(font);
 	m_pLabelRoundTime->SetFont(font);
-	m_pLabelWaveTime->SetFont(font);
-	m_pLabelAmmo->SetFont(font);
+	m_pLabelDeathMessage->SetFont(largeFont);
+	m_pLabelAmmo->SetFont(largeFont);
+	m_pLabelHealth->SetFont(largeFont);
 
 	BaseClass::ApplySchemeSettings( scheme );
 	SetPaintBackgroundEnabled( false );
@@ -253,16 +229,36 @@ void CHudBG2::Init( void )
 //==============================================
 void CHudBG2::VidInit( void )
 {
-	m_Base = gHUD.GetIcon( "hud_base" );
-	m_AmerHealthBase = gHUD.GetIcon("hud_amer_health_base");
-	m_AmerHealth     = gHUD.GetIcon("hud_amer_health");
-	m_AmerStamina    = gHUD.GetIcon("hud_amer_stamina");
-	m_BritHealthBase = gHUD.GetIcon("hud_brit_health_base");
-	m_BritHealth     = gHUD.GetIcon("hud_brit_health");
-	m_BritStamina    = gHUD.GetIcon("hud_brit_stamina");
-	m_SwingometerRed = gHUD.GetIcon("hud_swingometer_red");
-	m_SwingometerBlue= gHUD.GetIcon("hud_swingometer_blue");
 
+	m_pAmerFlagImage = gHUD.GetIcon("hud_aflag"); //scheme()->GetImage("hud/aflag", false);
+	m_pBritFlagImage = gHUD.GetIcon("hud_bflag"); //scheme()->GetImage("hud/bflag", false);
+	m_pBlackBackground			= scheme()->GetImage("hud/bg", false);
+	m_pStaminaBarImage			= scheme()->GetImage("hud/staminabar", false);
+	m_pHealthBarImage[0]		= scheme()->GetImage("hud/healthbar", false);
+	m_pHealthBarImage[1]		= scheme()->GetImage("hud/healthbar75", false);
+	m_pHealthBarImage[2]		= scheme()->GetImage("hud/healthbar50", false);
+	m_pHealthBarImage[3]		= scheme()->GetImage("hud/healthbar25", false);
+	m_pHealthBarOverlayImage	= scheme()->GetImage("classmenu/statbarmeter", false);
+	m_pHealthSymbolImage[0]		= scheme()->GetImage("hud/health_cross", false);
+	m_pHealthSymbolImage[1]		= scheme()->GetImage("hud/health_cross75", false);
+	m_pHealthSymbolImage[2]		= scheme()->GetImage("hud/health_cross50", false);
+	m_pHealthSymbolImage[3]		= scheme()->GetImage("hud/health_cross25", false);
+	m_pBottomLeftBackground		= scheme()->GetImage("hud/bottomleftbackground", false);
+	m_pAmmoBallImage			= scheme()->GetImage("hud/ammoball", false);
+	m_pSwingometerRedImage		= scheme()->GetImage("hud/swingometer_red", false);
+	m_pSwingometerBlueImage		= scheme()->GetImage("hud/swingometer_blue", false);
+
+	char buffer[40];
+	for (int i = 0; i < TOTAL_AMER_CLASSES; i++) {
+		const CPlayerClass* pClass = CPlayerClass::fromNums(TEAM_AMERICANS, i);
+		Q_snprintf(buffer, ARRAYSIZE(buffer), "classmenu/classes/a/%s", pClass->m_pszAbbreviation);
+		m_pAmericanClassIcons[i] = scheme()->GetImage(buffer, false);
+	}
+	for (int i = 0; i < TOTAL_BRIT_CLASSES; i++) {
+		const CPlayerClass* pClass = CPlayerClass::fromNums(TEAM_BRITISH, i);
+		Q_snprintf(buffer, ARRAYSIZE(buffer), "classmenu/classes/b/%s", pClass->m_pszAbbreviation);
+		m_pBritishClassIcons[i] = scheme()->GetImage(buffer, false);
+	}
 	
 }
 
@@ -273,7 +269,9 @@ void CHudBG2::VidInit( void )
 bool CHudBG2::ShouldDraw( void )
 {
 	bool temp = CHudElement::ShouldDraw();
-	HideShowAll(temp);	//BG2 - Tjoppen - HACKHACK
+	HideShowAllTeam(temp);	//BG2 - Tjoppen - HACKHACK
+	HideShowAllPlayer(temp);	//BG2 - Tjoppen - HACKHACK
+	m_pLabelDeathMessage->SetVisible(temp);	//BG2 - Tjoppen - HACKHACK
 	return temp;
 }
 
@@ -298,12 +296,393 @@ extern int hitVerificationHairs;
 extern int hitVerificationLatency;
 ConVar cl_hitveriflatency( "cl_hitveriflatency", "2.0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL, "How many seconds to show hit verification for?" ); // BG2 - VisualMelon - I'm bad at names
 
+bool CHudBG2::ShouldDrawPlayer(C_HL2MP_Player** ppPlayer, C_BaseCombatWeapon** ppWeapon) {
+	C_HL2MP_Player *pHL2Player = dynamic_cast<C_HL2MP_Player*>(C_HL2MP_Player::GetLocalPlayer());
+	if ((!pHL2Player || !pHL2Player->IsAlive()))
+	{
+		//spectating
+		int n = GetSpectatorTarget();
+
+		if (n <= 0) {
+			HideShowAllPlayer(false);
+			return false;
+		}
+
+		pHL2Player = dynamic_cast<C_HL2MP_Player*>(UTIL_PlayerByIndex(n));
+
+		if (!pHL2Player || !pHL2Player->IsAlive())
+		{
+			HideShowAllPlayer(false);
+			return false;
+		}
+	}
+
+	C_BaseCombatWeapon *wpn = pHL2Player->GetActiveWeapon();
+	if (wpn && wpn->m_bIsIronsighted)
+		// Don't draw hud if we're using Iron Sights. -HairyPotter
+	{
+		HideShowAllPlayer(false);
+		return false;
+	}
+
+	*ppPlayer = pHL2Player;
+	*ppWeapon = wpn;
+	HideShowAllPlayer(true);
+	HideShowAllTeam(true);
+	return true;
+}
+
+void CHudBG2::PaintSwingometer(/*C_HL2MP_Player* pHL2Player,*/ int swingScoreA, int swingScoreB) {
+	//just using these aliases
+	int& swinga = swingScoreA; int& swingb = swingScoreB;
+
+	float swing = m_flLastSwing;
+	int tot = swinga + swingb;
+
+	//guard against negatives. you never know..
+	if (swinga >= 0 && swingb >= 0 && tot > 0)
+		swing = swinga / (float)tot;
+	else
+		swing = 0.5f;	//returns to center when both scores are zero (round reset for instance)
+
+	//move swing value towards m_flLastSwing
+	float swingdiff = swing - m_flLastSwing;	//useful for setting alpha on bars
+	float swingadjust = swingdiff;
+
+	//cap swing rate so each percent takes 20 ms (meaning a full swing = 2 sec)
+	float swingrate = 0.5f;
+
+	if (swingadjust < -swingrate * gpGlobals->frametime) swingadjust = -swingrate * gpGlobals->frametime;
+	if (swingadjust >  swingrate * gpGlobals->frametime) swingadjust = swingrate * gpGlobals->frametime;
+
+	swing = m_flLastSwing + swingadjust;
+
+	//we have 200 pixels, but actual range will be from 20-180 to give enough room for the numbers
+	//to stay on their team's background.
+	int bluex = ScreenWidth() / 2 - 100;
+	int bluew = 20 + 160 * swing;
+	m_pSwingometerBlueImage->SetPos(bluex, 0);
+	m_pSwingometerBlueImage->SetSize(bluew, 30);
+	m_pSwingometerBlueImage->Paint();
+
+	m_pSwingometerRedImage->SetPos(bluex + bluew, 0);
+	m_pSwingometerRedImage->SetSize(200 - bluew, 30);
+	m_pSwingometerRedImage->Paint();
+
+	m_flLastSwing = swing;
+
+	//figure out whether our ticket meter should flash
+	extern ConVar mp_tickets_drain_a, mp_tickets_drain_b;
+
+	C_BasePlayer* pPlayer = C_BasePlayer::GetLocalPlayer();
+	if (pPlayer && HL2MPRules()->UsingTickets())
+	{
+		//Avoid spamming the player - only flash their team's number
+		//HACKHACK: Assume ticket decrease >= drain means we're being drained.
+		//          That or a whole bunch of players on our team spawned.
+		//          Require the drain/delta to be at least 2 though.
+		int minDelta = 2;
+
+		if (pPlayer->GetTeamNumber() == TEAM_AMERICANS && mp_tickets_drain_a.GetInt() >= minDelta &&
+			swinga <= m_iLastSwingA - mp_tickets_drain_a.GetInt())
+			m_flAFlashEnd = gpGlobals->curtime + 0.5f;
+
+		if (pPlayer->GetTeamNumber() == TEAM_BRITISH   && mp_tickets_drain_b.GetInt() >= minDelta &&
+			swingb <= m_iLastSwingB - mp_tickets_drain_b.GetInt())
+			m_flBFlashEnd = gpGlobals->curtime + 0.5f;
+	}
+
+	m_iLastSwingA = swinga;
+	m_iLastSwingB = swingb;
+}
+
+
+void CHudBG2::PaintBackgroundOnto(Label* pLabel) {
+	if (pLabel->IsVisible()) {
+		int textMargin = 3;
+		m_pBlackBackground->SetPos(pLabel->GetXPos() - textMargin, pLabel->GetYPos());
+		m_pBlackBackground->SetSize(pLabel->GetWide() + textMargin - 2, pLabel->GetTall());
+		m_pBlackBackground->Paint();
+	}
+}
+
+void CHudBG2::PaintTopCenterHUD(/*C_HL2MP_Player* pPlayer*/) {
+	//this part of HUD doesn't scale with screen?
+	const int halfx = ScreenWidth() / 2;
+	const int flagW = 83;
+	const int flagH = 50; // 5 by 3 aspect ratio
+
+	//BLACK ROUNDTIME BACKGROUND
+	if (m_pLabelCurrentRound->IsVisible()) PaintBackgroundOnto(m_pLabelCurrentRound);
+	PaintBackgroundOnto(m_pLabelRoundTime);
+	
+	//SWINGOMETER
+	//swingometer
+	//displays based on tickets in ticket mode, score otherwise
+	C_Team *pAmer = GetGlobalTeam(TEAM_AMERICANS);
+	C_Team *pBrit = GetGlobalTeam(TEAM_BRITISH);
+	int swingScoreA, swingScoreB;
+	if (HL2MPRules()->UsingTickets()) {
+		swingScoreA = pAmer ? pAmer->m_iTicketsLeft : 0;
+		swingScoreB = pBrit ? pBrit->m_iTicketsLeft : 0;
+	}
+	else {
+		swingScoreA = pAmer ? pAmer->Get_Score() : 0;
+		swingScoreB = pBrit ? pBrit->Get_Score() : 0;
+	}
+	PaintSwingometer(/*pPlayer,*/ swingScoreA, swingScoreB);
+
+	//NUMBER OF ROUNDS WON
+	Q_snprintf(g_hudBuffer, 512, "%i ", swingScoreB);
+	m_pLabelBTickets->SetText(g_hudBuffer);
+	//m_pLabelBTickets->SizeToContents();
+	m_pLabelBTickets->SetFgColor(colorForFlash(m_flBFlashEnd));
+	
+
+	Q_snprintf(g_hudBuffer, 512, "%i ", swingScoreA);
+	m_pLabelATickets->SetText(g_hudBuffer);
+	m_pLabelATickets->SizeToContents();
+	m_pLabelATickets->SetFgColor(colorForFlash(m_flAFlashEnd));
+
+	//FLAGS
+	m_pAmerFlagImage->DrawSelf(halfx - g_iFlagOffset - flagW, 0, flagW, flagH, COLOR_WHITE);
+	m_pBritFlagImage->DrawSelf(halfx + g_iFlagOffset, 0, flagW, flagH, COLOR_WHITE);
+
+	//SWINGOMETER SCORE LABELS
+	if (mp_rounds.GetBool() && pAmer && pBrit) {
+		Q_snprintf(g_hudBuffer, 512, "%i ", pBrit->Get_Score());	//BG2 - Tjoppen - avoid NULL
+		m_pLabelBScore->SetText(g_hudBuffer);
+		//m_pLabelBScore->SizeToContents();
+		m_pLabelBScore->SetFgColor(COLOR_WHITE);
+		PaintBackgroundOnto(m_pLabelBScore);
+
+		Q_snprintf(g_hudBuffer, 512, "%i ", pAmer->Get_Score());	//BG2 - Tjoppen - avoid NULL
+		m_pLabelAScore->SetText(g_hudBuffer);
+		m_pLabelAScore->SizeToContents();
+		m_pLabelAScore->SetFgColor(COLOR_WHITE);
+		PaintBackgroundOnto(m_pLabelAScore);
+	}
+
+	//ROUND COUNTER
+	extern ConVar mp_rounds;
+	bool bHasRoundCount = mp_rounds.GetBool();
+	if (bHasRoundCount) {
+		Q_snprintf(g_hudBuffer, 512, "Round %i/%i ", HL2MPRules()->m_iCurrentRound, mp_rounds.GetInt());
+		m_pLabelCurrentRound->SetText(g_hudBuffer);
+		m_pLabelCurrentRound->SizeToContents();
+		m_pLabelCurrentRound->SetFgColor(COLOR_WHITE);
+	}
+
+	//ROUND TIMER
+	//update round timer text
+	int roundtime;
+	if (bHasRoundCount) {
+		roundtime = ceilf(HL2MPRules()->m_fLastRoundRestart + mp_roundtime.GetFloat() - gpGlobals->curtime);
+	}
+	else {
+		roundtime = ceilf(HL2MPRules()->GetMapRemainingTime()); // -gpGlobals->curtime);
+	}
+	//only show actual time if it's a reasonable time
+	if (roundtime < 3600) {
+		if (roundtime < 0)
+			roundtime = 0; //no negative time
+		Q_snprintf(g_hudBuffer, 32, "%i:%02i ", roundtime / 60, roundtime % 60);
+		m_pLabelRoundTime->SetText(g_hudBuffer);
+	}
+	else {
+		m_pLabelRoundTime->SetText(" ");
+	}
+	m_pLabelRoundTime->SizeToContents();
+	m_pLabelRoundTime->SetFgColor(COLOR_WHITE);
+}
+
+void CHudBG2::PaintBottomLeftHUD(C_HL2MP_Player* pPlayer, C_BaseCombatWeapon* pWeapon) {
+	//BACKGROUND
+	m_pBottomLeftBackground->SetPos(0, ScreenHeight() - 60);
+	m_pBottomLeftBackground->SetSize(600, 60);
+	m_pBottomLeftBackground->Paint();
+
+	//HEALTH SYMBOL
+	const int SML = 10;
+	int marginBottom = ScreenHeight() - 50;
+	//pulsating
+	int health = pPlayer->GetHealth();
+	health = clamp(health, 0, 100);
+	//bool pulsesPerformed = health < 100;
+	
+	const float PULSE_DURATION = 0.05f;
+	//check for start of next pulse
+	if (gpGlobals->curtime > m_flStartPulseTime) {
+		m_flStartPulseTime = gpGlobals->curtime + health / 120.f;
+		m_flEndPulseTime = gpGlobals->curtime + PULSE_DURATION;
+	}
+	int healthIconIndex = 0;
+	if (health < 25) healthIconIndex = 3;
+	else if (health < 50) healthIconIndex = 2;
+	else if (health < 75) healthIconIndex = 1;
+	IImage* pHealthIcon = m_pHealthSymbolImage[healthIconIndex];
+	bool doPulse = health < 100 && m_flEndPulseTime > gpGlobals->curtime;
+	if (doPulse) {
+		float remainingTime = m_flEndPulseTime - gpGlobals->curtime;
+		float scale = (remainingTime / PULSE_DURATION) + 0.1f;
+
+		int offset = 4 * scale;
+		pHealthIcon->SetPos(SML - offset, marginBottom - offset);
+		pHealthIcon->SetSize(40 + 2 * offset, 40 + 2 * offset);
+	}
+	else {
+		pHealthIcon->SetPos(10, marginBottom);
+		pHealthIcon->SetSize(40, 40);
+	}
+	pHealthIcon->Paint();
+
+	//HEALTH COUNTER
+	Q_snprintf(g_hudBuffer, 4, "%i", health);
+	m_pLabelHealth->SetText(g_hudBuffer);
+	m_pLabelHealth->SizeToContents();
+	m_pLabelHealth->SetFgColor(getColorForHealth(health));
+
+
+	//HEALTH BAR
+	//health label
+	int marginLeft = 140;
+	IImage* pHealthBar = m_pHealthBarImage[healthIconIndex];
+	pHealthBar					->SetPos(marginLeft, marginBottom + 10);
+	m_pHealthBarOverlayImage	->SetPos(marginLeft, marginBottom + 10);
+	pHealthBar					->SetSize(max(health * 1.5f, 1), 20);
+	m_pHealthBarOverlayImage	->SetSize(150, 20);
+	//pHealthBar					->SetColor(getColorForHealth(health));
+	pHealthBar					->Paint();
+	m_pHealthBarOverlayImage	->Paint();
+
+	//STAMINA BAR
+	m_pStaminaBarImage->SetPos(marginLeft, marginBottom + 30);
+	m_pStaminaBarImage->SetSize(max(1,pPlayer->m_iStamina * 150 / 100), 4);
+	m_pStaminaBarImage->Paint();
+
+	if (pWeapon) {
+		//AMMO BALLS
+		if (pWeapon->Def()->m_Attackinfos[0].m_iAttacktype == ATTACKTYPE_FIREARM) {
+			marginLeft += 230;
+			int iAmmoCount = pPlayer->GetAmmoCount(pWeapon->GetPrimaryAmmoType());
+			m_pAmmoBallImage->SetSize(16, 16);
+			int x = marginLeft;
+			int y = ScreenHeight() - 50;
+			//paint rows of ammo ball images
+			for (int i = 0; i < iAmmoCount; i++) {
+				m_pAmmoBallImage->SetPos(x, y);
+				m_pAmmoBallImage->Paint();
+				x += 8;
+				/*if (i % 8 == 0) {
+					x = marginLeft;
+					y += 8;
+					}*/
+			}
+		}
+
+		//AMMO COUNT LABEL
+		int iAmmoCount = pPlayer->GetAmmoCount(pWeapon->GetPrimaryAmmoType());
+		if (pWeapon->Clip1() > 0)
+			iAmmoCount++;
+		if (iAmmoCount > 0)
+		{
+			Q_snprintf(g_hudBuffer, 512, "%i ", iAmmoCount);
+			m_pLabelAmmo->SetText(g_hudBuffer);
+			if (pWeapon->Clip1() == 0)
+			{
+				m_pLabelAmmo->SetFgColor(COLOR_RED);
+			}
+			else
+			{
+				m_pLabelAmmo->SetFgColor(COLOR_WHITE);
+			}
+			m_pLabelAmmo->SizeToContents();
+		}
+		else
+			m_pLabelAmmo->SetVisible(false);
+	}
+}
+
+void CHudBG2::PaintDeathMessage() {
+	C_BasePlayer* pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+	if (pLocalPlayer && pLocalPlayer->IsPlayerDead() && pLocalPlayer->GetTeamNumber() >= TEAM_AMERICANS) {
+		m_pLabelDeathMessage->SetVisible(true);
+
+		int wavetime = ceilf(HL2MPRules()->m_fLastRespawnWave + mp_respawntime.GetFloat() - gpGlobals->curtime);
+		//Four modes - skirmish, tickets, tickets with no tickets remaining, LMS/Linebattle
+		if (IsLMS()) {
+			m_pLabelDeathMessage->SetText(g_pVGuiLocalize->Find("#BG3_Spawn_Next_Round"));
+		}
+		else {
+			//Construct message
+			C_Team* pTeam = GetGlobalTeam(pLocalPlayer->GetTeamNumber());
+			wchar_t buffer[512];
+			//Msg(g_pVGuiLocalize->FindAsUTF8("#BG3_Respawning_In"));
+
+			if (IsSkirmish()) {
+				V_snwprintf(buffer, 512,
+					g_pVGuiLocalize->Find("#BG3_Respawning_In"), wavetime);
+			}
+			else if (pTeam->m_iTicketsLeft > 0) {
+				wchar_t buffer2[256];
+				wchar_t buffer3[256];
+				V_snwprintf(buffer2, 256,
+					g_pVGuiLocalize->Find("#BG3_Respawning_In"), wavetime);
+				V_snwprintf(buffer3, 256, g_pVGuiLocalize->Find("#BG3_Tickets_Remaining"), pTeam->m_iTicketsLeft);
+				V_snwprintf(buffer, 512, L"%s\n%s", buffer2, buffer3);
+
+			}
+			else if (IsTicketMode()) {
+				//ticket mode with no tickets remaining
+				V_snwprintf(buffer, 512, L"%s\n%s",
+					g_pVGuiLocalize->Find("#BG3_Out_Of_Tickets"), g_pVGuiLocalize->Find("#BG3_Spawn_Next_Round"));
+			}
+
+			m_pLabelDeathMessage->SetText(buffer);
+		}
+		m_pLabelDeathMessage->SizeToContents();
+		PaintBackgroundOnto(m_pLabelDeathMessage);
+	}
+	else {
+		m_pLabelDeathMessage->SetVisible(false);
+	}
+
+}
+
+void CHudBG2::PaintClassCounts() {
+	C_HL2MP_Player* pPlayer = ToHL2MPPlayer(C_BasePlayer::GetLocalPlayer());
+	if (pPlayer) {
+		int iTeam = pPlayer->GetTeamNumber();
+		if (iTeam >= TEAM_AMERICANS) {
+			char buffer[16];
+			NSoftInfo::Update();
+
+			IImage** ppImages = iTeam == TEAM_AMERICANS ? m_pAmericanClassIcons : m_pBritishClassIcons;
+			m_pClassCountLabels[5]->SetText("");
+			int numClasses = CPlayerClass::numClassesForTeam(iTeam);
+			for (int i = 0; i < numClasses; i++) {
+				const CPlayerClass* pClass = CPlayerClass::fromNums(iTeam, i);
+				int num = NSoftInfo::GetNumPlayersOfClass(pClass);
+				int limit = NClassQuota::GetLimitForClass(pClass);
+				if (limit >= 0)
+					Q_snprintf(buffer, sizeof(buffer), "%i/%i", num, limit);
+				else
+					Q_snprintf(buffer, sizeof(buffer), "%i", num);
+				m_pClassCountLabels[i]->SetText(buffer);
+				m_pClassCountLabels[i]->SizeToContents();
+				PaintBackgroundOnto(m_pClassCountLabels[i]);
+
+				ppImages[i]->SetPos(10, g_iClassCountY + (g_iClassIconSize + 2) * i);
+				ppImages[i]->SetSize(g_iClassIconSize, g_iClassIconSize);
+				ppImages[i]->Paint();
+			}
+		}
+	}
+}
+
 void CHudBG2::Paint()
 {
-	if( !m_Base || !m_AmerHealthBase || !m_AmerHealth || !m_AmerStamina ||
-		!m_BritHealthBase || !m_BritHealth || !m_BritStamina ||
-		!m_SwingometerRed || !m_SwingometerBlue )
-		return;
+
 
 	//BG2 - Tjoppen - Always paint damage label, so it becomes visible while using iron sights
 	//fade out the last second
@@ -349,243 +728,21 @@ void CHudBG2::Paint()
 	else
 		m_pLabelDamageTaken->SetVisible( false );
 
-	C_HL2MP_Player *pHL2Player = dynamic_cast<C_HL2MP_Player*>(C_HL2MP_Player::GetLocalPlayer());
-	if (!pHL2Player || !pHL2Player->IsAlive())
-	{
-		//spectating
-		int n = GetSpectatorTarget();
-		if( n <= 0 )
-		{
-			HideShowAll(false);
-			return;	//don't look at worldspawn..
-		}
+	PaintTopCenterHUD(/*pHL2Player*/);
+	PaintDeathMessage();
 
-		pHL2Player = dynamic_cast<C_HL2MP_Player*>(UTIL_PlayerByIndex(n));
-
-		if( !pHL2Player )
-		{
-			HideShowAll(false);
-			return;
-		}
-	}
-
-	C_BaseCombatWeapon *wpn = pHL2Player->GetActiveWeapon();
-	if (!wpn)
-	{
-		HideShowAll(false);
+	C_HL2MP_Player* pHL2Player = NULL;
+	C_BaseCombatWeapon* wpn = NULL;
+	if (!ShouldDrawPlayer(&pHL2Player, &wpn))
 		return;
-	}
-	// Don't draw hud if we're using Iron Sights. -HairyPotter
-	if (wpn->m_bIsIronsighted)
-	{
-		HideShowAll(false);
-		return;
-	}
-	//
 
-	HideShowAll(true);
-
-	Color ColourRed( 255, 0, 0, 255 );
-	Color ColourWhite( 255, 255, 255, 255 );
-
-	char msg2[512];
-
-	m_Base->DrawSelf(basex,basey,basew,baseh,ColourWhite);
-
-	C_Team *pAmer = GetGlobalTeam(TEAM_AMERICANS);
-	C_Team *pBrit = GetGlobalTeam(TEAM_BRITISH);
-
-	//swingometer
-	//displays based on tickets in ticket mode, score otherwise
-	int swinga = 0, swingb = 0;
-
-	if( HL2MPRules()->UsingTickets() )
-	{
-		swinga = pAmer ? pAmer->m_iTicketsLeft : 0;
-		swingb = pBrit ? pBrit->m_iTicketsLeft : 0;
-	}
-	else
-	{
-		swinga = pAmer ? pAmer->Get_Score() : 0;
-		swingb = pBrit ? pBrit->Get_Score() : 0;
-	}
-
-	float swing = m_flLastSwing;
-	int tot = swinga + swingb;
-
-	//guard against negatives. you never know..
-	if( swinga >= 0 && swingb >= 0 && tot > 0 )
-		swing = swinga / (float)tot;
-	else
-		swing = 0.5f;	//returns to center when both scores are zero (round reset for instance)
-
-	//move swing value towards m_flLastSwing
-	float swingdiff = swing - m_flLastSwing;	//useful for setting alpha on bars
-	float swingadjust = swingdiff;
-
-	//cap swing rate so each percent takes 20 ms (meaning a full swing = 2 sec)
-	float swingrate = 0.5f;
-
-	if( swingadjust < -swingrate * gpGlobals->frametime ) swingadjust = -swingrate * gpGlobals->frametime;
-	if( swingadjust >  swingrate * gpGlobals->frametime ) swingadjust =  swingrate * gpGlobals->frametime;
-
-	swing = m_flLastSwing + swingadjust;
-
-	//crop and scale to fit in swingw x swingh rectangle
-	m_SwingometerBlue->DrawSelfCropped( swingx, swingy, 0, 0,
-	                                    m_SwingometerBlue->Width() * swing, m_SwingometerBlue->Height(),
-										swingw * swing, swingh, ColourWhite );
-	m_SwingometerRed ->DrawSelfCropped( swingx + swingw * swing, swingy, m_SwingometerRed->Width() * swing, 0,
-	                                    m_SwingometerRed->Width() * (1 - swing), m_SwingometerRed->Height(),
-										swingw * (1 - swing), swingh, ColourWhite );
-
-	m_flLastSwing = swing;
-
-	//figure out whether our ticket meter should flash
-	extern ConVar mp_tickets_drain_a, mp_tickets_drain_b;
-
-	if( HL2MPRules()->UsingTickets() )
-	{
-		//Avoid spamming the player - only flash their team's number
-		//HACKHACK: Assume ticket decrease >= drain means we're being drained.
-		//          That or a whole bunch of players on our team spawned.
-		//          Require the drain/delta to be at least 2 though.
-		int minDelta = 2;
-
-		if( pHL2Player->GetTeamNumber() == TEAM_AMERICANS && mp_tickets_drain_a.GetInt() >= minDelta &&
-			swinga <= m_iLastSwingA - mp_tickets_drain_a.GetInt() )
-			m_flAFlashEnd = gpGlobals->curtime + 0.5f;
-
-		if( pHL2Player->GetTeamNumber() == TEAM_BRITISH   && mp_tickets_drain_b.GetInt() >= minDelta &&
-			swingb <= m_iLastSwingB - mp_tickets_drain_b.GetInt() )
-			m_flBFlashEnd = gpGlobals->curtime + 0.5f;
-	}
-
-	m_iLastSwingA = swinga;
-	m_iLastSwingB = swingb;
-
-	CHudTexture *pHealthBase, *pHealth, *pStamina;
-
-	if (pHL2Player->GetTeamNumber() == TEAM_AMERICANS)
-	{
-		pHealthBase  = m_AmerHealthBase;
-		pHealth      = m_AmerHealth;
-		pStamina     = m_AmerStamina;
-	}
-	else
-	{
-		pHealthBase  = m_BritHealthBase;
-		pHealth      = m_BritHealth;
-		pStamina     = m_BritStamina;
-	}
-
-	float health = pHL2Player->GetHealth() / 100.0f;
-	float stamina = pHL2Player->m_iStamina  / 100.0f;
-
-	pStamina->DrawSelfCropped( staminax, staminay + staminah * (1 - stamina), 0, pStamina->Height() * (1 - stamina),
-	                           pStamina->Width(), pStamina->Height() * stamina,
-							   staminaw, staminah * stamina, ColourWhite );
-
-	//crop both even though normally pHealth draws over pHealthBase
-	//this way users can mod so that the base is the actual meter, like the old HUD
-	//just to clarify, pHealthBase == amount of health left while pHealth == damage
-	pHealthBase->DrawSelfCropped( healthx, healthy + healthh * (1 - health), 0, pHealthBase->Height() * (1 - health),
-	                              pHealth->Width(), pHealth->Height() * health,
-	                              healthw, healthh * health, ColourWhite );
-
-	pHealth->DrawSelfCropped( healthx, healthy, 0, 0,
-	                          pHealth->Width(), pHealth->Height() * (1 - health),
-	                          healthw, healthh * (1 - health), ColourWhite );
-
-	if( HL2MPRules()->UsingTickets())
-	{
-		Q_snprintf( msg2, 512, "%i ", pBrit ? pBrit->Get_Score() : 0);	//BG2 - Tjoppen - avoid NULL
-		m_pLabelBScore->SetText(msg2);
-		m_pLabelBScore->SizeToContents();
-		m_pLabelBScore->SetFgColor( ColourWhite );
-	
-		Q_snprintf( msg2, 512, "%i ", pAmer ? pAmer->Get_Score() : 0);	//BG2 - Tjoppen - avoid NULL
-		m_pLabelAScore->SetText(msg2);
-		m_pLabelAScore->SizeToContents();
-		m_pLabelAScore->SetFgColor( ColourWhite );
-	}
-
-	extern ConVar mp_rounds;
-	bool bHasRoundCount = mp_rounds.GetBool();
-	if (bHasRoundCount) {
-		Q_snprintf(msg2, 512, "Round %i/%i ", HL2MPRules()->m_iCurrentRound, mp_rounds.GetInt());
-		m_pLabelCurrentRound->SetText(msg2);
-		m_pLabelCurrentRound->SizeToContents();
-		m_pLabelCurrentRound->SetFgColor(ColourWhite);
-	}
-
-	Q_snprintf( msg2, 512, "%i ", swingb);
-	m_pLabelBTickets->SetText(msg2);
-	m_pLabelBTickets->SizeToContents();
-	m_pLabelBTickets->SetFgColor( colorForFlash(m_flBFlashEnd) );
-
-	Q_snprintf( msg2, 512, "%i ", swinga);
-	m_pLabelATickets->SetText(msg2);
-	m_pLabelATickets->SizeToContents();
-	m_pLabelATickets->SetFgColor( colorForFlash(m_flAFlashEnd) );
-
-	int iAmmoCount = pHL2Player->GetAmmoCount(wpn->GetPrimaryAmmoType());
-	if (wpn->Clip1() > 0)
-		iAmmoCount++;
-	if( iAmmoCount > 0)
-	{
-		Q_snprintf( msg2, 512, "%i ", iAmmoCount);
-		m_pLabelAmmo->SetText(msg2);
-		if (wpn->Clip1() == 0)
-		{
-			m_pLabelAmmo->SetFgColor(ColourRed);
-		}
-		else
-		{
-			m_pLabelAmmo->SetFgColor(ColourWhite);
-		}
-		m_pLabelAmmo->SizeToContents();
-	}
-	else
-		m_pLabelAmmo->SetVisible( false );
-
-	int wavetime = ceilf(HL2MPRules()->m_fLastRespawnWave + mp_respawntime.GetFloat() - gpGlobals->curtime);
-	if (wavetime < 1800) {
-		if (wavetime < 0)
-			wavetime = 0;
-		Q_snprintf(msg2, 512, "%i:%02i ", wavetime / 60, wavetime % 60);
-		m_pLabelWaveTime->SetText(msg2);
-	} else {
-		m_pLabelWaveTime->SetText(" ");
-	}
-	m_pLabelWaveTime->SizeToContents();
-	m_pLabelWaveTime->SetFgColor( ColourWhite );
-
-	//update round timer text
-	int roundtime;
-	if (bHasRoundCount) {
-		roundtime = ceilf(HL2MPRules()->m_fLastRoundRestart + mp_roundtime.GetFloat() - gpGlobals->curtime);
-	} else {
-		roundtime = ceilf(HL2MPRules()->GetMapRemainingTime()); // -gpGlobals->curtime);
-	}
-	//only show actual time if it's a reasonable time
-	if (roundtime < 3600) {
-		if (roundtime < 0)
-			roundtime = 0;
-		Q_snprintf(msg2, 32, "%i:%02i ", roundtime / 60, roundtime % 60);
-		m_pLabelRoundTime->SetText(msg2);
-	} else {
-		m_pLabelRoundTime->SetText(" ");
-	}
-	m_pLabelRoundTime->SizeToContents();
-	m_pLabelRoundTime->SetFgColor( ColourWhite );
+	PaintBottomLeftHUD(pHL2Player, wpn);
+	PaintClassCounts();
 
 	m_pLabelLMS->SetText( g_pVGuiLocalize->Find("#LMS") );
 	m_pLabelLMS->SizeToContents();
-	m_pLabelLMS->SetFgColor( ColourWhite );
+	m_pLabelLMS->SetFgColor( COLOR_WHITE );
 
-	//Paint compass
-	//NHudCompass::Paint();
 }
 
 //==============================================
@@ -594,20 +751,7 @@ void CHudBG2::Paint()
 //==============================================
 void CHudBG2::OnThink()
 {
-	// display hintbox if stamina drops below 20%
-	//C_HL2MP_Player *pHL2Player = dynamic_cast<C_HL2MP_Player*>(C_HL2MP_Player::GetLocalPlayer()); //RE-enable these. -HairyPotter
-	//if (pHL2Player && pHL2Player->m_iStamina < 20)
- 	//	(GET_HUDELEMENT( CHintbox ))->UseHint(HINT_STAMINA, 6, DISPLAY_ONCE);
-	
-	//let paint sort it out
-	/*C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-	if (player)
-	{
-		if (player->GetHealth() <= 0)
-		{
-			HideShowAll(false);
-		}
-	}*/
+
 }
 
 void CHudBG2::Reset( void )
@@ -618,10 +762,17 @@ void CHudBG2::Reset( void )
 	m_flLastSwing = 0.5f;
 	m_flAFlashEnd = m_flBFlashEnd = 0;
 	m_iLastSwingA = m_iLastSwingB = 0;
-	HideShowAll( false );
+	m_flStartPulseTime = -FLT_MAX;
+	m_flEndPulseTime = -FLT_MAX;
+	m_bLocalPlayerAlive = false;
+	m_flEndClassIconDrawTime = -FLT_MAX;
+	NSoftInfo::Reset();
+	HideShowAllPlayer( false );
+	HideShowAllTeam(false);
+	m_pLabelDeathMessage->SetVisible(false);
 }
 
-void CHudBG2::HideShowAll( bool visible )
+void CHudBG2::HideShowAllTeam( bool visible )
 {
 	m_pLabelAScore->SetVisible(visible && HL2MPRules()->UsingTickets());
 	m_pLabelBScore->SetVisible(visible && HL2MPRules()->UsingTickets());
@@ -630,14 +781,23 @@ void CHudBG2::HideShowAll( bool visible )
 
 	extern ConVar mp_rounds;
 	m_pLabelCurrentRound->SetVisible(visible && mp_rounds.GetBool());
-
-	m_pLabelWaveTime->SetVisible(visible && !IsLMS());
 	m_pLabelRoundTime->SetVisible(visible);
+	for (int i = 0; i < 6; i++) {
+		m_pClassCountLabels[i]->SetVisible(visible);
+	}
+	
+	m_pLabelLMS->SetVisible( visible && IsLMSstrict() && cl_draw_lms_indicator.GetBool() );
+}
+
+void CHudBG2::HideShowAllPlayer(bool visible) {
 	m_pLabelAmmo->SetVisible(visible);
-	//m_pLabelBGVersion->SetVisible(false);	// BP: not used yet as its not subtle enough, m_pLabelBGVersion->SetVisible(ShouldDraw());
+	m_pLabelHealth->SetVisible(visible);
 	m_pLabelDamageGiven->SetVisible(m_flGivenExpireTime > gpGlobals->curtime);	//always show damage indicator (unless expired)
 	m_pLabelDamageTaken->SetVisible(m_flTakenExpireTime > gpGlobals->curtime);	//always show damage indicator (unless expired)
-	m_pLabelLMS->SetVisible( visible && IsLMSstrict() && cl_draw_lms_indicator.GetBool() );
+
+	for (int i = 0; i < 6; i++) {
+		m_pClassCountLabels[i]->SetVisible(visible);
+	}
 }
 
 //BG2 - Tjoppen - cl_hitverif & cl_winmusic && capturesounds & voice comm sounds //HairyPotter
@@ -648,7 +808,7 @@ ConVar	cl_capturesounds( "cl_capturesounds", "1", FCVAR_ARCHIVE, "Play flag capt
 ConVar cl_vcommsounds("cl_vcommsounds", "1", FCVAR_ARCHIVE, "Allow voice comm sounds?" );
 //
 
-
+ConVar cl_melee_timing_test("cl_melee_timing_test", "0", 0);
 void CHudBG2::MsgFunc_HitVerif( bf_read &msg )
 {
 	int attacker, victim, hitgroup;
@@ -662,6 +822,8 @@ void CHudBG2::MsgFunc_HitVerif( bf_read &msg )
 	victim		= msg.ReadByte();
 	hitgroup	= msg.ReadByte();
 	damage		= msg.ReadShort();
+	if (cl_melee_timing_test.GetBool())
+		Msg("Received hitverif, damage = %i, time %f\n", damage, gpGlobals->curtime);
 
 	//attack type and hitgroup are packed into the same byte
 	attackType = (hitgroup >> 4) & 0xF;
@@ -670,6 +832,11 @@ void CHudBG2::MsgFunc_HitVerif( bf_read &msg )
 	//don't display messages for 0-damage
 	if (damage <= 0)
 		return;
+
+	//reset health pulse
+	if (C_HL2MP_Player::GetLocalPlayer()->entindex() == victim)
+		m_flStartPulseTime = gpGlobals->curtime;
+
 
 	C_HL2MP_Player *pAttacker = dynamic_cast<C_HL2MP_Player*>(UTIL_PlayerByIndex( attacker ));
 
@@ -738,19 +905,7 @@ void CHudBG2::MsgFunc_HitVerif( bf_read &msg )
 
 		m_pLabelDamageGiven->SetText( message.c_str() );
 		m_flGivenExpireTime = gpGlobals->curtime + 5.0f;
-	}
-	else
-	{
-		/**
-		 * We're neither the attacker nor the victim.
-		 * This should rarely happen since only the attacker and victim are added to
-		 * this message's recipient filter. However, a user reported the indicator
-		 * showing another player's damage, so return in this case just to be safe.
-		 */
-		return;
-	}
-
-	
+	}	
 }
 
 void CHudBG2::MsgFunc_WinMusic( bf_read &msg )

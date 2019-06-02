@@ -1262,11 +1262,11 @@ void CHL2MP_Player::PlayermodelTeamClass()
 int CHL2MP_Player::GetAppropriateSkin()
 {
 	//clamp in case of strange class switches
-	m_iClassSkin = Clamp(m_iClassSkin, 0, m_pCurClass->numChooseableUniforms() - 1);
+	m_iClassSkin = Clamp(m_iClassSkin, 0, m_pCurClass->numChooseableUniformsForPlayer(this) - 1);
 
 	//if we're a bot, randomize our uniform
 	if (IsFakeClient()) {
-		m_iClassSkin = RndInt(0, m_pCurClass->numChooseableUniforms() - 1);
+		m_iClassSkin = RndInt(0, m_pCurClass->numChooseableUniformsForPlayer(this) - 1);
 	}
 
 	return m_iClassSkin * m_pCurClass->m_iSkinDepth + RndInt(0, m_pCurClass->m_iSkinDepth - 1);
@@ -1604,7 +1604,7 @@ void CHL2MP_Player::VerifyKitAmmoUniform() {
 	m_iGunKit = Clamp(m_iGunKit, 0, m_pCurClass->numChooseableWeapons() - 1);
 
 	//clamp skin to valid value
-	m_iClassSkin = Clamp(m_iClassSkin, 0, (int)m_pCurClass->numChooseableUniforms());
+	m_iClassSkin = Clamp(m_iClassSkin, 0, (int)m_pCurClass->numChooseableUniformsForPlayer(this) - 1);
 
 	//clamp ammo kit, then verify that our weapon allows for it
 	m_iAmmoKit = Clamp(m_iAmmoKit, AMMO_KIT_BALL, AMMO_KIT_BUCKSHOT);

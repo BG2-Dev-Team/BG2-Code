@@ -139,6 +139,8 @@ public:
 
 	void CheckChatText( char *p, int bufsize );
 
+	bool IsBetaTester() const;
+
 	void State_Transition( HL2MPPlayerState newState );
 	void State_Enter( HL2MPPlayerState newState );
 	void State_Leave();

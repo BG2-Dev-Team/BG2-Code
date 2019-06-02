@@ -112,13 +112,19 @@ const char* g_ppszFunBotNames[] {
 	"Turkeyshot", "Buckshot", "Birdshot", "Earshot", "Hipshot", "Headshot", "Bowshot", "Gunshot",
 	"Hotshot", "Scattershot", "Slingshot", "Grapeshot", "Snapshot", "Mugshot", "Ludicrous Speed", 
 	"Flint", "Not-a-Bot v2.1", "THE MAGICIAN", "Philip", "Brutus", "Julius Caesar", "Clocktower",
-	"Battle Droid", ""
+	"Battle Droid", 
+	"Apathetic Monster", "GNU_Bot", "APETHETIC L33p", "[pro]Cauldron", "$$$$$$$$$",
+	"#@$&shot", "CLockwoooork", "w00kiew00k", "Meetra", "Apathetic Caviar", "The Armenian Musket",
+	"The COHORT", "Renegade", "Paragon", "Mandelbrot", "Saddlebag", "NaturalNumber", "Ja ja man",
+	"Alexander the Weak", "Napoleon the -1", "STAB in yo FACE", "Conquistadora", "Euler's #2.718 fan",
+	"**grutchin", "qwerty", "dvorak", "Seahorse valley", "!!!PIZZA time!!!", "[=](pPlayer){pPlayer->kill();}"
 	
 	
 	"Gashmaster 100", "Hackmaster 200", "Sawmaster 300", "Dicemaster 400", "Puncturemaster 500",
 	"Prunemaster 600",
 	"Clubmaster 1000", "Slashmaster 2000", "Stabmaster 3000", "Slicemaster 4000", "Swingmaster 5000",
 	"Cutmaster 6000", "Carvemaster 7000", "Ripmaster 8000", "Beheadmaster 9000", "Cleavemaster 10000",
+
 	
 
 };

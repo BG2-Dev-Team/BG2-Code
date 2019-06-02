@@ -17,6 +17,8 @@
 #include "baseviewport.h"
 #include "game_controls/vguitextwindow.h"
 #include "../bg3/bg3_hint.h"
+#include "../bg3/bg3_classmenu.h"
+#include "../bg3/bg3_teammenu.h"
 #include "../bg3/vgui/html_hidden_load.h"
 #include "../../shared/bg3/Math/bg3_rand.h"
 #include "bg3/vgui/fancy_button.h"
@@ -43,7 +45,8 @@ class CMainMenu : public vgui::Frame
 public:
 	CMainMenu( vgui::VPANEL parent );
 	~CMainMenu();
- 
+
+
 	virtual void OnCommand(const char *command);
  
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme )
@@ -59,7 +62,7 @@ public:
 		set(m_pButtonLeave);
 #undef set
 	}
- 
+
 	// The panel background image should be square, not rounded.
 	virtual void PaintBackground()
 	{
@@ -119,18 +122,23 @@ public:
 		InRolloverOptions=false;
 		InRolloverLeave=false;
 
-		// community feed
-		int communityBorderX = 40; // left, right
-		int communityBorderY = 20; // bottom
-		int communityY = buttonstarty+70;
-
-		m_pCommunity->SetSize(this->GetWide() - communityBorderX * 2, this->GetTall() - (communityY + communityBorderY));
-		m_pCommunity->SetPos(communityBorderX, communityY);
-
-		if (InGame())
+		if (InGame()) {
 			m_pButtonCreateDisconnect->SetText("#BG3_Main_Disconnect");
-		else
+			//shrink menu size
+			SetSize(ScreenWidth(), 100);
+		}
+		else {
+			SetSize(ScreenWidth(), ScreenHeight());
+
+			// community feed
+			int communityBorderX = 40; // left, right
+			int communityBorderY = 20; // bottom
+			int communityY = buttonstarty + 70;
+
 			m_pButtonCreateDisconnect->SetText("#BG3_Main_Create_Server");
+			m_pCommunity->SetSize(this->GetWide() - communityBorderX * 2, this->GetTall() - (communityY + communityBorderY));
+			m_pCommunity->SetPos(communityBorderX, communityY);
+		}
 	}
  
 	virtual void OnThink()
@@ -335,6 +343,9 @@ private:
 	bool InRolloverSave;
 	bool InRolloverOptions;
 	bool InRolloverLeave;
+
+	IImage* m_pAmericanBackground;
+	IImage* m_pBritishBackground;
 };
 
 //-----------------------------------------------------------------------------
@@ -344,7 +355,7 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 {
 	g_pMainMenu = this;
 
-	LoadControlSettings( "resource/UI/MainMenu.res" ); // Optional, don't need this
+	//LoadControlSettings( "resource/UI/MainMenu.res" ); // Optional, don't need this
 
 	SetParent( parent );
 	SetTitleBarVisible( false );
@@ -355,6 +366,7 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	SetMoveable( false );
 	SetProportional( true );
 	SetVisible( true );
+	SetKeyBoardInputEnabled(true);
 	//SetKeyBoardInputEnabled( true );
 	//SetMouseInputEnabled( true );
 	//ActivateBuildMode();
@@ -423,6 +435,9 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 
 	m_pCommunity->OpenURL("https://battlegrounds3.com", NULL);
 	m_pCommunity->SetVisible(true);
+
+	m_pBritishBackground = scheme()->GetImage("classmenu/background_b", false);
+	m_pAmericanBackground = scheme()->GetImage("classmenu/background_a", false);
 }
  
 void CMainMenu::OnCommand(const char *command)
@@ -499,6 +514,9 @@ public:
 		}
 	}
  
+	void Hide() {
+		engine->ClientCmd("gamemenucommand ResumeGame");
+	}
 };
  
 static CSMenu g_SMenu;

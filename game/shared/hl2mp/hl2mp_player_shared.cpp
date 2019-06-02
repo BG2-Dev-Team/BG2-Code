@@ -64,6 +64,10 @@ void CHL2MP_Player::PrecacheFootStepSounds( void )
 	//PrecacheScriptSound( BG2_PLAYER_SOUND_PREFIX ".RunFootstepRight" );
 }
 
+bool CHL2MP_Player::IsBetaTester() const {
+	return !IsFakeClient(); //TODO implement this!
+}
+
 //-----------------------------------------------------------------------------
 // Consider the weapon's built-in accuracy, this character's proficiency with
 // the weapon, and the status of the target. Use this information to determine

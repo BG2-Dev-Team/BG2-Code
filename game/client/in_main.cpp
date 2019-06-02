@@ -473,7 +473,8 @@ void IN_SpeedDown( const CCommand &args ) {KeyDown(&in_speed, args[1] );}
 void IN_SpeedUp( const CCommand &args ) {KeyUp(&in_speed, args[1] );}
 void IN_StrafeDown( const CCommand &args ) {KeyDown(&in_strafe, args[1] );}
 void IN_StrafeUp( const CCommand &args ) {KeyUp(&in_strafe, args[1] );}
-void IN_Attack2Down( const CCommand &args ) { KeyDown(&in_attack2, args[1] );}
+extern ConVar cl_melee_timing_test;
+void IN_Attack2Down(const CCommand &args) { if (cl_melee_timing_test.GetBool()) Msg(__FUNCTION__ " at %f\n", gpGlobals->curtime); KeyDown(&in_attack2, args[1]); }
 void IN_Attack2Up( const CCommand &args ) {KeyUp(&in_attack2, args[1] );}
 void IN_UseDown ( const CCommand &args ) {KeyDown(&in_use, args[1] );}
 void IN_UseUp ( const CCommand &args ) {KeyUp(&in_use, args[1] );}

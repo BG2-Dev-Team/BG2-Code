@@ -77,6 +77,7 @@ public:
 	void	Initialize( void );
 	int		GetIDTarget() const;
 	void	UpdateIDTarget( void );
+	bool	IsBetaTester() const; //BG3 - beta testers get extra stuff
 	void	PrecacheFootStepSounds( void );
 	const char	*GetPlayerModelSoundPrefix( void );
 

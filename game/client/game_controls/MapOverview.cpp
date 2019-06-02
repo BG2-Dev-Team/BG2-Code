@@ -1078,7 +1078,8 @@ bool CMapOverview::ShouldDraw( void )
 
 void CMapOverview::UpdateSizeAndPosition()
 {
-	if ( g_pSpectatorGUI && g_pSpectatorGUI->IsVisible() )
+	//BG3 - Specator bars removed
+	/*if ( g_pSpectatorGUI && g_pSpectatorGUI->IsVisible() )
 	{
 		int iScreenWide, iScreenTall;
 		GetHudSize( iScreenWide, iScreenTall );
@@ -1095,7 +1096,7 @@ void CMapOverview::UpdateSizeAndPosition()
 			y = iTopBarHeight;
 
         SetBounds( x,y,w,MIN(h,iScreenTall) );
-	}
+	}*/
 }
 
 void CMapOverview::SetCenter(const Vector2D &mappos)

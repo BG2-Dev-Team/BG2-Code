@@ -93,6 +93,20 @@ CON_COMMAND(skirm, "Starts a 2-round competitive skirmish. An extra integer argu
 	engine->ServerExecute();
 }
 
+CON_COMMAND(dm, "Starts a single-round deathmatch. An extra integer argument, if provided, specifies the number of rounds.") {
+	if (!verifyMapModePermissions(__FUNCTION__))
+		return;
+	int roundCount = 1;
+	if (args.ArgC() > 1)
+		roundCount = atoi(args[1]);
+	if (roundCount < 1)
+		return;
+
+	mp_rounds.SetValue(roundCount);
+	engine->ServerCommand("exec dm.cfg\n");
+	engine->ServerExecute();
+}
+
 CON_COMMAND(changemap, "Changes the server to the specified map") {
 	if (!verifyMapModePermissions(__FUNCTION__) || args.ArgC() < 2)
 		return;

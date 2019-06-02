@@ -73,6 +73,17 @@ CPlayerClass::CPlayerClass(const char* abrv) {
 		m_pPopCounter = new NClassQuota::SPopulationCounter;
 }
 
+uint8 CPlayerClass::numChooseableUniformsForPlayer(CBasePlayer* pPlayer) const {
+	uint8 result;
+	if (m_bForceRandomUniform)
+		result = 1;
+	else if (m_bLastUniformRestricted && !ToHL2MPPlayer(pPlayer)->IsBetaTester())
+		result = m_iNumUniforms - 1;
+	else
+		result = m_iNumUniforms;
+	return result;
+}
+
 const CWeaponDef* CPlayerClass::getWeaponDef(byte iWeapon) const {
 	const char* name = m_aWeapons[iWeapon].m_pszWeaponPrimaryName;
 	return CWeaponDef::GetDefForWeapon(name);
@@ -422,6 +433,7 @@ DEC_BG3_PLAYER_CLASS(BInfantry, inf, b) {
 	m_iSkinDepth = 8;
 	m_iSleeveBase = SLEEVE_BINFANTRY;
 	m_iNumUniforms = 3;
+	m_bLastUniformRestricted = true;
 	//m_bAllowUniformSelection = true;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess";
@@ -595,6 +607,7 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 	m_iSleeveBase = SLEEVE_AINFANTRY;
 	m_iNumUniforms = 4;
 	m_pszDroppedHat = "models/player/american/infantry/american_hat.mdl";
+	m_bLastUniformRestricted = true;
 	//m_bAllowUniformSelection = true;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_longpattern";

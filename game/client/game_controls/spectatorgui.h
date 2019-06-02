@@ -62,8 +62,8 @@ public:
 	virtual void SetParent(vgui::VPANEL parent) { BaseClass::SetParent(parent); }
 	virtual void OnThink();
 
-	virtual int GetTopBarHeight() { return m_pTopBar->GetTall(); }
-	virtual int GetBottomBarHeight() { return m_pBottomBarBlank->GetTall(); }
+	//virtual int GetTopBarHeight() { return m_pTopBar->GetTall(); }
+	//virtual int GetBottomBarHeight() { return m_pBottomBarBlank->GetTall(); }
 	
 	virtual bool ShouldShowPlayerLabel( int specmode );
 
@@ -87,8 +87,8 @@ protected:
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 //	virtual void OnCommand( const char *command );
 
-	vgui::Panel *m_pTopBar;
-	vgui::Panel *m_pBottomBarBlank;
+	//vgui::Panel *m_pTopBar;
+	//vgui::Panel *m_pBottomBarBlank;
 
 	vgui::ImagePanel *m_pBannerImage;
 	vgui::Label *m_pPlayerLabel;

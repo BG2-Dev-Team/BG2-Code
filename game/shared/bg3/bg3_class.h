@@ -127,6 +127,7 @@ protected:
 public:
 	uint8			m_iSleeveBase = 0; //chosen sleeve skin is m_iSleeveBase + pOwner->m_iClassSkin - 1
 	bool			m_bForceRandomUniform = false;
+	bool			m_bLastUniformRestricted = false;
 	const char*		m_pszDroppedHat = 0;
 	//bool			m_bAllowUniformSelection = false; //allow uniform selection in the menu?
 
@@ -138,13 +139,13 @@ public:
 	inline bool isBritish() const { return m_iDefaultTeam == TEAM_BRITISH; }
 
 	inline uint8		numChooseableWeapons() const { return m_iChooseableKits; }
-	inline uint8		numChooseableUniforms() const { return m_bForceRandomUniform ? 1 : m_iNumUniforms; }
+	uint8				numChooseableUniformsForPlayer(CBasePlayer* pPlayer) const; // { return m_bForceRandomUniform ? 1 : m_iNumUniforms; }
 	inline uint8		numUniforms() const { return m_iNumUniforms; }
 	const CWeaponDef*	getWeaponDef(byte iKit) const;
 	void				getWeaponDef(byte iKit, const CWeaponDef** ppPrimary, const CWeaponDef** ppSecondary, const CWeaponDef** ppTertiary) const;
 	const CGunKit*		getWeaponKitChooseable(byte iWeapon) const; //indexes choosable weapons, skipping over non-choosable ones.
 
-	//EClassAvailability availabilityForPlayer(const CBasePlayer* pPlayer) const; //player can be null
+	
 
 #ifdef CLIENT_DLL
 	bool		shouldHaveWeaponSelectionMenu() const;

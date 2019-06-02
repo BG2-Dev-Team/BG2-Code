@@ -425,8 +425,8 @@ CSpectatorGUI::CSpectatorGUI(IViewPort *pViewPort) : EditablePanel( NULL, PANEL_
 	SetMouseInputEnabled( false );
 	SetKeyBoardInputEnabled( false );
 
-	m_pTopBar = new Panel( this, "topbar" );
- 	m_pBottomBarBlank = new Panel( this, "bottombarblank" );
+	//m_pTopBar = new Panel( this, "topbar" );
+ 	//m_pBottomBarBlank = new Panel( this, "bottombarblank" );
 
 	// m_pBannerImage = new ImagePanel( m_pTopBar, NULL );
 	m_pPlayerLabel = new Label( this, "playerlabel", "" );
@@ -478,13 +478,13 @@ void CSpectatorGUI::ApplySchemeSettings(IScheme *pScheme)
 		pConditions->deleteThis();
 	}
 
-	m_pBottomBarBlank->SetVisible( true );
-	m_pTopBar->SetVisible( true );
+	//m_pBottomBarBlank->SetVisible( true );
+	//m_pTopBar->SetVisible( true );
 
 	BaseClass::ApplySchemeSettings( pScheme );
 	SetBgColor(Color( 0,0,0,0 ) ); // make the background transparent
-	m_pTopBar->SetBgColor(GetBlackBarColor());
-	m_pBottomBarBlank->SetBgColor(GetBlackBarColor());
+	//m_pTopBar->SetBgColor(GetBlackBarColor());
+	//m_pBottomBarBlank->SetBgColor(GetBlackBarColor());
 	// m_pBottomBar->SetBgColor(Color( 0,0,0,0 ));
 	SetPaintBorderEnabled(false);
 
@@ -500,15 +500,15 @@ void CSpectatorGUI::ApplySchemeSettings(IScheme *pScheme)
 //-----------------------------------------------------------------------------
 void CSpectatorGUI::PerformLayout()
 {
-	int w,h,x,y;
+	int w, h; // , x, y;
 	GetHudSize(w, h);
 	
 	// fill the screen
 	SetBounds(0,0,w,h);
 
 	// stretch the bottom bar across the screen
-	m_pBottomBarBlank->GetPos(x,y);
-	m_pBottomBarBlank->SetSize( w, h - y );
+	//m_pBottomBarBlank->GetPos(x,y);
+	//m_pBottomBarBlank->SetSize( w, h - y );
 }
 
 //-----------------------------------------------------------------------------
@@ -608,10 +608,10 @@ void CSpectatorGUI::Update()
 {
 
 	int wide, tall;
-	int bx, by, bwide, btall;
+	//int bx, by, bwide, btall;
 
 	GetHudSize(wide, tall);
-	m_pTopBar->GetBounds( bx, by, bwide, btall );
+	//m_pTopBar->GetBounds( bx, by, bwide, btall );
 
 	IGameResources *gr = GameResources();
 	int specmode = GetSpectatorMode();
@@ -646,8 +646,8 @@ void CSpectatorGUI::Update()
 	else
 	{*/
 		// full top bar
-		m_pTopBar->SetSize( wide , btall ); // change width, keep height
-		m_pTopBar->SetPos( 0, 0 );
+		//m_pTopBar->SetSize( wide , btall ); // change width, keep height
+		//m_pTopBar->SetPos( 0, 0 );
 	//}
 
 	m_pPlayerLabel->SetVisible( ShouldShowPlayerLabel(specmode) );
@@ -684,7 +684,7 @@ void CSpectatorGUI::Update()
 	}
 
 	// update extra info field
-	wchar_t szEtxraInfo[1024];
+	/*wchar_t szEtxraInfo[1024];
 	wchar_t szTitleLabel[1024];
 	char tempstr[128];
 
@@ -712,7 +712,7 @@ void CSpectatorGUI::Update()
 	SetLabelText("extrainfo", szEtxraInfo );
 	SetLabelText("titlelabel", szTitleLabel );
 
-	UpdateTimer();//BG2 - Fire that timer! -HairyPotter
+	UpdateTimer();*///BG2 - Fire that timer! -HairyPotter
 }
 
 //-----------------------------------------------------------------------------

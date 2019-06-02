@@ -450,6 +450,7 @@ bool CBaseHudWeaponSelection::SelectSlot( int iSlot )
 //-----------------------------------------------------------------------------
 void CBaseHudWeaponSelection::UserCmd_Close(void)
 {
+	Msg(__FUNCTION__);
 	CancelWeaponSelection();
 }
 

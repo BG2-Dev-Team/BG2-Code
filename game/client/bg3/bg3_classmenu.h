@@ -328,7 +328,7 @@ public:
 	virtual void Update(void);
 	virtual bool NeedsUpdate(void) { return m_flNextGameRulesUpdate < gpGlobals->curtime; }
 	virtual bool HasInputElements(void) { return true; }
-	virtual void ShowPanel(bool bShow);
+	virtual void ShowPanel(bool bShow) override;
 	virtual void Paint(void);
 
 
@@ -344,6 +344,7 @@ public:
 private:
 	// VGUI2 overrides
 	virtual void	OnKeyCodePressed(vgui::KeyCode code);
+	virtual void	OnKeyCodeTyped(vgui::KeyCode code); //for ESCAPE key
 	virtual void	ApplySchemeSettings(vgui::IScheme *pScheme);
 	virtual void	PerformLayout();
 	void			UpdateToMatchTeam(int iTeam);

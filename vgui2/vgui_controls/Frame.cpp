@@ -2212,6 +2212,7 @@ void Frame::OnKeyCodeTyped(KeyCode code)
 		input()->GetAppModalSurface() == GetVPanel() )
 	{
 		// ESC cancels, unless we're in the engine - in the engine ESC flips between the UI and the game
+		Msg(__FUNCTION__);
 		CloseModal();
 	}
 	// Usually don't chain back as Frames are the end of the line for key presses, unless
