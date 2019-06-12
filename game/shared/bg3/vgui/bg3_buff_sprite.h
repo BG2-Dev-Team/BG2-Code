@@ -71,7 +71,7 @@ public:
 
 #ifdef CLIENT_DLL
 	//RenderGroup_t GetRenderGroup() override { return RENDER_GROUP_TWOPASS; }
-	bool ShouldDraw() override { return /*BaseClass::ShouldDraw() &&*/ (m_iForTeam == CBasePlayer::GetLocalPlayer()->GetTeamNumber()); }
+	bool ShouldDraw() override { return /*BaseClass::ShouldDraw() &&*/ (CBasePlayer::GetLocalPlayer() && m_iForTeam == CBasePlayer::GetLocalPlayer()->GetTeamNumber()); }
 #endif
 };
 
