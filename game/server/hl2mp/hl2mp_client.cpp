@@ -116,7 +116,7 @@ const char *GetGameDescription()
 	if ( g_pGameRules ) // this function may be called before the world has spawned, and the game rules initialized
 		return g_pGameRules->GetGameDescription();
 	else
-		return "Battle Grounds III Beta"; //BG2 - changed this from Half Life 2 Deathmatch
+		return "Battle Grounds III"; //BG2 - changed this from Half Life 2 Deathmatch
 }
 
 //-----------------------------------------------------------------------------
