@@ -57,6 +57,7 @@ public:
 #define set(a) a->SetFont(GetDefaultBG3FontScaledHorizontal(pScheme, a))
 		set(m_pButtonBegin);
 		set(m_pButtonCreateDisconnect);
+		set(m_pButtonMutePlayers); // BG3 - Ricochet
 		set(m_pButtonOptions);
 		set(m_pButtonSave);
 		set(m_pButtonLeave);
@@ -98,9 +99,10 @@ public:
 		imgarr[4] = m_pImgLeave;*/
 		buttarr[0] = m_pButtonBegin;
 		buttarr[1] = m_pButtonCreateDisconnect;
-		buttarr[2] = m_pButtonSave;
-		buttarr[3] = m_pButtonOptions;
-		buttarr[4] = m_pButtonLeave;
+		buttarr[2] = m_pButtonMutePlayers; // BG3 - Ricochet
+		buttarr[3] = m_pButtonSave;
+		buttarr[4] = m_pButtonOptions;
+		buttarr[5] = m_pButtonLeave;
 		
 		// BG2 - VisualMelon - fudge button/img widths for small screens
 		int biWide = (width * 2) / (narr * 2 + 1); // fit narr things in space of narr+0.5
@@ -118,6 +120,7 @@ public:
 
 		InRolloverBegin=false;
 		InRolloverCreateDisconnect=false;
+		InRolloverMutePlayers = false; // BG3 - Ricochet
 		InRolloverSave=false;
 		InRolloverOptions=false;
 		InRolloverLeave=false;
@@ -308,6 +311,29 @@ public:
 			}
 		}
 	}
+	void CheckRolloverMutePlayers(int x, int y, int fx, int fy) // BG3 - Ricochet
+	{
+		int bx, by, bw, bh; // button xpos, ypos, width, height
+
+		m_pButtonMutePlaters->GetPos(bx, by);
+		m_pButtonMutePlayers->GetSize(bw,bh);
+
+		bx = bx + fx; // xpos for button (rel to screen)
+		by = by + fy; // ypos for button (rel to screen)
+
+		// Check and see if mouse cursor is within button bounds
+		if ((x > bx && x < bx + bw) && (y > by && y < by + bh))
+		{
+			if (!InRolloverMutePlayers) {
+				InRolloverLeave = true;
+			}
+		}
+		else {
+			if (InRolloverMutePlayers) {
+				InRolloverLeave = false;
+			}
+		}
+	}
 	bool CMainMenu::InGame()
 	{
 		C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
@@ -328,6 +354,7 @@ private:
 	//vgui::ImagePanel *m_pImgLeave;
 	vgui::FancyButton *m_pButtonBegin;
 	vgui::FancyButton *m_pButtonCreateDisconnect;
+	vgui::FancyButton *m_pButtonMutePlayers; // BG3 - Ricochet
 	vgui::FancyButton *m_pButtonSave;
 	vgui::FancyButton *m_pButtonOptions;
 	vgui::FancyButton *m_pButtonLeave;
@@ -340,6 +367,7 @@ private:
 	bool InGameLayout;
 	bool InRolloverBegin;
 	bool InRolloverCreateDisconnect;
+	bool InRolloverMutePlayers; // BG3 - Ricochet
 	bool InRolloverSave;
 	bool InRolloverOptions;
 	bool InRolloverLeave;
@@ -409,6 +437,12 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 	setup(m_pButtonCreateDisconnect);
 	m_pButtonCreateDisconnect->SetCommand( "OpenCreateMultiplayerGameDialog" );
 	m_pButtonCreateDisconnect->SetText("#BG3_Main_Create_Server");
+
+	// Mute Players BG3 - Ricochet
+	m_pButtonMutePlayers = vgui::SETUP_PANEL(new vgui::FancyButton(this, "btnMute", ""));
+	setup(m_pButtonMutePlayers);
+	m_pButtonMutePlayers->SetCommand("OpenPlayerListDialog");
+	m_pButtonMutePlayers->SetText("#BG3_Main_PlayerList");
  
 	// Save
 	m_pButtonSave = vgui::SETUP_PANEL(new vgui::FancyButton(this, "btnBG2", ""));
@@ -471,6 +505,10 @@ void CMainMenu::OnCommand(const char *command)
 	else if ( !Q_stricmp( command, "Disconnect" ) )
 	{
 		engine->ClientCmd("Disconnect");
+	}
+	else if (!Q_stricmp(command, "OpenPlayerListDialog"))
+	{
+		engine->ClientCmd("gamemenucommand OpenPlayerListDialog");
 	}
 	BaseClass::OnCommand( command );
 	//BaseClass::OnCommand(command);
