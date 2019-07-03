@@ -84,25 +84,29 @@ public:
 	}
 	void CMainMenu::PerformDefaultLayout()
 	{
-		const int narr = 5;
+		int narr = 6;
 		int x;
 		//int verx;
 		//verx = 296;
 		x = 270;
-		vgui::FancyButton *buttarr[narr];
+		vgui::FancyButton *buttarr[6];
 		int width = this->GetWide();
 		
-		/*imgarr[0] = m_pImgBegin;
-		imgarr[1] = m_pImgCreateDisconnect;
-		imgarr[2] = m_pImgSave;
-		imgarr[3] = m_pImgOptions;
-		imgarr[4] = m_pImgLeave;*/
 		buttarr[0] = m_pButtonBegin;
 		buttarr[1] = m_pButtonCreateDisconnect;
-		buttarr[2] = m_pButtonMutePlayers; // BG3 - Ricochet
-		buttarr[3] = m_pButtonSave;
-		buttarr[4] = m_pButtonOptions;
-		buttarr[5] = m_pButtonLeave;
+		buttarr[2] = m_pButtonSave;
+		buttarr[3] = m_pButtonOptions;
+
+		if (InGame()) {
+			buttarr[4] = m_pButtonMutePlayers; // BG3 - Ricochet
+			buttarr[5] = m_pButtonLeave;
+			m_pButtonMutePlayers->SetVisible(true);
+		}
+		else {
+			buttarr[4] = m_pButtonLeave;
+			m_pButtonMutePlayers->SetVisible(false);
+			narr = 5;
+		}
 		
 		// BG2 - VisualMelon - fudge button/img widths for small screens
 		int biWide = (width * 2) / (narr * 2 + 1); // fit narr things in space of narr+0.5
@@ -315,7 +319,7 @@ public:
 	{
 		int bx, by, bw, bh; // button xpos, ypos, width, height
 
-		m_pButtonMutePlaters->GetPos(bx, by);
+		m_pButtonMutePlayers->GetPos(bx, by);
 		m_pButtonMutePlayers->GetSize(bw,bh);
 
 		bx = bx + fx; // xpos for button (rel to screen)

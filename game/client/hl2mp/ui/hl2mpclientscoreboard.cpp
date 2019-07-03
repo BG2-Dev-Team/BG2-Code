@@ -65,9 +65,10 @@ CHL2MPClientScoreBoardDialog::~CHL2MPClientScoreBoardDialog()
 //-----------------------------------------------------------------------------
 void CHL2MPClientScoreBoardDialog::PaintBackground()
 {
+	PerformLayout();
 	m_pPlayerList->SetBgColor(Color(0, 0, 0, 0));
 	m_pBritishPlayerList->SetBgColor(Color(0, 0, 0, 0));
-
+	
 	m_pPlayerList->SetBorder(NULL);
 	m_pBritishPlayerList->SetBorder(NULL);
 

@@ -38,5 +38,5 @@ commented on the following form:
 //BG3 - Awesome - these are the cvars the client's CCreateMapDialog needs to know about
 
 #define FLAGS FCVAR_GAMEDLL | FCVAR_NOTIFY | FCVAR_REPLICATED
-ConVar bot_difficulty("bot_difficulty", "3", FLAGS, "Bot skill level. 0,1,2,3 are easy, norm, hard, and random, respectively.");
+ConVar bot_difficulty("bot_difficulty", "0", FLAGS, "Bot skill level. 0,1,2,3 are easy, norm, hard, and random, respectively.");
 ConVar bot_minplayers_mode("bot_minplayers_mode", "0", FLAGS, "0 bots disabled, 1 use bot_minplayers, 2 let bot_minplayers_map override, 3 use only bot_minplayers_map");

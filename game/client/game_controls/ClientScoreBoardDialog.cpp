@@ -211,6 +211,8 @@ void CClientScoreBoardDialog::PostApplySchemeSettings( vgui::IScheme *pScheme )
 //-----------------------------------------------------------------------------
 void CClientScoreBoardDialog::ShowPanel(bool bShow)
 {
+	//LoadControlSettings("Resource/UI/ScoreBoard.res"); //BG3 - recalculate size every time HACK HACK
+
 	// Catch the case where we call ShowPanel before ApplySchemeSettings, eg when
 	// going from windowed <-> fullscreen
 	if ( m_pImageList == NULL )

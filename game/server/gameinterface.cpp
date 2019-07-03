@@ -1101,6 +1101,7 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	mp_limit_mapsize_high.Revert();
 	lb_enforce_weapon_amer.Revert();
 	lb_enforce_weapon_brit.Revert();
+	bot_minplayers_map.Revert();
 
 	//done. we can now exec the map config
 	char	szExec[256];
