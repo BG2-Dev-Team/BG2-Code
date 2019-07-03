@@ -21,7 +21,7 @@ extern ConVar mp_limit_mapsize_high;
 
 namespace NClassQuota {
 #define MAX_NUM_BOTS_PER_CLASS 2
-	
+
 #ifndef CLIENT_DLL
 	//BG3 - Awesome - I'm TIRED of Valve's list classes being so non-functional and undocumented...
 	// so here we go with my own list type I wrote more than a whole year ago in 2017 - May 2018
@@ -181,7 +181,7 @@ namespace NClassQuota {
 
 	void NotifyPlayerChangedTeamClass(const CHL2MP_Player* pPlayer, const CPlayerClass* pNextClass, uint8 iNextTeam) {
 		if (!pNextClass) {
-			Warning("In " __FUNCTION__ ", pNextClass is NULL");
+			Warning("In NotifyPlayerChangedTeamClass: pNextClass is NULL");
 			return;
 		}
 
@@ -223,7 +223,7 @@ namespace NClassQuota {
 		}
 	}
 
-	
+
 
 	int8 GetLimitTeamClass(uint8 iTeam, uint8 iClass) {
 		const CPlayerClass* pClass = CPlayerClass::fromNums(iTeam, iClass);
@@ -232,7 +232,7 @@ namespace NClassQuota {
 	int8 GetLimitForClass(const CPlayerClass* pClass) {
 		int numPlayers = HL2MPRules()->NumConnectedClients();
 
-		//TODO find a better place to initialize these 
+		//TODO find a better place to initialize these
 		if (!pClass->GetLimitsAreInitialized())
 			pClass->InitLimits();
 		if (numPlayers <= mp_limit_mapsize_low.GetInt())
@@ -244,7 +244,7 @@ namespace NClassQuota {
 	}
 
 	bool PlayerMayJoinTeam(const CHL2MP_Player* pPlayer, uint8 iTeam, CHL2MP_Player** ppBotToSwitch) {
-		
+
 		//check so we don't ruin the team balance..
 		//BG2 - Tjoppen - don't bother with checking balance if we're just changing class, not team.
 		//					CHL2MPRules::Think() will make sure the teams are kept balanced.
@@ -331,7 +331,7 @@ CON_COMMAND(class_report, "Reports populations of all player classes")
 		const CPlayerClass* pClass = pList[i];
 		int limit = NClassQuota::GetLimitForClass(pClass);
 		int iTeam = pClass->m_iDefaultTeam;
-		
+
 		Msg("%i - %s - (%i/%i)/%i\n",
 			iTeam,
 			pClass->m_pszAbbreviation,

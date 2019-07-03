@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -14,7 +14,9 @@
 struct studiohdr_t;
 
 #include <stdio.h>
+#include <tier0/valve_minmax_off.h>
 #include <stdlib.h>
+#include <tier0/valve_minmax_on.h>
 
 #include <tier0/platform.h>
 #include <tier0/dbg.h>

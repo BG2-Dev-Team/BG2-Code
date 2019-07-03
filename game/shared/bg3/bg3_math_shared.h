@@ -34,7 +34,7 @@ commented on the following form:
 #ifndef BG3_MATH
 #define BG3_MATH
 
-#include "bg3\Math\bg3_rand.h"
+#include "bg3/Math/bg3_rand.h"
 
 #ifndef CLIENT_DLL
 #include "../../server/cbase.h"
@@ -42,7 +42,7 @@ commented on the following form:
 #else
 #include "../../client/cbase.h"
 
-#endif 
+#endif
 
 #define SIGNOF(a) ((a) < 0 ? -1 : 1)
 
@@ -77,7 +77,7 @@ typedef float rad_t;
 ************************************************************************************/
 rad_t VectorAngleFromPlayerRelative(CBasePlayer* pPlayer, const Vector& vOffset);
 inline rad_t VectorAngleFromPlayer(CBasePlayer* pPlayer, const Vector& vWorldLocation) {
-	Vector offset = vWorldLocation - pPlayer->GetAbsOrigin(); 
+	Vector offset = vWorldLocation - pPlayer->GetAbsOrigin();
 	return VectorAngleFromPlayerRelative(pPlayer, offset);
 }
 

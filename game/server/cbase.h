@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -26,7 +26,6 @@
 
 // Misc C-runtime library headers
 #include <math.h>
-
 #include <stdio.h>
 
 // tier 0
@@ -86,7 +85,7 @@ class ISave;
 class IRestore;
 
 // maximum number of targets a single multi_manager entity may be assigned.
-#define MAX_MULTI_TARGETS	16 
+#define MAX_MULTI_TARGETS	16
 
 // NPCEvent.h declarations
 struct animevent_t;
@@ -118,7 +117,7 @@ enum
 	CDMG_TIMEBASED
 };
 
-// when calling KILLED(), a value that governs gib behavior is expected to be 
+// when calling KILLED(), a value that governs gib behavior is expected to be
 // one of these three values
 #define GIB_NORMAL			0// gib if entity was overkilled
 #define GIB_NEVER			1// never gib, no matter how much death damage is done ( freezing, etc )

@@ -29,7 +29,7 @@ void Permissions::RefreshPermissionsFromFile() {
 			nextPermission->m_pNextPermission = new Permissions();
 			nextPermission = nextPermission->m_pNextPermission;
 
-			strcpy_s(nextPermission->m_name, pKey->GetName());
+			strcpy(nextPermission->m_name, pKey->GetName());
 			nextPermission->m_bPermissionManage = pKey->FindKey("permissions_manage") != NULL;
 			nextPermission->m_bPlayerManage = pKey->FindKey("player_manage") != NULL;
 			nextPermission->m_bMapMode = pKey->FindKey("mapmode") != NULL;

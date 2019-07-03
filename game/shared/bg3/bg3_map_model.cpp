@@ -99,7 +99,7 @@ bool CMapInfo::MapExists(const char* pszMapName) {
 }
 
 void CMapInfo::SetName(const char* pszName) {
-	strcpy_s(m_pszMapName, pszName);
+	strcpy(m_pszMapName, pszName);
 
 	//Find the . and set it to null, simplifies later searches
 	bool bFound = false;

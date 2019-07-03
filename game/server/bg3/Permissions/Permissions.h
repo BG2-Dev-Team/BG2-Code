@@ -3,6 +3,7 @@
 
 #include "cbase.h"
 #include "vector"
+#include <string>
 
 class CHL2MP_Player;
 
@@ -17,6 +18,7 @@ public:
 	uint8 m_bConsoleAccess : 1; //general console access, supersedes everything else.
 	typedef std::string id_t;
 	std::vector<id_t> m_players; //which players have these permissions?
+    // std::vector<std::string> m_players; //which players have these permissions?
 private:
 	Permissions* m_pNextPermission; //next permission in the list
 	static Permissions* const s_pFirstPermission; //first permission in the list

@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -23,7 +23,9 @@ class CHL2MP_Player;
 #include "hl2mp_gamerules.h"
 #include "utldict.h"
 #include "bg3/Math/bg3_speedmod_list.h"
+#include "tier0/valve_minmax_off.h"
 #include "bg3/Permissions/Permissions.h"
+#include "tier0/valve_minmax_on.h"
 
 //=============================================================================
 // >> HL2MP_Player
@@ -52,7 +54,7 @@ public:
 
 	CHL2MP_Player();
 	~CHL2MP_Player( void );
-	
+
 	static CHL2MP_Player *CreatePlayer( const char *className, edict_t *ed )
 	{
 		CHL2MP_Player::s_PlayerEdict = ed;
@@ -97,7 +99,7 @@ public:
 			bool MayRespawnOnTeamChange(int previousTeam); //BG3 - specialized this function to team changes - Awesome
 			void HandleSpeedChanges(void);
 	//
-		
+
 	int FlashlightIsOn( void );
 	//void FlashlightTurnOn( void );
 	//void FlashlightTurnOff( void );
@@ -124,12 +126,12 @@ public:
 	void SetPlayerModel( void );
 	void SetPlayerTeamModel( void );
 	Activity TranslateTeamActivity( Activity ActToTranslate );
-	
+
 	void  PickDefaultSpawnTeam( void );
 	void  SetupPlayerSoundsByModel( const char *pModelName );
 	const char *GetPlayerModelSoundPrefix( void );
 	int	  GetPlayerModelType( void ) { return m_iPlayerSoundType;	}
-	
+
 	//void  DetonateTripmines( void ); //BG2
 
 	void Reset();
@@ -158,7 +160,7 @@ public:
 	Vector m_vecTotalBulletForce;	//Accumulator for bullet force in a single frame
 
 	// Tracks our ragdoll entity.
-	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle 
+	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle
 
 	virtual bool	CanHearAndReadChatFrom( CBasePlayer *pPlayer );
 
@@ -169,7 +171,7 @@ public:
 
 	//inline bool IsBritish(void) { return GetTeamNumber() == TEAM_BRITISH; }
 
-		
+
 private:
 
 	CNetworkQAngle( m_angEyeAngles );
@@ -228,7 +230,7 @@ private:
 	float	m_fNextStamRegen;				//BG2 - Draco - stamina regen timer
 
 	//BG2 - Tjoppen - tickets. sometimes we don't want to remove tickets on spawn, such as when first joining a team
-	bool	m_bDontRemoveTicket;	
+	bool	m_bDontRemoveTicket;
 
 	//BG3 - spawn room allows for instantaneous spawn
 	bool	m_bInSpawnRoom;

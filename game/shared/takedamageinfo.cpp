@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -62,6 +62,7 @@ void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBa
 	m_flDamageBonus = 0.f;
 	m_bForceFriendlyFire = false;
 	m_flDamageForForce = 0.f;
+    m_iHitGroup = 0;
 }
 
 CTakeDamageInfo::CTakeDamageInfo()
@@ -115,8 +116,8 @@ void CTakeDamageInfo::Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBas
 }
 
 //-----------------------------------------------------------------------------
-// Squirrel the damage value away as BaseDamage, which will later be used to 
-// calculate damage force. 
+// Squirrel the damage value away as BaseDamage, which will later be used to
+// calculate damage force.
 //-----------------------------------------------------------------------------
 void CTakeDamageInfo::AdjustPlayerDamageInflictedForSkillLevel()
 {
@@ -183,7 +184,7 @@ CMultiDamage::CMultiDamage()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CMultiDamage::Init( CBaseEntity *pTarget, CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBaseEntity *pWeapon, const Vector &damageForce, const Vector &damagePosition, const Vector &reportedPosition, float flDamage, int bitsDamageType, int iKillType )
 {
@@ -214,7 +215,7 @@ void ApplyMultiDamage( void )
 #ifndef CLIENT_DLL
 	const CBaseEntity *host = te->GetSuppressHost();
 	te->SetSuppressHost( NULL );
-		
+
 	g_MultiDamage.GetTarget()->TakeDamage( g_MultiDamage );
 
 	te->SetSuppressHost( (CBaseEntity*)host );
@@ -255,10 +256,10 @@ void AddMultiDamage( const CTakeDamageInfo &info, CBaseEntity *pEntity )
 	if ( bHasPhysicsForceDamage && g_MultiDamage.GetDamageType() != DMG_GENERIC )
 	{
 		// If you hit this assert, you've called TakeDamage with a damage type that requires a physics damage
-		// force & position without specifying one or both of them. Decide whether your damage that's causing 
-		// this is something you believe should impart physics force on the receiver. If it is, you need to 
+		// force & position without specifying one or both of them. Decide whether your damage that's causing
+		// this is something you believe should impart physics force on the receiver. If it is, you need to
 		// setup the damage force & position inside the CTakeDamageInfo (Utility functions for this are in
-		// takedamageinfo.cpp. If you think the damage shouldn't cause force (unlikely!) then you can set the 
+		// takedamageinfo.cpp. If you think the damage shouldn't cause force (unlikely!) then you can set the
 		// damage type to DMG_GENERIC, or | DMG_CRUSH if you need to preserve the damage type for purposes of HUD display.
 		if ( g_MultiDamage.GetDamageForce() == vec3_origin || g_MultiDamage.GetDamagePosition() == vec3_origin )
 		{
@@ -281,7 +282,7 @@ void AddMultiDamage( const CTakeDamageInfo &info, CBaseEntity *pEntity )
 
 
 //============================================================================================================
-// Utility functions for physics damage force calculation 
+// Utility functions for physics damage force calculation
 //============================================================================================================
 //-----------------------------------------------------------------------------
 // Purpose: Returns an impulse scale required to push an object.
@@ -309,7 +310,7 @@ void CalculateExplosiveDamageForce( CTakeDamageInfo *info, const Vector &vecDir,
 		flForceScale = flClampForce;
 
 	// Fudge blast forces a little bit, so that each
-	// victim gets a slightly different trajectory. 
+	// victim gets a slightly different trajectory.
 	// This simulates features that usually vary from
 	// person-to-person variables such as bodyweight,
 	// which are all indentical for characters using the same model.
@@ -380,7 +381,7 @@ void GuessDamageForce( CTakeDamageInfo *info, const Vector &vecForceDir, const V
 
 // Debug functions for printing out damage types
 
-// This table maps the DMG_* defines to their strings such that 
+// This table maps the DMG_* defines to their strings such that
 // for DMG_XXX = i << x  then table[i] = string for DMG_XXX
 
 static const char * const s_DamageTypeToStrTable[] =
@@ -428,7 +429,7 @@ void CTakeDamageInfo::DebugGetDamageTypeString(unsigned int damageType, char *ou
 	if ( damageType == 0 )
 	{
 		int charsWrit = Q_snprintf(outbuf, outbuflength, "%s", s_DamageTypeToStrTable[0]);
-		
+
 		outbuflength -= charsWrit;
 		outbuf += charsWrit; // advance the output pointer (now it sits on the null terminator)
 	}
@@ -442,7 +443,7 @@ void CTakeDamageInfo::DebugGetDamageTypeString(unsigned int damageType, char *ou
 		{
 			// this bit was set. Print the corresponding entry from the table
 			// (the index is +1 because entry 1 in the table corresponds to 1 << 0)
-			int charsWrit = Q_snprintf(outbuf, outbuflength, "%s ", s_DamageTypeToStrTable[i + 1]); 
+			int charsWrit = Q_snprintf(outbuf, outbuflength, "%s ", s_DamageTypeToStrTable[i + 1]);
 
 			outbuflength -= charsWrit; // reduce the chars left
 			outbuf += charsWrit; // advance the output pointer (now it sits on the null terminator)
@@ -455,7 +456,7 @@ void CTakeDamageInfo::DebugGetDamageTypeString(unsigned int damageType, char *ou
 // instant damage
 
 #define DMG_GENERIC			0			// generic damage was done
-#define DMG_CRUSH			(1 << 0)	// crushed by falling or moving object. 
+#define DMG_CRUSH			(1 << 0)	// crushed by falling or moving object.
 // NOTE: It's assumed crush damage is occurring as a result of physics collision, so no extra physics force is generated by crush damage.
 // DON'T use DMG_CRUSH when damaging entities unless it's the result of a physics collision. You probably want DMG_CLUB instead.
 #define DMG_BULLET			(1 << 1)	// shot
@@ -467,8 +468,8 @@ void CTakeDamageInfo::DebugGetDamageTypeString(unsigned int damageType, char *ou
 #define DMG_CLUB			(1 << 7)	// crowbar, punch, headbutt
 #define DMG_SHOCK			(1 << 8)	// electric shock
 #define DMG_SONIC			(1 << 9)	// sound pulse shockwave
-#define DMG_ENERGYBEAM		(1 << 10)	// laser or other high energy beam 
-#define DMG_PREVENT_PHYSICS_FORCE		(1 << 11)	// Prevent a physics force 
+#define DMG_ENERGYBEAM		(1 << 10)	// laser or other high energy beam
+#define DMG_PREVENT_PHYSICS_FORCE		(1 << 11)	// Prevent a physics force
 #define DMG_NEVERGIB		(1 << 12)	// with this bit OR'd in, no damage type will be able to gib victims upon death
 #define DMG_ALWAYSGIB		(1 << 13)	// with this bit OR'd in, any damage type can be made to gib victims upon death.
 #define DMG_DROWN			(1 << 14)	// Drowning

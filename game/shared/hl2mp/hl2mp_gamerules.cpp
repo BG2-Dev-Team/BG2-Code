@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -31,7 +31,7 @@
 	#include "voice_gamemgr.h"
 	#include "iscorer.h"
 	#include "hl2mp_player.h"
-	#include "bg3\bg3_line_spawn.h"
+	#include "bg3/bg3_line_spawn.h"
 	#include "weapon_hl2mpbasehlmpcombatweapon.h"
 	#include "team.h"
 	#include "voice_gamemgr.h"
@@ -42,7 +42,7 @@
 	#include "../../server/bg2/bg2_maptriggers.h"
 	#include "../../server/bg2/flag.h"
 	#include "../../server/bg2/ctfflag.h"
-	#include "../../server/bg2/mapfilter.h" 
+	#include "../../server/bg2/mapfilter.h"
 	#include "../../shared/bg3/bg3_buffs.h"
 //BG2 - Tjoppen - #includes
 #include "../bg3/Bots/bg3_bot.h"
@@ -52,7 +52,7 @@
 #include "../shared/bg3/bg3_class_quota.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-#ifdef DEBUG	
+#ifdef DEBUG
 	#include "hl2mp_bot_temp.h"
 #endif
 
@@ -118,7 +118,7 @@ ConVar mp_autobalancetolerance("mp_autobalancetolerance", "2", FCVAR_GAMEDLL | F
 	ConVar mp_limit_off_b_##size( "mp_limit_off_b_"#size, "-1", CVAR_FLAGS,\
 									"Max number of Royal Commanders on " sizename " maps" );\
 	ConVar mp_limit_rif_b_##size( "mp_limit_rif_b_"#size, "-1", CVAR_FLAGS,\
-									"Max number of Jägers on " sizename " maps" );\
+									"Max number of Jï¿½gers on " sizename " maps" );\
 	ConVar mp_limit_ski_b_##size( "mp_limit_ski_b_"#size, "-1", CVAR_FLAGS,\
 									"Max number of Natives on " sizename " maps" );\
 	ConVar mp_limit_linf_b_##size("mp_limit_linf_b_"#size, "-1", CVAR_FLAGS,\
@@ -200,17 +200,17 @@ IMPLEMENT_NETWORKCLASS_ALIASED( HL2MPGameRulesProxy, DT_HL2MPGameRulesProxy )
 
 static HL2MPViewVectors g_HL2MPViewVectors(
 Vector(0, 0, 60),       //VEC_VIEW (m_vView) //BG2 - Awesome[Was 64, but lowered it to match 2007 height. The 2007 height was 64 too but for some reason the 2013 one was still too high so I lowered it here]
-							  
+
 	Vector(-16, -16, 0 ),	  //VEC_HULL_MIN (m_vHullMin)
 	Vector( 16,  16,  72 ),	  //VEC_HULL_MAX (m_vHullMax)
-							  					
+
 	Vector(-16, -16, 0 ),	  //VEC_DUCK_HULL_MIN (m_vDuckHullMin)
 	Vector( 16,  16,  36 ),	  //VEC_DUCK_HULL_MAX	(m_vDuckHullMax)
 	Vector(0, 0, 36),		  //VEC_DUCK_VIEW		(m_vDuckView) //BG2 - Awesome[Was 24, but increased it to match perceived 2007 height. See comment above]
-							  					
+
 	Vector(-10, -10, -10 ),	  //VEC_OBS_HULL_MIN	(m_vObsHullMin)
 	Vector( 10,  10,  10 ),	  //VEC_OBS_HULL_MAX	(m_vObsHullMax)
-							  					
+
 	Vector( 0, 0, 14 ),		  //VEC_DEAD_VIEWHEIGHT (m_vDeadViewHeight)
 
 	Vector(-16, -16, 0 ),	  //VEC_CROUCH_TRACE_MIN (m_vCrouchTraceMin)
@@ -353,7 +353,7 @@ CHL2MPRules::CHL2MPRules()
 	//m_fEndRoundTime = -1;
 
 	//perform drain check at the appropriate time
-	//HACKHACK: We should check UsingTickets() and set the update to happen 
+	//HACKHACK: We should check UsingTickets() and set the update to happen
 	//          one second from now if we're not in tickets mode.
 	//          The function always returns false when called from here though.
 	//          So we also delay checking fullcap by ten seconds.
@@ -387,11 +387,11 @@ const HL2MPViewVectors* CHL2MPRules::GetHL2MPViewVectors()const
 {
 	return &g_HL2MPViewVectors;
 }
-	
+
 CHL2MPRules::~CHL2MPRules( void )
 {
 #ifndef CLIENT_DLL
-	// Note, don't delete each team since they are in the gEntList and will 
+	// Note, don't delete each team since they are in the gEntList and will
 	// automatically be deleted from there, instead.
 	g_Teams.Purge();
 #endif
@@ -410,7 +410,7 @@ void CHL2MPRules::CreateStandardEntities( void )
 	g_pLastRebelSpawn = NULL;*/
 
 #ifdef DBGFLAG_ASSERT
-	CBaseEntity *pEnt = 
+	CBaseEntity *pEnt =
 #endif
 	CBaseEntity::Create( "hl2mp_gamerules", vec3_origin, vec3_angle );
 	Assert( pEnt );
@@ -587,8 +587,8 @@ int CHL2MPRules::CountAlivePlayersAndTickets(int iTeamNumber)
 }
 void CHL2MPRules::SwapPlayerTeam(CHL2MP_Player *pPlayer, bool skipAlive)
 {
-	if (!pPlayer 
-		|| (pPlayer->IsAlive() && skipAlive) 
+	if (!pPlayer
+		|| (pPlayer->IsAlive() && skipAlive)
 		|| pPlayer->GetTeamNumber() < TEAM_AMERICANS
 		|| pPlayer->GetTeamNumber() > TEAM_BRITISH)
 		return;
@@ -716,7 +716,7 @@ void CHL2MPRules::Think( void )
 {
 
 #ifndef CLIENT_DLL
-	
+
 	CGameRules::Think();
 
 	CTeam *pAmericans = g_Teams[TEAM_AMERICANS];
@@ -815,7 +815,7 @@ void CHL2MPRules::Think( void )
 	{
 		m_fNextFlagUpdate = gpGlobals->curtime + 1;
 	}
-	
+
 
 	//=========================
 	//Score Cvars
@@ -855,7 +855,7 @@ void CHL2MPRules::Think( void )
 		RestartRound(false);	//BG2 - restart round
 	}
 
-	//wave spawning 
+	//wave spawning
 	if (mp_respawnstyle.GetInt() == 1 || UsingTickets()) {
 		if ((m_fLastRespawnWave + mp_respawntime.GetFloat()) <= gpGlobals->curtime)
 		{
@@ -928,7 +928,7 @@ void CHL2MPRules::Think( void )
 	}
 
 	if ( gpGlobals->curtime > m_tmNextPeriodicThink )
-	{		
+	{
 		NScorePreserve::Think();
 		m_tmNextPeriodicThink = gpGlobals->curtime + 10.0f;
 	}
@@ -959,7 +959,7 @@ void CHL2MPRules::GoToIntermission( void )
 		pPlayer->AddFlag( FL_FROZEN );
 	}
 #endif
-	
+
 }
 
 /*void CHL2MPRules::RestartGame() {
@@ -974,7 +974,7 @@ bool CHL2MPRules::CheckGameOver()
 		// check to see if we should change levels now
 		if ( m_flIntermissionEndTime < gpGlobals->curtime )
 		{
-			ChangeLevel(); // intermission is over			
+			ChangeLevel(); // intermission is over
 		}
 
 		return true;
@@ -984,12 +984,12 @@ bool CHL2MPRules::CheckGameOver()
 	return false;
 }
 
-// when we are within this close to running out of entities,  items 
+// when we are within this close to running out of entities,  items
 // marked with the ITEM_FLAG_LIMITINWORLD will delay their respawn
 #define ENTITY_INTOLERANCE	100
 
 //=========================================================
-// FlWeaponRespawnTime - Returns 0 if the weapon can respawn 
+// FlWeaponRespawnTime - Returns 0 if the weapon can respawn
 // now,  otherwise it returns the time at which it can try
 // to spawn again.
 //=========================================================
@@ -1022,7 +1022,7 @@ Vector CHL2MPRules::VecWeaponRespawnSpot( CBaseCombatWeapon *pWeapon )
 		return pHL2Weapon->GetOriginalSpawnOrigin();
 	}
 #endif
-	
+
 	return pWeapon->GetAbsOrigin();
 }
 
@@ -1044,14 +1044,14 @@ bool GetObjectsOriginalParameters( CBaseEntity *pObject, Vector &vOriginalOrigin
 	{
 		if ( pItem->m_flNextResetCheckTime > gpGlobals->curtime )
 			 return false;
-		
+
 		vOriginalOrigin = pItem->GetOriginalSpawnOrigin();
 		vOriginalAngles = pItem->GetOriginalSpawnAngles();
 
 		pItem->m_flNextResetCheckTime = gpGlobals->curtime + sv_hl2mp_item_respawn_time.GetFloat();
 		return true;
 	}
-	else if ( CWeaponHL2MPBase *pWeapon = IsManagedObjectAWeapon( pObject )) 
+	else if ( CWeaponHL2MPBase *pWeapon = IsManagedObjectAWeapon( pObject ))
 	{
 		if ( pWeapon->m_flNextResetCheckTime > gpGlobals->curtime )
 			 return false;
@@ -1075,7 +1075,7 @@ void CHL2MPRules::ManageObjectRelocation( void )
 		for ( int i = 0; i < iTotal; i++ )
 		{
 			CBaseEntity *pObject = m_hRespawnableItemsAndWeapons[i].Get();
-			
+
 			if ( pObject )
 			{
 				Vector vSpawOrigin;
@@ -1231,7 +1231,7 @@ void CHL2MPRules::ClientDisconnected( edict_t *pClient )
 
 		//BG3 - notify class quotas that this player's class may be available
 		NClassQuota::NotifyPlayerLeave(pPlayer);
-	}	
+	}
 
 	BaseClass::ClientDisconnected( pClient );
 
@@ -1260,7 +1260,7 @@ bool CHL2MPRules::ClientConnected(edict_t *pEntity, const char *pszName, const c
 
 
 //=========================================================
-// Deathnotice. 
+// Deathnotice.
 //=========================================================
 void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info )
 {
@@ -1289,7 +1289,7 @@ void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info
 		if ( pScorer )
 		{
 			killer_ID = pScorer->GetUserID();
-			
+
 			if ( pInflictor )
 			{
 				if ( pInflictor == pScorer )
@@ -1373,13 +1373,13 @@ void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info
 void CHL2MPRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 {
 #ifndef CLIENT_DLL
-	
+
 	CHL2MP_Player *pHL2Player = ToHL2MPPlayer( pPlayer );
 
 	if ( pHL2Player == NULL )
 		return;
 
-	//BG2 - The only thing cl_playermodel does at this point is change your team when you change the value. What's the point? 
+	//BG2 - The only thing cl_playermodel does at this point is change your team when you change the value. What's the point?
 	//Just use the class selection menu like everyone else so we can skim more shit off. -HairyPotter
 	/*const char *pCurrentModel = modelinfo->GetModelName( pPlayer->GetModel() );
 	const char *szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( pPlayer->edict() ), "cl_playermodel" );
@@ -1432,7 +1432,7 @@ void CHL2MPRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	BaseClass::ClientSettingsChanged( pPlayer );
 #endif
-	
+
 }
 
 int CHL2MPRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
@@ -1453,17 +1453,17 @@ int CHL2MPRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget 
 }
 
 const char *CHL2MPRules::GetGameDescription( void )
-{ 
+{
 	//BG2 - Tjoppen - our game descriptions - putting the current version number in these might be a good idea
 	return "Battle Grounds III";
-	// 
-} 
+	//
+}
 
 bool CHL2MPRules::IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer )
 {
 	return true;
 }
- 
+
 float CHL2MPRules::GetMapRemainingTime()
 {
 	// if timelimit is disabled, return 0
@@ -1478,7 +1478,7 @@ float CHL2MPRules::GetMapRemainingTime()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CHL2MPRules::Precache( void )
 {
@@ -1501,7 +1501,7 @@ bool CHL2MPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		return false;
 	}
 
-	return BaseClass::ShouldCollide( collisionGroup0, collisionGroup1 ); 
+	return BaseClass::ShouldCollide( collisionGroup0, collisionGroup1 );
 
 }
 
@@ -1538,7 +1538,7 @@ CAmmoDef *GetAmmoDef()
 {
 	static CAmmoDef def;
 	static bool bInitted = false;
-	
+
 	if ( !bInitted )
 	{
 		bInitted = true;
@@ -1562,7 +1562,7 @@ CAmmoDef *GetAmmoDef()
 #else
 
 	bool CHL2MPRules::FShouldSwitchWeapon( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon )
-	{		
+	{
 		//BG2 - Why so serious? -HairyPotter
 		/*if ( pPlayer->GetActiveWeapon() && pPlayer->IsNetClient() )
 		{
@@ -1717,7 +1717,7 @@ void CHL2MPRules::CleanUpMap()
 		{
 			if ( m_iIterator == g_MapEntityRefs.InvalidIndex() )
 			{
-				// This shouldn't be possible. When we loaded the map, it should have used 
+				// This shouldn't be possible. When we loaded the map, it should have used
 				// CCSMapLoadEntityFilter, which should have built the g_MapEntityRefs list
 				// with the same list of entities we're referring to here.
 				Assert( false );
@@ -1736,7 +1736,7 @@ void CHL2MPRules::CleanUpMap()
 				}
 				else
 				{
-					// Cool, the slot where this entity was is free again (most likely, the entity was 
+					// Cool, the slot where this entity was is free again (most likely, the entity was
 					// freed above). Now create an entity with this specific index.
 					return CreateEntityByName( pClassname, ref.m_iEdict );
 				}
@@ -1750,7 +1750,7 @@ void CHL2MPRules::CleanUpMap()
 	filter.m_iIterator = g_MapEntityRefs.Head();
 
 	// DO NOT CALL SPAWN ON info_node ENTITIES!
-	
+
 	MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true );*/
 }
 
@@ -1761,7 +1761,7 @@ void CHL2MPRules::CheckChatForReadySignal( CHL2MP_Player *pPlayer, const char *c
 		if( !pPlayer->IsReady() )
 		{
 			pPlayer->SetReady( true );
-		}		
+		}
 	}
 }
 
@@ -1780,7 +1780,7 @@ void CHL2MPRules::CheckAllPlayersReady( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 const char *CHL2MPRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 {
@@ -1820,7 +1820,7 @@ const char *CHL2MPRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 	{
 		if ( pPlayer->GetTeamNumber() != TEAM_SPECTATOR )
 		{
-			pszFormat = "HL2MP_Chat_All";	
+			pszFormat = "HL2MP_Chat_All";
 		}
 		else
 		{
@@ -1877,7 +1877,7 @@ void CHL2MPRules::RespawnAll()
 
 		if (!pPlayer)
 			continue;
-		
+
 		pPlayer->Spawn();
 
 		//BG2 - Tjoppen - remove ragdoll - remember to change this to remove multiple ones if we decide to enable more corpses
