@@ -31,9 +31,7 @@ commented on the following form:
 //BG2 - <name of contributer>[ - <small description>]
 */
 
-#ifdef WIN32
 #pragma once
-#endif
 
 #include "cbase.h"
 #include "player.h"
@@ -47,7 +45,7 @@ CPlayerSearch gathers information about nearby friends, enemies, and flags, from
 	of an owning player.
 */
 struct CPlayerSearch {
-	
+
 private:
 	CBasePlayer* m_pOwner;
 	int			 m_iOwnerTeam; //so we don't have to access the pointer over and over
@@ -83,7 +81,7 @@ public:
 
 	static CFlag* FindClosestFlagToSpot(CBasePlayer* pPlayer, bool insight, bool checkTeam, Vector vSpot);
 
-	
+
 
 public:
 	/*
@@ -130,4 +128,3 @@ public:
 	bool UpdateNavpoint(); //checks if we need to move to the next navpoint
 	void UpdateNavpointFirst(); //updates our navpoint when we first enter navpoint mode
 };
-

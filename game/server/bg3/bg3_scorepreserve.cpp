@@ -34,7 +34,9 @@ commented on the following form:
 #include "cbase.h"
 #include "bg3_scorepreserve.h"
 #include "player_resource.h"
+#include "tier0/valve_minmax_off.h"
 #include "vector"
+#include "tier0/valve_minmax_on.h"
 
 using namespace std;
 

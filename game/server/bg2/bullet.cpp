@@ -17,7 +17,7 @@
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 	Contact information:
-		Tomas "Tjoppen" Härdin		mail, in reverse: se . gamedev @ tjoppen
+		Tomas "Tjoppen" Hï¿½rdin		mail, in reverse: se . gamedev @ tjoppen
 
 	You may also contact the (future) team via the Battle Grounds website and/or forum at:
 		www.bgmod.com
@@ -45,16 +45,18 @@
 #include "ipredictionsystem.h"
 
 //Needed for linux compile.
-//#ifdef min 
-//#undef min 
-//#endif 
-//     
-//#ifdef max 
-//#undef max 
+//#ifdef min
+//#undef min
+//#endif
+//
+//#ifdef max
+//#undef max
 //#endif
 //
 
+#include "tier0/valve_minmax_off.h"
 #include <vector>
+#include "tier0/valve_minmax_on.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -81,7 +83,7 @@ public:
 	int rwc; // this gets set to a max, and when it hits zero, a ray is cast (and it is reset to max (see resetRwc)
 
 	void resetRwc(bool flex)
-	{	
+	{
 		if (flex)
 			rwc = sv_simulatedbullets_rwc.GetInt();
 		else
@@ -187,7 +189,7 @@ private:
 	{
 //#if 0
 //		//8 units "safety margin" to make sure we passed our victim's head
-//		/*float	margin = 8, 
+//		/*float	margin = 8,
 //				headTolerance = 32,	//how close to the head must the bullet be?
 //				desiredBacktrace = margin + speed * gpGlobals->frametime * 2;	//*2 due to frametime variations*/
 //		if( !m_bHasPlayedNearmiss /*&& (GetAbsOrigin() - m_vTrajStart).LengthSqr() > desiredBacktrace*desiredBacktrace*/ )
@@ -267,7 +269,7 @@ private:
 
 				// See if we should reflect off this surface
 				float hitDot = DotProduct( tr.plane.normal, -vecDir );
-				
+
 				// BG2 - BP original was( hitDot < 0.5f ) but a musket ball should not bounce off walls if the angle is too big
 				//BG2 - Tjoppen - don't ricochet unless we're hitting a surface at a 60 degree horisontal angle or more
 				//					this is a hack so that bullets don't ricochet off the ground
@@ -309,7 +311,7 @@ private:
 			CTakeDamageInfo	dmgInfo( m_pOwner, m_pOwner, m_pWeapon, dmg, DMG_BULLET | /*DMG_PREVENT_PHYSICS_FORCE |*/DMG_CRUSH | DMG_NEVERGIB ); //Changed to avoid asserts. -HairyPotter
 			dmgInfo.SetDamagePosition( tr.endpos );
 			tr.m_pEnt->DispatchTraceAttack( dmgInfo, vecDir, &tr );
-			
+
 			ApplyMultiDamage();
 
 			//Adrian: keep going through the glass.
@@ -461,7 +463,7 @@ void UpdateBullets()
 			}
 		}
 	}
-	
+
 	//double endTime = Plat_FloatTime();
 	//double btime = endTime - startTime;
 	//if (flex && btime > 0.000001)
@@ -562,7 +564,7 @@ CBullet *CBullet::BulletCreate( const Vector &vecOrigin, const QAngle &angAngles
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CBullet::~CBullet( void )
 {
@@ -573,14 +575,14 @@ CBullet::~CBullet( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CBullet::CreateVPhysics( void )
 {
 	// Create the object in the physics system
 	//BG2 - Tjoppen - SOLID_VPHYSICS
-	VPhysicsInitNormal( SOLID_VPHYSICS, FSOLID_NOT_STANDABLE, false );	
+	VPhysicsInitNormal( SOLID_VPHYSICS, FSOLID_NOT_STANDABLE, false );
 
 	return true;
 }
@@ -593,7 +595,7 @@ unsigned int CBullet::PhysicsSolidMaskForEntity() const
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CBullet::Spawn( void )
 {
@@ -630,13 +632,13 @@ void CBullet::Spawn( void )
 		if ( m_pGlowTrail != NULL )
 		{
 			m_pGlowTrail->FollowEntity( this );
-			m_pGlowTrail->SetTransparency( kRenderTransAdd, 255, 255, 255, 90, kRenderFxNone );																				
+			m_pGlowTrail->SetTransparency( kRenderTransAdd, 255, 255, 255, 90, kRenderFxNone );
 			m_pGlowTrail->SetStartWidth( teststart.GetFloat() );
 			m_pGlowTrail->SetEndWidth( testend.GetFloat() );
 			m_pGlowTrail->SetLifeTime( testlife.GetFloat() );
 		}
 	}*/
-	
+
 }
 
 
@@ -653,8 +655,8 @@ void CBullet::Precache( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pOther - 
+// Purpose:
+// Input  : *pOther -
 //-----------------------------------------------------------------------------
 void CBullet::BoltTouch( CBaseEntity *pOther )
 {
@@ -670,7 +672,7 @@ void CBullet::BoltTouch( CBaseEntity *pOther )
 	if ( pAttacker->GetActiveWeapon() != firedWeapon ) //So the weapon belonging to the person that fired the shot is not the same as the one that fired the shot.
 	{
 		UTIL_Remove( this );
-		return;	
+		return;
 	}
 
 	//StopSound( entindex(), "Bullets.DefaultNearmiss" ); //We've hit something, stop the nearmiss sound.
@@ -745,11 +747,11 @@ void CBullet::BoltTouch( CBaseEntity *pOther )
 				data.m_vOrigin = tr.endpos;
 				data.m_vNormal = vForward;
 				data.m_nEntIndex = tr.fraction != 1.0f;
-			
+
 				DispatchEffect( "Impact", data );
 			}
 		}
-		
+
 		SetTouch( NULL );
 		SetThink( NULL );
 
@@ -776,7 +778,7 @@ void CBullet::BoltTouch( CBaseEntity *pOther )
 
 			// See if we should reflect off this surface
 			float hitDot = DotProduct( tr.plane.normal, -vecDir );
-			
+
 			// BG2 - BP original was( hitDot < 0.5f ) but a musket ball should not bounce off walls if the angle is too big
 			//BG2 - Tjoppen - don't ricochet unless we're hitting a surface at a 60 degree horisontal angle or more
 			//					this is a hack so that bullets don't ricochet off the ground
@@ -784,7 +786,7 @@ void CBullet::BoltTouch( CBaseEntity *pOther )
 			if ( ( hitDot < 0.2f ) && ( speed > 100 ) && tr.plane.normal.z < 0.5f )
 			{
 				Vector vReflection = 2.0f * tr.plane.normal * hitDot + vecDir;
-				
+
 				QAngle reflectAngles;
 
 				VectorAngles( vReflection, reflectAngles );
@@ -798,10 +800,10 @@ void CBullet::BoltTouch( CBaseEntity *pOther )
 			}
 			else
 			{
-				
+
 				//FIXME: We actually want to stick (with hierarchy) to what we've hit
 				SetMoveType( MOVETYPE_NONE );
-			
+
 				Vector vForward;
 
 				AngleVectors( GetAbsAngles(), &vForward );
@@ -812,9 +814,9 @@ void CBullet::BoltTouch( CBaseEntity *pOther )
 				data.m_vOrigin = tr.endpos;
 				data.m_vNormal = vForward;
 				data.m_nEntIndex = 0;
-			
-				DispatchEffect( "Impact", data ); 
-				
+
+				DispatchEffect( "Impact", data );
+
 				UTIL_ImpactTrace( &tr, DMG_BULLET );
 
 				SetTouch( NULL );
@@ -825,7 +827,7 @@ void CBullet::BoltTouch( CBaseEntity *pOther )
 				SetNextThink( gpGlobals->curtime + 2.0f );*/
 				UTIL_Remove( this );
 			}
-			
+
 			//BG2 - BP  TODO: musket balls only create sparks on metal surfaces Shoot some sparks
 			/*if ( UTIL_PointContents( GetAbsOrigin() ) == CONTENTS_WATER)
 			{
@@ -846,7 +848,7 @@ void CBullet::BoltTouch( CBaseEntity *pOther )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CBullet::BubbleThink( void )
 {
@@ -881,7 +883,7 @@ void CBullet::BubbleThink( void )
 		SetAbsVelocity( vecDir * speed );
 
 		//8 units "safety margin" to make sure we passed our victim's head
-		/*float	margin = 8, 
+		/*float	margin = 8,
 				headTolerance = 32,	//how close to the head must the bullet be?
 				desiredBacktrace = margin + speed * gpGlobals->frametime * 2;	//*2 due to frametime variations*/
 		if( !m_bHasPlayedNearmiss /*&& (GetAbsOrigin() - m_vTrajStart).LengthSqr() > desiredBacktrace*desiredBacktrace*/ )
@@ -946,7 +948,7 @@ CLIENTEFFECT_REGISTER_END()*/
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 C_Bullet::C_Bullet( void )
 {
@@ -954,8 +956,8 @@ C_Bullet::C_Bullet( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : updateType - 
+// Purpose:
+// Input  : updateType -
 //-----------------------------------------------------------------------------
 void C_Bullet::OnDataChanged( DataUpdateType_t updateType )
 {
@@ -970,8 +972,8 @@ void C_Bullet::OnDataChanged( DataUpdateType_t updateType )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : flags - 
+// Purpose:
+// Input  : flags -
 // Output : int
 //-----------------------------------------------------------------------------
 int C_Bullet::DrawModel( int flags )
@@ -981,7 +983,7 @@ int C_Bullet::DrawModel( int flags )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void C_Bullet::ClientThink( void )
 {

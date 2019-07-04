@@ -34,7 +34,7 @@ commented on the following form:
 #include "cbase.h"
 #include "bg3_line_spawn.h"
 #include "hl2mp_gamerules.h"
-#include "Bots\bg3_bot.h"
+#include "Bots/bg3_bot.h"
 
 BEGIN_DATADESC(CLineSpawn)
 	DEFINE_KEYFIELD(m_iForTeam, FIELD_INTEGER, "forTeam"),
@@ -57,7 +57,7 @@ void CLineSpawn::CalculateSpawnLocations(void) {
 		m_vSpawnDirection.z = 0; //zero out Z direction to simplify slopes
 		m_vSpawnDirection.NormalizeInPlace();
 		m_vSpawnDirection *= m_flSeparationDistance;
-		
+
 
 		//setup variables and such
 		m_aSpawnLocations.RemoveAll();
@@ -66,16 +66,16 @@ void CLineSpawn::CalculateSpawnLocations(void) {
 		trace_t tr;
 		const Vector VERTICAL_OFFSET(0, 0, m_flRaycastHeight);
 		const Vector LITTLE_UP(0, 0, m_flGroundSeparation); //so players don't actually spawn in the ground
-		//Keep going 
+		//Keep going
 		for (int i = 0; i < gpGlobals->maxClients; i++) {
 			nextLocation = nextBaseLocation + VERTICAL_OFFSET;
 			UTIL_TraceLine(nextLocation, nextBaseLocation, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr);
 			DebugDrawLine(nextLocation, tr.endpos, 255, 0, 0, false, 99999);
 			nextLocation = tr.endpos + LITTLE_UP;
-			
+
 
 			m_aSpawnLocations.AddToTail(nextLocation);
-			
+
 			nextBaseLocation += m_vSpawnDirection;
 		}
 	}
@@ -118,7 +118,7 @@ void CLineSpawn::RecalculateSpawns(void) {
 
 	CLineSpawn* pSpawn = NULL;
 	weighted_spawn_t ws;
-	
+
 	while ((pSpawn = static_cast<CLineSpawn*>(gEntList.FindEntityByClassname(pSpawn, "info_player_line"))) != NULL) {
 		DevMsg("Recalculating spawns for info_line_spawn\n");
 		pSpawn->m_hSpawnDirection = gEntList.FindEntityByName(NULL, pSpawn->m_iszSpawnDirection);

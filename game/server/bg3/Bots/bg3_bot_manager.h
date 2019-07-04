@@ -31,9 +31,9 @@ commented on the following form:
 //BG3 - <name of contributer>[ - <small description>]
 */
 
-#ifdef WIN32
+// #ifdef WIN32
 #pragma once
-#endif
+// #endif
 
 
 /*
@@ -68,7 +68,7 @@ private:
 	static int	CountPlayersOfTeam(int iTeam);
 
 	static int	CountBotsOfTeam(int iTeam);
-	
+
 	static void RemoveBotOfTeam(int iTeam);
 
 public:

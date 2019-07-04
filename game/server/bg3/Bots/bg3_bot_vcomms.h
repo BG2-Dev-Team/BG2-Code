@@ -30,9 +30,9 @@ commented on the following form:
 
 //BG3 - <name of contributer>[ - <small description>]
 */
-#ifdef WIN32
+
 #pragma once
-#endif
+
 #include "cbase.h"
 #include "player.h"
 #include "../shared/bg3/bg3_player_shared.h"
@@ -74,7 +74,7 @@ private:
 
 	//if not NONE , and m_pContextPlayer has a nearby bot teammate, and m_bRedirectForcedContextToTeammate the bot plays this context instead
 	//used for bots responding with yes/no to other players' and bots' commands
-	BotContext		m_eForcedContext; 
+	BotContext		m_eForcedContext;
 	bool			m_bRedirectForcedContextToTeammate;
 
 public:
@@ -108,6 +108,6 @@ public:
 	//for interpreting comms sent from real players and other bots
 	//returns default if the real context should not incite special response
 	//from bots
-	static BotContext		ParseIntToContext(int iCom); 
+	static BotContext		ParseIntToContext(int iCom);
 	static CBotComManager*	GetBotCommsOfPlayer(CBasePlayer* pPlayer);
 };

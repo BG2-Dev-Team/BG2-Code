@@ -58,7 +58,9 @@ in separate files for bot communication, map navigation, etc.
 #include "bg3_bot_navpoint.h"
 #include "bg3_bot_vcomms.h"
 #include "bg3_bot_debug.h"
+#include "tier0/valve_minmax_off.h"
 #include <chrono>
+#include "tier0/valve_minmax_on.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -208,9 +210,9 @@ bool CSDKBot::ThinkCheckExitMelee() {
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkCheckRetreat() {
 	//check for emergency close-quarters combat
-	if (m_PlayerSearchInfo.CloseEnemyDist() < 800 
-		&& m_PlayerSearchInfo.CloseEnemySecondDist() < 800 
-		&& m_PlayerSearchInfo.OutNumbered() > 0.57 
+	if (m_PlayerSearchInfo.CloseEnemyDist() < 800
+		&& m_PlayerSearchInfo.CloseEnemySecondDist() < 800
+		&& m_PlayerSearchInfo.OutNumbered() > 0.57
 		&& m_PlayerSearchInfo.CloseFriendDist() < 800
 		&& m_PlayerSearchInfo.CloseFriendDist() > RETREAT_STOP_RANGE
 		&& m_flForceNoRetreatTime < gpGlobals->curtime) {
@@ -227,7 +229,7 @@ bool CSDKBot::ThinkCheckRetreatEnd() {
 	bool nearFriend = false;
 	if (m_PlayerSearchInfo.CloseFriend() && m_PlayerSearchInfo.CloseFriendDist() < RETREAT_STOP_RANGE)
 		nearFriend = true;
-	
+
 	CBasePlayer* pEnemy = m_PlayerSearchInfo.CloseEnemy();
 	if (!pEnemy || nearFriend || m_flEndRetreatTime < gpGlobals->curtime) {
 		ScheduleThinker(m_pPrevThinker, 0.1f);
@@ -272,7 +274,7 @@ bool CSDKBot::ThinkCheckFlagOrFight() {
 	if (pFlag && pEnemy) {
 		float enemyDistanceToFlag = (pEnemy->GetAbsOrigin() - pFlag->GetAbsOrigin()).Length();
 		float ourDistanceToFlag = (m_PlayerSearchInfo.OwnerOrigin() - pFlag->GetAbsOrigin()).Length();
-		if (m_pCurThinker != &BotThinkers::Flag /*No self-scheduling!*/ 
+		if (m_pCurThinker != &BotThinkers::Flag /*No self-scheduling!*/
 			&& enemyDistanceToFlag > 100 //don't bother if they're on the flag
 			&& enemyDistanceToFlag > ourDistanceToFlag && m_PlayerSearchInfo.CloseEnemyDist() > MELEE_RANGE_START) {
 			m_bTowardFlag = true;
@@ -359,7 +361,7 @@ void CSDKBot::Think() {
 		m_PlayerSearchInfo.UpdateOwnerLocation();
 		m_PlayerSearchInfo.UpdatePlayers();
 
-		
+
 		if (m_bLastThinkWasStateChange) {
 			m_bLastThinkWasStateChange = false;
 			PostStateChangeThink();
@@ -379,7 +381,7 @@ void CSDKBot::Think() {
 			m_bLastThinkWasStateChange = true;
 			ThinkMsg("Change...");
 		}
-			
+
 		m_LastCmd = m_curCmd;
 		//ThinkMsg("Buttons...");
 		ButtonThink();
@@ -420,13 +422,13 @@ void CSDKBot::PostStateChangeThink() {
 	if (m_pWeapon && m_pWeapon->IsIronsighted() && m_pCurThinker != &BotThinkers::PointBlank) {
 		m_curCmd.buttons &= ~IN_ZOOM; //disable ironsights
 	}
-		
+
 	//Msg("%s\tchanged state from \"%s\" to \"%s\"\n", m_pPlayer->GetPlayerName(), m_pPrevThinker->m_ppszThinkerName, m_pCurThinker->m_ppszThinkerName);
 }
 
 
 //-------------------------------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkWaypoint_Begin() {
 	SetUpdateFlags(true);
@@ -588,7 +590,7 @@ bool CSDKBot::ThinkMedRange_Begin() {
 					random -= 0.2;
 			}
 		}
-		
+
 		if (random < 0.9) {
 			m_flNextFireTime = gpGlobals->curtime + bot_randfloat(0.1f, 3.2f);
 		}
@@ -629,7 +631,7 @@ bool CSDKBot::ThinkMedRange() {
 				bForceForward = true;
 		}
 	}
-	
+
 	if (gpGlobals->curtime > m_flNextStrafeTime) {
 		float randomStrafe = bot_randfloat();
 		if (randomStrafe < 0.4f) {
@@ -773,7 +775,7 @@ bool CSDKBot::ThinkMelee_End() {
 }
 
 //-------------------------------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::ThinkRetreat_Begin() {
 	SendBotVcommContext(RETREAT);
@@ -818,7 +820,7 @@ bool CSDKBot::ThinkPointBlank_Begin() {
 	SetUpdateFlags(false);
 	m_curCmd.buttons = 0;
 	//random crouching
-	
+
 
 	bool bZoom = m_PlayerSearchInfo.CloseEnemyDist() > 400 && bot_randfloat() < 0.7f;
 	if (!bZoom)
@@ -883,7 +885,7 @@ bool CSDKBot::ThinkPointBlank_End() {
 	m_curCmd.buttons &= ~IN_ATTACK;
 	m_curCmd.buttons &= ~IN_DUCK;
 	m_curCmd.buttons &= ~IN_ZOOM;
-	
+
 	m_flNextFireTime = FLT_MAX;
 
 	CheckSwitchWeapon(); //check if our weapon doesn't have melee and swap if need be
@@ -1020,7 +1022,7 @@ bool CSDKBot::ThinkFollow() {
 		LookAt(lookTarget, 0.5f);
 		if (bMove) m_curCmd.buttons = IN_FORWARD;
 	}
-		
+
 	return true;
 }
 
@@ -1037,7 +1039,7 @@ bool CSDKBot::ThinkFollow_End() {
 //-----------------------------------------------------------------------------
 void Bot_RunAll(void)
 {
-	/*if (g_iWaitingAmount && g_bServerReady) //Kind of a shitty hack. But this will allow people to spawn a certain amount of bots in 
+	/*if (g_iWaitingAmount && g_bServerReady) //Kind of a shitty hack. But this will allow people to spawn a certain amount of bots in
 	{										  //the server.cfg. Anyway, the server is ready, so do it.
 		BotPutInServer(g_iWaitingAmount, false);
 		g_iWaitingAmount = 0; //Make sure we've reset the waiting count.
@@ -1066,7 +1068,7 @@ void Bot_RunAll(void)
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPlayer = UTIL_PlayerByIndex(i);// );
-		
+
 		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
 		{
 			CSDKBot *pBot = CSDKBot::ToBot(pPlayer);
@@ -1103,14 +1105,14 @@ void Bot_RunAll(void)
 
 //-----------------------------------------------------------------------------
 // Purpose: Simulates a single frame of movement for a player
-// Input  : *fakeclient - 
-//			*viewangles - 
-//			forwardmove - 
-//			m_flSideMove - 
-//			upmove - 
-//			buttons - 
-//			impulse - 
-//			msec - 
+// Input  : *fakeclient -
+//			*viewangles -
+//			forwardmove -
+//			m_flSideMove -
+//			upmove -
+//			buttons -
+//			impulse -
+//			msec -
 // Output : 	virtual void
 //-----------------------------------------------------------------------------
 void RunPlayerMove(CSDKPlayer *fakeclient, CUserCmd &cmd, float frametime)
@@ -1287,5 +1289,3 @@ bool Bot_TraceAhead(CSDKBot *pBot, CUserCmd &cmd)
 
 	return false;
 }
-
-

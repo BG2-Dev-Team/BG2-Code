@@ -30,9 +30,9 @@ commented on the following form:
 
 //BG3 - <name of contributer>[ - <small description>]
 */
-#ifdef WIN32
+// #ifdef WIN32
 #pragma once
-#endif
+// #endif
 
 #include "cbase.h"
 #include "baseentity.h"
@@ -72,7 +72,7 @@ protected:
 	float			m_flRadius;
 
 	//at what range should a bot using this point start looking at enemies instead?
-	ENavPointRange	m_eRange; 
+	ENavPointRange	m_eRange;
 
 public:
 	static CBotNavpoint* ClosestPointToPlayer(CBasePlayer* pPlayer, bool bCheckVis = false);

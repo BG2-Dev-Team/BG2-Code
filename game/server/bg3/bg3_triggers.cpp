@@ -1,6 +1,6 @@
 #include "cbase.h"
 #include "bg3_triggers.h"
-#include "hl2mp\hl2mp_player.h"
+#include "hl2mp/hl2mp_player.h"
 
 void CSpawnRoom::StartTouch(CBaseEntity* pOther) {
 	//Msg("Entity enters trigger\n");

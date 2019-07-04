@@ -17,7 +17,7 @@
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 	Contact information:
-		Tomas "Tjoppen" Härdin		mail, in reverse: se . gamedev @ tjoppen
+		Tomas "Tjoppen" Hï¿½rdin		mail, in reverse: se . gamedev @ tjoppen
 
 	You may also contact the (future) team via the Battle Grounds website and/or forum at:
 		www.bgmod.com
@@ -30,9 +30,7 @@
 
 	//BG2 - <name of contributer>[ - <small description>]
 */
-#ifdef WIN32
 #pragma once
-#endif
 
 #include "cbase.h"
 #include "npcevent.h"
@@ -63,7 +61,7 @@ class CBaseBG2Weapon : public CBaseHL2MPCombatWeapon
 {
 	DECLARE_CLASS( CBaseBG2Weapon, CBaseHL2MPCombatWeapon );
 public:
-	
+
 
 	enum
 	{
@@ -159,8 +157,8 @@ public:
 			modifier = Def()->m_flShotAimModifier;
 		if ((pPlayer->RallyGetCurrentRallies() & RALLY_ACCURACY) && (m_bIsIronsighted || (pPlayer->GetFlags() & FL_DUCKING)))
 			multiplier = RALLY_ACCURACY_MOD;
-		
-		
+
+
 
 		float base;
 
@@ -321,7 +319,7 @@ public:
 	int		m_iLastAttackType;	//used for HitVerif stuff
 #endif
 
-	DECLARE_NETWORKCLASS(); 
+	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
 
 /*#ifndef CLIENT_DLL
@@ -360,7 +358,7 @@ DEC_BG3_WEAPON_DEF(weapon_##name);								\
 CWeapon##name::CWeapon##name( void ) : CBaseBG2Weapon()			\
 { m_pWeaponDef = &g_Def_weapon_##name; }						\
 DEF_BG3_WEAPON_DEF(weapon_##name)
-	
+
 
 //constructor follows
 

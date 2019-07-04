@@ -40,7 +40,7 @@ commented on the following form:
 
 #include "cbase.h"
 #include "baseentity.h"
-#include "hl2mp\hl2mp_gamerules.h"
+#include "hl2mp/hl2mp_gamerules.h"
 
 
 class CAmmoCache : public CServerOnlyPointEntity {
@@ -59,16 +59,3 @@ private:
 };
 
 #endif //BG3_AMMO_CACHE_H
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -32,7 +32,7 @@ commented on the following form:
 */
 #include "cbase.h"
 #include "hl2mp/hl2mp_player.h"
-//#include "Math\static_initialize.h"
+//#include "Math/static_initialize.h"
 #include "../shared/bg3/bg3_buffs.h"
 #include "../shared/bg3/bg3_class_quota.h"
 #include "Permissions/bg3_player_locator.h"
@@ -112,7 +112,7 @@ PLAYER_COMMAND(classkit) {
 PLAYER_COMMAND(voicecomm) {
 	if (args.ArgC() < 2)
 		return;
-	
+
 	int comm = atoi(args[1]);
 	pPlayer->HandleVoicecomm(comm);
 
@@ -353,7 +353,7 @@ PLAYER_COMMAND(rc) {
 //--------------------------------------------------------------------------
 // Bot commands
 //--------------------------------------------------------------------------
-/*PLAYER_COMMAND(bot_kick_all) { 
+/*PLAYER_COMMAND(bot_kick_all) {
 	if (!pPlayer->m_pPermissions->m_bBotManage)
 		return;
 

@@ -45,11 +45,11 @@ class CLineSpawn : public CServerOnlyPointEntity {
 	DECLARE_DATADESC();
 public:
 	CLineSpawn() {
-		Warning(__FUNCTION__ "\n");
+		// Warning(__FUNCTION__ "\n");
 	}
 
 private:
-	
+
 
 	CLineSpawn(const CLineSpawn& rhs);
 	CLineSpawn& operator=(const CLineSpawn& rhs);
@@ -68,13 +68,13 @@ private:
 	void CalculateSpawnLocations(void);
 
 	static	CLineSpawn* ForceFindSpawnForTeam(int iTeam, CLineSpawn* pExclude); //for when randomness isn't enough
-	
+
 public:
 	static	void		RecalculateSpawns(void); //ensures we're ready to call these other spawning function
 	static	CLineSpawn* RandomSpawnForTeam(int iTeam);
 	static	void		SpawnTeam(int iTeam, CLineSpawn* pSpawn);
 	static	bool		SpawnBothTeams(void); //we could put this in gamerules, but those files are cluttered enough
-	
+
 	inline bool	IsValid() { return m_hSpawnDirection && m_aSpawnLocations.Count() == gpGlobals->maxClients; }
 };
 

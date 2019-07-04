@@ -44,7 +44,7 @@
 #include "bg3/Bots/bg3_bot_vcomms.h"
 #include "../shared/bg3/bg3_buffs.h"
 #include "../shared/bg3/bg3_class_quota.h"
-#include "../shared/bg3/math/bg3_rand.h"
+#include "../shared/bg3/Math/bg3_rand.h"
 #include "bg3/bg3_scorepreserve.h"
 #include "bg3/Bots/bg3_bot_influencer.h"
 //
@@ -129,7 +129,7 @@ SendPropInt(SENDINFO(m_iSpeedModifier), 9, 0),
 //Rallying info
 SendPropInt(SENDINFO(m_iCurrentRallies), RALLY_NUM, SPROP_UNSIGNED), //BG3 - only RALY_NUM different rallies available, 1 bit per rally
 
-//	SendPropExclude( "DT_ServerAnimationData" , "m_flCycle" ),	
+//	SendPropExclude( "DT_ServerAnimationData" , "m_flCycle" ),
 //	SendPropExclude( "DT_AnimTimeMustBeFirst" , "m_flAnimTime" ),
 
 END_SEND_TABLE()
@@ -353,7 +353,7 @@ void CHL2MP_Player::SetDefaultAmmoFull(bool bPlaySound) {
 		CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
 		if (m_pCurClass->m_pszSecondaryAmmo)
 			CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
-		
+
 		if (bPlaySound)
 			EmitSound("AmmoCrate.Give");
 	}
@@ -363,7 +363,7 @@ bool CHL2MP_Player::HasDefaultAmmoFull() {
 	int primaryAmmoCount = CBasePlayer::GetAmmoCount(GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
 	int idealPrimaryAmmoCount = m_pCurClass->m_iDefaultPrimaryAmmoCount;
 
-	
+
 	if (m_pCurClass->m_pszSecondaryAmmo){
 		int secondaryAmmoCount = CBasePlayer::GetAmmoCount(GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
 		int idealSecondaryAmmoCount = m_pCurClass->m_iDefaultSecondaryAmmoCount;
@@ -443,9 +443,9 @@ void CHL2MP_Player::Spawn(void)
 		InitFogController();
 		return;	//we're done
 	}
-		
-	
-	
+
+
+
 
 	BaseClass::Spawn();
 
@@ -499,7 +499,7 @@ void CHL2MP_Player::Spawn(void)
 	SetPlayerUnderwater(false);
 
 	//BG2 - Put the speed handler into spawn so flag weight works, among other things. -HairyPotter
-	HandleSpeedChanges(); 
+	HandleSpeedChanges();
 	//
 
 	//BG2 - Tjoppen - tickets
@@ -657,7 +657,7 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 	if (bApplyDamage){
 		BaseClass::TraceAttack(*dmgInfo, vecDir, ptr, pAccumulator);
 	}
-		
+
 }
 
 void CHL2MP_Player::HandleSpeedChanges(void)
@@ -724,12 +724,12 @@ void CHL2MP_Player::PostThink(void)
 
 	if (m_iStamina > 100)
 		m_iStamina = 100;	//cap if for some reason it went over 100
-	
+
 	//check if our rallying time has ended
 	if (m_iCurrentRallies && m_flEndRallyTime < gpGlobals->curtime) {
 		BG3Buffs::RallyPlayer(0, this);
 		OnRallyEffectDisable();
-		
+
 	}
 
 	if (GetFlags() & FL_DUCKING) {
@@ -849,7 +849,7 @@ bool CHL2MP_Player::WantsLagCompensationOnEntity(const CBasePlayer *pPlayer, con
 	const Vector &vMyOrigin = GetAbsOrigin();
 	const Vector &vHisOrigin = pPlayer->GetAbsOrigin();
 
-	// get max distance player could have moved within max lag compensation time, 
+	// get max distance player could have moved within max lag compensation time,
 	// multiply by 1.5 to to avoid "dead zones"  (sqrt(2) would be the exact value)
 	float maxDistance = 1.5 * pPlayer->MaxSpeed() * sv_maxunlag.GetFloat();
 
@@ -1098,7 +1098,7 @@ void CHL2MP_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 extern int	gEvilImpulse101;
 //-----------------------------------------------------------------------------
-// Purpose: Player reacts to bumping a weapon. 
+// Purpose: Player reacts to bumping a weapon.
 // Input  : pWeapon - the weapon that the player bumped into.
 // Output : Returns true if player picked up the weapon
 //-----------------------------------------------------------------------------
@@ -1342,7 +1342,7 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass)
 	}
 
 	//if there's a bot to switch, switch it to this player's class
-	if (pBotToSwitch) { 
+	if (pBotToSwitch) {
 		//the bot either switches the class we were, or an infinite class on the other team
 		const CPlayerClass* pBotSwitchClass = GetNextPlayerClass();
 
@@ -1363,7 +1363,7 @@ void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass)
 	int previousTeam = GetTeamNumber();
 
 	//The following line prevents anyone else from stealing our spot..
-	//Without this line several teamswitching/new players can pick a free class, so there can be for instance 
+	//Without this line several teamswitching/new players can pick a free class, so there can be for instance
 	// two loyalists even though the limit is one.
 	//This may be slightly unfair since a still living player may "steal" a spot without spawning as that class,
 	// since it's possible to switch classes around very fast. a player could block the use of a limited class,
@@ -1387,8 +1387,8 @@ void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass)
 		CommitSuicide();
 
 		ChangeTeam(iTeam);
-		
-			
+
+
 		if (MayRespawnOnTeamChange(previousTeam)) {
 			Spawn();
 		}
@@ -1400,7 +1400,7 @@ void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass)
 	CTeam *team = GetTeam();
 	const char* pClassName = pClass->m_pszJoinName;
 
-	//BG2 - Tjoppen - TODO: usermessage this change 
+	//BG2 - Tjoppen - TODO: usermessage this change
 	//This bit of code needs to be run AFTER the team change... if it changed.
 	if (m_bNoJoinMessage)
 		m_bNoJoinMessage = false;
@@ -1788,12 +1788,12 @@ public:
 	}
 
 public:
-	
+
 
 	// In case the client has the player entity, we transmit the player index.
 	// In case the client doesn't have it, we transmit the player's model index, origin, and angles
 	// so they can create a ragdoll in the right place.
-	CNetworkHandle(CBaseEntity, m_hPlayer);	// networked entity handle 
+	CNetworkHandle(CBaseEntity, m_hPlayer);	// networked entity handle
 	CNetworkHandle(CBaseEntity, m_hHat);
 	CNetworkVector(m_vecRagdollVelocity);
 	CNetworkVector(m_vecRagdollOrigin);
@@ -1835,7 +1835,7 @@ void CHL2MP_Player::CreateRagdollEntity(void)
 	}
 
 	// If we already have a ragdoll, don't make another one.
-	//CHL2MPRagdoll *pRagdoll = dynamic_cast< CHL2MPRagdoll* >( m_hRagdoll.Get() );// This makes no sense? We just removed our ragdoll.. 
+	//CHL2MPRagdoll *pRagdoll = dynamic_cast< CHL2MPRagdoll* >( m_hRagdoll.Get() );// This makes no sense? We just removed our ragdoll..
 	// Now we're trying to cast to it?
 
 	//BG2 - Tjoppen - here's another place where we put code for multiple ragdolls
@@ -1863,11 +1863,11 @@ void CHL2MP_Player::CreateRagdollEntity(void)
 		pRagdoll->SetAbsOrigin(GetAbsOrigin());
 
 		//set destruction time
-		
+
 
 		//have a chance of having hat fall off
 		if (m_pCurClass->m_pszDroppedHat && bot_randfloat() < 0.1f) {
-			
+
 			CBaseEntity* pHat = CreateEntityByName("prop_physics_multiplayer");
 
 			if (pHat) {
@@ -1887,8 +1887,8 @@ void CHL2MP_Player::CreateRagdollEntity(void)
 				Vector vel = GetAbsVelocity() * 1.1f;
 				AngularImpulse imp;
 				pPhys->SetVelocity(&vel, &imp);
-				
-				
+
+
 				pRagdoll->m_hHat = pHat;
 			}
 		}
@@ -2112,7 +2112,7 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 
 	EmitSound(filter, entindex(), ep);
 
-	
+
 	//
 	//gamestats->Event_PlayerDamage( this, inputInfo );
 
@@ -2389,7 +2389,7 @@ void CHL2MP_Player::State_PreThink()
 
 CHL2MPPlayerStateInfo *CHL2MP_Player::State_LookupInfo(HL2MPPlayerState state)
 {
-	// This table MUST match the 
+	// This table MUST match the
 	static CHL2MPPlayerStateInfo playerStateInfos[] =
 	{
 		{ STATE_ACTIVE, "STATE_ACTIVE", &CHL2MP_Player::State_Enter_ACTIVE, NULL, &CHL2MP_Player::State_PreThink_ACTIVE },
@@ -2473,12 +2473,12 @@ void CHL2MP_Player::State_Enter_ACTIVE()
 
 void CHL2MP_Player::State_PreThink_ACTIVE()
 {
-	//we don't really need to do anything here. 
+	//we don't really need to do anything here.
 	//This state_prethink structure came over from CS:S and was doing an assert check that fails the way hl2dm handles death
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 bool CHL2MP_Player::CanHearAndReadChatFrom(CBasePlayer *pPlayer)
 {

@@ -33,8 +33,8 @@ commented on the following form:
 
 #include "cbase.h"
 #include "bg3_bot_influencer.h"
-#include "bg3\static_initialize.h"
-#include "bg3\bg3_player_shared.h"
+#include "bg3/static_initialize.h"
+#include "bg3/bg3_player_shared.h"
 //#include "memory"
 
 #define DEF_EXECUTOR(name) \
@@ -124,7 +124,7 @@ void NBotInfluencer::InitMap(CUtlMap<comm_t, NBotInfluencer::pfExecutor>* pMap) 
 //Sets up map of voice command codes to influencing functions
 CUtlMap<comm_t, NBotInfluencer::pfExecutor>* NBotInfluencer::CreateMap() {
 	CUtlMap<comm_t, pfExecutor>* pMap = new CUtlMap<comm_t, pfExecutor>();
-	
+
 	SetDefLessFunc(*pMap);
 	InitMap(pMap);
 

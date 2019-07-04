@@ -26,7 +26,7 @@
 	#include "game.h"
 	#include "items.h"
 	#include "entitylist.h"
-	#include "in_buttons.h" 
+	#include "in_buttons.h"
 	#include <ctype.h>
 	#include "voice_gamemgr.h"
 	#include "iscorer.h"
@@ -42,7 +42,7 @@
 	#include "../bg2/flag.h"
 	//
 	//BG3 - bot population manager
-	#include "bg3/bots/bg3_bot_manager.h"
+	#include "bg3/Bots/bg3_bot_manager.h"
 
 	//BG3 - map existance checker
 	#include "bg3/bg3_map_model.h"
@@ -60,8 +60,8 @@
 REGISTER_GAMERULES_CLASS( CMultiplayRules );
 
 ConVar mp_chattime(
-		"mp_chattime", 
-		"10", 
+		"mp_chattime",
+		"10",
 		FCVAR_REPLICATED,
 		"amount of time players can chat after the game is over",
 		true, 1,
@@ -82,11 +82,11 @@ void MPTimeLimitCallback( IConVar *var, const char *pOldString, float flOldValue
 		MultiplayRules()->HandleTimeLimitChange();
 	}
 }
-#endif 
+#endif
 
 ConVar mp_timelimit( "mp_timelimit", "0", FCVAR_NOTIFY|FCVAR_REPLICATED, "game time per map in minutes"
 #ifdef GAME_DLL
-					, MPTimeLimitCallback 
+					, MPTimeLimitCallback
 #endif
 					);
 
@@ -138,15 +138,15 @@ ConVar mp_waitingforplayers_cancel( "mp_waitingforplayers_cancel", "0", FCVAR_GA
 ConVar mp_clan_readyrestart( "mp_clan_readyrestart", "0", FCVAR_GAMEDLL, "If non-zero, game will restart once someone from each team gives the ready signal" );
 ConVar mp_clan_ready_signal( "mp_clan_ready_signal", "ready", FCVAR_GAMEDLL, "Text that team leader from each team must speak for the match to begin" );
 
-ConVar nextlevel( "nextlevel", 
-				  "", 
+ConVar nextlevel( "nextlevel",
+				  "",
 				  FCVAR_GAMEDLL | FCVAR_NOTIFY | FCVAR_REPLICATED,
 #if defined( CSTRIKE_DLL ) || defined( TF_DLL )
 				  "If set to a valid map name, will trigger a changelevel to the specified map at the end of the round" );
 #else
 				  "If set to a valid map name, will change to this map during the next changelevel" );
 #endif // CSTRIKE_DLL || TF_DLL
-					  					  
+
 #endif
 
 #ifndef CLIENT_DLL
@@ -163,7 +163,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 int CMultiplayRules::Damage_GetTimeBased( void )
 {
@@ -172,7 +172,7 @@ int CMultiplayRules::Damage_GetTimeBased( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 int	CMultiplayRules::Damage_GetShouldGibCorpse( void )
 {
@@ -181,7 +181,7 @@ int	CMultiplayRules::Damage_GetShouldGibCorpse( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 int CMultiplayRules::Damage_GetShowOnHud( void )
 {
@@ -190,7 +190,7 @@ int CMultiplayRules::Damage_GetShowOnHud( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 int	CMultiplayRules::Damage_GetNoPhysicsForce( void )
 {
@@ -200,7 +200,7 @@ int	CMultiplayRules::Damage_GetNoPhysicsForce( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 int	CMultiplayRules::Damage_GetShouldNotBleed( void )
 {
@@ -209,8 +209,8 @@ int	CMultiplayRules::Damage_GetShouldNotBleed( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : iDmgType - 
+// Purpose:
+// Input  : iDmgType -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CMultiplayRules::Damage_IsTimeBased( int iDmgType )
@@ -220,8 +220,8 @@ bool CMultiplayRules::Damage_IsTimeBased( int iDmgType )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : iDmgType - 
+// Purpose:
+// Input  : iDmgType -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CMultiplayRules::Damage_ShouldGibCorpse( int iDmgType )
@@ -231,8 +231,8 @@ bool CMultiplayRules::Damage_ShouldGibCorpse( int iDmgType )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : iDmgType - 
+// Purpose:
+// Input  : iDmgType -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CMultiplayRules::Damage_ShowOnHUD( int iDmgType )
@@ -242,8 +242,8 @@ bool CMultiplayRules::Damage_ShowOnHUD( int iDmgType )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : iDmgType - 
+// Purpose:
+// Input  : iDmgType -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CMultiplayRules::Damage_NoPhysicsForce( int iDmgType )
@@ -254,8 +254,8 @@ bool CMultiplayRules::Damage_NoPhysicsForce( int iDmgType )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : iDmgType - 
+// Purpose:
+// Input  : iDmgType -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CMultiplayRules::Damage_ShouldNotBleed( int iDmgType )
@@ -275,7 +275,7 @@ CMultiplayRules::CMultiplayRules()
 	RefreshSkillData( true );
 
 	// 11/8/98
-	// Modified by YWB:  Server .cfg file is now a cvar, so that 
+	// Modified by YWB:  Server .cfg file is now a cvar, so that
 	//  server ops can run multiple game servers, with different server .cfg files,
 	//  from a single installed directory.
 	// Mapcyclefile is already a cvar.
@@ -336,7 +336,7 @@ bool CMultiplayRules::Init()
 #ifdef CLIENT_DLL
 
 
-#else 
+#else
 
 	extern bool			g_fGameOver;
 
@@ -375,7 +375,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 	void CMultiplayRules::Think ( void )
 	{
 		BaseClass::Think();
-		
+
 		///// Check game rules /////
 
 		//BG3 - we'll check this in HL2MPGameRules
@@ -387,7 +387,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 		float flTimeLimit = mp_timelimit.GetFloat() * 60;
 		//float flFragLimit = fraglimit.GetFloat();
-		
+
 		if ( flTimeLimit != 0 && gpGlobals->curtime >= flTimeLimit )
 		{
 			GoToIntermission();
@@ -546,7 +546,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 			if ( pCheck->GetWeight() > -1 && pCheck->GetWeight() == iCurrentWeight && pCheck != pCurrentWeapon )
 			{
-				// this weapon is from the same category. 
+				// this weapon is from the same category.
 				if ( pCheck->HasAnyAmmo() )
 				{
 					if ( pPlayer->Weapon_CanSwitchTo( pCheck ) )
@@ -559,8 +559,8 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			{
 				//Msg( "Considering %s\n", STRING( pCheck->GetClassname() );
 				// we keep updating the 'best' weapon just in case we can't find a weapon of the same weight
-				// that the player was using. This will end up leaving the player with his heaviest-weighted 
-				// weapon. 
+				// that the player was using. This will end up leaving the player with his heaviest-weighted
+				// weapon.
 				if ( pCheck->HasAnyAmmo() )
 				{
 					// if this weapon is useable, flag it as the best
@@ -570,16 +570,16 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			}
 		}
 
-		// if we make it here, we've checked all the weapons and found no useable 
-		// weapon in the same catagory as the current weapon. 
-		
-		// if pBest is null, we didn't find ANYTHING. Shouldn't be possible- should always 
+		// if we make it here, we've checked all the weapons and found no useable
+		// weapon in the same catagory as the current weapon.
+
+		// if pBest is null, we didn't find ANYTHING. Shouldn't be possible- should always
 		// at least get the crowbar, but ya never know.
 		return pBest;
 	}
 
 	//-----------------------------------------------------------------------------
-	// Purpose: 
+	// Purpose:
 	// Output : Returns true on success, false on failure.
 	//-----------------------------------------------------------------------------
 	bool CMultiplayRules::SwitchToNextBestWeapon( CBaseCombatCharacter *pPlayer, CBaseCombatWeapon *pCurrentWeapon )
@@ -588,7 +588,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 		if ( pWeapon != NULL )
 			return pPlayer->Weapon_Switch( pWeapon );
-		
+
 		return false;
 	}
 
@@ -602,7 +602,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 	void CMultiplayRules::InitHUD( CBasePlayer *pl )
 	{
-	} 
+	}
 
 	//=========================================================
 	//=========================================================
@@ -643,7 +643,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			return 10;
 			break;
 		}
-	} 
+	}
 
 	//=========================================================
 	//=========================================================
@@ -717,7 +717,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 	}
 
 	//-----------------------------------------------------------------------------
-	// Purpose: 
+	// Purpose:
 	//-----------------------------------------------------------------------------
 	CBasePlayer *CMultiplayRules::GetDeathScorer( CBaseEntity *pKiller, CBaseEntity *pInflictor )
 	{
@@ -768,7 +768,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		CBaseEntity *pInflictor = info.GetInflictor();
 		CBaseEntity *pKiller = info.GetAttacker();
 		CBasePlayer *pScorer = GetDeathScorer( pKiller, pInflictor, pVictim );
-		
+
 		//BG2 - Draco
 		//pVictim->IncrementDeathCount( 1 );
 
@@ -778,15 +778,15 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		FireTargets( "game_playerdie", pVictim, pVictim, USE_TOGGLE, 0 );
 
 		// Did the player kill himself?
-		if ( pVictim == pScorer )  
-		{			
+		if ( pVictim == pScorer )
+		{
 			if ( UseSuicidePenalty() )
 			{
 				//BG2 - Draco
 				//pVictim->IncrementFragCount( -1 );
 				if (pVictim->GetTeamNumber() > TEAM_SPECTATOR)	//no penalty to selecting team. only for switching while alive
 					pVictim->IncrementDeathCount(-100); //Take away 100 damage points for 'kill'ing yourself
-			}			
+			}
 		}
 		else if ( pScorer )
 		{
@@ -796,7 +796,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			{
 				pScorer->IncrementFragCount(1);
 			}
-			
+
 			// Allow the scorer to immediately paint a decal
 			pScorer->AllowImmediateDecalPainting();
 
@@ -806,18 +806,18 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			FireTargets( "game_playerkill", pScorer, pScorer, USE_TOGGLE, 0 );
 		}
 		else
-		{  
+		{
 			if ( UseSuicidePenalty() )
 			{
-				// Players lose a frag for letting the world kill them			
+				// Players lose a frag for letting the world kill them
 				//BG2 - Draco
 				//pVictim->IncrementFragCount( -1 );
-			}					
+			}
 		}
 	}
 
 	//=========================================================
-	// Deathnotice. 
+	// Deathnotice.
 	//=========================================================
 	void CMultiplayRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info )
 	{
@@ -845,7 +845,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			if ( pScorer )
 			{
 				killer_ID = pScorer->GetUserID();
-				
+
 				if ( pInflictor )
 				{
 					if ( pInflictor == pScorer )
@@ -895,7 +895,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			event->SetInt("priority", 7 );	// HLTV event priority, not transmitted
 #ifdef HL1MP_DLL
 			event->SetString("weapon", killer_weapon_name );
-#endif			
+#endif
 			gameeventmanager->FireEvent( event );
 		}
 
@@ -919,12 +919,12 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		return gpGlobals->curtime + WEAPON_RESPAWN_TIME;
 	}
 
-	// when we are within this close to running out of entities,  items 
+	// when we are within this close to running out of entities,  items
 	// marked with the ITEM_FLAG_LIMITINWORLD will delay their respawn
 	#define ENTITY_INTOLERANCE	100
 
 	//=========================================================
-	// FlWeaponRespawnTime - Returns 0 if the weapon can respawn 
+	// FlWeaponRespawnTime - Returns 0 if the weapon can respawn
 	// now,  otherwise it returns the time at which it can try
 	// to spawn again.
 	//=========================================================
@@ -1086,7 +1086,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 	CBaseEntity *CMultiplayRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 	{
-		CBaseEntity *pentSpawnSpot = BaseClass::GetPlayerSpawnSpot( pPlayer );	
+		CBaseEntity *pentSpawnSpot = BaseClass::GetPlayerSpawnSpot( pPlayer );
 
 	//!! replace this with an Event
 	/*
@@ -1124,9 +1124,9 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		return false;
 	}
 
-	bool CMultiplayRules::FAllowFlashlight( void ) 
-	{ 
-		return flashlight.GetInt() != 0; 
+	bool CMultiplayRules::FAllowFlashlight( void )
+	{
+		return flashlight.GetInt() != 0;
 	}
 
 	//=========================================================
@@ -1151,10 +1151,10 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 		if ( tv_delaymapchange.GetBool() )
 		{
-			if ( HLTVDirector()->IsActive() )	
+			if ( HLTVDirector()->IsActive() )
 				flWaitTime = MAX( flWaitTime, HLTVDirector()->GetDelay() );
 		}
-				
+
 		m_flIntermissionEndTime = gpGlobals->curtime + flWaitTime;
 
 		for ( int i = 1; i <= MAX_PLAYERS; i++ )
@@ -1364,7 +1364,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			{
 				return true;
 			}
-		}	
+		}
 
 		return false;
 	}
@@ -1384,7 +1384,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			//BG3 - Awesome - there's a bug where ChangeLevelToMap won't succesfully change the map
 			nextlevel.SetValue(""); //this ensures we never try changing to the nextlevel twice
 		}
-		
+
 		if (!customChangeValid)
 		{
 			GetNextLevelName( szNextMap, sizeof(szNextMap) );
@@ -1556,7 +1556,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 	}
 
 
-#endif		
+#endif
 
 
 	//-----------------------------------------------------------------------------
@@ -1598,7 +1598,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 					item.m_bShowSubtitle = ( menuitem->GetInt( "show_subtitle", 0 ) > 0 );
 					item.m_bDistanceBasedSubtitle = ( menuitem->GetInt( "distance_check_subtitle", 0 ) > 0 );
 
-					Q_strncpy( item.m_szGestureActivity, menuitem->GetString( "activity", "" ), sizeof( item.m_szGestureActivity ) ); 
+					Q_strncpy( item.m_szGestureActivity, menuitem->GetString( "activity", "" ), sizeof( item.m_szGestureActivity ) );
 #else
 					Q_strncpy( item.m_szSubtitle, menuitem->GetString( "subtitle", "" ), MAX_VOICE_COMMAND_SUBTITLE );
 					Q_strncpy( item.m_szMenuLabel, menuitem->GetString( "menu_label", "" ), MAX_VOICE_COMMAND_SUBTITLE );

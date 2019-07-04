@@ -17,7 +17,7 @@
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 	Contact information:
-		Tomas "Tjoppen" Härdin		mail, in reverse: se . gamedev @ tjoppen
+		Tomas "Tjoppen" Hï¿½rdin		mail, in reverse: se . gamedev @ tjoppen
 
 	You may also contact the (future) team via the Battle Grounds website and/or forum at:
 		www.bgmod.com
@@ -38,9 +38,9 @@
 #ifdef CLIENT_DLL
 #error DO NOT USE ON CLIENT! c_flag.cpp/.h is for that
 #endif
-#ifdef WIN32
+// #ifdef WIN32
 #pragma once
-#endif
+// #endif
 const int CFlag_START_DISABLED = 1;		// spawnflag definition
 
 //BG2 - Tjoppen - TODO: replace the use of ClientPrintAll with custom usermessages
@@ -51,7 +51,7 @@ void ClientPrint( CBasePlayer *pPlayer, int msg_type, int msg_dest = HUD_PRINTCE
 class CFlag : public CBaseAnimating
 {
 	DECLARE_CLASS( CFlag, CBaseAnimating );
-	DECLARE_NETWORKCLASS(); 
+	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
 	DECLARE_DATADESC();
 
@@ -82,7 +82,7 @@ class CFlag : public CBaseAnimating
 	//CNetworkVar( bool, m_bActive );		//BG2 - Tjoppen - adding SaintGreg's flag stuff from way back as a placeholder
 										//				  until the new flag code is done.
 
-	CNetworkVar( bool, m_bNotUncappable );	//is flag non-uncappable? 
+	CNetworkVar( bool, m_bNotUncappable );	//is flag non-uncappable?
 	CNetworkVar( bool, m_bUncapOnDeath );	//does this flag uncap if all overloaders die?
 
 	//BG2 - SaintGreg - Output functions similar to BG's

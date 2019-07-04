@@ -33,7 +33,7 @@ commented on the following form:
 
 #include "cbase.h"
 #include "bg3_turret.h"
-#include "bg3\bg3_math_shared.h"
+#include "bg3/bg3_math_shared.h"
 
 BEGIN_DATADESC(CTurretFire)
 	DEFINE_KEYFIELD(m_flAccuracyConeRadius, FIELD_FLOAT, "accuracy"),
@@ -51,7 +51,7 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(info_swivel_muzzle, CTurretFire);
 
-void CTurretFire::DoFireEvent(CBasePlayer* pAttacker, const Vector& vMuzzle, Vector vDirection, float flAccuracyConeRadius, 
+void CTurretFire::DoFireEvent(CBasePlayer* pAttacker, const Vector& vMuzzle, Vector vDirection, float flAccuracyConeRadius,
 	vec_t vRange, byte iBaseDamage, byte iNumBullets) {
 
 	//Make the direction unit length
@@ -156,5 +156,5 @@ void CTurretFire::Spawn() {
 	//Clamp damage - no healing!
 	Clamp(m_iBaseDamage, 0, 1024);
 
-	
+
 }
