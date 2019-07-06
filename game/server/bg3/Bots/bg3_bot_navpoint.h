@@ -30,9 +30,8 @@ commented on the following form:
 
 //BG3 - <name of contributer>[ - <small description>]
 */
-// #ifdef WIN32
+
 #pragma once
-// #endif
 
 #include "cbase.h"
 #include "baseentity.h"

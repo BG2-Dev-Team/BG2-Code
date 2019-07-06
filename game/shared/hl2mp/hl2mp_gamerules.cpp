@@ -118,7 +118,7 @@ ConVar mp_autobalancetolerance("mp_autobalancetolerance", "2", FCVAR_GAMEDLL | F
 	ConVar mp_limit_off_b_##size( "mp_limit_off_b_"#size, "-1", CVAR_FLAGS,\
 									"Max number of Royal Commanders on " sizename " maps" );\
 	ConVar mp_limit_rif_b_##size( "mp_limit_rif_b_"#size, "-1", CVAR_FLAGS,\
-									"Max number of J�gers on " sizename " maps" );\
+									"Max number of Jägers on " sizename " maps" );\
 	ConVar mp_limit_ski_b_##size( "mp_limit_ski_b_"#size, "-1", CVAR_FLAGS,\
 									"Max number of Natives on " sizename " maps" );\
 	ConVar mp_limit_linf_b_##size("mp_limit_linf_b_"#size, "-1", CVAR_FLAGS,\

@@ -98,7 +98,7 @@ CHL2MP_Player* FindPlayerByName(const char* pszName) {
 	return pResult;
 }
 
-void z(CHL2MP_Player** pPlayerList, const char* pszString, CHL2MP_Player* pRequester = NULL) {
+void GetPlayersFromString(CHL2MP_Player** pPlayerList, const char* pszString, CHL2MP_Player* pRequester = NULL) {
 	//two possibilities - keyword or name
 	if (pszString[0] == '@') {
 		//@me

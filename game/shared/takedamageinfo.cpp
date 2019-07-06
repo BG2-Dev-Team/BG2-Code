@@ -62,7 +62,7 @@ void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBa
 	m_flDamageBonus = 0.f;
 	m_bForceFriendlyFire = false;
 	m_flDamageForForce = 0.f;
-    m_iHitGroup = 0;
+	m_iHitGroup = 0;
 }
 
 CTakeDamageInfo::CTakeDamageInfo()
