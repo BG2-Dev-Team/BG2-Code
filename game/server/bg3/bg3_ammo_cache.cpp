@@ -90,7 +90,9 @@ giveammoloop:
 		if (pPlayer 
 			&& (m_iForTeam == TEAM_ANY || pPlayer->GetTeamNumber() == m_iForTeam)
 			&& (IsLinebattle() || EntDist(*this, *pPlayer) < m_flRadius)
-			&& pPlayer->GetTeamNumber() == activatorTeam) {
+			&& pPlayer->GetTeamNumber() == activatorTeam
+			&& pPlayer->m_flNextAmmoRefill < gpGlobals->curtime) {
+			pPlayer->m_flNextAmmoRefill = gpGlobals->curtime + 30; //30 seconds intervals
 			pPlayer->SetDefaultAmmoFull(true);
 		}
 	}

@@ -149,8 +149,8 @@ void CHudBG2::ApplySettings(KeyValues *inResourceData)
 
 	//position ticket score labels
 	m_pLabelATickets->SetPos(halfx - g_iFlagOffset + 2, 2);
-	m_pLabelBTickets->SetPos(halfx + 50, 2);
-	m_pLabelBTickets->SetSize(50, 20);
+	m_pLabelBTickets->SetPos(halfx, 2);
+	m_pLabelBTickets->SetSize(100, 20);
 	m_pLabelATickets->SetContentAlignment(Label::Alignment::a_west);
 	m_pLabelBTickets->SetContentAlignment(Label::Alignment::a_east);
 

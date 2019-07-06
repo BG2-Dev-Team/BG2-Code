@@ -180,6 +180,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 	m_bDontRemoveTicket = true;
 
 	m_bInSpawnRoom = false;
+	m_flNextAmmoRefill = -FLT_MAX;
 }
 
 CHL2MP_Player::~CHL2MP_Player(void)
@@ -333,7 +334,8 @@ void CHL2MP_Player::GiveDefaultItems(void)
 		AddSpeedModifier(k.m_iMovementSpeedModifier, ESpeedModID::Weapon);
 
 		//Give primary and secondary ammo
-		int ammoCount = IsLinebattle() ? m_pCurClass->m_iDefaultPrimaryAmmoCount : m_pCurClass->m_iDefaultPrimaryAmmoCount; //* 2;
+		extern ConVar lb_ammo_multiplier;
+		int ammoCount = !IsLinebattle() ? m_pCurClass->m_iDefaultPrimaryAmmoCount : m_pCurClass->m_iDefaultPrimaryAmmoCount * lb_ammo_multiplier.GetFloat(); //* 2;
 		CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
 		if (m_pCurClass->m_pszSecondaryAmmo)
 			CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
@@ -345,11 +347,13 @@ void CHL2MP_Player::GiveDefaultItems(void)
 	}
 }
 
+ConVar lb_ammo_multiplier = ConVar("lb_ammo_multiplier", "1", FCVAR_GAMEDLL, "Multipliers starting ammo during linebattle", true, 0.1f, true, 5.0f);
 void CHL2MP_Player::SetDefaultAmmoFull(bool bPlaySound) {
 	//Msg("Filling ammo for %s\n", GetPlayerName());
 	if (!HasDefaultAmmoFull()) {
 		//Set primary and secondary ammo
 		int ammoCount = m_pCurClass->m_iDefaultPrimaryAmmoCount;
+		if (IsLinebattle()) ammoCount *= lb_ammo_multiplier.GetFloat();
 		CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
 		if (m_pCurClass->m_pszSecondaryAmmo)
 			CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
@@ -362,15 +366,14 @@ void CHL2MP_Player::SetDefaultAmmoFull(bool bPlaySound) {
 bool CHL2MP_Player::HasDefaultAmmoFull() {
 	int primaryAmmoCount = CBasePlayer::GetAmmoCount(GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
 	int idealPrimaryAmmoCount = m_pCurClass->m_iDefaultPrimaryAmmoCount;
-
-
+	if (IsLinebattle()) idealPrimaryAmmoCount *= lb_ammo_multiplier.GetFloat();
 	if (m_pCurClass->m_pszSecondaryAmmo){
 		int secondaryAmmoCount = CBasePlayer::GetAmmoCount(GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
 		int idealSecondaryAmmoCount = m_pCurClass->m_iDefaultSecondaryAmmoCount;
-		return primaryAmmoCount == idealPrimaryAmmoCount && secondaryAmmoCount == idealSecondaryAmmoCount;
+		return primaryAmmoCount >= idealPrimaryAmmoCount && secondaryAmmoCount >= idealSecondaryAmmoCount;
 	}
 	else {
-		return primaryAmmoCount == idealPrimaryAmmoCount;
+		return primaryAmmoCount >= idealPrimaryAmmoCount;
 	}
 }
 
@@ -1426,8 +1429,6 @@ void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass)
 	if (!DeathCount()) {
 		NScorePreserve::NotifyConnected(this->entindex());
 	}
-	//ensure permissions are up-to-date
-	Permissions::LoadPermissionsForPlayer(this);
 }
 
 void CHL2MP_Player::CheckQuickRespawn() {
@@ -1676,6 +1677,8 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 	//Check if the command is in our map of commands, otherwise pass it down
 	int commandIndex = s_mPlayerCommands.Find(cmd);
+	//ensure permissions are up-to-date
+	Permissions::LoadPermissionsForPlayer(this);
 	if (commandIndex != s_mPlayerCommands.InvalidIndex()) {
 		PlayerCommandFunc pcf = s_mPlayerCommands[commandIndex];
 		pcf(this, args);

@@ -324,7 +324,7 @@ CHL2MPRules::CHL2MPRules()
 	}
 
 	//reset the bot manager's think time
-	CBotManager::SetNextThink(gpGlobals->curtime + 10);
+	CBotManager::SetNextThink(gpGlobals->curtime + 40);
 
 	m_bTeamPlayEnabled = teamplay.GetBool();
 	m_flIntermissionEndTime = 0.0f;
@@ -592,88 +592,6 @@ void CHL2MPRules::SwapPlayerTeam(CHL2MP_Player *pPlayer, bool skipAlive)
 		|| pPlayer->GetTeamNumber() < TEAM_AMERICANS
 		|| pPlayer->GetTeamNumber() > TEAM_BRITISH)
 		return;
-
-	//BG3 - this code is so old and horrible, I'll do something simpler for now.
-	//Also, I suspect the crash on team switch originates from in here...
-	/*int edict = engine->IndexOfEdict(pPlayer->edict());
-	int iTeam = pPlayer->GetTeamNumber();
-	int iOtherTeam;
-	int playerClass;
-	const char *kitvar = NULL;
-	const char *prevclassvar = NULL;
-
-	//default to using normal kit
-	bool useDefaultKit = true;
-
-	if (iTeam == TEAM_BRITISH)
-	{
-		iOtherTeam = TEAM_AMERICANS;
-
-		prevclassvar = "cl_a_prevclass";
-		const char *value = engine->GetClientConVarValue(edict, prevclassvar);
-
-		if (value && sscanf(value, "%i", &playerClass) == 1)
-		{
-			pPlayer->SetNextClass(playerClass);
-		}
-		else
-		{
-			playerClass = pPlayer->GetClass();
-		}
-
-		switch (playerClass)
-		{
-		case CLASS_INFANTRY: kitvar = "cl_kit_a_inf"; break;
-		case CLASS_SKIRMISHER: kitvar = "cl_kit_a_ski"; break;
-		case CLASS_OFFICER: kitvar = "cl_kit_a_off"; break;
-		}
-	}
-	else if (iTeam == TEAM_AMERICANS)
-	{
-		iOtherTeam = TEAM_BRITISH;
-
-		prevclassvar = "cl_b_prevclass";
-		const char *value = engine->GetClientConVarValue(edict, prevclassvar);
-
-		if (value && sscanf(value, "%i", &playerClass) == 1)
-		{
-			pPlayer->SetNextClass(playerClass);
-		}
-		else
-		{
-			playerClass = pPlayer->GetClass();
-		}
-
-		switch (playerClass)
-		{
-		case CLASS_INFANTRY: kitvar = "cl_kit_b_inf"; break;
-		case CLASS_SKIRMISHER: kitvar = "cl_kit_b_ski"; break;
-		case CLASS_LIGHT_INFANTRY: kitvar = "cl_kit_b_light"; break;
-		case CLASS_OFFICER: kitvar = "cl_kit_b_off"; break;
-		}
-	}
-	else
-	{
-		//ignore spectators and such
-		return;
-	}
-
-	if (kitvar)
-	{
-		const char *value = engine->GetClientConVarValue(edict, kitvar);
-
-		if (value && sscanf(value, "%i %i %i", &pPlayer->m_iGunKit, &pPlayer->m_iAmmoKit, &pPlayer->m_iClassSkin) == 3)
-		{
-			//kit successfully parsed
-			useDefaultKit = false;
-		}
-	}
-
-	if (useDefaultKit)
-	{
-		pPlayer->m_iGunKit = 0;
-		pPlayer->m_iAmmoKit = AMMO_KIT_BALL;
-	}*/
 
 	int iOtherTeam = pPlayer->GetTeamNumber() == TEAM_AMERICANS ? TEAM_BRITISH : TEAM_AMERICANS;
 

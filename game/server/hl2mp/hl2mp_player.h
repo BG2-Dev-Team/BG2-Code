@@ -222,12 +222,14 @@ public:
 	inline int RallyGetCurrentRallies() { return m_iCurrentRallies; }
 	float	m_flEndRallyTime;
 
+	float	m_flNextAmmoRefill;
 private:
 	//int		m_iClass;					//BG2 - Tjoppen - class system
 	//int		m_iNextClass;					//BG2 - Tjoppen - which class will we become on our next respawn?
 	float	m_flNextVoicecomm,				//BG2 - Tjoppen - voice comms
 			m_flNextGlobalVoicecomm;		//BG2 - Tjoppen - only battlecries for now
 	float	m_fNextStamRegen;				//BG2 - Draco - stamina regen timer
+	
 
 	//BG2 - Tjoppen - tickets. sometimes we don't want to remove tickets on spawn, such as when first joining a team
 	bool	m_bDontRemoveTicket;

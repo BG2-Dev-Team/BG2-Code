@@ -114,7 +114,7 @@ void z(CHL2MP_Player** pPlayerList, const char* pszString, CHL2MP_Player* pReque
 
 			trace_t t;
 			Vector start = pRequester->Weapon_ShootPosition();
-			UTIL_TraceLine(start, start + direction, MASK_SHOT, NULL, COLLISION_GROUP_PLAYER, &t);
+			UTIL_TraceLine(start + direction / 100, start + direction, MASK_SHOT, NULL, COLLISION_GROUP_PLAYER, &t);
 			if (t.m_pEnt && t.m_pEnt->IsPlayer()) {
 				pPlayerList[0] = ToHL2MPPlayer(t.m_pEnt);
 			}

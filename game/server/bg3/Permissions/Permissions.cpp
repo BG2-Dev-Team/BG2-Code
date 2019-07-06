@@ -43,6 +43,7 @@ void Permissions::LoadPermissionsForPlayer(CHL2MP_Player* pPlayer) {
 endloop:
 	if (!pPermission) pPermission = s_pFirstPermission;
 	pPlayer->m_pPermissions = pPermission;
+	Msg(" permission is %s\n", pPermission->m_name);
 }
 
 Permissions* Permissions::FindPermissionByName(const char* pszName) {
