@@ -224,14 +224,10 @@ public:
 
 		if (iAttack == ATTACK_NONE)
 			return 0;
-		/*else if (Def()->m_Attackinfos[iAttack].m_iAttacktype == ATTACKTYPE_STAB)
-			return sv_bayonet_retrace_duration.GetFloat();*/
+		else if (Def()->m_Attackinfos[iAttack].m_iAttacktype == ATTACKTYPE_STAB)
+			return sv_bayonet_retrace_duration.GetFloat();
 		else
 			return Def()->m_Attackinfos[iAttack].m_flRetraceDuration;
-	}
-
-	float GetRetraceDelay(int iAttack) {
-		return Def()->m_Attackinfos[iAttack].m_flRetraceDelay;
 	}
 
 	int GetStaminaDrain( int iAttack )
@@ -263,15 +259,11 @@ public:
 	}
 
 	float	m_flLastRecoil,					//for multiple recoil supression on client
-		m_flStopAttemptingSwing,			//this is for melee attacks that go on for several frames
-		m_flStartAttemptingSwing;			//for delayed melee
+			m_flStopAttemptingSwing;		//this is for melee attacks that go on for several frames
 											// in other words, the game will attempt to do the tracelines for say 100 ms
 	float	m_flStartDemotingHeadhits;		//the point in time at which retraced head hits will be demoted to chest hits
 	int		m_iLastAttack;					//for reattempting swings
 	Vector	m_vLastForward;					//last forward eye vector
-
-	//for delayed stab
-	bool	m_bFirstRetraceFrame;
 
 	//for delayed fire
 	bool	m_bShouldSampleForward;
