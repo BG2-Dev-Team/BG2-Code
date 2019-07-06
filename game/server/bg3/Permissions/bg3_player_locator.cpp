@@ -1,6 +1,9 @@
 #include "cbase.h"
 #include "bg3_player_locator.h"
 #include "hl2mp/hl2mp_player.h"
+#include "tier0/valve_minmax_off.h"
+#include <string>
+#include "tier0/valve_minmax_on.h"
 #include "memdbgon.h"
 
 using namespace std;
@@ -95,7 +98,7 @@ CHL2MP_Player* FindPlayerByName(const char* pszName) {
 	return pResult;
 }
 
-void GetPlayersFromString(CHL2MP_Player** pPlayerList, const char* pszString, CHL2MP_Player* pRequester) {
+void z(CHL2MP_Player** pPlayerList, const char* pszString, CHL2MP_Player* pRequester = NULL) {
 	//two possibilities - keyword or name
 	if (pszString[0] == '@') {
 		//@me
@@ -171,7 +174,7 @@ void GetPlayersFromString(CHL2MP_Player** pPlayerList, const char* pszString, CH
 					}
 				}
 			}
-		}	
+		}
 	}
 	else {
 
@@ -189,7 +192,7 @@ void GetPlayersFromString(CHL2MP_Player** pPlayerList, const char* pszString, CH
 CON_COMMAND(psearch, "") {
 	CHL2MP_Player** pPlayerList = new CHL2MP_Player*[gpGlobals->maxClients];
 	memset(pPlayerList, 0, gpGlobals->maxClients * sizeof(CHL2MP_Player*));
-	
+
 	GetPlayersFromString(pPlayerList, args[1], NULL);
 	int i = 0;
 	while (pPlayerList[i]) {

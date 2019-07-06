@@ -2,8 +2,9 @@
 #define BG3_PERMISSIONS_H
 
 #include "cbase.h"
+#include "tier0/valve_minmax_off.h"
 #include <vector>
-// #include <string>
+#include "tier0/valve_minmax_on.h"
 
 class CHL2MP_Player;
 

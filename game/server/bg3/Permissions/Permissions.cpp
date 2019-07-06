@@ -24,7 +24,7 @@ void Permissions::LoadPermissionsForPlayer(CHL2MP_Player* pPlayer) {
 	pPlayer->GetSteamID(&sid);
 	char buffer[64];
 	convertSteamIDToString(sid, buffer, sizeof(buffer));
-	std::string id = buffer;
+	CUtlString id = buffer;
 	Msg("Getting permissions for player with STEAMID: %s\n", buffer);
 
 	//search for existing permission set with our SteamID
