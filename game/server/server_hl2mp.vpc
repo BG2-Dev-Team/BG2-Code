@@ -217,6 +217,14 @@ $Project "Server (HL2MP)"
 				$File "$SRCDIR\game\shared\bg3\Math\bg3_rand.h"
 				$File "bg3\Math\bg3_speedmod_list.h"
 			}
+			$Folder "Permissions"
+			{
+				$File "bg3\Permissions\bg3_player_locator.cpp"
+				$File "bg3\Permissions\bg3_player_locator.h"
+				$File "bg3\Permissions\Permissions.cpp"
+				$File "bg3\Permissions\Permissions.h"
+				$File "bg3\Permissions\Permissions_Parse.cpp"
+			}
 			$Folder "StatTracker"
 			{
 				$File "$SRCDIR\game\shared\bg3\StatTracker\bg3_stat_tracker.cpp"
@@ -224,6 +232,8 @@ $Project "Server (HL2MP)"
 			}
 			$File	"bg3\bg3_ammo_cache.cpp"
 			$File	"bg3\bg3_ammo_cache.h"
+			$File 	"$SRCDIR\game\shared\bg3\vgui\bg3_buff_sprite.cpp"
+			$File 	"$SRCDIR\game\shared\bg3\vgui\bg3_buff_sprite.h"
 			$File 	"$SRCDIR\game\shared\bg3\bg3_buffs.cpp"
 			$File 	"$SRCDIR\game\shared\bg3\bg3_buffs.h"
 			$File 	"$SRCDIR\game\shared\bg3\bg3_class.cpp"

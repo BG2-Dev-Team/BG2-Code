@@ -449,8 +449,7 @@ bool CBaseHudWeaponSelection::SelectSlot( int iSlot )
 // Purpose: Close the weapon selection
 //-----------------------------------------------------------------------------
 void CBaseHudWeaponSelection::UserCmd_Close(void)
-{
-	Msg(__FUNCTION__);
+{								
 	CancelWeaponSelection();
 }
 

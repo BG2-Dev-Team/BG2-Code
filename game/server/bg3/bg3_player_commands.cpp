@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 Lesser General Public License for more details.
 
-You should have received a copy of the GNU Lesser General Public
+You should have received a copy of the GNU Le							sser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
@@ -141,6 +141,18 @@ static void PerPlayerCommand(CHL2MP_Player* pRequester, const char* pszPlayerSea
 	delete[] pPlayerList;
 }
 
+PLAYER_COMMAND(rkick) {
+	if (!pPlayer->m_pPermissions->m_bPlayerManage)
+		return;
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			char buffer[128];
+			Q_snprintf(buffer, sizeof(buffer), "kick \"%s\"\n", pPlayer->GetPlayerName());
+			engine->ServerCommand(buffer);
+		});
+	}
+}
+
 PLAYER_COMMAND(slay) {
 	if (!pPlayer->m_pPermissions->m_bPlayerManage)
 		return;
@@ -240,7 +252,7 @@ PLAYER_COMMAND(aclass) {
 		return;
 
 	//Don't let non-americans change kit
-	if (pPlayer->GetTeamNumber() != TEAM_AMERICANS)
+	if (pPlayer->GetTeamNumber() != TEAM_AMERICANS && !pPlayer->m_pPermissions->m_bConsoleAccess)
 		return;
 	if (args.ArgC() == 2) {
 		LinebattleSetClass(TEAM_AMERICANS, args[1]);
@@ -251,7 +263,7 @@ PLAYER_COMMAND(bclass) {
 		return;
 
 	//Don't let non-brits change kit
-	if (pPlayer->GetTeamNumber() != TEAM_BRITISH)
+	if (pPlayer->GetTeamNumber() != TEAM_BRITISH && !pPlayer->m_pPermissions->m_bConsoleAccess)
 		return;
 	if (args.ArgC() == 2) {
 		LinebattleSetClass(TEAM_BRITISH, args[1]);
@@ -266,7 +278,6 @@ static void LinebattleSetKit(int iTeam, int iWeapon, int iUniform, int iAmmo) {
 	for (int i = 1; i <= gpGlobals->maxClients; i++) {
 		CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
 		if (pPlayer && pPlayer->GetTeamNumber() == iTeam) {
-			Msg("Setting player kit\n");
 			pPlayer->m_iClassSkin = iUniform;
 			pPlayer->m_iGunKit = iWeapon;
 			pPlayer->m_iAmmoKit = iAmmo;
@@ -307,8 +318,6 @@ PLAYER_COMMAND(bkit) {
 
 	if (!pPlayer->m_pPermissions->m_bPlayerManage)
 		return;
-
-	Msg("player bkit\n");
 
 	if (args.ArgC() == 2) {
 		LinebattleSetKit(TEAM_BRITISH, atoi(args[1]), 0, 0);
