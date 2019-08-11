@@ -1161,7 +1161,7 @@ void CHL2MPRules::ClientDisconnected( edict_t *pClient )
 //-----------------------------------------------------------------------------
 #ifndef CLIENT_DLL
 bool CHL2MPRules::ClientConnected(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen) {
-
+	
 	bool result = BaseClass::ClientConnected(pEntity, pszName, pszAddress, reject, maxrejectlen);
 
 	//BG3 - Awesome - this entry point doesn't actually seem to be working, trying somewhere else
@@ -1799,11 +1799,7 @@ void CHL2MPRules::RespawnAll()
 		pPlayer->Spawn();
 
 		//BG2 - Tjoppen - remove ragdoll - remember to change this to remove multiple ones if we decide to enable more corpses
-		if (pPlayer->m_hRagdoll)
-		{
-			UTIL_RemoveImmediate(pPlayer->m_hRagdoll);
-			pPlayer->m_hRagdoll = NULL;
-		}
+		pPlayer->RemoveRagdolls();
 	}
 
 	for (x = 0; x < g_Teams[TEAM_BRITISH]->GetNumPlayers(); x++)
@@ -1816,11 +1812,7 @@ void CHL2MPRules::RespawnAll()
 		pPlayer->Spawn();
 
 		//BG2 - Tjoppen - remove ragdoll - remember to change this to remove multiple ones if we decide to enable more corpses
-		if (pPlayer->m_hRagdoll)
-		{
-			UTIL_RemoveImmediate(pPlayer->m_hRagdoll);
-			pPlayer->m_hRagdoll = NULL;
-		}
+		pPlayer->RemoveRagdolls();
 	}
 	if (UseLineSpawn()) {
 		CLineSpawn::SpawnBothTeams();

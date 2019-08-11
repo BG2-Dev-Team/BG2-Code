@@ -157,8 +157,12 @@ public:
 
 	Vector m_vecTotalBulletForce;	//Accumulator for bullet force in a single frame
 
+private:
 	// Tracks our ragdoll entity.
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle 
+public:
+	void RemoveRagdolls();
+
 
 	virtual bool	CanHearAndReadChatFrom( CBasePlayer *pPlayer );
 
@@ -227,6 +231,7 @@ private:
 	float	m_flNextVoicecomm,				//BG2 - Tjoppen - voice comms
 			m_flNextGlobalVoicecomm;		//BG2 - Tjoppen - only battlecries for now
 	float	m_fNextStamRegen;				//BG2 - Draco - stamina regen timer
+	float	m_flNextRagdollRemoval;
 	
 
 	//BG2 - Tjoppen - tickets. sometimes we don't want to remove tickets on spawn, such as when first joining a team

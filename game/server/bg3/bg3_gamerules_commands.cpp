@@ -121,19 +121,6 @@ CON_COMMAND(changemap, "Changes the server to the specified map") {
 	((CHL2MPRules*) g_pGameRules)->ChangeLevel();
 }
 
-CON_COMMAND(nextmap, "Changes the server to the specified map") {
-	if (!verifyMapModePermissions(__FUNCTION__) || args.ArgC() < 2)
-		return;
-
-	if (!CMapInfo::MapExists(args[1])) {
-		CSay("The map %s does not exist", args[1]);
-		return;
-	}
-
-	//nextlevel is already built for this purpose
-	nextlevel.SetValue(args[1]);
-}
-
 CON_COMMAND(csay, "Says a message in chat") {
 	if (!verifyMapModePermissions(__FUNCTION__) || args.ArgC() < 2)
 		return;

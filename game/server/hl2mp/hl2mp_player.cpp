@@ -51,6 +51,7 @@
 
 extern ConVar mp_autobalanceteams;
 extern ConVar mp_autobalancetolerance;
+extern ConVar mp_disable_firearms;
 //BG2 - Tjoppen - sv_voicecomm_text, set to zero for realism
 ConVar sv_voicecomm_text("sv_voicecomm_text", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Show voicecomm text on clients?");
 ConVar sv_unlag_lmb("sv_unlag_lmb", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Do unlagging for left mouse button (primary attack)?");
@@ -190,11 +191,8 @@ CHL2MP_Player::~CHL2MP_Player(void)
 
 void CHL2MP_Player::UpdateOnRemove(void)
 {
-	if (m_hRagdoll)
-	{
-		UTIL_RemoveImmediate(m_hRagdoll);
-		m_hRagdoll = NULL;
-	}
+	//BG2 - Tjoppen - here's where we put code for multiple ragdolls
+	RemoveRagdolls();
 
 	BaseClass::UpdateOnRemove();
 }
@@ -337,13 +335,13 @@ void CHL2MP_Player::GiveDefaultItems(void)
 		extern ConVar lb_ammo_multiplier;
 		int ammoCount = !IsLinebattle() ? m_pCurClass->m_iDefaultPrimaryAmmoCount : m_pCurClass->m_iDefaultPrimaryAmmoCount * lb_ammo_multiplier.GetFloat(); //* 2;
 		CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
-		if (m_pCurClass->m_pszSecondaryAmmo)
+		if (m_pCurClass->m_pszSecondaryAmmo && !mp_disable_firearms.GetBool())
 			CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
 
 		//Give extra ammo from kit
-		if (k.m_pszAmmoOverrideName) {
+		/*if (k.m_pszAmmoOverrideName) {
 			CBasePlayer::SetAmmoCount(k.m_iAmmoOverrideCount, GetAmmoDef()->Index(k.m_pszAmmoOverrideName));
-		}
+		}*/
 	}
 }
 
@@ -355,7 +353,7 @@ void CHL2MP_Player::SetDefaultAmmoFull(bool bPlaySound) {
 		int ammoCount = m_pCurClass->m_iDefaultPrimaryAmmoCount;
 		if (IsLinebattle()) ammoCount *= lb_ammo_multiplier.GetFloat();
 		CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
-		if (m_pCurClass->m_pszSecondaryAmmo)
+		if (m_pCurClass->m_pszSecondaryAmmo && !mp_disable_firearms.GetBool())
 			CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
 		
 		if (bPlaySound)
@@ -367,7 +365,7 @@ bool CHL2MP_Player::HasDefaultAmmoFull() {
 	int primaryAmmoCount = CBasePlayer::GetAmmoCount(GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
 	int idealPrimaryAmmoCount = m_pCurClass->m_iDefaultPrimaryAmmoCount;
 	if (IsLinebattle()) idealPrimaryAmmoCount *= lb_ammo_multiplier.GetFloat();
-	if (m_pCurClass->m_pszSecondaryAmmo){
+	if (m_pCurClass->m_pszSecondaryAmmo && !mp_disable_firearms.GetBool()){
 		int secondaryAmmoCount = CBasePlayer::GetAmmoCount(GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
 		int idealSecondaryAmmoCount = m_pCurClass->m_iDefaultSecondaryAmmoCount;
 		return primaryAmmoCount >= idealPrimaryAmmoCount && secondaryAmmoCount >= idealSecondaryAmmoCount;
@@ -447,8 +445,6 @@ void CHL2MP_Player::Spawn(void)
 		return;	//we're done
 	}
 		
-	
-	
 
 	BaseClass::Spawn();
 
@@ -733,6 +729,11 @@ void CHL2MP_Player::PostThink(void)
 		BG3Buffs::RallyPlayer(0, this);
 		OnRallyEffectDisable();
 		
+	}
+
+	if (gpGlobals->curtime > m_flNextRagdollRemoval) {
+		RemoveRagdolls();
+		m_flNextRagdollRemoval = FLT_MAX;
 	}
 
 	if (GetFlags() & FL_DUCKING) {
@@ -1673,7 +1674,7 @@ void CHL2MP_Player::OnRallyEffectDisable() {
 bool CHL2MP_Player::ClientCommand(const CCommand &args)
 {
 	const char *cmd = args[0];
-	//Msg("Player received command %s\n", cmd);
+	//Msg("Player %s received command %s\n", GetPlayerName(), cmd);
 
 	//Check if the command is in our map of commands, otherwise pass it down
 	int commandIndex = s_mPlayerCommands.Find(cmd);
@@ -1777,7 +1778,7 @@ bool CHL2MP_Player::BecomeRagdollOnClient(const Vector &force)
 // -------------------------------------------------------------------------------- //
 // Ragdoll entities.
 // -------------------------------------------------------------------------------- //
-ConVar sv_ragdoll_staytime("sv_ragdoll_staytime", "30", FCVAR_GAMEDLL);
+ConVar sv_ragdoll_staytime("sv_ragdoll_staytime", "10", FCVAR_GAMEDLL);
 class CHL2MPRagdoll : public CBaseAnimatingOverlay
 {
 public:
@@ -1827,15 +1828,7 @@ CON_COMMAND(destroy_ragdolls, "") {
 
 void CHL2MP_Player::CreateRagdollEntity(void)
 {
-	//BG2 - Tjoppen - here's where we put code for multiple ragdolls
-	if (m_hRagdoll) //One already exists.. remove it.
-	{
-		CHL2MPRagdoll* pDoll = static_cast<CHL2MPRagdoll*>(m_hRagdoll.Get());
-		UTIL_RemoveImmediate(pDoll->m_hHat);
-		pDoll->m_hHat = NULL;
-		UTIL_RemoveImmediate(m_hRagdoll);
-		m_hRagdoll = NULL;
-	}
+	RemoveRagdolls();
 
 	// If we already have a ragdoll, don't make another one.
 	//CHL2MPRagdoll *pRagdoll = dynamic_cast< CHL2MPRagdoll* >( m_hRagdoll.Get() );// This makes no sense? We just removed our ragdoll.. 
@@ -1952,8 +1945,12 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 	// Note: since we're dead, it won't draw us on the client, but we don't set EF_NODRAW
 	// because we still want to transmit to the clients in our PVS.
 	//BG2 - Tjoppen - reenable spectators - no dead bodies raining from the sky
-	if (GetTeamNumber() > TEAM_SPECTATOR)
+	if (GetTeamNumber() > TEAM_SPECTATOR && sv_ragdoll_staytime.GetFloat() > 1) {
 		CreateRagdollEntity();
+		extern ConVar sv_ragdoll_staytime;
+		m_flNextRagdollRemoval = gpGlobals->curtime + sv_ragdoll_staytime.GetFloat();
+	}
+		
 
 	RemoveSelfFromFlags();
 
@@ -2124,8 +2121,8 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 
 void CHL2MP_Player::DeathSound(const CTakeDamageInfo &info)
 {
-	if (m_hRagdoll && m_hRagdoll->GetBaseAnimating()->IsDissolving())
-		return;
+	//if (m_hRagdoll && m_hRagdoll->GetBaseAnimating()->IsDissolving())
+		//return;
 
 	//BG2 - Tjoppen - unassigned/spectator don't make deathsound
 	if (GetTeamNumber() <= TEAM_SPECTATOR)
@@ -2490,6 +2487,18 @@ bool CHL2MP_Player::CanHearAndReadChatFrom(CBasePlayer *pPlayer)
 		return false;
 
 	return true;
+}
+
+void CHL2MP_Player::RemoveRagdolls() {
+	//BG2 - Tjoppen - here's where we put code for multiple ragdolls
+	if (m_hRagdoll) //One already exists.. remove it.
+	{
+		CHL2MPRagdoll* pDoll = static_cast<CHL2MPRagdoll*>(m_hRagdoll.Get());
+		UTIL_RemoveImmediate(pDoll->m_hHat);
+		pDoll->m_hHat = NULL;
+		UTIL_RemoveImmediate(m_hRagdoll);
+		m_hRagdoll = NULL;
+	}
 }
 
 //BG2

@@ -465,21 +465,23 @@ bool CClientScoreBoardDialog::StaticPlayerSortFunc(vgui::SectionedListPanel *lis
 	KeyValues *it2 = list->GetItemData(itemID2);
 	Assert(it1 && it2);
 
-	// first compare frags
-	int v1 = it1->GetInt("frags");
-	int v2 = it2->GetInt("frags");
+	// next compare deaths
+	int v1 = it1->GetInt("deaths");
+	int v2 = it2->GetInt("deaths");
 	if (v1 > v2)
 		return true;
 	else if (v1 < v2)
 		return false;
 
-	// next compare deaths
-	v1 = it1->GetInt("deaths");
-	v2 = it2->GetInt("deaths");
+
+	// first compare frags
+	v1 = it1->GetInt("frags");
+	v2 = it2->GetInt("frags");
 	if (v1 > v2)
-		return false;
-	else if (v1 < v2)
 		return true;
+	else if (v1 < v2)
+		return false;
+
 
 	// the same, so compare itemID's (as a sentinel value to get deterministic sorts)
 	return itemID1 < itemID2;

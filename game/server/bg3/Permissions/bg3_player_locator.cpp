@@ -18,7 +18,7 @@ static int GetStringMatchLength(string str, string searchTerm, bool* bExactMatch
 	*bExactMatch = false;
 
 	//only bother searching if it's feasible
-	if (str.size() > searchTerm.size() && searchTerm.size() > 0) {
+	if (str.size() >= searchTerm.size() && searchTerm.size() > 0) {
 
 		//ignore case if necessary
 		if (bIgnoreCase) {
@@ -54,7 +54,8 @@ CHL2MP_Player* FindPlayerByName(const char* pszName) {
 
 			//find longest match
 			int matchLength = GetStringMatchLength(pPlayer->GetPlayerName(), pszName, &bExactMatch);
-			if (matchLength > maxMatchLength) {
+			//Msg("%i, %s == %s\n", matchLength, pPlayer->GetPlayerName(), pszName);
+			if (matchLength >= maxMatchLength) {
 				maxMatchLength = matchLength;
 				pResult = pPlayer;
 			}
@@ -111,7 +112,7 @@ void GetPlayersFromString(CHL2MP_Player** pPlayerList, const char* pszString, CH
 
 			trace_t t;
 			Vector start = pRequester->Weapon_ShootPosition();
-			UTIL_TraceLine(start + direction / 100, start + direction, MASK_SHOT, NULL, COLLISION_GROUP_PLAYER, &t);
+			UTIL_TraceLine(start + direction / 100, start + direction, MASK_SHOT, pRequester, COLLISION_GROUP_PLAYER, &t);
 			if (t.m_pEnt && t.m_pEnt->IsPlayer()) {
 				pPlayerList[0] = ToHL2MPPlayer(t.m_pEnt);
 			}

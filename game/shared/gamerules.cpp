@@ -354,6 +354,7 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 	trace_t		tr;
 	float		flAdjustedDamage, falloff;
 	Vector		vecSpot;
+	//int attackerTeam = info.GetAttacker() ? info.GetAttacker()->GetTeamNumber() : TEAM_UNASSIGNED;
 
 	Vector vecSrc = vecSrcIn;
 
@@ -388,9 +389,16 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 		if ( pEntity == pEntityIgnore )
 			continue;
 
-		//ignore grenades!
+		//BG3 - ignore grenades!
 		if (dynamic_cast<CBaseGrenade*>(pEntity))
 			continue;
+
+		//BG3 - special friendlyfire setting
+		/*if (attackerTeam != TEAM_UNASSIGNED 
+			&& (attackerTeam == pEntity->GetTeamNumber() 
+				&& friendlyfire.GetInt() == 0
+				&& info.GetAttacker() != pEntity))
+			continue;*/
 
 		if ( pEntity->m_takedamage == DAMAGE_NO )
 			continue;

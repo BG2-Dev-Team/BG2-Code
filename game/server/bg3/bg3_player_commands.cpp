@@ -38,6 +38,10 @@ commented on the following form:
 #include "Permissions/bg3_player_locator.h"
 #include "bg2/vcomm.h"
 #include "gameinterface.h"
+#include "../shared/bg3/bg3_map_model.h"
+
+void CSay(const char* pszFormat, ...);
+void Host_Say(edict_t *pEdict, const CCommand &args, bool teamonly);
 
 //Static map of from player-issued to command strings to their functions
 CUtlDict<PlayerCommandFunc> CHL2MP_Player::s_mPlayerCommands;
@@ -57,6 +61,8 @@ namespace {
 	static void __player_command_##name(CHL2MP_Player*, const CCommand&);\
 	static CCommandDeclarator __declare_command_##name(#name, &__player_command_##name); \
 	static void __player_command_##name(CHL2MP_Player* pPlayer, const CCommand& args)
+#define PLAYER_COMMAND_ALIAS(orig, name) \
+	static CCommandDeclarator __declare_command_##name(#name, &__player_command_##orig); \
 
 //--------------------------------------------------------------------------------
 // Purpose: Player commands begin here
@@ -141,6 +147,53 @@ static void PerPlayerCommand(CHL2MP_Player* pRequester, const char* pszPlayerSea
 	delete[] pPlayerList;
 }
 
+static int g_banMinutes = 0;
+PLAYER_COMMAND(rban) {
+	if (!pPlayer->m_pPermissions->m_bPlayerManage)
+		return;
+
+	if (args[2][0] == '@' && strcmp(args[2], "@aim") != 0)
+		return;
+		
+	if (args.ArgC() == 3) {
+		g_banMinutes = atoi(args[1]); if (g_banMinutes < 0) return;
+		PerPlayerCommand(pPlayer, args[2], [](CHL2MP_Player* pPlayer) {
+
+			CSteamID sid;
+			pPlayer->GetSteamID(&sid);
+			char buffer[64];
+			convertSteamIDToString(sid, buffer, sizeof(buffer));
+
+			char buffer2[128];
+			Q_snprintf(buffer2, sizeof(buffer2), "banid %i %s kick\n", g_banMinutes, buffer);
+			engine->ServerCommand(buffer2);
+			engine->ServerExecute();
+
+			Q_snprintf(buffer2, sizeof(buffer2), "kick \"%s\"\n", pPlayer->GetPlayerName());
+			engine->ServerCommand(buffer2);
+		});
+	}
+
+}
+PLAYER_COMMAND_ALIAS(rban, b);
+/*PLAYER_COMMAND(rbanip) {
+	if (!pPlayer->m_pPermissions->m_bPlayerManage)
+		return;
+
+	if (args.ArgC() == 3) {
+		g_banMinutes = atoi(args[1]); if (g_banMinutes < 0) return;
+		PerPlayerCommand(pPlayer, args[2], [](CHL2MP_Player* pPlayer) {
+
+			pPlayer->GetSteamID()
+
+			char buffer2[128];
+			Q_snprintf(buffer2, sizeof(buffer2), "banid %i %s kick\n", g_banMinutes, buffer);
+		});
+	}
+
+}
+PLAYER_COMMAND_ALIAS(rbanip, bip);*/
+
 PLAYER_COMMAND(rkick) {
 	if (!pPlayer->m_pPermissions->m_bPlayerManage)
 		return;
@@ -152,6 +205,7 @@ PLAYER_COMMAND(rkick) {
 		});
 	}
 }
+PLAYER_COMMAND_ALIAS(rkick, k);
 
 PLAYER_COMMAND(slay) {
 	if (!pPlayer->m_pPermissions->m_bPlayerManage)
@@ -163,6 +217,7 @@ PLAYER_COMMAND(slay) {
 		});
 	}
 }
+PLAYER_COMMAND_ALIAS(slay, s);
 
 PLAYER_COMMAND(spawn) {
 	if (!pPlayer->m_pPermissions->m_bPlayerManage)
@@ -466,4 +521,36 @@ PLAYER_COMMAND(vcomm_halt) {
 	uint8 comm = VCOMM2_HALT;
 	pPlayer->HandleVoicecomm(comm);
 	//BG3Buffs::RallyRequest(comm, pPlayer);
+}
+
+
+/* GAME INFO COMMANDS */
+//float g_flNextServerChatMessage = -FLT_MAX;
+/*PLAYER_COMMAND(ff) {
+	engine->ServerExecute();
+	if (friendlyfire.GetBool())
+		engine->ServerCommand("say Friendly Fire is ON\n");
+	else
+		engine->ServerCommand("say Friendly Fire is OFF\n");
+	engine->ServerExecute();
+}*/
+/*
+PLAYER_COMMAND(currentmap) {
+	CSay(g_pGameRules->MapName());
+}
+*/
+CON_COMMAND(nextmap, "Changes the server to the specified map") {
+	if (args.ArgC() < 2 || !verifyMapModePermissions(__FUNCTION__)) {
+		//CSay("The next map is %s", nextlevel.GetString());
+	}
+	else {
+
+		if (!CMapInfo::MapExists(args[1])) {
+			CSay("The map %s does not exist", args[1]);
+			return;
+		}
+
+		//nextlevel is already built for this purpose
+		nextlevel.SetValue(args[1]);
+	}
 }

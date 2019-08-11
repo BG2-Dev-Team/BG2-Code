@@ -28,6 +28,7 @@
 //#define PANEL_TEAMS			"teammenu"
 #define PANEL_COMM			"commmenu"
 #define PANEL_COMM2			"commmenu2"
+#define PANEL_ADMIN			"adminmenu"
 //
 
 //BG3 - new team and kits menus

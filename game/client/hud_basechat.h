@@ -361,9 +361,17 @@ public:
 					if (buffer[0] != '/') {
 						PostMessage(m_pHudChat, new KeyValues("ChatEntrySend"));
 					}
-					if (buffer[0] == '/' || buffer[0] == '!') {
+					if (buffer[0] == '/' 
+						|| buffer[0] == '!') {
 						engine->ServerCmd(buffer + 1);
 					}
+					if (strcmp(buffer, "currentmap") == 0
+						|| strcmp(buffer, "ff") == 0
+						|| strcmp(buffer, "nextmap") == 0) {
+						Msg("Sending %s as command\n", buffer);
+						engine->ServerCmd(buffer);
+					}
+						
 				}
 			}
 		

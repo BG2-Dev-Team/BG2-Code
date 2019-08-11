@@ -663,13 +663,13 @@ bool CHL2MPClientScoreBoardDialog::GetPlayerScoreInfo(int playerIndex, KeyValues
 	{
 		kv->SetInt("deaths", g_PR->GetDeaths(playerIndex));
 	}
-	else
+	/*else
 	{
 		if (playerIndex == pPlayer->entindex())
 			kv->SetInt("deaths", g_PR->GetDeaths(playerIndex));
 		else
 			kv->SetString("deaths", "");
-	}
+	}*/
 	//
 	kv->SetInt("frags", g_PR->GetPlayerScore(playerIndex));
 	//BG2 - Tjoppen - dead column
@@ -711,20 +711,9 @@ struct PlayerScoreInfo
 	bool alive;
 };
 
-int PlayerScoreInfoSort(const PlayerScoreInfo *p1, const PlayerScoreInfo *p2)
+/*int PlayerScoreInfoSort(const PlayerScoreInfo *p1, const PlayerScoreInfo *p2)
 {
-	// check local
-	if (p1->important)
-		return -1;
-	if (p2->important)
-		return 1;
-
-	// check alive
-	if (p1->alive && !p2->alive)
-		return -1;
-	if (p2->alive && !p1->alive)
-		return 1;
-
+	
 	// check frags
 	if (p1->frags > p2->frags)
 		return -1;
@@ -737,12 +726,25 @@ int PlayerScoreInfoSort(const PlayerScoreInfo *p1, const PlayerScoreInfo *p2)
 	if (p2->deaths < p1->deaths)
 		return 1;
 
+	// check local
+	if (p1->important)
+		return -1;
+	if (p2->important)
+		return 1;
+
+	// check alive
+	if (p1->alive && !p2->alive)
+		return -1;
+	if (p2->alive && !p1->alive)
+		return 1;
+
+
 	// check index
 	if (p1->index < p2->index)
 		return -1;
 
 	return 1;
-}
+}*/
 
 //-----------------------------------------------------------------------------
 // Purpose: 

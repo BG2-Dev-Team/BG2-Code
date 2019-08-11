@@ -10,6 +10,7 @@ Permissions* const Permissions::s_pFirstPermission = &g_NullPermission;
 
 Permissions::Permissions() {
 	memset(m_name, 0, sizeof(m_name));
+	strcpy(m_name, "default");
 	m_bPermissionManage = m_bPlayerManage = m_bMapMode = m_bBotManage = m_bConsoleAccess = 0;
 	m_pNextPermission = NULL; //null terminator in linked list
 }
@@ -25,7 +26,7 @@ void Permissions::LoadPermissionsForPlayer(CHL2MP_Player* pPlayer) {
 	char buffer[64];
 	convertSteamIDToString(sid, buffer, sizeof(buffer));
 	std::string id = buffer;
-	Msg("Getting permissions for player with STEAMID: %s, ", buffer);
+	Msg("Getting permissions for %s with STEAMID: %s, ", pPlayer->GetPlayerName(), buffer);
 
 	//search for existing permission set with our SteamID
 	Permissions* pNextPermission = s_pFirstPermission;

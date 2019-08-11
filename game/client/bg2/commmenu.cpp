@@ -226,8 +226,6 @@ void CCommMenu::OnKeyCodePressed(KeyCode code)
 	// and the actual pressed key, and compare those..
 	int iLastTrappedKey = code;	
 
-	Msg("Key %i pressed for commmenu\n", iLastTrappedKey);
-
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
 	if ( !pPlayer )
