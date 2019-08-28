@@ -293,7 +293,9 @@ static const char *s_PreserveEnts[] =
 	public:
 		virtual bool		CanPlayerHearPlayer( CBasePlayer *pListener, CBasePlayer *pTalker, bool &bProximity )
 		{
-			return ( pListener->GetTeamNumber() == pTalker->GetTeamNumber() );
+			extern ConVar sv_alltalk;
+			return ( !ToHL2MPPlayer(pTalker)->m_bMuted && 
+				(sv_alltalk.GetBool() || pListener->GetTeamNumber() == pTalker->GetTeamNumber()) );
 		}
 	};
 	CVoiceGameMgrHelper g_VoiceGameMgrHelper;

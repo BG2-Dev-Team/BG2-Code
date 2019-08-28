@@ -12,6 +12,8 @@ extern ConVar	cl_crosshair,
 				cl_crosshair_b,
 				cl_crosshair_a,
 
+				cl_dynamic_crosshair,
+
 				//cl_simple_smoke,
 				cl_capturesounds,
 				hud_showtargetid,
@@ -57,6 +59,8 @@ class CBG2OptionsPanel : public vgui::Frame
 									(m_pFlag2CrosshairCheckButton->IsSelected() ? 4 : 0) |
 									(m_pFlag3CrosshairCheckButton->IsSelected() ? 8 : 0) );
 
+			cl_dynamic_crosshair.SetValue(m_pDynamicCrosshairCheckButton->IsSelected());
+
 			if (m_pHitverifCheckButton->IsEnabled()) // BG2 - VisualMelon - So we don't keep resetting it if it's disabled
 				cl_hitverif.SetValue( m_pHitverifCheckButton->IsSelected() );
 			if (m_pHitdamagelineCheckButton->IsEnabled())
@@ -95,6 +99,8 @@ class CBG2OptionsPanel : public vgui::Frame
 		m_pFlag1CrosshairCheckButton->SetSelected( (cl_crosshair.GetInt() & 2) ? true : false );
 		m_pFlag2CrosshairCheckButton->SetSelected( (cl_crosshair.GetInt() & 4) ? true : false );
 		m_pFlag3CrosshairCheckButton->SetSelected( (cl_crosshair.GetInt() & 8) ? true : false );
+
+		m_pDynamicCrosshairCheckButton->SetSelected(cl_dynamic_crosshair.GetBool());
 
 		m_pHitverifCheckButton->SetSelected( cl_hitverif.GetBool() );
 		m_pHitdamagelineCheckButton->SetSelected( cl_hitdamageline.GetBool() );
@@ -146,6 +152,9 @@ class CBG2OptionsPanel : public vgui::Frame
 
 		m_pFlag3CrosshairCheckButton = new vgui::CheckButton( this, "Flag3CrosshairCheckButton", "" );
 		m_pFlag3CrosshairCheckButton->AddActionSignalTarget( this );
+
+		m_pDynamicCrosshairCheckButton = new vgui::CheckButton(this, "DynamicCrosshairCheckButton", "");
+		m_pDynamicCrosshairCheckButton->AddActionSignalTarget(this);
 
 		m_pHitverifCheckButton = new vgui::CheckButton( this, "HitverifCheckButton", "" );
 		m_pHitverifCheckButton->AddActionSignalTarget( this );
@@ -202,6 +211,8 @@ class CBG2OptionsPanel : public vgui::Frame
 						*m_pFlag1CrosshairCheckButton,
 						*m_pFlag2CrosshairCheckButton,
 						*m_pFlag3CrosshairCheckButton,
+
+						*m_pDynamicCrosshairCheckButton,
 
 						*m_pHitverifCheckButton,
 						*m_pHitdamagelineCheckButton,

@@ -802,7 +802,7 @@ void CHudBG2::HideShowAllPlayer(bool visible) {
 
 //BG2 - Tjoppen - cl_hitverif & cl_winmusic && capturesounds & voice comm sounds //HairyPotter
 ConVar	cl_hitverif( "cl_hitverif", "1", FCVAR_ARCHIVE, "Display hit verification? 1 For all. 2 For Melee only. 3 For Firearms only." );
-ConVar	cl_hitdamageline( "cl_hitdamageline", "0", FCVAR_ARCHIVE, "Display hit damage line? 1 For all. 2 For Melee only. 3 For Firearms only." ); // BG2 - VisualMelon - default to off
+ConVar	cl_hitdamageline( "cl_hitdamageline", "1", FCVAR_ARCHIVE, "Display hit damage line? 1 For all. 2 For Melee only. 3 For Firearms only." ); // BG2 - VisualMelon - default to off
 ConVar	cl_winmusic( "cl_winmusic", "1", FCVAR_ARCHIVE, "Play win music?" );
 ConVar	cl_capturesounds( "cl_capturesounds", "1", FCVAR_ARCHIVE, "Play flag capture sounds?" );
 ConVar cl_vcommsounds("cl_vcommsounds", "1", FCVAR_ARCHIVE, "Allow voice comm sounds?" );

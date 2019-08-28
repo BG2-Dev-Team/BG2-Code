@@ -279,6 +279,9 @@ public:
 
 	//BG3 - permissions
 	Permissions* m_pPermissions;
+
+	//BG3 - rudimentary mute system
+	bool m_bMuted;
 };
 
 //BG2 - Tjoppen - ammo kit definitions

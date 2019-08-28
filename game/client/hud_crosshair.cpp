@@ -464,6 +464,7 @@ void CHudCrosshair::GetDrawPosition ( float *pX, float *pY, bool *pbBehindCamera
 	*pbBehindCamera = bBehindCamera;
 }
 
+ConVar cl_dynamic_crosshair("cl_dynamic_crosshair", "1", FCVAR_ARCHIVE);
 
 void CHudCrosshair::Paint( void )
 {
@@ -520,6 +521,8 @@ void CHudCrosshair::Paint( void )
 		int w = ScreenWidth(),
 			h = ScreenHeight();
 
+		bool dynamic = cl_dynamic_crosshair.GetBool();
+
 		float	cx = w / 2,
 			cy = h / 2,
 			r = max(w, h) / 2;
@@ -528,21 +531,24 @@ void CHudCrosshair::Paint( void )
 		//when no, the circle will fade out. once holding a loaded firearm again, it will fade back in
 		bool drawCircle = false;
 
+		static float lastr = 0;
+		static float circlealpha = 1;
+
+	
 		if (weapon->GetAttackType(C_BaseBG2Weapon::ATTACK_PRIMARY) == ATTACKTYPE_FIREARM)
 		{
-			drawCircle = weapon->m_iClip1;
+			drawCircle = weapon->m_iClip1 || !dynamic;
 
 			//add both spreads (accuracy and internal ballistics) to give a more accurate circle
-			r *= weapon->GetAccuracy(C_BaseBG2Weapon::ATTACK_PRIMARY) + weapon->GetCurrentAmmoSpread();
+			r *= !dynamic ? 2.2f : weapon->GetAccuracy(C_BaseBG2Weapon::ATTACK_PRIMARY) + weapon->GetCurrentAmmoSpread();
 			r *= 0.008725f;
 		}
 		else
 			r *= 0.05f;
 
-		static float lastr = 0;
-		static float circlealpha = 1;
-
 		r = lastr = r + (lastr - r) * expf(-13.0f * gpGlobals->frametime);
+		
+
 
 		//lerp circle alpha up or down
 		circlealpha += (drawCircle ? 6 : -6) * gpGlobals->frametime;
@@ -579,7 +585,7 @@ void CHudCrosshair::Paint( void )
 			//BG3 - accuracy indicator for when none other available
 			float accuracyShift = 0;
 			bool nocircleOtherwise = !(cl_crosshair.GetInt() & (1 | 8));
-			if (nocircleOtherwise && drawCircle)
+			if (nocircleOtherwise && drawCircle && dynamic)
 				accuracyShift = r;
 
 			//without expansion

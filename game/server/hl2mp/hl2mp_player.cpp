@@ -157,6 +157,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 
 	m_bEnterObserver = false;
 	m_bReady = false;
+	m_bMuted = false;
 
 	//BG2 - Default weapon kits. -Hairypotter
 	m_iGunKit = 0;

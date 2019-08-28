@@ -219,6 +219,18 @@ PLAYER_COMMAND(slay) {
 }
 PLAYER_COMMAND_ALIAS(slay, s);
 
+PLAYER_COMMAND(mute) {
+	if (!pPlayer->m_pPermissions->m_bPlayerManage)
+		return;
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			pPlayer->m_bMuted = !pPlayer->m_bMuted;
+			Msg("Toggled mute on %s\n", pPlayer->GetPlayerName());
+		});
+	}
+}
+PLAYER_COMMAND_ALIAS(mute, m);
+
 PLAYER_COMMAND(spawn) {
 	if (!pPlayer->m_pPermissions->m_bPlayerManage)
 		return;
@@ -540,17 +552,14 @@ PLAYER_COMMAND(currentmap) {
 }
 */
 CON_COMMAND(nextmap, "Changes the server to the specified map") {
-	if (args.ArgC() < 2 || !verifyMapModePermissions(__FUNCTION__)) {
-		//CSay("The next map is %s", nextlevel.GetString());
-	}
-	else {
+	if (!verifyMapModePermissions(__FUNCTION__) || args.ArgC() < 2)
+		return;
 
-		if (!CMapInfo::MapExists(args[1])) {
-			CSay("The map %s does not exist", args[1]);
-			return;
-		}
-
-		//nextlevel is already built for this purpose
-		nextlevel.SetValue(args[1]);
+	if (!CMapInfo::MapExists(args[1])) {
+		CSay("The map %s does not exist", args[1]);
+		return;
 	}
+
+	//nextlevel is already built for this purpose
+	nextlevel.SetValue(args[1]);
 }

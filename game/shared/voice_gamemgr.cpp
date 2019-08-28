@@ -201,7 +201,7 @@ void CVoiceGameMgr::UpdateMasks()
 {
 	m_UpdateInterval = 0;
 
-	bool bAllTalk = !!sv_alltalk.GetInt();
+	//bool bAllTalk = !!sv_alltalk.GetInt();
 
 	for(int iClient=0; iClient < m_nMaxPlayers; iClient++)
 	{
@@ -233,7 +233,7 @@ void CVoiceGameMgr::UpdateMasks()
 			{
 				CBaseEntity *pEnt = UTIL_PlayerByIndex(iOtherClient+1);
 				if(pEnt && pEnt->IsPlayer() && 
-					(bAllTalk || m_pHelper->CanPlayerHearPlayer(pPlayer, (CBasePlayer*)pEnt, bProximity )) )
+					(m_pHelper->CanPlayerHearPlayer(pPlayer, (CBasePlayer*)pEnt, bProximity )) )
 				{
 					gameRulesMask[iOtherClient] = true;
 					ProximityMask[iOtherClient] = bProximity;

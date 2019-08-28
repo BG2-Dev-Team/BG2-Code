@@ -96,6 +96,7 @@
 #include "bg3/bg3_line_spawn.h"
 #include "bg3/Bots/bg3_bot.h"
 #include "bg3/Bots/bg3_bot_influencer.h"
+#include "bg3/bg3_scorepreserve.h"
 #include "../shared/bg3/bg3_class_quota.h"
 #include "../shared/bg3/bg3_buffs.h"
 #ifndef USE_ENTITY_BULLET
@@ -1122,6 +1123,9 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 
 	//BG3 - reset officer's buff timers - otherwise its times go out of sync with server clock
 	BG3Buffs::Reset();
+
+	//Remove existing scores
+	NScorePreserve::Flush();
 
 	//BG2 - Tjoppen - tickets
 	//we need to call CTeam::ResetTickets() here rather than in CTeam::Init() since the teams get inited before the map config is loaded

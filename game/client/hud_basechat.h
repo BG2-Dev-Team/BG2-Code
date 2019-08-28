@@ -368,7 +368,7 @@ public:
 					if (strcmp(buffer, "currentmap") == 0
 						|| strcmp(buffer, "ff") == 0
 						|| strcmp(buffer, "nextmap") == 0) {
-						Msg("Sending %s as command\n", buffer);
+						//Msg("Sending %s as command\n", buffer);
 						engine->ServerCmd(buffer);
 					}
 						

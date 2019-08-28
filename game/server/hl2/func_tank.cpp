@@ -1477,6 +1477,10 @@ void CFuncTank::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 		if ( !m_hControlVolume->IsTouching( pPlayer ) )
 			return;
 
+		//don't allow reloading players to use it
+		if (pPlayer->GetActiveWeapon() && pPlayer->GetActiveWeapon()->m_bInReload)
+			return;
+
 		// Interrupt any npc in route (ally or not).
 		if ( NPC_InRoute() )
 		{
