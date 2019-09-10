@@ -1935,6 +1935,7 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 
 			SecondaryAttack();
 
+
 			// Secondary ammo doesn't have a reload animation
 			if ( UsesClipsForAmmo2() )
 			{

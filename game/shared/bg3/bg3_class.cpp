@@ -649,6 +649,7 @@ DEC_BG3_PLAYER_CLASS(AOfficer, off, a) {
 DEC_BG3_PLAYER_CLASS(AFrontiersman, rif, a) {
 	m_iDefaultTeam = TEAM_AMERICANS;
 	m_iClassNumber = CLASS_SNIPER;
+	m_bHasImplicitDamageResistance = true;
 
 	m_flBaseSpeed = SPEED_SNIPER;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_SNIPER;

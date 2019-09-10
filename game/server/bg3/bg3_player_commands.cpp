@@ -224,12 +224,41 @@ PLAYER_COMMAND(mute) {
 		return;
 	if (args.ArgC() == 2) {
 		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
-			pPlayer->m_bMuted = !pPlayer->m_bMuted;
-			Msg("Toggled mute on %s\n", pPlayer->GetPlayerName());
+			pPlayer->m_bMuted = true;
+			Msg("Muted %s\n", pPlayer->GetPlayerName());
 		});
 	}
 }
 PLAYER_COMMAND_ALIAS(mute, m);
+PLAYER_COMMAND(unmute) {
+	if (!pPlayer->m_pPermissions->m_bPlayerManage)
+		return;
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			pPlayer->m_bMuted = false;
+			Msg("Unmuted %s\n", pPlayer->GetPlayerName());
+		});
+	}
+}
+PLAYER_COMMAND_ALIAS(unmute, um);
+
+CHL2MP_Player* g_pMicSoloPlayer = NULL;
+
+PLAYER_COMMAND(solo) {
+	if (!pPlayer->m_pPermissions->m_bPlayerManage)
+		return;
+	if (pPlayer == g_pMicSoloPlayer)
+		g_pMicSoloPlayer = NULL;
+	else
+		g_pMicSoloPlayer = pPlayer;
+}
+
+PLAYER_COMMAND(unsolo) {
+	if (!pPlayer->m_pPermissions->m_bPlayerManage)
+		return;
+
+	g_pMicSoloPlayer = NULL;
+}
 
 PLAYER_COMMAND(spawn) {
 	if (!pPlayer->m_pPermissions->m_bPlayerManage)

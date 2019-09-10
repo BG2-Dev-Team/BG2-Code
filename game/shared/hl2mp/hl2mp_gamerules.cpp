@@ -294,8 +294,11 @@ static const char *s_PreserveEnts[] =
 		virtual bool		CanPlayerHearPlayer( CBasePlayer *pListener, CBasePlayer *pTalker, bool &bProximity )
 		{
 			extern ConVar sv_alltalk;
-			return ( !ToHL2MPPlayer(pTalker)->m_bMuted && 
-				(sv_alltalk.GetBool() || pListener->GetTeamNumber() == pTalker->GetTeamNumber()) );
+			extern CHL2MP_Player* g_pMicSoloPlayer;
+			return ( 
+				!ToHL2MPPlayer(pTalker)->m_bMuted 
+				&& (sv_alltalk.GetBool() || pListener->GetTeamNumber() == pTalker->GetTeamNumber()) 
+				&& (g_pMicSoloPlayer == NULL || pTalker == g_pMicSoloPlayer));
 		}
 	};
 	CVoiceGameMgrHelper g_VoiceGameMgrHelper;
@@ -1145,6 +1148,11 @@ void CHL2MPRules::ClientDisconnected( edict_t *pClient )
 			pComms->m_pContextPlayer = nullptr;
 			pComms->ResetThinkTime(bot_randfloat(4.0f, 16.0f));
 		}
+
+		//If this player is on solo mic, remove that
+		extern CHL2MP_Player* g_pMicSoloPlayer;
+		if (pPlayer == g_pMicSoloPlayer)
+			g_pMicSoloPlayer = NULL;
 
 		//BG3 - preserve our score
 		NScorePreserve::NotifyDisconnected(pPlayer->entindex());

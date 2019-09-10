@@ -354,7 +354,7 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 	trace_t		tr;
 	float		flAdjustedDamage, falloff;
 	Vector		vecSpot;
-	//int attackerTeam = info.GetAttacker() ? info.GetAttacker()->GetTeamNumber() : TEAM_UNASSIGNED;
+	int attackerTeam = info.GetAttacker() ? info.GetAttacker()->GetTeamNumber() : TEAM_UNASSIGNED;
 
 	Vector vecSrc = vecSrcIn;
 
@@ -394,11 +394,12 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 			continue;
 
 		//BG3 - special friendlyfire setting
-		/*if (attackerTeam != TEAM_UNASSIGNED 
-			&& (attackerTeam == pEntity->GetTeamNumber() 
-				&& friendlyfire.GetInt() == 0
-				&& info.GetAttacker() != pEntity))
-			continue;*/
+		bool friendlyAttack = 
+			(attackerTeam != TEAM_UNASSIGNED
+			&& (attackerTeam == pEntity->GetTeamNumber()
+			&& friendlyfire.GetInt() == 0
+			&& info.GetAttacker() != pEntity));
+			
 
 		if ( pEntity->m_takedamage == DAMAGE_NO )
 			continue;
@@ -533,6 +534,9 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 		CTakeDamageInfo adjustedInfo = info;
 		//Msg("%s: Blocked damage: %f percent (in:%f  out:%f)\n", pEntity->GetClassname(), flBlockedDamagePercent * 100, flAdjustedDamage, flAdjustedDamage - (flAdjustedDamage * flBlockedDamagePercent) );
 		adjustedInfo.SetDamage( flAdjustedDamage - (flAdjustedDamage * flBlockedDamagePercent) );
+
+		// BG3 - if this is a friendly attack, don't kill
+		if (friendlyAttack) adjustedInfo.SetDamage(min(adjustedInfo.GetDamage(), pEntity->GetHealth() - 1));
 
 		// Now make a consideration for skill level!
 		if( info.GetAttacker() && info.GetAttacker()->IsPlayer() && pEntity->IsNPC() )

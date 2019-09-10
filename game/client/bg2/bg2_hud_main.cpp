@@ -651,7 +651,7 @@ void CHudBG2::PaintDeathMessage() {
 
 void CHudBG2::PaintClassCounts() {
 	C_HL2MP_Player* pPlayer = ToHL2MPPlayer(C_BasePlayer::GetLocalPlayer());
-	if (pPlayer) {
+	if (pPlayer && !pPlayer->IsAlive()) {
 		int iTeam = pPlayer->GetTeamNumber();
 		if (iTeam >= TEAM_AMERICANS) {
 			char buffer[16];
@@ -808,7 +808,6 @@ ConVar	cl_capturesounds( "cl_capturesounds", "1", FCVAR_ARCHIVE, "Play flag capt
 ConVar cl_vcommsounds("cl_vcommsounds", "1", FCVAR_ARCHIVE, "Allow voice comm sounds?" );
 //
 
-ConVar cl_melee_timing_test("cl_melee_timing_test", "0", 0);
 void CHudBG2::MsgFunc_HitVerif( bf_read &msg )
 {
 	int attacker, victim, hitgroup;
@@ -822,8 +821,6 @@ void CHudBG2::MsgFunc_HitVerif( bf_read &msg )
 	victim		= msg.ReadByte();
 	hitgroup	= msg.ReadByte();
 	damage		= msg.ReadShort();
-	if (cl_melee_timing_test.GetBool())
-		Msg("Received hitverif, damage = %i, time %f\n", damage, gpGlobals->curtime);
 
 	//attack type and hitgroup are packed into the same byte
 	attackType = (hitgroup >> 4) & 0xF;
@@ -984,6 +981,7 @@ void CHudBG2::MsgFunc_VCommSounds( bf_read &msg )
 
 	PlayVCommSound( snd, client );
 }
+
 void CHudBG2::PlayVCommSound( char snd[512], int playerindex )
 {
 	C_BasePlayer *pPlayer = UTIL_PlayerByIndex( playerindex );

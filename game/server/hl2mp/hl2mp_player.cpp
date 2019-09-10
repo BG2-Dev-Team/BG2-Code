@@ -333,11 +333,12 @@ void CHL2MP_Player::GiveDefaultItems(void)
 		AddSpeedModifier(k.m_iMovementSpeedModifier, ESpeedModID::Weapon);
 
 		//Give primary and secondary ammo
-		extern ConVar lb_ammo_multiplier;
+		/*extern ConVar lb_ammo_multiplier;
 		int ammoCount = !IsLinebattle() ? m_pCurClass->m_iDefaultPrimaryAmmoCount : m_pCurClass->m_iDefaultPrimaryAmmoCount * lb_ammo_multiplier.GetFloat(); //* 2;
 		CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
 		if (m_pCurClass->m_pszSecondaryAmmo && !mp_disable_firearms.GetBool())
-			CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
+			CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));*/
+		SetDefaultAmmoFull(true);
 
 		//Give extra ammo from kit
 		/*if (k.m_pszAmmoOverrideName) {

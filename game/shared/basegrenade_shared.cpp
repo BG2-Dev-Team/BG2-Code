@@ -544,6 +544,7 @@ CBaseGrenade::CBaseGrenade(void)
 	m_flDetonateTime	= 0;
 	m_bHasWarnedAI		= false;
 	m_bDidExplode		= false;
+	m_takedamage		= DAMAGE_NO; //BG3 - Awesome - grenades don't receive damage or else they'll fly over the map like artillery
 
 	SetSimulatedEveryTick( true );
 };

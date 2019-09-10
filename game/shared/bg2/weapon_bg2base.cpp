@@ -31,8 +31,8 @@
 	//BG2 - <name of contributer>[ - <small description>]
 */
 
-
 #include "cbase.h"
+#include <chrono>
 #include "weapon_bg2base.h"
 #include "ammodef.h"
 
@@ -46,6 +46,7 @@
 	#include "model_types.h"
 	//#include "clienteffectprecachesystem.h"
 	#include "fx.h"
+	#include "hud_crosshair.h"
 #else
 	#include "hl2mp_player.h"
 	#include "te_effect_dispatch.h"
@@ -179,7 +180,6 @@ void CBaseBG2Weapon::SecondaryAttack( void )
 {
 	if ( m_bIsIronsighted )
 		return;
-
 	DoAttack( ATTACK_SECONDARY );
 }
 
@@ -552,6 +552,8 @@ void CBaseBG2Weapon::Swing( int iAttack, bool bIsFirstAttempt )
 {
 	trace_t traceHit;
 
+	//bIsFirstAttempt = bIsFirstAttempt && m_flStopAttemptingSwing < gpGlobals->curtime;
+
 	// Try a ray
 	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 	if ( !pOwner )
@@ -602,13 +604,26 @@ void CBaseBG2Weapon::Swing( int iAttack, bool bIsFirstAttempt )
 	else
 	{
 		//stop attempting more swings (don't cut through masses of people or hit the same person ten times)
-		m_flStopAttemptingSwing = 0;
+		m_flStopAttemptingSwing = -FLT_MAX;
 
 		Hit( traceHit, iAttack );
 	}
+
 	// Send the anim
-	if( bIsFirstAttempt )
+	//for some reason on client, DoAttack() can be called multiple times on the first frames
+	//and so Swing(iAttack, bFirstAttempt = true) is called multiple times even though it won't
+	//always be the first attempt
+	//Fixing this will make the animation not play sometimes
+	if (bIsFirstAttempt)
 	{
+		using namespace std::chrono;
+		milliseconds ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+#ifdef CLIENT_DLL
+		//signal crosshair to show hitscan icon
+		CHudCrosshair::GetCrosshair()->RegisterMeleeSwing(this, iAttack);
+#endif
+		
+
 		SendWeaponAnim( GetActivity( iAttack ) );
 		pOwner->SetAnimation( PLAYER_ATTACK2 );
 

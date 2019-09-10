@@ -21,6 +21,8 @@
 //BG2 - Tjoppen - #includes
 #include "../game/shared/bg2/weapon_bg2base.h"
 #include "./bg2/ironsights.h"
+#include "c_playerresource.h"
+
 //
 
 #ifdef SIXENSE
@@ -59,17 +61,23 @@ int ScreenTransform( const Vector& point, Vector& screen );
 #else
 DECLARE_HUDELEMENT( CHudCrosshair );
 #endif
+
+CHudCrosshair* CHudCrosshair::g_pCrosshair = NULL;
 CHudCrosshair::CHudCrosshair( const char *pElementName ) :
 		CHudElement( pElementName ), BaseClass( NULL, "HudCrosshair" )
 {
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
+	g_pCrosshair = this;
+
 	m_pCrosshair = 0;
 
 	m_clrCrosshair = Color( 0, 0, 0, 0 );
 
 	m_vecCrossHairOffsetAngle.Init();
+
+	m_flMeleeScanEndTime = -FLT_MAX;
 
 	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_CROSSHAIR );
 }
@@ -464,8 +472,21 @@ void CHudCrosshair::GetDrawPosition ( float *pX, float *pY, bool *pbBehindCamera
 	*pbBehindCamera = bBehindCamera;
 }
 
+void CHudCrosshair::RegisterMeleeSwing(CBaseBG2Weapon* pWeapon, int iAttack) {
+	//ignore if we already have a scan scheduled
+	if (m_flMeleeScanEndTime > gpGlobals->curtime)
+		return;
+
+	//estimate scan time based on player's ping
+	float ping = g_PR->GetPing(CBasePlayer::GetLocalPlayer()->entindex()) / 1000.f;
+	m_flMeleeScanStartTime = gpGlobals->curtime + ping;
+	m_flMeleeScanEndTime = m_flMeleeScanStartTime + pWeapon->GetRetraceDuration(iAttack);
+}
+
 ConVar cl_dynamic_crosshair("cl_dynamic_crosshair", "1", FCVAR_ARCHIVE);
 
+static bool g_bPreviousFrameIronsighted = false;
+static float g_flEndCrosshairTime = -FLT_MAX;
 void CHudCrosshair::Paint( void )
 {
 	//BG2 - found this stuff while porting to 2016 - Awesome
@@ -479,13 +500,15 @@ void CHudCrosshair::Paint( void )
 
 	if (pWeapon->m_bIsIronsighted) //No crosshair in Iron Sights. -HairyPotter
 	{
-#ifdef TWEAK_IRONSIGHTS
-
-#else
 		IronPaint();
-		return;
-#endif
-	}//
+		if (g_bPreviousFrameIronsighted && (gpGlobals->curtime > g_flEndCrosshairTime)) {
+			return;
+		}
+		else if (!g_bPreviousFrameIronsighted) {
+			g_flEndCrosshairTime = gpGlobals->curtime + 0.375f;
+		}
+	}
+	g_bPreviousFrameIronsighted = pWeapon->m_bIsIronsighted;
 
 
 	if ( !m_pCrosshair )
@@ -512,9 +535,6 @@ void CHudCrosshair::Paint( void )
 	//int iTextureH = m_pCrosshair->Height();
 	//BG2 - Same old code slightly tweaked - HairyPotter
 	C_BaseBG2Weapon *weapon = dynamic_cast<C_BaseBG2Weapon*>(pPlayer->GetActiveWeapon());
-
-	if (!weapon)
-		return;
 
 	if (weapon)
 	{
@@ -546,7 +566,8 @@ void CHudCrosshair::Paint( void )
 		else
 			r *= 0.05f;
 
-		r = lastr = r + (lastr - r) * expf(-13.0f * gpGlobals->frametime);
+		//crosshair size changes faster when we're aiming in
+		r = lastr = r + (lastr - r) * expf((g_bPreviousFrameIronsighted * -3 - 13.0f) * gpGlobals->frametime);
 		
 
 
@@ -559,10 +580,15 @@ void CHudCrosshair::Paint( void )
 		// BG2 - VisualMelon - paint all the stuff that shows up even in iron sights
 		IronPaint();
 
+		//melee hitscan icon
+		bool bDrawHitScan = dynamic && gpGlobals->curtime > m_flMeleeScanStartTime && gpGlobals->curtime < m_flMeleeScanEndTime;
+
 		//Msg( "%f %f %f\n", cx, cy, r );
-		if (cl_crosshair.GetInt() & 4)
+		//center dot
+		if (cl_crosshair.GetInt() & 4 || bDrawHitScan)
 		{
 			float scale = cl_crosshair_scale.GetFloat() * min(w, h) / 300;
+			if (bDrawHitScan) scale *= 3;
 
 			surface()->DrawSetColor(Color(cl_crosshair_r.GetInt(), cl_crosshair_g.GetInt(),
 				cl_crosshair_b.GetInt(), cl_crosshair_a.GetInt()));
@@ -694,4 +720,6 @@ void CHudCrosshair::SetCrosshair( CHudTexture *texture, const Color& clr )
 void CHudCrosshair::ResetCrosshair()
 {
 	SetCrosshair( m_pDefaultCrosshair, Color(255, 255, 255, 255) );
+
+	
 }

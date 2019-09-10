@@ -14,6 +14,8 @@
 #include "hudelement.h"
 #include <vgui_controls/Panel.h>
 
+class C_BaseBG2Weapon;
+
 namespace vgui
 {
 	class IScheme;
@@ -32,15 +34,26 @@ public:
 
 	virtual void	SetCrosshairAngle( const QAngle& angle );
 	virtual void	SetCrosshair( CHudTexture *texture, const Color& clr );
+	static CHudCrosshair* GetCrosshair() { return g_pCrosshair; }
 	virtual void	ResetCrosshair();
 	virtual void	DrawCrosshair( void ) {}
   	virtual bool	HasCrosshair( void ) { return ( m_pCrosshair != NULL ); }
 	virtual bool	ShouldDraw();
 
+	void			Reset() override {
+		m_flMeleeScanEndTime = -FLT_MAX;
+		m_flMeleeScanStartTime = -FLT_MAX;
+	}
+
 	// any UI element that wants to be at the aim point can use this to figure out where to draw
 	static	void	GetDrawPosition ( float *pX, float *pY, bool *pbBehindCamera, QAngle angleCrosshairOffset = vec3_angle );
 
+	//This is called when a melee attack starts on the client side
+	void			RegisterMeleeSwing(C_BaseBG2Weapon* pWeapon, int iAttack);
+
 protected:
+	static CHudCrosshair* g_pCrosshair;
+
 	virtual void	ApplySchemeSettings( vgui::IScheme *scheme );
 	virtual void	IronPaint();//Bg2 - Commented -Hairypotter
 	virtual void	Paint();
@@ -51,7 +64,11 @@ protected:
 	Color			m_clrCrosshair;
 	QAngle			m_vecCrossHairOffsetAngle;
 
+	float			m_flMeleeScanStartTime;
+	float			m_flMeleeScanEndTime;
+
 	CPanelAnimationVar( bool, m_bHideCrosshair, "never_draw", "false" );
+
 };
 
 

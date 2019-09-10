@@ -1,6 +1,6 @@
 /*
 The Battle Grounds 3 - A Source modification
-Copyright (C) 2017, The Battle Grounds 2 Team and Contributors
+Copyright (C) 2017, The Battle Grounds 3 Team and Contributors
 
 The Battle Grounds 3 free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
