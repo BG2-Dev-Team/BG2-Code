@@ -45,6 +45,9 @@ CUtlDict<CWeaponDef*> g_dictWeaponDefs;
 // Purpose: Puts any weapon def into the dictionary
 //-----------------------------------------------------------------------------
 CWeaponDef::CWeaponDef(const char* pszWeaponName) {
+	m_bQuickdraw = false;
+	m_flRandomAdditionalLockTimeMax = 0.0f;
+
 	m_bDontAutoreload = true;
 	m_bCantAbortReload = true;
 	//m_iOwnerSpeedModOnKill = m_iAerialDamageMod = 0;

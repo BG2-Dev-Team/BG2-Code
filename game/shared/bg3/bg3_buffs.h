@@ -68,6 +68,10 @@ namespace BG3Buffs {
 	extern CHudTexture* g_ppIcons[];
 	void InitializeIcons();
 
+	void InitializeTexts();
+	wchar_t* GetTextForBuff(RallyAsInt buff);
+	
+
 	//Maps the "slot0" , "slot1"... commands to the voice commands
 	//and sends them to the server.
 	void SendRallyRequestFromSlot(int iSlot);

@@ -180,7 +180,7 @@ int CHL2MP_Player::GetCurrentSpeed(void) const
 		//spectating
 		base = 240;
 	}
-	else if (m_nButtons & IN_WALK && (pWeapon && !pWeapon->m_bInReload)) //don't let players needlessly walk while reloading
+	else if (m_nButtons & IN_WALK && (pWeapon && !pWeapon->m_bInReload && !pWeapon->m_bIsIronsighted)) //don't let players needlessly walk while reloading
 	{
 		base = 120;
 		//use same walking speed for all classes
@@ -708,3 +708,5 @@ void CPlayerAnimState::GetOuterAbsVelocity( Vector& vel )
 	vel = GetOuter()->GetAbsVelocity();
 #endif
 }
+
+ConVar sv_stamina("sv_stamina", "1", FCVAR_GAMEDLL | FCVAR_REPLICATED);

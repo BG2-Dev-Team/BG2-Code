@@ -115,6 +115,9 @@ Label*			g_pClassNameLabel;
 Label*			g_pWeaponNameLabel;
 Label*			g_pClassDescLabel;
 Label*			g_pWeaponDescLabel;
+Label*			g_pTeamwidePickingLabel;
+Label*			g_pClassBuffLabel;
+Label*			g_pOfficerBuffsLabel;
 
 #define NUM_CLASS_BUTTONS 6
 #define NUM_AMMO_BUTTONS 2
@@ -128,9 +131,18 @@ int g_iCurrentTeammenuTeam = TEAM_INVALID;
 //-----------------------------------------------------------------------------
 // Purpose: Begin class button functions
 //-----------------------------------------------------------------------------
+CClassButton::CClassButton(Panel *parent, const char *panelName, const char *text, int index) : Button(parent, panelName, text), m_iIndex(index) {
+
+	m_pCountLabel = new Label(this, "ClassCountLabel", "--");
+}
+
 void CClassButton::ApplySchemeSettings(vgui::IScheme* pScheme) {
 	BaseClass::ApplySchemeSettings(pScheme);
 	SetPaintBorderEnabled(false);
+	m_pCountLabel->SetFgColor(g_cBG3TextColor);
+	m_pCountLabel->SetPos(0, 0);
+	m_pCountLabel->SetSize(30, 20);
+	SetDefaultBG3FontScaled(pScheme, m_pCountLabel);
 }
 
 void CClassButton::OnMousePressed(vgui::MouseCode code) {
@@ -160,6 +172,7 @@ void CClassButton::OnMousePressed(vgui::MouseCode code) {
 }
 
 void CClassButton::OnCursorEntered() {
+	UpdateGamerulesData();
 	m_bMouseOver = true;
 	if (m_eAvailable != CLASS_UNAVAILABLE) {
 		UpdateDisplayedButton(this);
@@ -225,6 +238,28 @@ void CClassButton::UpdateGamerulesData() {
 		return;
 
 	m_eAvailable = NClassQuota::PlayerMayJoinClass(pPlayer, m_pPlayerClass); //m_pPlayerClass->availabilityForPlayer(pPlayer);
+
+	//set label text
+	char buffer[8];
+	int limit = NClassQuota::GetLimitForClass(m_pPlayerClass);
+	int count = count = g_Teams[m_pPlayerClass->m_iDefaultTeam]->GetNumOfNextClassRealPlayers(m_pPlayerClass->m_iClassNumber);
+	if (limit < 0) {
+		Q_snprintf(buffer, sizeof(buffer), "%i", count);
+		m_pCountLabel->SetText(buffer);
+	}
+	else if (limit == 0 && count == 0) {
+		m_pCountLabel->SetText("-/-");
+	}
+	else {
+		Q_snprintf(buffer, sizeof(buffer), "%i/%i", count, limit);
+		m_pCountLabel->SetText(buffer);
+	}
+	m_pCountLabel->SizeToContents();
+	m_pCountLabel->SetWide(m_pCountLabel->GetWide() * 1.2f); //italic font extends slightly beyond the edge
+
+	//officer mode overrides everything
+	extern bool g_bClassMenuOfficerMode;
+	if (g_bClassMenuOfficerMode) m_eAvailable = CLASS_FREE;
 
 	UpdateImage();
 }
@@ -292,8 +327,11 @@ void CClassButton::UpdateToMatchClass(const CPlayerClass* pClass) {
 int CClassButton::s_iSize = DEFAULT_ICON_SIZE;
 
 
-
-
+bool g_bClassMenuOfficerMode = false;
+CON_COMMAND(teamkitmenu, "(Linebattle Mode Only) Sets the class, weapon, uniform, and ammo for the entire team.") {
+	g_bClassMenuOfficerMode = true;
+	engine->ClientCmd("classmenu");
+}
 
 
 //-----------------------------------------------------------------------------
@@ -303,9 +341,27 @@ void JoinRequest(int iGun, int iAmmo, int iSkin, int iTeam, int iClass) {
 	//BG3 - we've merged the class and kit commands into a single command, classkit, to simplify
 	//ordering dependencies on server side
 
-	char cmd[32];
-	Q_snprintf(cmd, sizeof(cmd), "classkit %i %i %i %i %i\n", iTeam, iClass, iGun, iAmmo, iSkin);
-	engine->ServerCmd(cmd);
+	if (g_bClassMenuOfficerMode) {
+		g_bClassMenuOfficerMode = false;
+
+		C_BasePlayer* pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+		int team = pLocalPlayer->GetTeamNumber();
+		if (!pLocalPlayer || team != iTeam)
+			return;
+
+		const char* pszCommandString = team == TEAM_AMERICANS ? "aclasskit" : "bclasskit";
+
+		const char* pszClassAbbreviation = CPlayerClass::fromNums(iTeam, iClass)->m_pszAbbreviation;
+
+		char cmd[32];
+		Q_snprintf(cmd, sizeof(cmd), "%s %s %i %i %i", pszCommandString, pszClassAbbreviation, iGun, iSkin, iAmmo);
+		engine->ServerCmd(cmd);
+	}
+	else {
+		char cmd[32];
+		Q_snprintf(cmd, sizeof(cmd), "classkit %i %i %i %i %i\n", iTeam, iClass, iGun, iAmmo, iSkin);
+		engine->ServerCmd(cmd);
+	}
 
 	/*
 	Q_snprintf(cmd, sizeof(cmd), "kit %i %i %i \n", iGun, iAmmo, iSkin);
@@ -369,7 +425,7 @@ void CWeaponButton::OnCursorEntered() {
 void CWeaponButton::OnCursorExited() { 
 	m_bMouseOver = false; 
 	if (m_iWeaponCount > 1) {
-		g_pGlowyWeaponArrow->SetImage(MENU_ARROW_NORMAL);
+		g_pGlowyWeaponArrow->SetImage(MENU_ARROW_HOVER);
 	}
 }
 
@@ -436,7 +492,7 @@ void CWeaponButton::UpdateImage(const CGunKit* pKit) {
 // Purpose: Glowing/pulsing arrow indicates that weapons can be swapped
 //-----------------------------------------------------------------------------
 GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons::GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons() {
-	m_pImage = scheme()->GetImage(MENU_ARROW_NORMAL, false);
+	m_pImage = scheme()->GetImage(MENU_ARROW_HOVER, false);
 }
 
 
@@ -476,13 +532,28 @@ namespace NClassWeaponStats {
 	int g_iAccuracyWidth;
 	int g_iBulletDamageWidth;
 	int g_iReloadSpeedWidth;
+	int g_iLockTimeWidth;
 	int g_iMeleeRangeWidth;
 	int g_iMeleeDamageWidth;
 	int g_iMeleeToleranceWidth;
 	int g_iMeleeSpeedWidth;
+	
 
 	void UpdateToMatchClass(const CPlayerClass* pClass) {
-		/**/
+		//update the buff label
+		if (pClass->m_bHasImplicitDamageResistance) {
+			g_pClassBuffLabel->SetText("#BG3_Classmenu_Buff_DmgRst");
+			g_pClassBuffLabel->SetVisible(true);
+			g_pClassBuffLabel->SizeToContents();
+		}
+		else if (pClass->m_bHasImplicitDamageWeakness) {
+			g_pClassBuffLabel->SetText("#BG3_Classmenu_Buff_DmgWk");
+			g_pClassBuffLabel->SetVisible(true);
+			g_pClassBuffLabel->SizeToContents();
+		}
+		else {
+			g_pClassBuffLabel->SetVisible(false);
+		}
 	}
 
 	void UpdateWeaponStatsAllCurrent() {
@@ -517,6 +588,8 @@ namespace NClassWeaponStats {
 			g_iAccuracyWidth = 1;
 			g_iBulletDamageWidth = 1;
 			g_iReloadSpeedWidth = 1;
+			g_iLockTimeWidth = 1;
+			g_pnLockTime->SetText("");
 			g_pnBulletDamage->SetText("");
 			g_pnReloadSpeed->SetText("");
 		}
@@ -599,6 +672,11 @@ namespace NClassWeaponStats {
 			reload /= 12.0f;
 			set(ReloadSpeed, reload);
 
+			//calc lock time
+			float locktime = pWeapon->m_flLockTime + pWeapon->m_flRandomAdditionalLockTimeMax;
+			locktime = (0.55 - locktime) / 0.55;
+			set(LockTime, locktime);
+
 			//update texts
 			if (buckshot) {
 				Q_snprintf(buffer, sizeof(buffer), "%i * %i", pWeapon->m_iNumShot, (int)(pWeapon->m_iDamagePerShot + 0.5f));
@@ -611,10 +689,13 @@ namespace NClassWeaponStats {
 
 			Q_snprintf(buffer, sizeof(buffer), "%.1fs", pWeapon->m_flApproximateReloadTime);
 			g_pnReloadSpeed->SetText(buffer);
+
+			Q_snprintf(buffer, sizeof(buffer), "%.2fs", pWeapon->m_flLockTime + pWeapon->m_flRandomAdditionalLockTimeMax);
+			g_pnLockTime->SetText(buffer);
 		}
 		if (melee) {
 			//calc melee range
-			float meleeRange = melee->m_flRange / 100.f;
+			float meleeRange = (melee->m_flRange - 40.f) / 60.f;
 			set(MeleeRange, meleeRange);
 			Q_snprintf(buffer, sizeof(buffer), "%.0f\"", melee->m_flRange);
 			g_pnMeleeRange->SetText(buffer);
@@ -648,6 +729,7 @@ namespace NClassWeaponStats {
 			g_pAccuracy			= new Label(pParent, "AccuracyLabel", "");
 			g_pReloadSpeed		= new Label(pParent, "ReloadSpeedLabel", "");
 			g_pBulletDamage		= new Label(pParent, "BulletDamageLabel", "");
+			g_pLockTime			= new Label(pParent, "LockTimeLabel", "");
 			g_pMeleeDamage		= new Label(pParent, "MeleeDamageLabel", "");
 			g_pMeleeRange		= new Label(pParent, "MeleeRangeLabel", "");
 			g_pMeleeTolerance	= new Label(pParent, "MeleeToleranceLabel", "");
@@ -655,6 +737,7 @@ namespace NClassWeaponStats {
 
 			g_pnClassSpeed		= new Label(pParent, "ClassSpeedNumber", "");
 			g_pnReloadSpeed		= new Label(pParent, "ReloadSpeedNumber", "");
+			g_pnLockTime		= new Label(pParent, "LockTimeNumber", "");
 			g_pnBulletDamage	= new Label(pParent, "BulletDamageNumber", "");
 			g_pnMeleeDamage		= new Label(pParent, "MeleeDamageNumber", "");
 			g_pnMeleeRange		= new Label(pParent, "MeleeRangeNumber", "");
@@ -675,6 +758,8 @@ namespace NClassWeaponStats {
 		setn(g_pnBulletDamage);
 		set(g_pReloadSpeed);
 		setn(g_pnReloadSpeed);
+		set(g_pLockTime);
+		setn(g_pnLockTime);
 		set(g_pMeleeRange);
 		setn(g_pnMeleeRange);
 		set(g_pMeleeDamage);
@@ -696,6 +781,8 @@ namespace NClassWeaponStats {
 		set(nBulletDamage);
 		set(ReloadSpeed);
 		set(nReloadSpeed);
+		set(LockTime);
+		set(nLockTime);
 		set(MeleeRange);
 		set(nMeleeRange);
 		set(MeleeDamage);
@@ -714,6 +801,7 @@ namespace NClassWeaponStats {
 		set(g_pAccuracy)
 		set(g_pBulletDamage)
 		set(g_pReloadSpeed)
+		set(g_pLockTime)
 		set(g_pMeleeRange)
 		set(g_pMeleeDamage)
 		set(g_pMeleeTolerance)
@@ -739,6 +827,7 @@ namespace NClassWeaponStats {
 		paint(Accuracy);
 		paint(BulletDamage);
 		paint(ReloadSpeed);
+		paint(LockTime);
 		paint(MeleeRange);
 		paint(MeleeDamage);
 		paint(MeleeTolerance);
@@ -751,6 +840,7 @@ namespace NClassWeaponStats {
 		g_pAccuracy->SetText("#BG3_STAT_ACCURACY");
 		g_pBulletDamage->SetText("#BG3_STAT_BULLET_DAMAGE");
 		g_pReloadSpeed->SetText("#BG3_STAT_RELOAD_SPEED");
+		g_pLockTime->SetText("#BG3_STAT_LOCK_TIME");
 		g_pMeleeRange->SetText("#BG3_STAT_MELEE_RANGE");
 		g_pMeleeDamage->SetText("#BG3_STAT_MELEE_DAMAGE");
 		g_pMeleeTolerance->SetText("#BG3_STAT_MELEE_TOLERANCE");
@@ -763,6 +853,7 @@ namespace NClassWeaponStats {
 	Label* g_pAccuracy;
 	Label* g_pBulletDamage;
 	Label* g_pReloadSpeed;
+	Label* g_pLockTime;
 	Label* g_pMeleeRange;
 	Label* g_pMeleeDamage;
 	Label* g_pMeleeTolerance; //COS tolerance + melee duration
@@ -771,6 +862,7 @@ namespace NClassWeaponStats {
 	Label* g_pnClassSpeed;
 	Label* g_pnBulletDamage;
 	Label* g_pnReloadSpeed;
+	Label* g_pnLockTime;
 	Label* g_pnMeleeRange;
 	Label* g_pnMeleeDamage;
 	Label* g_pnMeleeSpeed;
@@ -980,6 +1072,7 @@ void CTeamToggleButton::OnMousePressed(MouseCode code) {
 }
 
 void CTeamToggleButton::Paint() {
+
 	int w, h;
 	GetSize(w, h);
 	m_pImage->SetSize(w, h);
@@ -1066,6 +1159,9 @@ CClassMenu::CClassMenu(vgui::VPANEL pParent) : Frame(NULL, PANEL_CLASSES) {
 	g_pWeaponNameLabel = new Label(this, "WeaponNameLabel", "");
 	g_pClassDescLabel = new Label(this, "ClassDescLabel", "");
 	g_pWeaponDescLabel = new Label(this, "ClassDescLabel", "");
+	g_pTeamwidePickingLabel = new Label(this, "TeamwidePickingLabel", "");
+	g_pClassBuffLabel = new Label(this, "ClassBuffLabel", "");
+	g_pOfficerBuffsLabel = new Label(this, "OfficerBuffsLabel", "");
 
 	//Build TeamToggle and Close Buttons
 	m_pCloseButton = new CCloseButton(this, "ClassMenuCloseButton", MENU_CLOSE_ICON);
@@ -1108,6 +1204,9 @@ void CClassMenu::Update() {
 }
 
 void CClassMenu::ShowPanel(bool bShow) {
+	if (!bShow)
+		g_bClassMenuOfficerMode = false;//closing the menu always disables officer mode
+
 	if (engine->IsPlayingDemo()) //Don't show up in demos -HairyPotter
 		return;
 
@@ -1132,6 +1231,12 @@ void CClassMenu::ShowPanel(bool bShow) {
 		HideCommMenu();
 		Activate();
 		PerformLayout();
+
+		m_pTeamToggleButton->SetVisible(!g_bClassMenuOfficerMode); //disable team toggle in officer mode
+		g_pTeamwidePickingLabel->SetVisible(g_bClassMenuOfficerMode);
+		for (int i = 0; i < NUM_CLASS_BUTTONS; i++) {
+			g_ppClassButtons[i]->m_pCountLabel->SetVisible(!g_bClassMenuOfficerMode);
+		}
 
 		if (g_iCurrentTeammenuTeam != TEAM_INVALID)
 			UpdateToMatchTeam(g_iCurrentTeammenuTeam);
@@ -1230,7 +1335,7 @@ void CClassMenu::OnKeyCodePressed(KeyCode code) {
 	if (index >= 0 && index < NUM_CLASS_BUTTONS)
 		g_ppClassButtons[index]->SimulateMousePressed();
 
-	if (code == KEY_N)
+	if (code == KEY_N && !g_bClassMenuOfficerMode)
 		engine->ClientCmd("teammenu");
 }
 
@@ -1263,13 +1368,19 @@ void CClassMenu::ApplySchemeSettings(IScheme* pScheme) {
 	SetDefaultBG3FontScaled(pScheme, g_pClassNameLabel);
 	SetDefaultBG3FontScaled(pScheme, g_pWeaponNameLabel);
 	SetDefaultBG3FontScaled(pScheme, g_pGoButton);
+	SetDefaultBG3FontScaled(pScheme, g_pTeamwidePickingLabel);
 
 #define set(a) a->SetFgColor(g_cBG3TextColor)
 	set(g_pClassNameLabel);
 	set(g_pWeaponNameLabel);
 	set(g_pClassDescLabel);
 	set(g_pWeaponDescLabel);
+	set(g_pTeamwidePickingLabel);
+	set(g_pClassBuffLabel);
 #undef set
+
+	g_pClassBuffLabel->SetPaintBackgroundEnabled(true);
+	g_pClassBuffLabel->SetBgColor(Color(0, 0, 0, 100));
 }
 
 void CClassMenu::PerformLayout() {
@@ -1334,7 +1445,7 @@ void CClassMenu::PerformLayout() {
 	g_pGlowyWeaponArrow->SetPulseSize(iconsz / 8);
 	const int ARROW_OFFSET = (iconsz - ARROW_SIZE) / 2;
 	g_pGlowyWeaponArrow->SetPosition(weaponx + 3 * iconsz + ARROW_OFFSET, yBase + ARROW_OFFSET);
-	g_pGlowyWeaponArrow->SetImage(MENU_ARROW_NORMAL);
+	g_pGlowyWeaponArrow->SetImage(MENU_ARROW_HOVER);
 	
 
 	//----------------------------------------------------------
@@ -1412,7 +1523,15 @@ void CClassMenu::PerformLayout() {
 	g_pWeaponDescLabel->SetPos(weaponx, descy);
 	g_pWeaponDescLabel->SetSize(weaponw, desch);
 
-	
+	g_pTeamwidePickingLabel->SetPos(0, ScreenHeight() - 200);
+	g_pTeamwidePickingLabel->SetSize(ScreenWidth() - 100, 200);
+	g_pTeamwidePickingLabel->SetText("#BG3_Classmenu_teamwide");
+
+	g_pClassBuffLabel->SetPos(xBase, uniformy + 2);
+	g_pClassBuffLabel->SetSize(classw, 30);
+
+	g_pOfficerBuffsLabel->SetPos(weaponx, uniformy + icon_half);
+	g_pOfficerBuffsLabel->SetSize(weaponw, 600);
 }
 
 void CClassMenu::UpdateToMatchTeam(int iTeam) {

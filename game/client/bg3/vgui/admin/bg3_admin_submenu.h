@@ -42,102 +42,53 @@ commented on the following form:
 
 class CHL2MP_Player;
 
+#define NUM_ADMIN_MENU_LABELS 10
+
 class CAdminSubMenu {
 public:
 	CAdminSubMenu();
+
+	CAdminSubMenu(const char* pszLineItemText, const char* pszTitle);
 
 	//variable-length array of children
 	//if there are no children, this is NULL and 
 	//this submenu is only an option of another submenu
 	//and does not have any suboptions itself.
 	//i.e. if this is NULL, this is a leaf node.
-	CAdminSubMenu** m_aChildren = NULL;
+	CAdminSubMenu** m_aChildren;
+	int				m_iNumChildren;
 	
-	//Gets the text used to show how this sub menu would appear if it is shown in the given slot
+	//Tthe text used to show this sub menu when it is shown in the given slot
 	//I.e. the PARENT of this submenu uses this to get the text
-	//1,2,3 etc. prefixes added automatically;
-	virtual std::string getLineItemText(uint8 slot) = 0;
+	//1,2,3 etc. prefixes added automatically elsewhere;
+//protected:
+	const char* m_pszLineItemText;
+
+public:
+	//Title of this menu as it would appear at the top of the panel
+	const char* m_pszTitle;
+	
+	//Usually just returns m_pszLineItemText unless this is a funky listed menu.
+	void getLineItemText(uint8 iForSlot, wchar* buffer, int bufferSize) const;
 	
 	//Called when this submenu is opened from the parent menu
-	virtual void onOpenedFromParent(uint8 slot) = 0;
+	//If returns true, then menu goes back up to parent's parent (back button)
+	bool(*m_pszFunc)(uint8 iSlot, CAdminSubMenu* pSelf);
 };
 
+//top-level singleton
 class CAdminMainMenu : public CAdminSubMenu {
 public:
-	std::string getLineItemText(uint8 slot) override { return "Admin Menu"; }
-	void onOpenedFromParent(uint8 slot) override {}
 
 	CAdminMainMenu();
 
 	static CAdminMainMenu* Get();
 };
 
-/*****************************************************************************************************
-* Generalized list menu, so that we don't have to code a pagination system multiple times.
-*****************************************************************************************************/
-class CListedMenuOption {
-	virtual std::string getForIndex(int index) = 0;
-	std::string getLineItemText(uint8 slot);
-	virtual void onOpenedFromParent(uint8 slot);
-};
+//HACK HACK - using the "say" command from console doesn't interpret commands in the said text,
+//so call this function to both "say" the command AND send it to the server
+void SayServerCommand(const char* pszFormat, ...);
 
-class CListedMenu : public CAdminSubMenu {
-	void onOpenedFromParent(uint8 slot) override;
-};
-
-/*****************************************************************************************************
-* Map menu and map menu options
-*****************************************************************************************************/
-class CMapMenu : public CListedMenu {
-	std::string getLineItemText(uint8 slot) override { return "Change Map"; }
-	void onOpenedFromParent(uint8 slot) override;
-};
-
-class CMapMenuOption : public CListedMenuOption {
-public:
-	std::string getForIndex(int index) override;
-	void onOpenedFromParent(uint8 slot) override;
-};
-
-/*****************************************************************************************************
-* Player menu and player menu options
-*****************************************************************************************************/
-class CPlayerMenu : public CAdminSubMenu {
-	std::string getLineItemText(uint8 slot) override;
-	void onOpenedFromParent(uint8 slot) override;
-	void(*m_pPerPlayerAction)(CHL2MP_Player*);
-};
-
-class CPlayerMenuOption : public CListedMenuOption {
-	std::string getForIndex(int index) override;
-	void onOpenedFromParent(uint8 slot) override;
-	void(*m_pPerPlayerAction)(CHL2MP_Player*);
-};
-
-class CPlayerActionMenu : public CAdminSubMenu {
-	std::string getLineItemText(uint8 slot) override { return "Player Commands"; }
-	void onOpenedFromParent(uint8 slot) override;
-};
-
-/*****************************************************************************************************
-* Gamemode menu and gamemode menu options
-*****************************************************************************************************/
-class CModeMenu : public CAdminSubMenu {
-	std::string getLineItemText(uint8 slot) override { return "Game Modes"; }
-	void onOpenedFromParent(uint8 slot) override {}
-};
-
-class CModeMenuOption : public CAdminSubMenu {
-public:
-	CModeMenuOption(const char* command, const char* name) {
-		m_pszCommand = command; m_pszCommandName = name;
-	}
-	const char* m_pszCommand;
-	const char* m_pszCommandName;
-	std::string getLineItemText(uint8 slot) override { return m_pszCommandName; }
-	void onOpenedFromParent(uint8 slot) override {
-		engine->ServerCmd(m_pszCommand);
-	}
-};
+extern CAdminSubMenu* g_pAdminBackButton;
 
 #endif //ADMINSUBMENU_H

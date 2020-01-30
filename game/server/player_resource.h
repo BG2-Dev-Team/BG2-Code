@@ -30,6 +30,8 @@ public:
 	void SetPlayerScore(int entindex, int score);
 	//
 
+	int GetPing(int index) const { return m_iPing[index]; }
+
 protected:
 	// Data for each player that's propagated to all clients
 	// Stored in individual arrays so they can be sent down via datatables

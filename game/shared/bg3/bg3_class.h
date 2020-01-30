@@ -115,7 +115,7 @@ public:
 	const char* m_pszPlayerModel;
 	const char* m_pszJoinName = nullptr;
 
-#define NUM_POSSIBLE_WEAPON_KITS 4
+#define NUM_POSSIBLE_WEAPON_KITS 5
 	CGunKit		m_aWeapons[NUM_POSSIBLE_WEAPON_KITS];
 private:
 	mutable uint8		m_iChooseableKits;
@@ -133,6 +133,7 @@ public:
 
 	bool			m_bCanDoVcommBuffs = false; //this will be true for officer
 	bool			m_bHasImplicitDamageResistance = false;
+	bool			m_bHasImplicitDamageWeakness = false;
 
 //Functions
 	inline bool isAmerican() const { return m_iDefaultTeam == TEAM_AMERICANS; }
@@ -196,6 +197,7 @@ public:
 	inline static int numClassesForTeam(int iTeam) { return iTeam == TEAM_AMERICANS ? TOTAL_AMER_CLASSES : TOTAL_BRIT_CLASSES; }
 	static const CPlayerClass* const * asList(); //retrieves a list of pointers to the classes
 
+	static void RemoveClassLimits();
 };
 
 /*

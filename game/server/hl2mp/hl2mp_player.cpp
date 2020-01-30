@@ -168,6 +168,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 	m_iCurrentRallies = 0;
 
 	m_pPermissions = NULL;
+	//m_pPermissions = Permissions::NullPermission();
 
 	BaseClass::ChangeTeam(0);
 
@@ -314,37 +315,32 @@ void CHL2MP_Player::GiveDefaultItems(void)
 		m_iGunKit = RandomInt(0, m_pCurClass->numChooseableWeapons() - 1);;
 	}
 
-	if (weapon_test.GetBool() && weapon_test_team.GetInt() == GetTeamNumber()) {
-		GiveNamedItem("weapon_spontoon");
-	}
-	else {
-
-		//give the chosen weapons
-		const CGunKit& k = m_pCurClass->m_aWeapons[m_iGunKit];
-		GiveNamedItem(k.m_pszWeaponPrimaryName);
-		if (k.m_pszWeaponSecondaryName) {
-			GiveNamedItem(k.m_pszWeaponSecondaryName);
-			if (k.m_pszWeaponTertiaryName) {
-				GiveNamedItem(k.m_pszWeaponTertiaryName);
-			}
+	//give the chosen weapons
+	const CGunKit& k = m_pCurClass->m_aWeapons[m_iGunKit];
+	GiveNamedItem(k.m_pszWeaponPrimaryName);
+	if (k.m_pszWeaponSecondaryName) {
+		GiveNamedItem(k.m_pszWeaponSecondaryName);
+		if (k.m_pszWeaponTertiaryName) {
+			GiveNamedItem(k.m_pszWeaponTertiaryName);
 		}
-
-		//Apply kit-specific speed modifier
-		AddSpeedModifier(k.m_iMovementSpeedModifier, ESpeedModID::Weapon);
-
-		//Give primary and secondary ammo
-		/*extern ConVar lb_ammo_multiplier;
-		int ammoCount = !IsLinebattle() ? m_pCurClass->m_iDefaultPrimaryAmmoCount : m_pCurClass->m_iDefaultPrimaryAmmoCount * lb_ammo_multiplier.GetFloat(); //* 2;
-		CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
-		if (m_pCurClass->m_pszSecondaryAmmo && !mp_disable_firearms.GetBool())
-			CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));*/
-		SetDefaultAmmoFull(true);
-
-		//Give extra ammo from kit
-		/*if (k.m_pszAmmoOverrideName) {
-			CBasePlayer::SetAmmoCount(k.m_iAmmoOverrideCount, GetAmmoDef()->Index(k.m_pszAmmoOverrideName));
-		}*/
 	}
+
+	//Apply kit-specific speed modifier
+	AddSpeedModifier(k.m_iMovementSpeedModifier, ESpeedModID::Weapon);
+
+	//Give primary and secondary ammo
+	/*extern ConVar lb_ammo_multiplier;
+	int ammoCount = !IsLinebattle() ? m_pCurClass->m_iDefaultPrimaryAmmoCount : m_pCurClass->m_iDefaultPrimaryAmmoCount * lb_ammo_multiplier.GetFloat(); //* 2;
+	CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
+	if (m_pCurClass->m_pszSecondaryAmmo && !mp_disable_firearms.GetBool())
+		CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));*/
+	SetDefaultAmmoFull(true);
+
+	//Give extra ammo from kit
+	/*if (k.m_pszAmmoOverrideName) {
+		CBasePlayer::SetAmmoCount(k.m_iAmmoOverrideCount, GetAmmoDef()->Index(k.m_pszAmmoOverrideName));
+	}*/
+	
 }
 
 ConVar lb_ammo_multiplier = ConVar("lb_ammo_multiplier", "1", FCVAR_GAMEDLL, "Multipliers starting ammo during linebattle", true, 0.1f, true, 5.0f);
@@ -646,7 +642,7 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 		if (pVictim->GetPlayerClass()->m_bHasImplicitDamageResistance && newInfo.GetDamage() < DMG_MOD_GRENADIER_CAP) {
 			newInfo.ScaleDamage(DMG_MOD_GRENADIER);
 		}
-		else if (pVictim->GetClass() == CLASS_SKIRMISHER) {
+		else if (pVictim->GetPlayerClass()->m_bHasImplicitDamageWeakness) {
 			if (newInfo.GetDamage() < DMG_MOD_SKI_CAP) {
 				newInfo.ScaleDamage(DMG_MOD_SKI);
 			}
@@ -1625,6 +1621,10 @@ void CHL2MP_Player::VerifyKitAmmoUniform() {
 //BG2 - handle stamina change
 void CHL2MP_Player::DrainStamina(int iAmount)
 {
+	extern ConVar sv_stamina;
+	if (!sv_stamina.GetBool())
+		return;
+
 	//limit drain to be no more than 50 at once
 	if (iAmount > 50)
 		iAmount = 50;
@@ -1771,6 +1771,10 @@ void CHL2MP_Player::CreateViewModel(int index /*=0*/)
 		m_hViewModel.Set(index, vm);
 	}
 }
+
+/*void CHL2MP_Player::HUD_GameMessage(const char* pszText, EHANDLE hPlayerName) {
+
+}*/
 
 bool CHL2MP_Player::BecomeRagdollOnClient(const Vector &force)
 {

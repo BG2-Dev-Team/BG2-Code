@@ -28,6 +28,7 @@
 //BG2 - Tjoppen - #includes
 #include "hl2mp_gamerules.h"
 #include "../game/server/bg2/vcomm.h"
+#include "bg2/bg2_hud_main.h"
 //
 
 
@@ -1053,7 +1054,11 @@ void CBaseHudChat::MsgFunc_BG2Events(bf_read &msg)
 		break;
 	}
 
-	int len;
+	//HACK HACK
+	//instead of showing it via the previous method, just reroute it to the new HUD
+	LocalGameMsg(outputBuf);
+
+	/*int len;
 	switch (msg_dest)
 	{
 	case HUD_PRINTCENTER:
@@ -1070,7 +1075,7 @@ void CBaseHudChat::MsgFunc_BG2Events(bf_read &msg)
 		Printf(CHAT_FILTER_NONE, "%s", ConvertCRtoNL(szString));
 		Msg("%s", ConvertCRtoNL(szString));
 		break;
-	}
+	}*/
 }
 
 void CBaseHudChat::MsgFunc_VoiceSubtitle( bf_read &msg )

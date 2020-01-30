@@ -164,7 +164,6 @@ const char* g_ppszBritishPlayerModels[NUM_BRIT_PLAYERMODELS];
 const char* g_ppszAmericanPlayerModels[NUM_AMER_PLAYERMODELS];
 
 void CPlayerClass::postClassConstruct(CPlayerClass* pClass) {
-	int index = pClass->m_iClassNumber;
 
 	//BG3 - Awesome - increase general class speed?
 	//pClass->m_flBaseSpeed *= 1.1f;
@@ -177,6 +176,8 @@ void CPlayerClass::postClassConstruct(CPlayerClass* pClass) {
 			chooseable++;
 	}
 	pClass->m_iChooseableKits = chooseable;
+
+	int index = pClass->m_iClassNumber;
 
 	//this will make it so that british classes come first in the list
 	if (pClass->m_iDefaultTeam == TEAM_AMERICANS)
@@ -358,6 +359,14 @@ const CPlayerClass* const * CPlayerClass::asList() {
 	return g_ppClasses;
 }
 
+void CPlayerClass::RemoveClassLimits() {
+	for (int i = 0; i < numClasses(); i++) {
+		g_ppClasses[i]->m_pcvLimit_lrg->SetValue(-1);
+		g_ppClasses[i]->m_pcvLimit_med->SetValue(-1);
+		g_ppClasses[i]->m_pcvLimit_sml->SetValue(-1);
+	}
+}
+
 /*
 PLAYER MODEL PATHS AND NAMES - these are used repeatedly for precacheing the models and assigning them to players
 */
@@ -438,6 +447,8 @@ DEC_BG3_PLAYER_CLASS(BInfantry, inf, b) {
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess";
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_longpattern";
+	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_sea_service";
+	m_aWeapons[2].m_iMovementSpeedModifier = 3;
 
 
 	postClassConstruct(this);
@@ -495,6 +506,7 @@ DEC_BG3_PLAYER_CLASS(BJaeger, rif, b) {
 DEC_BG3_PLAYER_CLASS(BNative, ski, b) {
 	m_iDefaultTeam = TEAM_BRITISH;
 	m_iClassNumber = CLASS_SKIRMISHER;
+	m_bHasImplicitDamageWeakness = true;
 
 	m_flBaseSpeed = SPEED_SKIRMISHER;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_SKIRMISHER;
@@ -613,7 +625,8 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_longpattern";
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_charleville";
 	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_miquelet";
-	//m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_old_model_charleville";
+	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_old_model_charleville";
+	m_aWeapons[4].m_pszWeaponPrimaryName = "weapon_dutch";
 
 	postClassConstruct(this);
 }
@@ -673,6 +686,7 @@ DEC_BG3_PLAYER_CLASS(AFrontiersman, rif, a) {
 DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 	m_iDefaultTeam = TEAM_AMERICANS;
 	m_iClassNumber = CLASS_SKIRMISHER;
+	m_bHasImplicitDamageWeakness = true;
 
 	m_flBaseSpeed = SPEED_SKIRMISHER;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_SKIRMISHER;

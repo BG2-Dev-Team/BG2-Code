@@ -475,9 +475,6 @@ void IN_SpeedUp( const CCommand &args ) {KeyUp(&in_speed, args[1] );}
 void IN_StrafeDown( const CCommand &args ) {KeyDown(&in_strafe, args[1] );}
 void IN_StrafeUp( const CCommand &args ) {KeyUp(&in_strafe, args[1] );}
 void IN_Attack2Down(const CCommand &args) { 
-	using namespace std::chrono;
-	milliseconds ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-	Msg("CLIENT ATTACK2 %li\n", ms);
 	KeyDown(&in_attack2, args[1]); 
 }
 void IN_Attack2Up( const CCommand &args ) {KeyUp(&in_attack2, args[1] );}

@@ -162,6 +162,7 @@ void CBuffIcons::Init(void)
 void CBuffIcons::VidInit(void)
 {
 	BG3Buffs::InitializeIcons();
+	BG3Buffs::InitializeTexts();
 	//Get a default icon
 	m_pCurIcon = BG3Buffs::RallyIconFrom(0);
 
@@ -349,33 +350,24 @@ void CBuffIcons::LocalizeOfficerViewLabels() {
 //========================================================================
 // Status effect localiztion
 //========================================================================
-#define RALLY_SPEED_RELOAD_APPROX 25
+
 void CBuffIcons::LocalizeEffectLabels(int iRallyFlags) {
-	wchar_t buffer[64];
+	wchar_t* text = L"";
 	switch (iRallyFlags) {
 	case RALLY_ADVANCE:
-		Warning("Localizing advance buff!\n");
-		V_snwprintf(buffer, 64, g_pVGuiLocalize->Find("#BG3_Effect_Advance"),
-			(int)(RALLY_SPEED_MOD * 100 - 100), RALLY_SPEED_RELOAD_APPROX);
+		text = BG3Buffs::GetTextForBuff(BG3Buffs::ADVANCE);
 		break;
 	case RALLY_FIRE:
-		V_snwprintf(buffer, 64, g_pVGuiLocalize->Find("#BG3_Effect_Fire"),
-			(int)(((1.0f - Sqr(RALLY_ACCURACY_MOD)) * 100)), (int)(RALLY_DAMAGE_MOD * 100 - 100));
+		text = BG3Buffs::GetTextForBuff(BG3Buffs::FIRE);
 		break;
 	case RALLY_RALLY_ROUND:
-		V_snwprintf(buffer, 64, g_pVGuiLocalize->Find("#BG3_Effect_Rally"),
-			(int)(RALLY_STAMINA_MOD * 100 - 100), (int)((1.0f - RALLY_ARMOR_MOD) * 100));
+		text = BG3Buffs::GetTextForBuff(BG3Buffs::RALLY_ROUND);
 		break;
 	case RALLY_RETREAT:
-		V_snwprintf(buffer, 64, g_pVGuiLocalize->Find("#BG3_Effect_Retreat"),
-			(int)((1.0f - RALLY_ARMOR_MOD) * 100), RALLY_SPEED_RELOAD_APPROX);
-		//RALLY_SPEED_RELOAD is an appoximation
-		//normally while reloading we move at 50% of top speed.
-		//with the buff, we move at 25% of top speed
-		//this is good enough anyways, players get the message
+		text = BG3Buffs::GetTextForBuff(BG3Buffs::RETREAT);
 		break;
 	}
-	m_pBuffEffectLabel->SetText(buffer);
+	m_pBuffEffectLabel->SetText(text);
 	m_pBuffEffectLabel->SizeToContents();
 }
 

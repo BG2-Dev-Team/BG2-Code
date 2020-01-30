@@ -1044,11 +1044,11 @@ bool CFuncTank::StartControl( CBaseCombatCharacter *pController )
 	EmitSound( "Func_Tank.BeginUse" );
 	
 	SetNextThink( gpGlobals->curtime + 0.1f );
-	
+
 	// Let the map maker know a controller has been found
 	if ( m_hController->IsPlayer() )
 	{
-		m_OnGotPlayerController.FireOutput( this, this );
+		m_OnGotPlayerController.FireOutput( m_hController, this );
 	}
 	else
 	{

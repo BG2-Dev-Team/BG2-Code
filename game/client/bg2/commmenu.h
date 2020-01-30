@@ -61,7 +61,7 @@ public:
 		classmenu,
 		commmenu,
 		commmenu2,
-		weaponmenu;
+		admin;
 
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 	virtual void OnKeyCodePressed(vgui::KeyCode code);

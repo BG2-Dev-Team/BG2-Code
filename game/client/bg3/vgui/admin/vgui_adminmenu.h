@@ -20,6 +20,7 @@
 #include <game/client/iviewport.h>
 #include <../../shared/bg3/bg3_player_shared.h>
 #include "bg3_admin_submenu.h"
+#include <vector>
 
 class KeyValues;
 
@@ -37,58 +38,32 @@ class IBaseFileSystem;
 //------------------------------------------------------------------------------------------------------------------------
 // Begin comm menu base code.
 //------------------------------------------------------------------------------------------------------------------------
-class CAdminMenu : public vgui::Frame, public IViewPortPanel
+class CAdminMenu : public vgui::Panel
 {
-	DECLARE_CLASS_SIMPLE(CAdminMenu, vgui::Frame);
+	DECLARE_CLASS_SIMPLE(CAdminMenu, vgui::Panel);
 
 public:
-	CAdminMenu(IViewPort *pViewPort);
+	CAdminMenu(vgui::Panel* parent);
 	~CAdminMenu() {}
 
 	virtual const char *GetName(void) { return PANEL_ADMIN; }
 
-	IViewPort *m_pViewPort;
+	virtual void ApplySchemeSettings(vgui::IScheme *pScheme) override;
+	virtual bool IsVisible() override { return BaseClass::IsVisible(); }
+	vgui::VPANEL GetVPanel(void) override { return BaseClass::GetVPanel(); }
+	virtual void SetParent(vgui::VPANEL parent) override { BaseClass::SetParent(parent); }
 
-	int	slot1,
-		slot2,
-		slot3,
-		slot4,
-		slot5,
-		slot6,
-		slot7,
-		slot8,
-		slot9,
-		slot10,
-
-		teammenu,
-		classmenu,
-		commmenu,
-		commmenu2,
-		weaponmenu;
-
-	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
-	virtual void OnKeyCodePressed(vgui::KeyCode code);
-	virtual bool IsVisible() { return BaseClass::IsVisible(); }
-	vgui::VPANEL GetVPanel(void) { return BaseClass::GetVPanel(); }
-	virtual void SetParent(vgui::VPANEL parent) { BaseClass::SetParent(parent); }
-	virtual void Update(void);
-	virtual void ShowPanel(bool bShow);
-	virtual void SetData(KeyValues *data) {};
-	virtual void Reset(void) { }
-	virtual bool NeedsUpdate(void) { return false; }
-	virtual bool HasInputElements(void) { return false; }
-
-
-	void SetViewModeText(const char *text) { }
-	void SetPlayerFgColor(Color c1) { }
-	virtual void PerformLayout() {}
-
-	vgui::Label	*m_pLabel;
+	vgui::Label*	m_pTitleLabel;
+	vgui::Label*	m_pLabels[NUM_ADMIN_MENU_LABELS];
+	void			SetFontsAllLabels(vgui::HFont font, vgui::HFont titleFont);
 
 	//And here is the actual important BG3/Admin menu stuff
-	CAdminSubMenu* m_pCurrentMenu;
-	void forwardKeyToSubmenu(uint8 slot);
-	void updateLabelToMatchCurrentMenu();
+	CAdminSubMenu*					m_pCurrentMenu;
+	std::vector<CAdminSubMenu*>		m_menuStack; //so we can go back with the back button
+	void ResetToMainMenu();
+	void ForwardKeyToSubmenu(uint8 slot); //handles input. 0 = slot1, 1 = slot2, etc. 0 = slot 10
+	void UpdateLabelsToMatchCurrentMenu();
+	void SetVisible(bool bVisible) override;
 };
 
 extern CAdminMenu* g_pAdminMenu;

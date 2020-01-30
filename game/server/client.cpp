@@ -1146,6 +1146,9 @@ void Player_NoClip(CBasePlayer* pPlayer) {
 	CPlayerState *pl = pPlayer->PlayerData();
 	Assert(pl);
 
+	extern ConVar mp_comp_notifications;
+	if (mp_comp_notifications.GetBool()) CSay("Toggled noclip on %s", pPlayer->GetPlayerName());
+
 	if (pPlayer->GetMoveType() != MOVETYPE_NOCLIP)
 	{
 		EnableNoClip(pPlayer);
@@ -1195,7 +1198,7 @@ void CC_Player_NoClip( void )
 		return;
 
 	//BG3 - Awesome - allow noclip for admins
-	if (!sv_cheats->GetBool() && !ToHL2MPPlayer(pPlayer)->m_pPermissions->m_bPlayerManage)
+	if (!sv_cheats->GetBool() && !ToHL2MPPlayer(pPlayer)->GetPermissions()->m_bPlayerManage)
 		return;
 
 	//BG3 - Awesome- moved everything else into this function

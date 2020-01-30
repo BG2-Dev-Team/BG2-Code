@@ -47,7 +47,7 @@ using namespace vgui;
 CCommBase::CCommBase() : Frame( NULL, PANEL_COMM )
 {
 	slot1 = slot2 = slot3 = slot4 = slot5 = slot6 = slot7 = slot8 = slot9 = slot10 = -1;
-	teammenu = classmenu = commmenu = commmenu2 = weaponmenu = -1;
+	teammenu = classmenu = commmenu = commmenu2 = admin = -1;
 
 	SetMouseInputEnabled( false );
 	SetKeyBoardInputEnabled( true );
@@ -95,13 +95,6 @@ void CCommBase::OnKeyCodePressed(KeyCode code)
 
 		return;
 	}
-	else if( iLastTrappedKey == weaponmenu )
-	{
-		ShowPanel( false );
-		panel->ShowPanel(true);
-
-		return;
-	}
 	else if( iLastTrappedKey == commmenu )
 	{
 		m_pViewPort->ShowPanel( PANEL_COMM2, false );
@@ -116,6 +109,14 @@ void CCommBase::OnKeyCodePressed(KeyCode code)
 		m_pViewPort->ShowPanel( PANEL_COMM2, !IsVisible() );
 		panel->ShowPanel( false ); //Class menu
 		
+		return;
+	}
+	else if (iLastTrappedKey == admin)
+	{
+		m_pViewPort->ShowPanel(PANEL_COMM, false);
+		m_pViewPort->ShowPanel(PANEL_COMM2, false);
+		panel->ShowPanel(false); //Class menu
+
 		return;
 	}
 	else
@@ -165,7 +166,7 @@ void CCommBase::Update()
 	if( classmenu < 0 ) classmenu = gameuifuncs->GetButtonCodeForBind( "classmenu" );
 	if( commmenu < 0 ) commmenu = gameuifuncs->GetButtonCodeForBind( "commmenu" );
 	if( commmenu2 < 0 ) commmenu2 = gameuifuncs->GetButtonCodeForBind( "commmenu2" );
-	if( weaponmenu < 0 ) weaponmenu = gameuifuncs->GetButtonCodeForBind( "weaponmenu" );
+	if (admin < 0) admin = gameuifuncs->GetButtonCodeForBind("admin");
 }
 
 void CCommBase::ShowPanel( bool bShow )

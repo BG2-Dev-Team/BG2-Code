@@ -100,7 +100,7 @@ void GetPlayersFromString(CHL2MP_Player** pPlayerList, const char* pszString, CH
 	//two possibilities - keyword or name
 	if (pszString[0] == '@') {
 		//@me
-		if (Q_strcmp(pszString, "@me") == 0) {
+		if (Q_strcmp(pszString, "@me") == 0 && pRequester) {
 			pPlayerList[0] = pRequester;
 		}
 		else if (Q_strcmp(pszString, "@aim") == 0 && pRequester) {
@@ -175,9 +175,12 @@ void GetPlayersFromString(CHL2MP_Player** pPlayerList, const char* pszString, CH
 		}	
 	}
 	else {
+		CHL2MP_Player* pFoundPlayer = NULL;
 
 		//find player by name or by index
-		CHL2MP_Player* pFoundPlayer = FindPlayerByName(pszString);
+		if (pszString[0] != '\0') {
+			pFoundPlayer = FindPlayerByName(pszString);
+		}
 
 		if (!pFoundPlayer && pszString[0] == '#') {
 			int id = atoi(pszString + 1) - 1;

@@ -47,6 +47,7 @@
 	//#include "clienteffectprecachesystem.h"
 	#include "fx.h"
 	#include "hud_crosshair.h"
+	#include "c_playerresource.h"
 #else
 	#include "hl2mp_player.h"
 	#include "te_effect_dispatch.h"
@@ -57,12 +58,14 @@
 
 	#include "shot_manipulator.h"
 	#include "ilagcompensationmanager.h"
+	#include "player_resource.h"
 #endif
 
 #include "takedamageinfo.h"
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
 #include "effect_dispatch_data.h"
 #include "../server/bg2/bullet.h"
+#include "../bg3/Math/bg3_rand.h"
 #include "shot_manipulator.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -140,7 +143,8 @@ CBaseBG2Weapon::CBaseBG2Weapon( void )
 	m_bShouldSampleForward = false;
 	m_bShouldFireDelayed = false;
 	
-
+	m_flNextRecoil = FLT_MAX;
+	m_flNextReload = -FLT_MAX;
 	//m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_NONE;
 	//m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_NONE; //BG3 - Awesome - moved these to def
 
@@ -279,6 +283,17 @@ void CBaseBG2Weapon::Fire( int iAttack )
 	}
 
 	float flintlockDelay = Def()->m_flLockTime;
+	if (Def()->m_flRandomAdditionalLockTimeMax) {
+		//let ping decrease random locktime
+#ifdef CLIENT_DLL
+		float ping = g_PR->GetPing(pPlayer->entindex()) / 1000.f;
+#else
+		float ping = g_pPlayerResource->GetPing(pPlayer->entindex()) / 1000.f;
+#endif
+		flintlockDelay += max(0, RndFloat(0, Def()->m_flRandomAdditionalLockTimeMax) - ping / 7.14f);
+	}
+
+	
 
 	if( sv_turboshots.GetInt() == 0 )
 		m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + flintlockDelay;
@@ -302,7 +317,7 @@ void CBaseBG2Weapon::Fire( int iAttack )
 	if( sv_infiniteammo.GetInt() == 0 )
 		m_iClip1--;
 
-	m_fNextHolster = gpGlobals->curtime + 0.2f; //Keep people from switching weapons right after shooting.
+	
 
 	//flintlock delay is based on our weapon type
 	
@@ -313,6 +328,11 @@ void CBaseBG2Weapon::Fire( int iAttack )
 	m_flNextSampleForward = gpGlobals->curtime + flintlockDelay;
 	m_bShouldFireDelayed = true;
 	m_flNextDelayedFire = gpGlobals->curtime + flintlockDelay;
+	m_flNextRecoil = gpGlobals->curtime + flintlockDelay;
+	m_flNextReload = gpGlobals->curtime + flintlockDelay + (Def()->m_flRandomAdditionalLockTimeMax ? 0.15f : 0);
+
+	//Keep people from switching weapons right after shooting.
+	m_fNextHolster = max(gpGlobals->curtime + 0.2f, m_flNextDelayedFire);
 }
 
 void CBaseBG2Weapon::FireBullets( int iAttack )
@@ -738,19 +758,6 @@ void CBaseBG2Weapon::ItemPostFrame( void )
 		m_vLastForward = manipulator.ApplySpread( sv_perfectaim.GetInt() == 0 ? Cone( GetAccuracy( m_iLastAttack ) ) : vec3_origin );
 		m_bShouldSampleForward = false;
 
-		//Disorient the player
-		if( sv_steadyhand.GetInt() == 0 )
-		{
-			int iSeed = CBaseEntity::GetPredictionRandomSeed() & 255;
-			RandomSeed( iSeed );
-
-			//BG2 - Tjoppen - HACKHACK: weapon attacks get called multiple times on client. until we figure out
-			//							why, multiple recoils must be supressed.
-			if (m_flLastRecoil + 0.1f < gpGlobals->curtime) {
-				pOwner->ViewPunch(QAngle(-8, random->RandomFloat(-2, 2), 0) * GetRecoil(m_iLastAttack));
-			}
-			m_flLastRecoil = gpGlobals->curtime;
-		}
 	}
 
 	if( m_bShouldFireDelayed && m_flNextDelayedFire <= gpGlobals->curtime )
@@ -758,6 +765,25 @@ void CBaseBG2Weapon::ItemPostFrame( void )
 		m_bShouldFireDelayed = false;
 
 		FireBullets( m_iLastAttack );
+		//m_flNextReload = FLT_MAX; //wait for recoil to happen and for that to set next reload time
+		//m_flNextRecoil = gpGlobals->curtime + 1.f; //apply recoil next frame
+	}
+
+	//Disorient the player, but only after firing
+	if (sv_steadyhand.GetInt() == 0)
+	{
+
+		//BG2 - Tjoppen - HACKHACK: weapon attacks get called multiple times on client. until we figure out
+		//							why, multiple recoils must be supressed.
+		if (m_flNextRecoil < gpGlobals->curtime) {
+			//if too much time has passed, then we somehow reloaded before recoil, so don't apply recoil
+			if (m_flNextRecoil + 2 > gpGlobals->curtime) {
+				int iSeed = CBaseEntity::GetPredictionRandomSeed() & 255;
+				RandomSeed(iSeed);
+				pOwner->ViewPunch(QAngle(-8, random->RandomFloat(-2, 2), 0) * GetRecoil(m_iLastAttack));
+			}
+			m_flNextRecoil = FLT_MAX;
+		}
 	}
 
 	BaseClass::ItemPostFrame();
@@ -791,12 +817,14 @@ bool CBaseBG2Weapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 bool CBaseBG2Weapon::Reload( void )
 {
 	//BG2 - Tjoppen - disallow reloading until delayed firing has occured
-	if (m_bShouldFireDelayed) {
+	//BG3 - or until recoil happenned
+	if (m_bShouldFireDelayed || (m_flNextReload > gpGlobals->curtime)) {
 		return false;
 	}
-		
 
-	return BaseClass::Reload();
+	bool reload = BaseClass::Reload();
+	
+	return reload;
 }
 
 //roob: set correct skin on equip

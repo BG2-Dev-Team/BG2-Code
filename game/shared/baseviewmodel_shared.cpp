@@ -90,6 +90,7 @@ void CBaseViewModel::CalcIronsights(Vector &pos, QAngle &ang)
 
 	//get delta time for interpolation
 	float time = pWeapon->IsIronsighted() ? IRONSIGHTS_ANGLE_IN_TIME : IRONSIGHTS_ANGLE_OUT_TIME;
+	if (pWeapon->Def()->m_bQuickdraw) time /= 1.5f;
 	float delta((gpGlobals->curtime - pWeapon->m_flIronsightedTime) / time);
 	float exp = (pWeapon->IsIronsighted()) ?
 		(delta > 1.0f) ? 1.0f : delta : //normal blending

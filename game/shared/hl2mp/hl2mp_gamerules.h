@@ -51,6 +51,9 @@ inline bool IsLMSstrict()	{ return mp_respawnstyle.GetInt() == 2; }
 inline bool IsSkirmish()	{ return mp_respawnstyle.GetInt() == 1; }
 inline bool UseLineSpawn()	{ return IsLinebattle(); }
 
+void CSay(const char* pszFormat, ...);
+void MSay(const char* pszFormat, ...);
+
 #ifndef CLIENT_DLL
 #define CON_COMMAND_SERVER(name, tooltip) \
 	static void PerformCommand_##name(ConVar* pVar, const char* pszOldValue, float flOldValue); \
@@ -269,14 +272,14 @@ private:
 	*/
 	void SwapPlayerTeam(CHL2MP_Player *pPlayer, bool skipAlive);
 
+	//BG2 - Tjoppen - stuff in CHL2MPRules
+public:
 	/**
 	* Swap team for all players on both teams
 	* Note that no players are killed.
 	*/
 	void SwapTeams(void);
 
-	//BG2 - Tjoppen - stuff in CHL2MPRules
-public:
 	void RestartRound(bool swapTeams, bool bSetLastRoundTime = true); //bSetLastRoundTime set to false is for fullcaps, so that fullcaps don't reset round clock
 	void RespawnAll();
 	void WinSong(int team, bool m_bWonMap = false);

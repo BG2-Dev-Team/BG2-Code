@@ -115,13 +115,14 @@ BotThinker* CSDKBot::s_pDefaultThinker = &BotThinkers::Death;
 // Purpose: Checks whether or not the musket is capable of firing at this moment. Does not look for FF
 //-------------------------------------------------------------------------------------------------
 bool CSDKBot::CanFire() {
+	extern ConVar mp_disable_firearms;
 	bool canFire = false;
 	m_pWeapon = static_cast<CBaseBG2Weapon*>(m_pPlayer->GetActiveWeapon());
 	if (m_pWeapon) {
 		canFire = m_pWeapon->Clip1() > 0;
 	}
 
-	return canFire;
+	return canFire && !mp_disable_firearms.GetBool();
 }
 
 //-------------------------------------------------------------------------------------------------

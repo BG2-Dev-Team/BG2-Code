@@ -16,6 +16,7 @@
 #include "../shared/bg3/bg3_buffs.h"
 #include "bg2/commmenu.h"
 #include "bg2/commmenu2.h"
+#include "bg3/vgui/admin/vgui_adminmenu.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -421,6 +422,12 @@ bool CBaseHudWeaponSelection::SelectSlot( int iSlot )
 	}
 	else if (g_pCommMenu2->IsVisible()) {
 		g_pCommMenu2->PlayVcommBySlot(iSlot);
+		return true;
+	}
+	else if (g_pAdminMenu->IsVisible()) {
+		iSlot--;
+		if (iSlot == -1) iSlot = 9; //slot 0 becomes the tenth slot, which is index 9 in a list
+		g_pAdminMenu->ForwardKeyToSubmenu(iSlot); //admin menu slots start at 0, so slot1 = 0
 		return true;
 	}
 	/*else {

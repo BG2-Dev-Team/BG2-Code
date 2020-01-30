@@ -270,6 +270,8 @@ public:
 	float	m_flNextSampleForward;
 	bool	m_bShouldFireDelayed;
 	float	m_flNextDelayedFire;
+	float	m_flNextRecoil;
+	float	m_flNextReload; //without this, the player can sometimes reoad before recoil is applied
 
 	//BG3 - Awesome - moved this to CBaseCombatWeapon
 	//void		UpdateBodyGroups();

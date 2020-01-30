@@ -38,6 +38,9 @@ commented on the following form:
 #ifndef CLIENT_DLL
 #include "te_effect_dispatch.h"
 #include "../shared/bg3/vgui/bg3_buff_sprite.h"
+#else
+#include <vgui_controls/controls.h>
+#include <vgui/ILocalize.h>
 #endif
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -236,6 +239,30 @@ namespace BG3Buffs {
 		g_ppIcons[RALLY_ROUND]	= gHUD.GetIcon("buff_rally_round");
 		g_ppIcons[RETREAT]		= gHUD.GetIcon("buff_retreat");
 		g_ppIcons[NONE]			= gHUD.GetIcon("buff_empty");
+	}
+
+	static wchar_t g_aaBuffTexts[4][64];
+	//RALLY_SPEED_RELOAD is an appoximation
+	//normally while reloading we move at 50% of top speed.
+	//with the buff, we move at 25% of top speed
+	//this is good enough anyways, players get the message
+	#define RALLY_SPEED_RELOAD_APPROX 25
+	void InitializeTexts() {
+		V_snwprintf(g_aaBuffTexts[0], 64, g_pVGuiLocalize->Find("#BG3_Effect_Advance"),
+			(int)(RALLY_SPEED_MOD * 100 - 100), RALLY_SPEED_RELOAD_APPROX);
+		V_snwprintf(g_aaBuffTexts[1], 64, g_pVGuiLocalize->Find("#BG3_Effect_Fire"),
+			(int)(((1.0f - Sqr(RALLY_ACCURACY_MOD)) * 100)), (int)(RALLY_DAMAGE_MOD * 100 - 100));
+		V_snwprintf(g_aaBuffTexts[2], 64, g_pVGuiLocalize->Find("#BG3_Effect_Rally"),
+			(int)(RALLY_STAMINA_MOD * 100 - 100), (int)((1.0f - RALLY_ARMOR_MOD) * 100));
+		V_snwprintf(g_aaBuffTexts[3], 64, g_pVGuiLocalize->Find("#BG3_Effect_Retreat"),
+			(int)((1.0f - RALLY_ARMOR_MOD) * 100), RALLY_SPEED_RELOAD_APPROX);
+	}
+
+	wchar_t* GetTextForBuff(RallyAsInt buff) {
+		if (buff >= 0 && buff < NONE)
+			return g_aaBuffTexts[buff];
+		else
+			return L"";
 	}
 
 	void SendRallyRequestFromSlot(int iSlot) {

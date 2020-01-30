@@ -34,7 +34,15 @@ commented on the following form:
 #include "cbase.h"
 #include "hl2mp/hl2mp_gamerules.h"
 #include "../shared/bg3/bg3_map_model.h"
+#include "../shared/bg3/Math/bg3_rand.h"
+#include "../shared/bg3/bg3_class_quota.h"
+#include "team.h"
 
+void PerPlayerCommand(CHL2MP_Player* pRequester, const char* pszPlayerSearchTerm, void(*pFunc)(CHL2MP_Player*));
+
+ConVar mp_comp_notifications = ConVar("mp_comp_notifications", "1", FCVAR_GAMEDLL);
+
+//Prints in chat
 void CSay(const char* pszFormat, ...) {
 	va_list vl;
 	va_start(vl, pszFormat);
@@ -46,6 +54,24 @@ void CSay(const char* pszFormat, ...) {
 	char buffer2[140];
 	Q_snprintf(buffer2, sizeof(buffer), "say %s\n", buffer);
 	engine->ServerCommand(buffer2);
+}
+
+//Prints on screen below scoreboard
+void MSay(const char* pszFormat, ...) {
+	va_list vl;
+	va_start(vl, pszFormat);
+	char buffer[256];
+	V_vsnprintf(buffer, sizeof(buffer), pszFormat, vl);
+
+	const char* pszMessage = buffer;
+	if (strlen(pszMessage) > 244) return; //avoid out-of-bounds strings
+
+	CReliableBroadcastRecipientFilter recpfilter;
+	UserMessageBegin(recpfilter, "GameMsg");
+	WRITE_SHORT(strlen(pszMessage)); //length of message
+	WRITE_SHORT(260); //no player injected into localized string, out-of-bounds player index will work
+	WRITE_STRING(pszMessage);
+	MessageEnd();
 }
 
 /*
@@ -63,6 +89,11 @@ CON_COMMAND(linebattle, "Starts a linebattle. With an integer argument provided,
 	mp_rounds.SetValue(count);
 	engine->ServerCommand("exec linebattle.cfg\n");
 	engine->ServerExecute();
+
+	if (RndFloat() < 0.02f)
+		MSay("#BG3_Winebottle_Started");
+	else
+		MSay("#BG3_Linebattle_Started");
 }
 
 CON_COMMAND(lms, "Starts an LMS match. With an integer argument provided, the round count is set to the given number and then lms.cfg is loaded. If no argument is provided, the round count is set to 0 and then the lms.cfg is loaded. Modifying lms.cfg can override the round system settings.") {
@@ -77,6 +108,7 @@ CON_COMMAND(lms, "Starts an LMS match. With an integer argument provided, the ro
 	mp_rounds.SetValue(count);
 	engine->ServerCommand("exec lms.cfg\n");
 	engine->ServerExecute();
+	MSay("#BG3_LMS_Started");
 }
 
 CON_COMMAND(skirm, "Starts a 2-round competitive skirmish. An extra integer argument, if provided, sets the round duration in minutes, and then the skirm.cfg is loaded. If no argument is provided, a 20 minute round duration is assumed. Modify the skirm.cfg to change parameters.") {
@@ -91,6 +123,7 @@ CON_COMMAND(skirm, "Starts a 2-round competitive skirmish. An extra integer argu
 	mp_roundtime.SetValue(60 * count);
 	engine->ServerCommand("exec skirm.cfg\n");
 	engine->ServerExecute();
+	MSay("#BG3_Skirmish_Started");
 }
 
 CON_COMMAND(dm, "Starts a single-round deathmatch. An extra integer argument, if provided, specifies the number of rounds.") {
@@ -105,6 +138,7 @@ CON_COMMAND(dm, "Starts a single-round deathmatch. An extra integer argument, if
 	mp_rounds.SetValue(roundCount);
 	engine->ServerCommand("exec dm.cfg\n");
 	engine->ServerExecute();
+	MSay("#BG3_DM_Started");
 }
 
 CON_COMMAND(changemap, "Changes the server to the specified map") {
@@ -129,4 +163,357 @@ CON_COMMAND(csay, "Says a message in chat") {
 	Q_snprintf(buffer, len, "say %s\n", args[1]);
 	engine->ServerCommand(buffer);
 	delete[] buffer;
+}
+
+CON_COMMAND(remove_class_limits, "Removes all class limit and weapon restrictions") {
+	if (!verifyMapModePermissions(__FUNCTION__))
+		return;
+
+	extern ConVar lb_enforce_weapon_amer, lb_enforce_weapon_brit;
+	lb_enforce_weapon_amer.Revert();
+	lb_enforce_weapon_brit.Revert();
+	CPlayerClass::RemoveClassLimits();
+	MSay("#BG3_Adm_Limits_Removed");
+}
+
+CON_COMMAND(mp_friendlyfire_toggle, "Toggles friendly fire setting") {
+	if (!verifyMapModePermissions(__FUNCTION__))
+		return;
+
+	extern ConVar friendlyfire;
+	friendlyfire.SetValue(!friendlyfire.GetBool());
+	const char* pszMessage = friendlyfire.GetBool() ? "#BG3_Adm_FF_On" : "#BG3_Adm_FF_Off";
+	MSay(pszMessage);
+}
+
+CON_COMMAND(swap_teams, "Swaps teams") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	HL2MPRules()->SwapTeams();
+	MSay("#BG3_Adm_TeamsSwapped");
+}
+
+CHL2MP_Player* g_pMicSoloPlayer = NULL;
+
+CON_COMMAND(solo, "Gives solo permission to player who sent the command, or toggles solo permission if the player already has it. Does nothing when entered from server console.") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	if (pPlayer && !pPlayer->GetPermissions()->m_bPlayerManage)
+		return;
+	if (pPlayer == g_pMicSoloPlayer)
+		g_pMicSoloPlayer = NULL;
+	else
+		g_pMicSoloPlayer = pPlayer;
+}
+
+CON_COMMAND(unsolo, "Turns off all solo permissions.") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	if (pPlayer && !pPlayer->GetPermissions()->m_bPlayerManage)
+		return;
+
+	g_pMicSoloPlayer = NULL;
+}
+
+
+CON_COMMAND(spawn, "Spawns specified player(s)") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			if (mp_comp_notifications.GetBool()) CSay("Spawning %s via console command", pPlayer->GetPlayerName());
+			pPlayer->Spawn();
+		});
+	}
+}
+
+CON_COMMAND(spec, "Switches the specifies player(s) to spectate") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+	if (args.ArgC() == 2 /*&& pPlayer->ShouldRunRateLimitedCommand(args)*/) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			// instantly join spectators
+			pPlayer->HandleCommand_JoinTeam(TEAM_SPECTATOR);
+		});
+	}
+}
+
+CON_COMMAND(amer, "Switches specified player(s) to American team") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			if (pPlayer->GetTeamNumber() == TEAM_BRITISH) {
+				const CPlayerClass* pClass = NClassQuota::FindInfiniteClassForTeam(TEAM_AMERICANS);
+				pPlayer->ForceJoin(pClass, TEAM_AMERICANS, pClass->m_iClassNumber);
+			}
+		});
+	}
+}
+
+CON_COMMAND(brit, "Switches specified player(s) to British team") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			if (pPlayer->GetTeamNumber() == TEAM_AMERICANS) {
+				const CPlayerClass* pClass = NClassQuota::FindInfiniteClassForTeam(TEAM_BRITISH);
+				pPlayer->ForceJoin(pClass, TEAM_BRITISH, pClass->m_iClassNumber);
+			}
+		});
+	}
+}
+
+static const CPlayerClass* g_pNextLinebattleClass = NULL;
+static void LinebattleSetClass(int iTeam, const char* pszAbbreviation, bool instant = true) {
+	if (!IsLinebattle())
+		return;
+
+	//First get pointer to player class
+	g_pNextLinebattleClass = CPlayerClass::fromAbbreviation(iTeam, pszAbbreviation);
+
+	if (g_pNextLinebattleClass) {
+		const CPlayerClass& pc = *g_pNextLinebattleClass;
+
+		if (instant) {
+			const char* pszSelector = iTeam == TEAM_AMERICANS ? "@amer" : "@brit";
+			//set all players of correct team to that class
+			PerPlayerCommand(NULL, pszSelector, [](CHL2MP_Player* pPlayer){
+				pPlayer->ForceJoin(g_pNextLinebattleClass, g_pNextLinebattleClass->m_iDefaultTeam, g_pNextLinebattleClass->m_iClassNumber);
+			});
+		}
+
+		//set all other limits on other classes to 0, set our limit to -1
+		pc.m_pcvLimit_lrg->SetValue("-1");
+		pc.m_pcvLimit_med->SetValue("-1");
+		pc.m_pcvLimit_sml->SetValue("-1");
+		for (int i = 0; i < CPlayerClass::numClassesForTeam(iTeam); i++) {
+			const CPlayerClass* pOtherClass = CPlayerClass::fromNums(iTeam, i);
+			if (pOtherClass != &pc) {
+				pOtherClass->m_pcvLimit_lrg->SetValue(0);
+				pOtherClass->m_pcvLimit_med->SetValue(0);
+				pOtherClass->m_pcvLimit_sml->SetValue(0);
+			}
+		}
+	}
+}
+
+CON_COMMAND(aclass, "Sets class for american team from its abbreviation. Linebattle only. Works only if player is on American team or if command is sent through server console.") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+	
+	//Don't let non-americans change kit
+	if (pPlayer && pPlayer->GetTeamNumber() != TEAM_AMERICANS && !pPlayer->GetPermissions()->m_bConsoleAccess)
+		return;
+	if (args.ArgC() == 2) {
+		LinebattleSetClass(TEAM_AMERICANS, args[1]);
+	}
+}
+CON_COMMAND(bclass, "Sets class for british team from its abbreviation. Linebattle only. Works only if player is on American team or if command is sent through server console.") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+	//Don't let non-brits change kit
+	if (pPlayer && pPlayer->GetTeamNumber() != TEAM_BRITISH && !pPlayer->GetPermissions()->m_bConsoleAccess)
+		return;
+	if (args.ArgC() == 2) {
+		LinebattleSetClass(TEAM_BRITISH, args[1]);
+	}
+}
+
+
+
+static void LinebattleSetKit(int iTeam, int iWeapon, int iUniform, int iAmmo) {
+	if (!IsLinebattle())
+		return;
+
+	//tell all players on team to change and spawn with new kit
+	for (int i = 1; i <= gpGlobals->maxClients; i++) {
+		CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+		if (pPlayer && pPlayer->GetTeamNumber() == iTeam) {
+			pPlayer->m_iClassSkin = iUniform;
+			pPlayer->m_iGunKit = iWeapon;
+			pPlayer->m_iAmmoKit = iAmmo;
+
+			//let the respawn code fix clamp the out-of-range values
+			pPlayer->CheckQuickRespawn();
+
+			//set the weapon forcer to force joining players to a specific kit
+			ConVar* pWeaponKitEnforcer = pPlayer->GetTeamNumber() == TEAM_AMERICANS ? &lb_enforce_weapon_amer : &lb_enforce_weapon_brit;
+			pWeaponKitEnforcer->SetValue(iWeapon + 1);
+		}
+	}
+}
+
+CON_COMMAND(akit, "Sets the weapon, uniform, and ammo of American players") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+
+	//Don't let non-americans change kit
+	if (pPlayer && pPlayer->GetTeamNumber() != TEAM_AMERICANS)
+		return;
+
+
+	if (args.ArgC() == 2) {
+		LinebattleSetKit(TEAM_AMERICANS, atoi(args[1]), 0, 0);
+	}
+	else if (args.ArgC() == 3) {
+		LinebattleSetKit(TEAM_AMERICANS, atoi(args[1]), atoi(args[2]), 0);
+	}
+	else if (args.ArgC() == 4) {
+		LinebattleSetKit(TEAM_AMERICANS, atoi(args[1]), atoi(args[2]), atoi(args[3]));
+	}
+}
+
+CON_COMMAND(bkit, "") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+	//Don't let non-brits change kit
+	if (pPlayer && pPlayer->GetTeamNumber() != TEAM_BRITISH)
+		return;
+
+	if (args.ArgC() == 2) {
+		LinebattleSetKit(TEAM_BRITISH, atoi(args[1]), 0, 0);
+	}
+	else if (args.ArgC() == 3) {
+		LinebattleSetKit(TEAM_BRITISH, atoi(args[1]), atoi(args[2]), 0);
+	}
+	else if (args.ArgC() == 4) {
+		LinebattleSetKit(TEAM_BRITISH, atoi(args[1]), atoi(args[2]), atoi(args[3]));
+	}
+}
+
+CON_COMMAND(aclasskit, "") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+	//Don't let non-americans change kit
+	if (pPlayer && pPlayer->GetTeamNumber() != TEAM_AMERICANS && !pPlayer->GetPermissions()->m_bConsoleAccess)
+		return;
+	if (args.ArgC() == 5) {
+		LinebattleSetClass(TEAM_AMERICANS, args[1], true);
+		LinebattleSetKit(TEAM_AMERICANS, atoi(args[2]), atoi(args[3]), atoi(args[4]));
+	}
+}
+CON_COMMAND(bclasskit, "") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+	//Don't let non-british change kit
+	if (pPlayer && pPlayer->GetTeamNumber() != TEAM_BRITISH && !pPlayer->GetPermissions()->m_bConsoleAccess)
+		return;
+	if (args.ArgC() == 5) {
+		LinebattleSetClass(TEAM_BRITISH, args[1], true);
+		LinebattleSetKit(TEAM_BRITISH, atoi(args[2]), atoi(args[3]), atoi(args[4]));
+	}
+}
+
+void Player_NoClip(CBasePlayer* pPlayer);
+CON_COMMAND(clip, "") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+	const char* pszSelector = "";
+	if (pPlayer && args.ArgC() == 1) {
+		pszSelector = "@me";
+	}
+	else if (args.ArgC() > 1) {
+		pszSelector = args[1];
+	}
+
+	PerPlayerCommand(pPlayer, pszSelector, [](CHL2MP_Player* pPlayer){
+		if (pPlayer->GetTeamNumber() >= TEAM_AMERICANS) {
+			Player_NoClip(pPlayer);
+		}
+	});
+}
+
+CON_COMMAND(rc, "") {
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	if (!pPlayer || !pPlayer->GetPermissions()->m_bConsoleAccess)
+		return;
+
+	//build a second set of arguments
+	char buffer[512];
+	Q_snprintf(buffer, sizeof(buffer), "%s\n", args.GetCommandString() + 3);
+	Msg(buffer);
+	engine->ServerCommand(buffer);
+	engine->ServerExecute();
+}
+
+void ClientPrintAll(const char *str, bool printfordeadplayers, bool forcenextclientprintall);
+
+CON_COMMAND(msay, "") {
+	if (args.ArgC() < 2 || !verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	const char* pszMessage = args.GetCommandString() + 5;
+	if (strlen(pszMessage) > 244) return; //avoid out-of-bounds strings
+
+	CReliableBroadcastRecipientFilter recpfilter;
+	UserMessageBegin(recpfilter, "GameMsg");
+	WRITE_SHORT(strlen(pszMessage)); //length of message
+	WRITE_SHORT(260); //no player injected into localized string, out-of-bounds player index will work
+	WRITE_STRING(pszMessage);
+	MessageEnd();
+}
+
+CON_COMMAND(mp_tickets_a_adjust, "Adjusts American ticket amount by given amout, positive or negative") {
+	if (args.ArgC() < 2 || !verifyMapModePermissions(__FUNCTION__))
+		return;
+
+	if (mp_comp_notifications.GetBool()) CSay("Changing American team ticket amount.");
+	CTeam *pAmericans = g_Teams[TEAM_AMERICANS];
+	pAmericans->ChangeTickets(atoi(args[1]));
+}
+
+CON_COMMAND(mp_tickets_b_adjust, "Adjusts British ticket amount by given amout, positive or negative") {
+	if (args.ArgC() < 2 || !verifyMapModePermissions(__FUNCTION__))
+		return;
+
+	if (mp_comp_notifications.GetBool()) CSay("Changing British team ticket amount.");
+	CTeam *pBritish = g_Teams[TEAM_BRITISH];
+	pBritish->ChangeTickets(atoi(args[1]));
 }

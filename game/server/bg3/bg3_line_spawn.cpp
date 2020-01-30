@@ -48,7 +48,7 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(info_player_line, CLineSpawn);
 
-void CLineSpawn::CalculateSpawnLocations(void) {
+void CLineSpawn::CalculateSpawnLocations() {
 	//only do this if we can & have to
 	if (m_hSpawnDirection && m_aSpawnLocations.Count() != gpGlobals->maxClients) {
 

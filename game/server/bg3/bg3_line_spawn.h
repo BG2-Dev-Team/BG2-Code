@@ -44,9 +44,7 @@ class CLineSpawn : public CServerOnlyPointEntity {
 	DECLARE_CLASS(CLineSpawn, CServerOnlyPointEntity);
 	DECLARE_DATADESC();
 public:
-	CLineSpawn() {
-		Warning(__FUNCTION__ "\n");
-	}
+	CLineSpawn() {}
 
 private:
 	

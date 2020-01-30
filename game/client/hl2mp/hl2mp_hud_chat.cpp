@@ -54,8 +54,7 @@ void CHudChatInputLine::ApplySchemeSettings(vgui::IScheme *pScheme)
 
 CHudChat::CHudChat( const char *pElementName ) : BaseClass( pElementName )
 {
-	//as good a place as any, and it's relevant
-	engine->ClientCmd("cl_showpluginmessages 1\n");
+
 }
 
 void CHudChat::CreateChatInputLine( void )

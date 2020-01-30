@@ -98,7 +98,7 @@ class CClassButton : public vgui::Button {
 public:
 	DECLARE_CLASS_SIMPLE(CClassButton, vgui::Button);
 
-	CClassButton(Panel *parent, const char *panelName, const char *text, int index) : Button(parent, panelName, text), m_iIndex(index) { }
+	CClassButton(Panel *parent, const char *panelName, const char *text, int index);
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 
 	inline void SimulateMousePressed() { OnMousePressed(MOUSE_LEFT); }
@@ -123,6 +123,8 @@ public:
 	
 
 	static int s_iSize;
+
+	vgui::Label* m_pCountLabel;
 private:
 	bool m_bMouseOver = false;
 
@@ -135,6 +137,7 @@ private:
 	vgui::IImage* m_pAvailableImage;	//selectable, free
 	//vgui::IImage* m_pFullImage;		//currently taken, not free
 	//vgui::IImage* m_pNoneImage;			//limit is 0, not allowed for this map/gamemode
+
 
 	EClassAvailability	m_eAvailable;
 };
@@ -225,6 +228,7 @@ namespace NClassWeaponStats {
 	dec(g_pAccuracy);
 	dec(g_pBulletDamage);
 	dec(g_pReloadSpeed);
+	dec(g_pLockTime);
 	dec(g_pMeleeRange);
 	dec(g_pMeleeDamage);
 	dec(g_pMeleeTolerance); //COS Tolerance + retrace duration
@@ -234,6 +238,7 @@ namespace NClassWeaponStats {
 	dec(g_pnClassSpeed);
 	dec(g_pnBulletDamage);
 	dec(g_pnReloadSpeed);
+	dec(g_pnLockTime);
 	dec(g_pnMeleeRange);
 	dec(g_pnMeleeDamage);
 	dec(g_pnMeleeSpeed);

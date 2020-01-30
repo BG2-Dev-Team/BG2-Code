@@ -37,8 +37,8 @@ ConVar voice_serverdebug( "voice_serverdebug", "0" );
 
 // Set game rules to allow all clients to talk to each other.
 // Muted players still can't talk to each other.
-ConVar sv_alltalk( "sv_alltalk", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Players can hear all other players, no team restrictions" );
-
+//BG3 - ConVar moved to shared gamerules file
+extern ConVar sv_alltalk;
 
 CVoiceGameMgr g_VoiceGameMgr;
 

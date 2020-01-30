@@ -32,6 +32,7 @@
 #include "../shared/bg3/bg3_class_quota.h"
 #include "bg2_hud_main.h"
 #include "bg3/bg3_soft_info.h"
+#include "bg3/vgui/bg3_fonts.h"
 #include "bg3/bg3_hud_compass.h"
 //
 
@@ -49,6 +50,7 @@ DECLARE_HUD_MESSAGE( CHudBG2, HitVerif );
 DECLARE_HUD_MESSAGE( CHudBG2, WinMusic );
 DECLARE_HUD_MESSAGE( CHudBG2, CaptureSounds ); //HairyPotter
 DECLARE_HUD_MESSAGE( CHudBG2, VCommSounds );
+DECLARE_HUD_MESSAGE( CHudBG2, GameMsg );
 
 static char g_hudBuffer[512];
 
@@ -81,11 +83,14 @@ CHudBG2::CHudBG2( const char *pElementName ) :
 
 	SetHiddenBits( HIDEHUD_ALL );//HIDEHUD_MISCSTATUS );
 
+	m_pAdminMenu = new CAdminMenu(this);
+	m_pAdminMenu->SetVisible(false);
+
 	Color ColourWhite( 255, 255, 255, 255 );
 
 	auto createLabel = [&](Label** ppLabel) {
 		*ppLabel = new vgui::Label(this, "RoundState_warmpup", "");
-		(*ppLabel)->SetPaintBackgroundEnabled(false);
+		//(*ppLabel)->SetPaintBackgroundEnabled(false);
 		(*ppLabel)->SetPaintBorderEnabled(false);
 		(*ppLabel)->SizeToContents();
 		(*ppLabel)->SetContentAlignment(vgui::Label::a_west);
@@ -107,6 +112,7 @@ CHudBG2::CHudBG2( const char *pElementName ) :
 	for (int i = 0; i < 6; i++) {
 		createLabel(m_pClassCountLabels + i);
 	}
+	createLabel(&m_pLabelGameMessage);
 
 	CBaseEntity::PrecacheScriptSound( "Americans.win" );
 	CBaseEntity::PrecacheScriptSound( "British.win" );
@@ -162,12 +168,17 @@ void CHudBG2::ApplySettings(KeyValues *inResourceData)
 	m_pLabelCurrentRound->SetPos(halfx - 50, m_pLabelRoundTime->GetYPos() + m_pLabelRoundTime->GetTall());
 
 	//health label
-	int marginLeft = 60;
-	int marginBottom = ScreenHeight() - 50;
+	int marginLeft = 50;
+	int marginBottom = ScreenHeight() - 60;
 	m_pLabelHealth->SetPos(marginLeft, marginBottom);
+	m_pLabelHealth->SetContentAlignment(Label::Alignment::a_center);
+	m_pLabelHealth->SetSize(90, 50);
 
 	//ammo counter
-	m_pLabelAmmo->SetPos(320, marginBottom);
+	m_pLabelAmmo->SetContentAlignment(Label::Alignment::a_center);
+	m_pLabelAmmo->SetPos(300, marginBottom);
+	m_pLabelAmmo->SetSize(70, 50);
+	m_pLabelAmmo->SetText("Hello world");
 
 	//death message
 	m_pLabelDeathMessage->SetPos(10, ScreenHeight() * 0.8f);
@@ -177,8 +188,14 @@ void CHudBG2::ApplySettings(KeyValues *inResourceData)
 		m_pClassCountLabels[i]->SetPos(44, g_iClassCountY + i * 34);
 	}
 
+	//game message
+	m_pLabelGameMessage->SetContentAlignment(Label::Alignment::a_center);
+
 	//grab and scale coordinates and dimensions
 	m_pLabelLMS         ->SetPos(GET_COORD(lmsx),      GET_COORD(lmsy));
+
+	m_pAdminMenu->SetPos(100, 200);
+	//m_pAdminMenu->SetSize(640, 480);
 
 	BaseClass::ApplySettings(inResourceData);
 }
@@ -200,7 +217,12 @@ void CHudBG2::ApplySchemeSettings( IScheme *scheme )
 	m_pLabelRoundTime->SetFont(font);
 	m_pLabelDeathMessage->SetFont(largeFont);
 	m_pLabelAmmo->SetFont(largeFont);
-	m_pLabelHealth->SetFont(largeFont);
+	m_pLabelHealth->SetFont(font);
+	m_pLabelGameMessage->SetFont(font);
+
+	font = scheme->GetFont("BG3Default35");
+	largeFont = scheme->GetFont("BG3Default50");
+	m_pAdminMenu->SetFontsAllLabels(font, largeFont);
 
 	BaseClass::ApplySchemeSettings( scheme );
 	SetPaintBackgroundEnabled( false );
@@ -217,6 +239,7 @@ void CHudBG2::Init( void )
 	HOOK_HUD_MESSAGE( CHudBG2, WinMusic );
 	HOOK_HUD_MESSAGE( CHudBG2, CaptureSounds );
 	HOOK_HUD_MESSAGE( CHudBG2, VCommSounds );
+	HOOK_HUD_MESSAGE( CHudBG2, GameMsg);
 	//BG2 - Tjoppen - serverside blood, a place to hook as good as any
 	extern void  __MsgFunc_ServerBlood( bf_read &msg );
 	HOOK_MESSAGE( ServerBlood );
@@ -494,6 +517,10 @@ void CHudBG2::PaintTopCenterHUD(/*C_HL2MP_Player* pPlayer*/) {
 	}
 	m_pLabelRoundTime->SizeToContents();
 	m_pLabelRoundTime->SetFgColor(COLOR_WHITE);
+
+	//GAME MESSAGE
+	PaintBackgroundOnto(m_pLabelGameMessage);
+	//m_pLabelGameMessage->SetVisible(m_flGameMessageExpireTime < gpGlobals->curtime);
 }
 
 void CHudBG2::PaintBottomLeftHUD(C_HL2MP_Player* pPlayer, C_BaseCombatWeapon* pWeapon) {
@@ -539,7 +566,9 @@ void CHudBG2::PaintBottomLeftHUD(C_HL2MP_Player* pPlayer, C_BaseCombatWeapon* pW
 	//HEALTH COUNTER
 	Q_snprintf(g_hudBuffer, 4, "%i", health);
 	m_pLabelHealth->SetText(g_hudBuffer);
-	m_pLabelHealth->SizeToContents();
+	//m_pLabelHealth->SizeToContents();
+	//m_pLabelHealth->SetSize(m_pLabelHealth->GetWide() + 10, m_pLabelHealth->GetTall() + 10 );
+	SetDefaultBG3FontScaled(g_pVGuiSchemeManager->GetIScheme(GetScheme()), m_pLabelHealth);
 	m_pLabelHealth->SetFgColor(getColorForHealth(health));
 
 
@@ -573,10 +602,10 @@ void CHudBG2::PaintBottomLeftHUD(C_HL2MP_Player* pPlayer, C_BaseCombatWeapon* pW
 				m_pAmmoBallImage->SetPos(x, y);
 				m_pAmmoBallImage->Paint();
 				x += 8;
-				/*if (i % 8 == 0) {
+				if ((i+1) % 8 == 0) {
 					x = marginLeft;
 					y += 8;
-					}*/
+				}
 			}
 		}
 
@@ -586,7 +615,7 @@ void CHudBG2::PaintBottomLeftHUD(C_HL2MP_Player* pPlayer, C_BaseCombatWeapon* pW
 			iAmmoCount++;
 		if (iAmmoCount > 0)
 		{
-			Q_snprintf(g_hudBuffer, 512, "%i ", iAmmoCount);
+			Q_snprintf(g_hudBuffer, 512, "%i", iAmmoCount);
 			m_pLabelAmmo->SetText(g_hudBuffer);
 			if (pWeapon->Clip1() == 0)
 			{
@@ -596,7 +625,8 @@ void CHudBG2::PaintBottomLeftHUD(C_HL2MP_Player* pPlayer, C_BaseCombatWeapon* pW
 			{
 				m_pLabelAmmo->SetFgColor(COLOR_WHITE);
 			}
-			m_pLabelAmmo->SizeToContents();
+			//m_pLabelAmmo->SizeToContents();
+			SetDefaultBG3FontScaled(g_pVGuiSchemeManager->GetIScheme(GetScheme()), m_pLabelAmmo);
 		}
 		else
 			m_pLabelAmmo->SetVisible(false);
@@ -651,8 +681,9 @@ void CHudBG2::PaintDeathMessage() {
 
 void CHudBG2::PaintClassCounts() {
 	C_HL2MP_Player* pPlayer = ToHL2MPPlayer(C_BasePlayer::GetLocalPlayer());
-	if (pPlayer && !pPlayer->IsAlive()) {
-		int iTeam = pPlayer->GetTeamNumber();
+	int iTeam = pPlayer->GetTeamNumber();
+	bool draw = pPlayer && !pPlayer->IsAlive() && (iTeam >= TEAM_AMERICANS);
+	if (draw) {
 		if (iTeam >= TEAM_AMERICANS) {
 			char buffer[16];
 			NSoftInfo::Update();
@@ -678,12 +709,15 @@ void CHudBG2::PaintClassCounts() {
 			}
 		}
 	}
+	else {
+		for (int i = 0; i < ARRAYSIZE(m_pClassCountLabels); i++) {
+			m_pClassCountLabels[i]->SetText("");
+		}
+	}
 }
 
 void CHudBG2::Paint()
 {
-
-
 	//BG2 - Tjoppen - Always paint damage label, so it becomes visible while using iron sights
 	//fade out the last second
 	float alphaTaken = (m_flTakenExpireTime - gpGlobals->curtime) * 255.0f;
@@ -731,13 +765,15 @@ void CHudBG2::Paint()
 	PaintTopCenterHUD(/*pHL2Player*/);
 	PaintDeathMessage();
 
+	
+	PaintClassCounts();
+
 	C_HL2MP_Player* pHL2Player = NULL;
 	C_BaseCombatWeapon* wpn = NULL;
 	if (!ShouldDrawPlayer(&pHL2Player, &wpn))
 		return;
 
 	PaintBottomLeftHUD(pHL2Player, wpn);
-	PaintClassCounts();
 
 	m_pLabelLMS->SetText( g_pVGuiLocalize->Find("#LMS") );
 	m_pLabelLMS->SizeToContents();
@@ -757,6 +793,7 @@ void CHudBG2::OnThink()
 void CHudBG2::Reset( void )
 {
 	//mapchange, clear indicators. and stuff.
+	m_flGameMessageExpireTime = -FLT_MAX;
 	m_flGivenExpireTime = 0;
 	m_flTakenExpireTime = 0;
 	m_flLastSwing = 0.5f;
@@ -785,6 +822,7 @@ void CHudBG2::HideShowAllTeam( bool visible )
 	for (int i = 0; i < 6; i++) {
 		m_pClassCountLabels[i]->SetVisible(visible);
 	}
+	m_pLabelGameMessage->SetVisible(m_flGameMessageExpireTime > gpGlobals->curtime);
 	
 	m_pLabelLMS->SetVisible( visible && IsLMSstrict() && cl_draw_lms_indicator.GetBool() );
 }
@@ -794,10 +832,11 @@ void CHudBG2::HideShowAllPlayer(bool visible) {
 	m_pLabelHealth->SetVisible(visible);
 	m_pLabelDamageGiven->SetVisible(m_flGivenExpireTime > gpGlobals->curtime);	//always show damage indicator (unless expired)
 	m_pLabelDamageTaken->SetVisible(m_flTakenExpireTime > gpGlobals->curtime);	//always show damage indicator (unless expired)
+	
 
-	for (int i = 0; i < 6; i++) {
+	/*for (int i = 0; i < 6; i++) {
 		m_pClassCountLabels[i]->SetVisible(visible);
-	}
+	}*/
 }
 
 //BG2 - Tjoppen - cl_hitverif & cl_winmusic && capturesounds & voice comm sounds //HairyPotter
@@ -807,6 +846,77 @@ ConVar	cl_winmusic( "cl_winmusic", "1", FCVAR_ARCHIVE, "Play win music?" );
 ConVar	cl_capturesounds( "cl_capturesounds", "1", FCVAR_ARCHIVE, "Play flag capture sounds?" );
 ConVar cl_vcommsounds("cl_vcommsounds", "1", FCVAR_ARCHIVE, "Allow voice comm sounds?" );
 //
+
+void LocalGameMsg(const char* pszToken) {
+	CHudBG2::GetInstance()->SetGameMsgText(g_pVGuiLocalize->Find(pszToken));
+}
+void LocalGameMsg(const wchar* pszText) {
+	CHudBG2::GetInstance()->SetGameMsgText(pszText);
+}
+
+void CHudBG2::SetGameMsgText(const wchar* pszText) {
+	m_pLabelGameMessage->SetText(pszText);
+
+	//okay... font scaling is wierd and this way turns out to work best
+	//1. reset panel size
+	int wide = ScreenWidth() / 2;
+	int posx = wide / 2;
+	int posy = m_pLabelCurrentRound->GetYPos() + m_pLabelCurrentRound->GetTall();
+	m_pLabelGameMessage->SetPos(posx, posy);
+	m_pLabelGameMessage->SetSize(wide, ScreenHeight() / 15);
+
+	//2. set scaled font
+	SetDefaultBG3FontScaled(g_pVGuiSchemeManager->GetIScheme(GetScheme()), m_pLabelGameMessage);
+
+	//3. do sizeToContents to remove blank space
+	m_pLabelGameMessage->SizeToContents();
+
+	//4. calculate change in size, then move label to center it
+	m_pLabelGameMessage->SetPos(posx + (wide - m_pLabelGameMessage->GetWide()) / 2, posy);
+
+	//5. italic fonts get cropped at the end, so we make it a wee bit wider
+	m_pLabelGameMessage->SetWide(m_pLabelGameMessage->GetWide() * 1.07f);
+
+	m_flGameMessageExpireTime = gpGlobals->curtime + 5.f;
+}
+
+void CHudBG2::MsgFunc_GameMsg(bf_read& msg) {
+	//Three steps for getting text
+	//1. read raw text from msg
+	//2. localize the text
+	//3. inject any player names
+	const int BUFFER_SIZE = 256;
+	//wchar_t buffer1[BUFFER_SIZE];
+	wchar_t buffer2[BUFFER_SIZE];
+
+	//step 1, read raw text from msg
+	uint16 readTextLen = msg.ReadShort();
+	uint16 textLen = min(readTextLen, BUFFER_SIZE);
+	int16 playerIndex = msg.ReadShort();
+	C_BasePlayer* pPlayer = UTIL_PlayerByIndex(playerIndex);
+	msg.ReadBytes(g_hudBuffer, textLen);
+	g_hudBuffer[textLen] = 0;
+
+	wchar* localized = NULL;
+	if (g_hudBuffer[0] == '#') localized = g_pVGuiLocalize->Find(g_hudBuffer);
+
+	//step 2 and 3, localize text if applicable with player name
+	if (localized && pPlayer) {
+		//get player name in wchar_t
+		wchar_t buffer3[BUFFER_SIZE];
+		mbtowc(buffer3, pPlayer->GetPlayerName(), sizeof(buffer3));
+		V_snwprintf(buffer2, BUFFER_SIZE, localized, buffer3);
+	}
+	else if (localized) {
+		V_snwprintf(buffer2, BUFFER_SIZE, localized);
+	}
+	else 
+	{
+		g_pVGuiLocalize->ConvertANSIToUnicode(g_hudBuffer, buffer2, sizeof(buffer2));
+	}
+	
+	SetGameMsgText(buffer2);
+}
 
 void CHudBG2::MsgFunc_HitVerif( bf_read &msg )
 {
@@ -990,3 +1100,7 @@ void CHudBG2::PlayVCommSound( char snd[512], int playerindex )
 		pPlayer->EmitSound( snd );
 }
 //
+
+CON_COMMAND(admin, "Toggles the admin menu") {
+	g_pAdminMenu->SetVisible(!g_pAdminMenu->IsVisible());
+}

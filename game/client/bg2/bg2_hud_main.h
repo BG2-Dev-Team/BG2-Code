@@ -14,9 +14,11 @@
 #include "hl2mp_gamerules.h"
 
 #include "../bg3/vgui/bg3_hud_damage_accumulator.h"
+#include "../bg3/vgui/admin/vgui_adminmenu.h"
 
 
-
+void LocalGameMsg(const char* pszToken);
+void LocalGameMsg(const wchar* pszText);
 
 
 //==============================================
@@ -50,6 +52,8 @@ public:
 	virtual void OnThink();
 	void Reset( void );
 
+	void SetGameMsgText(const wchar* pszText);
+	void MsgFunc_GameMsg(bf_read& msg);
 	void MsgFunc_HitVerif( bf_read &msg );
 	void MsgFunc_WinMusic( bf_read &msg );
 	//HairyPotter
@@ -69,7 +73,6 @@ public:
 
 private:
 
-
 	vgui::Label * m_pLabelBScore; 
 	vgui::Label * m_pLabelAScore; 
 	vgui::Label * m_pLabelBTickets;
@@ -83,6 +86,11 @@ private:
 	vgui::Label * m_pLabelLMS;		//BG2 - Tjoppen - TODO: remove this when hintbox works correctly
 	vgui::Label * m_pLabelHealth;
 
+	vgui::Label * m_pLabelGameMessage;
+
+	CAdminMenu  * m_pAdminMenu;
+
+	float m_flGameMessageExpireTime;
 	float m_flTakenExpireTime;
 	float m_flGivenExpireTime;
 	float m_flLastSwing;	//last frame's swingometer value
@@ -113,6 +121,9 @@ private:
 	float		m_flStartPulseTime; //pulsating health symbol
 	float		m_flEndPulseTime;
 
+public:
+
+	CAdminMenu* GetAdminMenu() const { return m_pAdminMenu; }
 	
 protected:
 

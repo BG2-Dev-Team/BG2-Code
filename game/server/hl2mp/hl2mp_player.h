@@ -278,10 +278,16 @@ public:
 	bool m_bNoJoinMessage;
 
 	//BG3 - permissions
+private:
+	friend class Permissions;
 	Permissions* m_pPermissions;
-
+public:
+	const Permissions* GetPermissions() const { return m_pPermissions ? m_pPermissions : Permissions::NullPermission(); }
 	//BG3 - rudimentary mute system
 	bool m_bMuted;
+
+	//void HUD_StatusMessage(const char* pszText, EHANDLE hPlayerName);
+	//void HUD_GameMessage(const char* pszText, EHANDLE hPlayerName);
 };
 
 //BG2 - Tjoppen - ammo kit definitions
@@ -305,7 +311,7 @@ inline bool verifyBotPermissions(const char* pszFunctionName) {
 
 	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
 	if (pPlayer) {
-		return verifyPermissions(pPlayer, pPlayer->m_pPermissions->m_bBotManage, pszFunctionName);
+		return verifyPermissions(pPlayer, pPlayer->GetPermissions()->m_bBotManage, pszFunctionName);
 	}
 	return false;
 }
@@ -316,7 +322,18 @@ inline bool verifyMapModePermissions(const char* pszFunctionName) {
 
 	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
 	if (pPlayer) {
-		return verifyPermissions(pPlayer, pPlayer->m_pPermissions->m_bBotManage, pszFunctionName);
+		return verifyPermissions(pPlayer, pPlayer->GetPermissions()->m_bMapMode, pszFunctionName);
+	}
+	return false;
+}
+
+inline bool verifyPlayerPermissions(const char* pszFunctionName) {
+	if (UTIL_IsCommandIssuedByServerAdmin())
+		return true;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	if (pPlayer) {
+		return verifyPermissions(pPlayer, pPlayer->GetPermissions()->m_bPlayerManage, pszFunctionName);
 	}
 	return false;
 }

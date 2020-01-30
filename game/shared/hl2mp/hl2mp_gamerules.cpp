@@ -166,6 +166,8 @@ ConVar lb_enforce_volley_fire("lb_enforce_volley_fire", "1", CVAR_FLAGS, "Whethe
 ConVar lb_enforce_volley_fire_tolerance("lb_enforce_volley_fire_tolerance", "2", CVAR_FLAGS, "If volley fire is enforced, players are given this amount of time to fire after their officer shoots.");
 ConVar lb_enforce_no_troll("lb_enforce_no_troll", "1", CVAR_FLAGS, "If on, prevents rambos from shooting or stabbing, and prevents trolls from stabbing teammates in non-melee situations. 0 is off, 1 is on.");
 
+ConVar sv_alltalk("sv_alltalk", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Players can hear all other players, no team restrictions");
+
 // BG2 - VisualMelon - Can't find a better place to put this
 int hitVerificationHairs = 0;
 int hitVerificationLatency = 1.5;
@@ -846,7 +848,20 @@ void CHL2MPRules::Think( void )
 			if (m_iTDMTeamThatWon != TEAM_NONE)
 				score = 1;
 
-			HandleScores(m_iTDMTeamThatWon, score, 0, true);
+			int msg_type = 0;
+			switch (m_iTDMTeamThatWon) {
+			case TEAM_AMERICANS:
+				msg_type = AMERICAN_ROUND_WIN;
+				break;
+			case TEAM_BRITISH:
+				msg_type = BRITISH_ROUND_WIN;
+				break;
+			case TEAM_NONE:
+				msg_type = ROUND_DRAW;
+				break;
+			}
+
+			HandleScores(m_iTDMTeamThatWon, score, msg_type, true);
 		}
 	}
 

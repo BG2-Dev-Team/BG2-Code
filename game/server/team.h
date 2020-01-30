@@ -98,6 +98,9 @@ public:
 
 	//we explicitly allow the number of tickets to be removed to be decimal
 	void RemoveTickets(float number);
+
+	//allow custom ticket changes for custom gamemodes
+	void ChangeTickets(int amount);
 private:
 	//fractional number of tickets left over from last call to RemoveTickets()
 	//zeroed on round restart

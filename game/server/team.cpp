@@ -536,3 +536,8 @@ void CTeam::RemoveTickets(float number)
 		m_flTicketRemovalFraction = number - intPart;
 	}
 }
+
+void CTeam::ChangeTickets(int number) {
+	m_iTicketsLeft += number;
+	if (m_iTicketsLeft < 0) m_iTicketsLeft = 0;
+}

@@ -51,7 +51,7 @@ float	flNextClientPrintAll = 0;
 bool	bNextClientPrintAllForce = false;
 extern bool		g_fGameOver;
 
-void ClientPrintAll( char *str, bool printfordeadplayers, bool forcenextclientprintall )
+void ClientPrintAll(const char *str, bool printfordeadplayers, bool forcenextclientprintall )
 {
 	if( !str )
 		return;
@@ -75,22 +75,23 @@ void ClientPrintAll( char *str, bool printfordeadplayers, bool forcenextclientpr
 
 void ClientPrintAll( int msg_type, int msg_dest, const char * param1, const char * param2 )
 {
-	CReliableBroadcastRecipientFilter filter;
+	{
+		CReliableBroadcastRecipientFilter filter;
+		UserMessageBegin(filter, "BG2Events");
+		WRITE_BYTE(msg_type);
+		WRITE_BYTE(msg_dest);
 
-	UserMessageBegin( filter, "BG2Events" );
-		WRITE_BYTE( msg_type );
-		WRITE_BYTE( msg_dest );
-
-		if ( param1 )
-			WRITE_STRING( param1 );
+		if (param1)
+			WRITE_STRING(param1);
 		else
-			WRITE_STRING( "" );
+			WRITE_STRING("");
 
-		if ( param2 )
-			WRITE_STRING( param2 );
+		if (param2)
+			WRITE_STRING(param2);
 		else
-			WRITE_STRING( "" );
-	MessageEnd();
+			WRITE_STRING("");
+		MessageEnd();
+	}
 }
 
 void ClientPrint( CBasePlayer *pPlayer, int msg_type, int msg_dest, const char * param1, const char * param2 )

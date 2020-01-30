@@ -133,7 +133,7 @@ PLAYER_COMMAND(battlecry) {
 //--------------------------------------------------------------------------------
 // Purpose: Admin commands begin here
 //--------------------------------------------------------------------------------
-static void PerPlayerCommand(CHL2MP_Player* pRequester, const char* pszPlayerSearchTerm, void(*pFunc)(CHL2MP_Player*)) {
+void PerPlayerCommand(CHL2MP_Player* pRequester, const char* pszPlayerSearchTerm, void(*pFunc)(CHL2MP_Player*)) {
 	CHL2MP_Player** pPlayerList = new CHL2MP_Player*[gpGlobals->maxClients];
 	memset(pPlayerList, 0, gpGlobals->maxClients * sizeof(CHL2MP_Player*));
 
@@ -149,7 +149,7 @@ static void PerPlayerCommand(CHL2MP_Player* pRequester, const char* pszPlayerSea
 
 static int g_banMinutes = 0;
 PLAYER_COMMAND(rban) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
+	if (!pPlayer->GetPermissions()->m_bPlayerManage)
 		return;
 
 	if (args[2][0] == '@' && strcmp(args[2], "@aim") != 0)
@@ -177,7 +177,7 @@ PLAYER_COMMAND(rban) {
 }
 PLAYER_COMMAND_ALIAS(rban, b);
 /*PLAYER_COMMAND(rbanip) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
+	if (!pPlayer->GetPermissions()->m_bPlayerManage)
 		return;
 
 	if (args.ArgC() == 3) {
@@ -195,7 +195,7 @@ PLAYER_COMMAND_ALIAS(rban, b);
 PLAYER_COMMAND_ALIAS(rbanip, bip);*/
 
 PLAYER_COMMAND(rkick) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
+	if (!pPlayer->GetPermissions()->m_bPlayerManage)
 		return;
 	if (args.ArgC() == 2) {
 		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
@@ -208,7 +208,7 @@ PLAYER_COMMAND(rkick) {
 PLAYER_COMMAND_ALIAS(rkick, k);
 
 PLAYER_COMMAND(slay) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
+	if (!pPlayer->GetPermissions()->m_bPlayerManage)
 		return;
 
 	if (args.ArgC() == 2) {
@@ -220,7 +220,7 @@ PLAYER_COMMAND(slay) {
 PLAYER_COMMAND_ALIAS(slay, s);
 
 PLAYER_COMMAND(mute) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
+	if (!pPlayer->GetPermissions()->m_bPlayerManage)
 		return;
 	if (args.ArgC() == 2) {
 		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
@@ -231,7 +231,7 @@ PLAYER_COMMAND(mute) {
 }
 PLAYER_COMMAND_ALIAS(mute, m);
 PLAYER_COMMAND(unmute) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
+	if (!pPlayer->GetPermissions()->m_bPlayerManage)
 		return;
 	if (args.ArgC() == 2) {
 		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
@@ -242,288 +242,22 @@ PLAYER_COMMAND(unmute) {
 }
 PLAYER_COMMAND_ALIAS(unmute, um);
 
-CHL2MP_Player* g_pMicSoloPlayer = NULL;
 
-PLAYER_COMMAND(solo) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
-		return;
-	if (pPlayer == g_pMicSoloPlayer)
-		g_pMicSoloPlayer = NULL;
-	else
-		g_pMicSoloPlayer = pPlayer;
-}
-
-PLAYER_COMMAND(unsolo) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
-		return;
-
-	g_pMicSoloPlayer = NULL;
-}
-
-PLAYER_COMMAND(spawn) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
+/*PLAYER_COMMAND(spawn) {
+	if (!pPlayer->GetPermissions()->m_bPlayerManage)
 		return;
 
 	if (args.ArgC() == 2) {
 		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			CSay("Spawning %s via console command", pPlayer->GetPlayerName());
 			pPlayer->Spawn();
 		});
 	}
-}
-
-PLAYER_COMMAND(spec) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
-		return;
-
-	if (args.ArgC() == 2 && pPlayer->ShouldRunRateLimitedCommand(args)) {
-		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
-			// instantly join spectators
-			pPlayer->HandleCommand_JoinTeam(TEAM_SPECTATOR);
-		});
-	}
-}
-
-PLAYER_COMMAND(amer) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
-		return;
-
-	if (args.ArgC() == 2) {
-		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
-			if (pPlayer->GetTeamNumber() == TEAM_BRITISH) {
-				const CPlayerClass* pClass = NClassQuota::FindInfiniteClassForTeam(TEAM_AMERICANS);
-				pPlayer->ForceJoin(pClass, TEAM_AMERICANS, pClass->m_iClassNumber);
-			}
-		});
-	}
-}
-
-PLAYER_COMMAND(brit) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
-		return;
-
-	if (args.ArgC() == 2) {
-		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
-			if (pPlayer->GetTeamNumber() == TEAM_AMERICANS) {
-				const CPlayerClass* pClass = NClassQuota::FindInfiniteClassForTeam(TEAM_BRITISH);
-				pPlayer->ForceJoin(pClass, TEAM_BRITISH, pClass->m_iClassNumber);
-			}
-		});
-	}
-}
-
-static const CPlayerClass* g_pNextLinebattleClass = NULL;
-static void LinebattleSetClass(int iTeam, const char* pszAbbreviation) {
-	if (!IsLinebattle())
-		return;
-
-	//First get pointer to player class
-	g_pNextLinebattleClass = CPlayerClass::fromAbbreviation(iTeam, pszAbbreviation);
-
-	if (g_pNextLinebattleClass) {
-		const CPlayerClass& pc = *g_pNextLinebattleClass;
-		const char* pszSelector = iTeam == TEAM_AMERICANS ? "@amer" : "@brit";
-
-		//set all players of correct team to that class
-		PerPlayerCommand(NULL, pszSelector, [](CHL2MP_Player* pPlayer){
-			pPlayer->ForceJoin(g_pNextLinebattleClass, g_pNextLinebattleClass->m_iDefaultTeam, g_pNextLinebattleClass->m_iClassNumber);
-		});
-
-		//set all other limits on other classes to 0, set our limit to -1
-		pc.m_pcvLimit_lrg->SetValue("-1");
-		pc.m_pcvLimit_med->SetValue("-1");
-		pc.m_pcvLimit_sml->SetValue("-1");
-		for (int i = 0; i < CPlayerClass::numClassesForTeam(iTeam); i++) {
-			const CPlayerClass* pOtherClass = CPlayerClass::fromNums(iTeam, i);
-			if (pOtherClass != &pc) {
-				pOtherClass->m_pcvLimit_lrg->SetValue(0);
-				pOtherClass->m_pcvLimit_med->SetValue(0);
-				pOtherClass->m_pcvLimit_sml->SetValue(0);
-			}
-		}
-	}
-}
-
-PLAYER_COMMAND(aclass) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
-		return;
-
-	//Don't let non-americans change kit
-	if (pPlayer->GetTeamNumber() != TEAM_AMERICANS && !pPlayer->m_pPermissions->m_bConsoleAccess)
-		return;
-	if (args.ArgC() == 2) {
-		LinebattleSetClass(TEAM_AMERICANS, args[1]);
-	}
-}
-PLAYER_COMMAND(bclass) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
-		return;
-
-	//Don't let non-brits change kit
-	if (pPlayer->GetTeamNumber() != TEAM_BRITISH && !pPlayer->m_pPermissions->m_bConsoleAccess)
-		return;
-	if (args.ArgC() == 2) {
-		LinebattleSetClass(TEAM_BRITISH, args[1]);
-	}
-}
-
-static void LinebattleSetKit(int iTeam, int iWeapon, int iUniform, int iAmmo) {
-	if (!IsLinebattle())
-		return;
-
-	//tell all players on team to change and spawn with new kit
-	for (int i = 1; i <= gpGlobals->maxClients; i++) {
-		CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-		if (pPlayer && pPlayer->GetTeamNumber() == iTeam) {
-			pPlayer->m_iClassSkin = iUniform;
-			pPlayer->m_iGunKit = iWeapon;
-			pPlayer->m_iAmmoKit = iAmmo;
-
-			//let the respawn code fix clamp the out-of-range values
-			pPlayer->CheckQuickRespawn();
-
-			//set the weapon forcer to force joining players to a specific kit
-			ConVar* pWeaponKitEnforcer = pPlayer->GetTeamNumber() == TEAM_AMERICANS ? &lb_enforce_weapon_amer : &lb_enforce_weapon_brit;
-			pWeaponKitEnforcer->SetValue(iWeapon + 1);
-		}
-	}
-}
-
-PLAYER_COMMAND(akit) {
-	//Don't let non-americans change kit
-	if (pPlayer->GetTeamNumber() != TEAM_AMERICANS)
-		return;
-
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
-		return;
-
-	if (args.ArgC() == 2) {
-		LinebattleSetKit(TEAM_AMERICANS, atoi(args[1]), 0, 0);
-	}
-	else if (args.ArgC() == 3) {
-		LinebattleSetKit(TEAM_AMERICANS, atoi(args[1]), atoi(args[2]), 0);
-	}
-	else if (args.ArgC() == 4) {
-		LinebattleSetKit(TEAM_AMERICANS, atoi(args[1]), atoi(args[2]), atoi(args[3]));
-	}
-}
-
-PLAYER_COMMAND(bkit) {
-	//Don't let non-brits change kit
-	if (pPlayer->GetTeamNumber() != TEAM_BRITISH)
-		return;
-
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
-		return;
-
-	if (args.ArgC() == 2) {
-		LinebattleSetKit(TEAM_BRITISH, atoi(args[1]), 0, 0);
-	}
-	else if (args.ArgC() == 3) {
-		LinebattleSetKit(TEAM_BRITISH, atoi(args[1]), atoi(args[2]), 0);
-	}
-	else if (args.ArgC() == 4) {
-		LinebattleSetKit(TEAM_BRITISH, atoi(args[1]), atoi(args[2]), atoi(args[3]));
-	}
-}
-
-void Player_NoClip(CBasePlayer* pPlayer);
-PLAYER_COMMAND(clip) {
-	if (!pPlayer->m_pPermissions->m_bPlayerManage)
-		return;
-
-	const char* pszSelector = "@me";
-	if (args.ArgC() > 1)
-		pszSelector = args[1];
-
-	PerPlayerCommand(pPlayer, pszSelector, [](CHL2MP_Player* pPlayer){
-		if (pPlayer->GetTeamNumber() >= TEAM_AMERICANS) {
-			Player_NoClip(pPlayer);
-		}
-	});
-}
-
-PLAYER_COMMAND(rc) {
-	if (!pPlayer->m_pPermissions->m_bConsoleAccess)
-		return;
-
-	//build a second set of arguments
-	char buffer[512];
-	Q_snprintf(buffer, sizeof(buffer), "%s\n", args.GetCommandString() + 3);
-	Msg(buffer);
-	engine->ServerCommand(buffer);
-	engine->ServerExecute();
-}
-
-//Let's alias some of the actual console commands
-//--------------------------------------------------------------------------
-// Bot commands
-//--------------------------------------------------------------------------
-/*PLAYER_COMMAND(bot_kick_all) { 
-	if (!pPlayer->m_pPermissions->m_bBotManage)
-		return;
-
-	//Don't reinvent the wheel, just send it to server console
-	engine->ServerCommand("bot_kick_all 1\n");
-}
-
-PLAYER_COMMAND(bot_add) {
-	if (!pPlayer->m_pPermissions->m_bBotManage)
-		return;
-
-	//Don't reinvent the wheel, just send it to server console
-	//build a second set of arguments
-	char buffer[16];
-	Q_snprintf(buffer, sizeof(buffer), "%s\n", args.GetCommandString() + 3);
-	engine->ServerCommand(buffer);
-}
-PLAYER_COMMAND(bot_add_a) {
-	if (!pPlayer->m_pPermissions->m_bBotManage)
-		return;
-
-	char buffer[16];
-	Q_snprintf(buffer, sizeof(buffer), "%s\n", args.GetCommandString() + 3);
-	engine->ServerCommand(buffer);
-}
-PLAYER_COMMAND(bot_add_b) {
-	if (!pPlayer->m_pPermissions->m_bBotManage)
-		return;
-
-	char buffer[16];
-	Q_snprintf(buffer, sizeof(buffer), "%s\n", args.GetCommandString() + 3);
-	engine->ServerCommand(buffer);
-}
-PLAYER_COMMAND(bot_minplayers_mode) {
-	if (!pPlayer->m_pPermissions->m_bBotManage)
-		return;
-
-	char buffer[16];
-	Q_snprintf(buffer, sizeof(buffer), "%s\n", args.GetCommandString() + 3);
-	engine->ServerCommand(buffer);
-}
-PLAYER_COMMAND(bot_minplayers) {
-	if (!pPlayer->m_pPermissions->m_bBotManage)
-		return;
-
-	char buffer[16];
-	Q_snprintf(buffer, sizeof(buffer), "%s\n", args.GetCommandString() + 3);
-	engine->ServerCommand(buffer);
-}
-PLAYER_COMMAND(bot_maxplayers) {
-	if (!pPlayer->m_pPermissions->m_bBotManage)
-		return;
-
-	char buffer[16];
-	Q_snprintf(buffer, sizeof(buffer), "%s\n", args.GetCommandString() + 3);
-	engine->ServerCommand(buffer);
-}
-PLAYER_COMMAND(bot_difficulty) {
-	if (!pPlayer->m_pPermissions->m_bBotManage)
-		return;
-
-	char buffer[16];
-	Q_snprintf(buffer, sizeof(buffer), "%s\n", args.GetCommandString() + 3);
-	engine->ServerCommand(buffer);
 }*/
+
+
+
+
 
 //--------------------------------------------------------------------------
 // Individual buff commands

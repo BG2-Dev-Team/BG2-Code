@@ -60,7 +60,7 @@ commented on the following form:
 Singletons - handle bots for a given team.
 */
 
-ConVar bot_vcomms("bot_vcomms", "1", FCVAR_GAMEDLL, "Whether or not to allow bots to use voice commands");
+extern ConVar bot_vcomms;
 
 CBotComManager g_BotBritComms(TEAM_BRITISH);
 CBotComManager g_BotAmerComms(TEAM_AMERICANS);

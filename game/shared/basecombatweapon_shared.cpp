@@ -751,10 +751,12 @@ void CBaseCombatWeapon::EnableIronsights(void)
 	CBaseViewModel *vm = pOwner->GetViewModel(m_nViewModelIndex, false);
 	if (vm) vm->m_flSwayMultiplier = 1;
 
+	float attackDelay = Def()->m_bQuickdraw ? IRONSIGHTS_ATTACK_DELAY_IN_FAST : IRONSIGHTS_ATTACK_DELAY_IN;
+
 	//delay both attacks, but make sure we don't roll back the attack times
-	m_flNextPrimaryAttack = max(m_flNextPrimaryAttack, gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_IN);
-	m_flNextSecondaryAttack = max(m_flNextSecondaryAttack, gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_IN);
-	m_flNextDisableIronsights = gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_IN;
+	m_flNextPrimaryAttack = max(m_flNextPrimaryAttack, gpGlobals->curtime + attackDelay);
+	m_flNextSecondaryAttack = max(m_flNextSecondaryAttack, gpGlobals->curtime + attackDelay);
+	m_flNextDisableIronsights = gpGlobals->curtime + attackDelay;
 }
 
 void CBaseCombatWeapon::DisableIronsights(void)
