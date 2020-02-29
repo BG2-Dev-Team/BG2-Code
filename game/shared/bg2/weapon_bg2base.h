@@ -155,7 +155,7 @@ public:
 		return m_Attackinfos[iAttack].m_vStandSpread * (moving ? 2.0f : 1.0f);*/
 
 		//Check for other accuracy modifications
-		if (Def()->m_iNumShot > 0 && pPlayer->GetCurrentAmmoKit() == AMMO_KIT_BUCKSHOT)
+		if (Def()->m_iNumShot > 0 && (pPlayer->GetCurrentAmmoKit() == AMMO_KIT_BUCKSHOT || Def()->m_bShotOnly))
 			modifier = Def()->m_flShotAimModifier;
 		if ((pPlayer->RallyGetCurrentRallies() & RALLY_ACCURACY) && (m_bIsIronsighted || (pPlayer->GetFlags() & FL_DUCKING)))
 			multiplier = RALLY_ACCURACY_MOD;
@@ -270,8 +270,6 @@ public:
 	float	m_flNextSampleForward;
 	bool	m_bShouldFireDelayed;
 	float	m_flNextDelayedFire;
-	float	m_flNextRecoil;
-	float	m_flNextReload; //without this, the player can sometimes reoad before recoil is applied
 
 	//BG3 - Awesome - moved this to CBaseCombatWeapon
 	//void		UpdateBodyGroups();
@@ -303,7 +301,7 @@ public:
 	{
 		CHL2MP_Player *pPlayer = ToHL2MPPlayer( GetOwner() );
 
-		if ( !pPlayer || Def()->m_iNumShot <= 0 || pPlayer->GetCurrentAmmoKit() != AMMO_KIT_BUCKSHOT )
+		if ( !pPlayer || Def()->m_iNumShot <= 0 || (pPlayer->GetCurrentAmmoKit() != AMMO_KIT_BUCKSHOT && !Def()->m_bShotOnly))
 			return 0;
 
 		return Def()->m_flShotSpread;

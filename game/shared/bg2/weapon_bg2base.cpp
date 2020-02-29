@@ -26,7 +26,7 @@
 	notice cannot be put in all of them, but merely the ones that have any
 	changes from the original SDK.
 	 In order to facilitate easy searching, all changes are and must be
-	commented on the following form:
+	commented on the following form:d
 
 	//BG2 - <name of contributer>[ - <small description>]
 */
@@ -55,17 +55,17 @@
 	#include "Sprite.h"
 	#include "SpriteTrail.h"
 	#include "beam_shared.h"
-
+	#include "player_resource.h"
 	#include "shot_manipulator.h"
 	#include "ilagcompensationmanager.h"
-	#include "player_resource.h"
 #endif
+
+#include "../bg3/Math/bg3_rand.h"
 
 #include "takedamageinfo.h"
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
 #include "effect_dispatch_data.h"
 #include "../server/bg2/bullet.h"
-#include "../bg3/Math/bg3_rand.h"
 #include "shot_manipulator.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -143,8 +143,7 @@ CBaseBG2Weapon::CBaseBG2Weapon( void )
 	m_bShouldSampleForward = false;
 	m_bShouldFireDelayed = false;
 	
-	m_flNextRecoil = FLT_MAX;
-	m_flNextReload = -FLT_MAX;
+
 	//m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_NONE;
 	//m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_NONE; //BG3 - Awesome - moved these to def
 
@@ -282,18 +281,31 @@ void CBaseBG2Weapon::Fire( int iAttack )
 		return;
 	}
 
+	//flintlock delay is based on our weapon type
 	float flintlockDelay = Def()->m_flLockTime;
 	if (Def()->m_flRandomAdditionalLockTimeMax) {
 		//let ping decrease random locktime
+		//so here's a problem... we need to appear 'random' yet both client and server need to generate the same random number
+		//create array of seeds that both server and client know about
+		int remainder = (int)gpGlobals->curtime % 10;
+		float seed1 = gpGlobals->curtime * 16000;
+		srand((unsigned int)seed1);
+		int seeds[4] = { ((int)seed1 + entindex()) << 16, ~(*reinterpret_cast<int*>(&seed1)), (pPlayer->entindex() << 12) + pPlayer->entindex() * (int)seed1, rand() + (remainder << 30) };
+#ifdef CLIENT_DLL
+		//Msg("Seeds %i %i %i\n", seeds[0], seeds[1], seeds[2], seeds[4]);
+#endif
+		RndSeed(seeds);
+
 #ifdef CLIENT_DLL
 		float ping = g_PR->GetPing(pPlayer->entindex()) / 1000.f;
 #else
 		float ping = g_pPlayerResource->GetPing(pPlayer->entindex()) / 1000.f;
 #endif
-		flintlockDelay += max(0, RndFloat(0, Def()->m_flRandomAdditionalLockTimeMax) - ping / 7.14f);
+		float pingScale = 1.f - (ping / 0.25f);
+		Clamp(pingScale, 0.f, 1.f);
+		flintlockDelay += RndFloat(0, Def()->m_flRandomAdditionalLockTimeMax) * pingScale;
 	}
 
-	
 
 	if( sv_turboshots.GetInt() == 0 )
 		m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + flintlockDelay;
@@ -317,22 +329,14 @@ void CBaseBG2Weapon::Fire( int iAttack )
 	if( sv_infiniteammo.GetInt() == 0 )
 		m_iClip1--;
 
-	
-
-	//flintlock delay is based on our weapon type
-	
-		
 
 	//sample eye vector after a short delay, then fire the bullet(s) a short time after that
 	m_bShouldSampleForward = true;
-	m_flNextSampleForward = gpGlobals->curtime + flintlockDelay;
+	m_flNextSampleForward = gpGlobals->curtime + flintlockDelay; 
 	m_bShouldFireDelayed = true;
 	m_flNextDelayedFire = gpGlobals->curtime + flintlockDelay;
-	m_flNextRecoil = gpGlobals->curtime + flintlockDelay;
-	m_flNextReload = gpGlobals->curtime + flintlockDelay + (Def()->m_flRandomAdditionalLockTimeMax ? 0.15f : 0);
 
-	//Keep people from switching weapons right after shooting.
-	m_fNextHolster = max(gpGlobals->curtime + 0.2f, m_flNextDelayedFire);
+	m_fNextHolster = gpGlobals->curtime + max(flintlockDelay, 0.2f); //Keep people from switching weapons right after shooting.
 }
 
 void CBaseBG2Weapon::FireBullets( int iAttack )
@@ -342,6 +346,8 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 	if( !pPlayer )
 		return;
 
+#ifndef CLIENT_DLL
+
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
 
 	//figure out how many balls we should fire based on the player's current ammo kit
@@ -349,29 +355,17 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 	int iDamage = 0;
 	float muzzleVelocity = Def()->m_flMuzzleVelocity;
 	
-	switch( pPlayer->GetCurrentAmmoKit() )
-	{
-	default:
-	case AMMO_KIT_BALL:
-		numActualShot = 1;
-		iDamage = GetDamage( iAttack );
-		break;
-	case AMMO_KIT_BUCKSHOT:
-		if( Def()->m_iNumShot > 0 )
-		{
-			numActualShot = Def()->m_iNumShot;
-			iDamage = Def()->m_iDamagePerShot;
-			muzzleVelocity = Def()->m_flShotMuzzleVelocity;
-		}
-		else
-		{
-			//just in case we got AMMO_KIT_BUCKSHOT without being able to shoot shot
-			numActualShot = 1;
-			iDamage = GetDamage( iAttack );
-		}
-		break;
+	int kit = pPlayer->GetCurrentAmmoKit();
+	if ((kit == AMMO_KIT_BUCKSHOT || Def()->m_bShotOnly) && Def()->m_iNumShot > 0) {
+		numActualShot = Def()->m_iNumShot;
+		iDamage = Def()->m_iDamagePerShot;
+		muzzleVelocity = Def()->m_flShotMuzzleVelocity;
 	}
-
+	else {
+		numActualShot = 1;
+		iDamage = GetDamage(iAttack);
+	}
+	
 	//be a bit paranoid in case m_iNumShot is set to some crazy value
 	if( numActualShot <= 0 )
 		numActualShot = 1;
@@ -380,18 +374,19 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 
 	muzzleVelocity = sv_muzzle_velocity_override.GetFloat() > 0 ? sv_muzzle_velocity_override.GetFloat() : muzzleVelocity;
 
-#ifndef CLIENT_DLL
+
 	//BG3 - Build the bullet whiz sound effect and dispatch it to client
 	CEffectData whizData;
 	whizData.m_vOrigin = vecSrc; //trace start position
 	whizData.m_vStart = m_vLastForward; //forward vector
 	whizData.m_nEntIndex = pPlayer->entindex(); //shooting player shouldn't hear their own bullets
 	DispatchEffect("MusketWhiz", whizData);
-#endif
+
+
 
 	if( sv_simulatedbullets.GetBool() )
 	{
-#ifndef CLIENT_DLL
+
 
 		//Move bullets up slightly so players can shoot over windowcills etc. properly
 		vecSrc.z += 2;
@@ -417,7 +412,7 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 									muzzleVelocity, pPlayer );
 #endif
 		}
-#endif
+
 	}
 	else
 	{
@@ -436,6 +431,21 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 		// Fire the bullets, and force the first shot to be perfectly accurate
 		pPlayer->FireBullets( info );
 	}
+#endif
+	//Disorient the player
+	if (sv_steadyhand.GetInt() == 0)
+	{
+		int iSeed = CBaseEntity::GetPredictionRandomSeed() & 255;
+		RandomSeed(iSeed);
+
+		//BG2 - Tjoppen - HACKHACK: weapon attacks get called multiple times on client. until we figure out
+		//							why, multiple recoils must be supressed.
+		if (m_flLastRecoil + 0.1f < gpGlobals->curtime) {
+			pPlayer->ViewPunch(QAngle(-8, random->RandomFloat(-2, 2), 0) * GetRecoil(m_iLastAttack));
+		}
+		m_flLastRecoil = gpGlobals->curtime;
+	}
+
 }
 
 //------------------------------------------------------------------------------
@@ -765,25 +775,6 @@ void CBaseBG2Weapon::ItemPostFrame( void )
 		m_bShouldFireDelayed = false;
 
 		FireBullets( m_iLastAttack );
-		//m_flNextReload = FLT_MAX; //wait for recoil to happen and for that to set next reload time
-		//m_flNextRecoil = gpGlobals->curtime + 1.f; //apply recoil next frame
-	}
-
-	//Disorient the player, but only after firing
-	if (sv_steadyhand.GetInt() == 0)
-	{
-
-		//BG2 - Tjoppen - HACKHACK: weapon attacks get called multiple times on client. until we figure out
-		//							why, multiple recoils must be supressed.
-		if (m_flNextRecoil < gpGlobals->curtime) {
-			//if too much time has passed, then we somehow reloaded before recoil, so don't apply recoil
-			if (m_flNextRecoil + 2 > gpGlobals->curtime) {
-				int iSeed = CBaseEntity::GetPredictionRandomSeed() & 255;
-				RandomSeed(iSeed);
-				pOwner->ViewPunch(QAngle(-8, random->RandomFloat(-2, 2), 0) * GetRecoil(m_iLastAttack));
-			}
-			m_flNextRecoil = FLT_MAX;
-		}
 	}
 
 	BaseClass::ItemPostFrame();
@@ -817,14 +808,12 @@ bool CBaseBG2Weapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 bool CBaseBG2Weapon::Reload( void )
 {
 	//BG2 - Tjoppen - disallow reloading until delayed firing has occured
-	//BG3 - or until recoil happenned
-	if (m_bShouldFireDelayed || (m_flNextReload > gpGlobals->curtime)) {
+	if (m_bShouldFireDelayed) {
 		return false;
 	}
+		
 
-	bool reload = BaseClass::Reload();
-	
-	return reload;
+	return BaseClass::Reload();
 }
 
 //roob: set correct skin on equip

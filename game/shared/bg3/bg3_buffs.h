@@ -63,6 +63,7 @@ namespace BG3Buffs {
 		FIRE,
 		RALLY_ROUND,
 		RETREAT,
+		SLOW,
 		NONE,
 	};
 	extern CHudTexture* g_ppIcons[];

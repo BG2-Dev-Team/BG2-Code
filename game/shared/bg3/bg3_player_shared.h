@@ -137,7 +137,7 @@ HITGROUP MODIFIERS - used player.cpp - don't change these unless you have a real
 /*
 GRENADE INFORMATION - used in basegrenade_shared.h and other places - I tried to put these definitions in weapon_bg2base.cpp but it wouldn't resolve the externals - Awesome
 */
-#define DMG_GRENADE 150.0f
+#define DMG_GRENADE 172.50f
 #define GRENADE_FUSE_LENGTH 5.0f
 
 /*
@@ -154,7 +154,7 @@ RAW RALLY TYPES - DON"T CHANGE THESE UNLESS YOU' KNOW WHAT YOU'RE DOING
 m_iCurrentRallies is a bit field so that a player can have multiple rallies at once!
 */
 #if 1
-#define RALLY_NUM				7	//Data tables need this, so keep it up-to-date
+#define RALLY_NUM				8	//Data tables need this, so keep it up-to-date
 
 #define RALLY_DURATION			10.0f	//default until you change the derived macros
 #define RALLY_INTERVAL			50.0f //time a team must wait before their officer can do another rally
@@ -186,6 +186,10 @@ m_iCurrentRallies is a bit field so that a player can have multiple rallies at o
 //used in linebattle
 #define RALLY_RADIUS_LINEBATTLE	2048.0f
 #define RALLY_DURATION_LB_MOD	2.0f /*Duration of rally effects is multiplied by this*/
+
+#define NERF_SLOW				(1 << 7)
+#define NERF_SLOW_MOD			0.9f //Speed multiplier
+
 #endif
 
 /*
@@ -223,6 +227,8 @@ VCOMM RALLYING DEFINITIONS - these are just mergers of the raw rally types defin
 
 #define RALLY_RETREAT			(RALLY_SPEED_RELOAD | RALLY_ARMOR)
 #define RALLY_RETREAT_DURATION		RALLY_DURATION
+
+#define NERF_SLOW_DURATION			5.f
 #endif
 
 

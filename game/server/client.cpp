@@ -260,7 +260,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 
 	Q_strncat( text, p, sizeof( text ), COPY_ALL_CHARACTERS );
 	Q_strncat( text, "\n", sizeof( text ), COPY_ALL_CHARACTERS );
- 
+
 	// loop through all players
 	// Start with the first player.
 	// This may return the world in single player if the client types something between levels or during spawn
@@ -279,7 +279,8 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		if ( !(client->IsNetClient()) )	// Not a client ? (should never be true)
 			continue;
 
-		if ( teamonly && g_pGameRules->PlayerCanHearChat( client, pPlayer ) != GR_TEAMMATE )
+		bool differentTeams = pPlayer->GetTeamNumber() != client->GetTeamNumber();
+		if ( teamonly && differentTeams )
 			continue;
 
 		if ( pPlayer && !client->CanHearAndReadChatFrom( pPlayer ) )

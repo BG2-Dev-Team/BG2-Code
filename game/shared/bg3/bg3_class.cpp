@@ -627,6 +627,8 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_miquelet";
 	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_old_model_charleville";
 	m_aWeapons[4].m_pszWeaponPrimaryName = "weapon_dutch";
+	m_aWeapons[5].m_pszWeaponPrimaryName = "weapon_american_brownbess";
+	m_aWeapons[6].m_pszWeaponPrimaryName = "weapon_light_model_charleville";
 
 	postClassConstruct(this);
 }
@@ -712,6 +714,8 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 	m_aWeapons[2].m_pszWeaponSecondaryName = "weapon_smallsword";
 	m_aWeapons[2].m_pszPlayerModelOverrideName = MODEL_ASTATEMILITIA; //BG3 - minuteman/state class merge
 	m_aWeapons[2].m_iSleeveSkinOverride = SLEEVE_ASTATEMILITIA;
+
+	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_blunderbuss";
 
 #ifdef CLIENT_DLL
 	m_aWeapons[2].SetLocalizedName("weapon_longpattern_state");

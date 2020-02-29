@@ -242,6 +242,10 @@ PLAYER_COMMAND(unmute) {
 }
 PLAYER_COMMAND_ALIAS(unmute, um);
 
+PLAYER_COMMAND(setname) {
+	if (args.ArgC() > 1)
+		pPlayer->SetPlayerName(args[1]);
+}
 
 /*PLAYER_COMMAND(spawn) {
 	if (!pPlayer->GetPermissions()->m_bPlayerManage)

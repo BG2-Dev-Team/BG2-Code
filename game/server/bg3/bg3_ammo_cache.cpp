@@ -42,6 +42,8 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(info_ammo_cache, CAmmoCache);
 
+ConVar mp_ammo_cache_refresh_time("mp_ammo_cache_refresh_time", "30", FCVAR_GAMEDLL);
+
 void CAmmoCache::Spawn() {
 	ThinkSet((BASEPTR) &CAmmoCache::Think);
 	
@@ -92,7 +94,7 @@ giveammoloop:
 			&& (IsLinebattle() || EntDist(*this, *pPlayer) < m_flRadius)
 			&& pPlayer->GetTeamNumber() == activatorTeam
 			&& pPlayer->m_flNextAmmoRefill < gpGlobals->curtime) {
-			pPlayer->m_flNextAmmoRefill = gpGlobals->curtime + 30; //30 seconds intervals
+			pPlayer->m_flNextAmmoRefill = gpGlobals->curtime + mp_ammo_cache_refresh_time.GetFloat(); //30 seconds intervals
 			pPlayer->SetDefaultAmmoFull(true);
 		}
 	}

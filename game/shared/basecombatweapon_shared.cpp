@@ -752,6 +752,7 @@ void CBaseCombatWeapon::EnableIronsights(void)
 	if (vm) vm->m_flSwayMultiplier = 1;
 
 	float attackDelay = Def()->m_bQuickdraw ? IRONSIGHTS_ATTACK_DELAY_IN_FAST : IRONSIGHTS_ATTACK_DELAY_IN;
+	attackDelay = Def()->m_bSlowDraw ? IRONSIGHTS_ATTACK_DELAY_IN_SLOW : attackDelay;
 
 	//delay both attacks, but make sure we don't roll back the attack times
 	m_flNextPrimaryAttack = max(m_flNextPrimaryAttack, gpGlobals->curtime + attackDelay);

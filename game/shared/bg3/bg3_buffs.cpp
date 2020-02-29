@@ -226,6 +226,8 @@ namespace BG3Buffs {
 			pIcon = g_ppIcons[RALLY_ROUND];
 		bcase RALLY_RETREAT:
 			pIcon = g_ppIcons[RETREAT];
+		bcase NERF_SLOW:
+			pIcon = g_ppIcons[SLOW];
 		}
 		
 		return pIcon;
@@ -238,6 +240,7 @@ namespace BG3Buffs {
 		g_ppIcons[FIRE]			= gHUD.GetIcon("buff_fire");
 		g_ppIcons[RALLY_ROUND]	= gHUD.GetIcon("buff_rally_round");
 		g_ppIcons[RETREAT]		= gHUD.GetIcon("buff_retreat");
+		//g_ppIcons[SLOW]			= gHUD.GetIcon("nerf_slow");
 		g_ppIcons[NONE]			= gHUD.GetIcon("buff_empty");
 	}
 
@@ -315,6 +318,10 @@ namespace BG3Buffs {
 			break;
 		case RALLY_RETREAT:
 			duration = RALLY_RETREAT_DURATION;
+			break;
+		case NERF_SLOW:
+			duration = NERF_SLOW_DURATION;
+			break;
 		default:
 			Assert("Failed to get duration of a rally flag!" && 0);
 			break;
@@ -322,7 +329,7 @@ namespace BG3Buffs {
 
 		//Lengthen the time if we're in linebattle mode
 		
-		if (IsLinebattle())
+		if (IsLinebattle() && rallyFlags != NERF_SLOW)
 			duration *= RALLY_DURATION_LB_MOD;
 
 		return duration;

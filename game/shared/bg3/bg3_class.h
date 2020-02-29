@@ -115,7 +115,7 @@ public:
 	const char* m_pszPlayerModel;
 	const char* m_pszJoinName = nullptr;
 
-#define NUM_POSSIBLE_WEAPON_KITS 5
+#define NUM_POSSIBLE_WEAPON_KITS 7
 	CGunKit		m_aWeapons[NUM_POSSIBLE_WEAPON_KITS];
 private:
 	mutable uint8		m_iChooseableKits;

@@ -194,6 +194,9 @@ int CHL2MP_Player::GetCurrentSpeed(void) const
 	if ((m_iCurrentRallies & RALLY_SPEED) && pWeapon && !pWeapon->m_bInReload && !pWeapon->m_bIsIronsighted) {
 		scale *= RALLY_SPEED_MOD;
 	}
+	else if (m_iCurrentRallies & NERF_SLOW) {
+		scale *= NERF_SLOW_MOD;
+	}
 
 //#define SLOPE_SPEED_SCALE
 #ifdef SLOPE_SPEED_SCALE

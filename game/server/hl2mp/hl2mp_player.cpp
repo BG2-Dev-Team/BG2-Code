@@ -590,6 +590,7 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 	bool bApplyDamage = true;
 	const CTakeDamageInfo * dmgInfo = &info;
 
+
 	CHL2MP_Player * pAttacker = ToHL2MPPlayer(info.GetAttacker());
 	CHL2MP_Player * pVictim = ToHL2MPPlayer(ptr->m_pEnt);
 	if (ptr && pAttacker && pVictim) {
@@ -639,16 +640,22 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 		newInfo.ScaleDamage(scale);
 
 		//Do the grenadier damage scale last because it depends on what the damage already is
-		if (pVictim->GetPlayerClass()->m_bHasImplicitDamageResistance && newInfo.GetDamage() < DMG_MOD_GRENADIER_CAP) {
+		if (pAttacker->RallyGetCurrentRallies() != RALLY_RALLY_ROUND && pVictim->GetPlayerClass()->m_bHasImplicitDamageResistance && newInfo.GetDamage() < DMG_MOD_GRENADIER_CAP) {
 			newInfo.ScaleDamage(DMG_MOD_GRENADIER);
 		}
-		else if (pVictim->GetPlayerClass()->m_bHasImplicitDamageWeakness) {
+		else if (pVictim->GetPlayerClass()->m_bHasImplicitDamageWeakness && pVictim->RallyGetCurrentRallies() != RALLY_RALLY_ROUND) {
 			if (newInfo.GetDamage() < DMG_MOD_SKI_CAP) {
 				newInfo.ScaleDamage(DMG_MOD_SKI);
 			}
 			else if (newInfo.GetDamage() < DMG_MOD_SKI * DMG_MOD_SKI) {
 				newInfo.SetDamage((float)(DMG_MOD_SKI * DMG_MOD_SKI_CAP));
 			}
+		}
+	
+		if (newInfo.GetDamageType() == DMG_BLAST && newInfo.GetDamage() > 20 && pVictim->RallyGetCurrentRallies() != RALLY_RALLY_ROUND) {
+			pVictim->m_iStamina = 0;
+			BG3Buffs::RallyPlayer(0, pVictim);
+			BG3Buffs::RallyPlayer(NERF_SLOW, pVictim);
 		}
 	}
 	if (bApplyDamage){
@@ -1446,7 +1453,7 @@ void CHL2MP_Player::CheckQuickRespawn() {
 		&& GetHealth() == 100
 		&& (HasLoadedWeapon() || IsLinebattle()) //in linebattle, forgive players who accidentally shoot in spawn
 		&& (m_fLastRespawn + classSwitchTime > gpGlobals->curtime)) {
-		m_bDontRemoveTicket = true;
+		//m_bDontRemoveTicket = true;
 		UpdateToMatchClassWeaponAmmoUniform();
 
 		//HACK HACK this prevents players from class-switching more than once, until they spawn for some other reason

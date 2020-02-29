@@ -304,7 +304,9 @@ void CWeaponFrag::PrimaryAttack( void )
 //-----------------------------------------------------------------------------
 void CWeaponFrag::DecrementAmmo( CBaseCombatCharacter *pOwner )
 {
-	pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+	extern ConVar sv_infiniteammo;
+	if (sv_infiniteammo.GetInt() == 0)
+		pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
 }
 
 //-----------------------------------------------------------------------------
@@ -406,11 +408,11 @@ void CWeaponFrag::ThrowGrenade( CBasePlayer *pPlayer )
 	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f;
 	CheckThrowPosition( pPlayer, vecEye, vecSrc );
 //	vForward[0] += 0.1f;
-	vForward[2] += 0.1f;
+	vForward[2] += 0.2f;
 
 	Vector vecThrow;
 	pPlayer->GetVelocity( &vecThrow, NULL );
-	vecThrow += vForward * 500;
+	vecThrow += vForward * 600;
 	CBaseGrenade *pGrenade = Fraggrenade_Create( vecSrc, vec3_angle, vecThrow, AngularImpulse(600,random->RandomInt(-1200,1200),0), pPlayer, m_flFuseEndTime - gpGlobals->curtime, false );
 
 	if ( pGrenade )

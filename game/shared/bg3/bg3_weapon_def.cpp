@@ -46,6 +46,7 @@ CUtlDict<CWeaponDef*> g_dictWeaponDefs;
 //-----------------------------------------------------------------------------
 CWeaponDef::CWeaponDef(const char* pszWeaponName) {
 	m_bQuickdraw = false;
+	m_bSlowDraw = false;
 	m_flRandomAdditionalLockTimeMax = 0.0f;
 
 	m_bDontAutoreload = true;
@@ -64,6 +65,8 @@ CWeaponDef::CWeaponDef(const char* pszWeaponName) {
 	m_bAltFiresUnderwater = false;
 
 	g_dictWeaponDefs.Insert(pszWeaponName, this);
+
+	m_bShotOnly = false;
 }
 
 //Default weapon def used by non-BG3 weapons

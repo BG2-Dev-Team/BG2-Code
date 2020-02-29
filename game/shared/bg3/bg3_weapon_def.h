@@ -117,6 +117,7 @@ public:
 	float	m_flZeroRange;		//range to zero the gun in at
 	uint8	m_iNumShot;
 	float	m_iDamagePerShot;
+	bool	m_bShotOnly;
 
 	//uint8	m_iOwnerSpeedModOnKill; //BG3 - was for Native war club, removed for now
 	//uint8	m_iAerialDamageMod; //damage modifier for hits in the air
@@ -129,6 +130,7 @@ public:
 	float	m_flIronsightFOVOffset;
 	bool	m_bWeaponHasSights;
 	bool	m_bQuickdraw;
+	bool	m_bSlowDraw;
 
 	bool	m_bFiresUnderwater,
 			m_bAltFiresUnderwater;

@@ -38,7 +38,7 @@
 
 #define GRENADE_RADIUS	4.0f // inches
 
-#define GRENADE_DAMAGE_RADIUS 250.0f
+#define GRENADE_DAMAGE_RADIUS 247.5f
 
 #ifdef CLIENT_DLL
 #define CWeaponFrag C_WeaponFrag

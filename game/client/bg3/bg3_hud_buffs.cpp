@@ -275,7 +275,7 @@ void CBuffIcons::PaintOfficerView() {
 	float xExcluded, yExcluded;
 	xExcluded = yExcluded = 0;
 
-	for (int i = 0; i < BG3Buffs::NONE; i++) {
+	for (int i = 0; i < BG3Buffs::SLOW; i++) {
 		m_pCurIcon = BG3Buffs::g_ppIcons[i];
 
 		//don't draw the active icon, we'll draw it last instead

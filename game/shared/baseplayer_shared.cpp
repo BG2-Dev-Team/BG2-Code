@@ -1433,6 +1433,7 @@ void CBasePlayer::ViewPunch( const QAngle &angleOffset )
 	if ( IsInAVehicle() )
 		return;
 
+
 	m_Local.m_vecPunchAngleVel += angleOffset * 20;
 }
 

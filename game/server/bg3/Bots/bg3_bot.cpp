@@ -320,8 +320,9 @@ bool CSDKBot::ThinkCheckEnterMedRangeCombat() {
 // Purpose: Checks if the playe we're following still exists and is still alive and
 //		that we havn't followed them for too long.
 //-------------------------------------------------------------------------------------------------
+ConVar bot_follow_timeout("bot_follow_timeout", "8", FCVAR_GAMEDLL);
 bool CSDKBot::ThinkCheckStopFollow() {
-	if (m_flLastFollowTime + 8.0f < gpGlobals->curtime
+	if (m_flLastFollowTime + bot_follow_timeout.GetFloat() < gpGlobals->curtime
 		|| !m_hFollowedPlayer
 		|| !m_hFollowedPlayer->IsAlive()) {
 		ScheduleThinker(&BotThinkers::MedRange, 0.1f);

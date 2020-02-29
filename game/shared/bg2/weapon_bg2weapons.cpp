@@ -55,6 +55,10 @@ const int BESS_FIRE_DAMAGE = 111;			//60 * 1.85
 const int BESS_BAYONET_DAMAGE = 63;			//43 * 0.8 * 1.85
 const int BESS_BAYONET_RANGE = 83;
 
+const int AMER_BESS_FIRE_DAMAGE = 116;			//60 * 1.85
+const int AMER_BESS_BAYONET_DAMAGE = 66;			//43 * 0.8 * 1.85
+const int AMER_BESS_BAYONET_RANGE = 83;
+
 const int REVOL_FIRE_DAMAGE = 104;			//58 * 1.85 // BG2 - VisualMelon - Formerly 107 (now about 3% less)
 const int REVOL_BAYONET_DAMAGE = 61;		//41 * 0.8 * 1.85 + 1
 const int REVOL_BAYONET_RANGE = 75;
@@ -74,6 +78,10 @@ const int DUTCH_BAYONET_RANGE = 80;
 const int OLDMODEL_CHARLE_FIRE_DAMAGE = 112;
 const int OLDMODEL_CHARLE_BAYONET_DAMAGE = 63;
 const int OLDMODEL_CHARLE_BAYONET_RANGE = 83;
+
+const int LMODEL_CHARLE_FIRE_DAMAGE = 100; 
+const int LMODEL_CHARLE_BAYONET_DAMAGE = 57;
+const int LMODEL_CHARLE_BAYONET_RANGE = 81;
 
 const int SEASERVICE_FIRE_DAMAGE = 111;			//60 * 1.85
 const int SEASERVICE_BAYONET_DAMAGE = 63;			//43 * 0.8 * 1.85
@@ -97,6 +105,8 @@ const int CARBINE_SHOT_DAMAGE = 30;			//damage per shot. 11 * 1.85 -> 20 -> 8*20
 const int CARBINE_NUM_SHOT = 7;				// BG2 - VisualMelon - formerly 10
 const int CARBINE_BAYONET_DAMAGE = 60;		//BG3 - formerly equivalant to bess damage, 63, now 58
 const int CARBINE_BAYONET_RANGE = 72;
+
+const int BLUNDERBUSS_SHOT_DAMAGE = 46;
 
 const int PATTERN_FIRE_DAMAGE = 103;
 
@@ -219,6 +229,7 @@ DECLARE_BG2_WEAPON(sea_service)
 
 	m_fHolsterTime = 0.75f;
 	m_flApproximateReloadTime = 7.2f;
+	//m_flLockTime = 0.07f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset = -2.5;
@@ -251,14 +262,14 @@ DECLARE_BG2_WEAPON(sea_service)
 	//secondary
 	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_STAB;
 	m_Attackinfos[1].m_iDamage = SEASERVICE_BAYONET_DAMAGE;//60;
-	m_Attackinfos[1].m_flAttackrate = 1.0f;//-0.7f;
+	m_Attackinfos[1].m_flAttackrate = 0.95f;//-0.7f;
 	m_Attackinfos[1].m_flRange = SEASERVICE_BAYONET_RANGE;
 	//m_Attackinfos[1].m_flCosAngleTolerance	= 0.95f;
 	m_Attackinfos[1].m_iAttackActivity = ACT_VM_SECONDARYATTACK;
 	m_Attackinfos[1].m_iAttackActivityEmpty = ACT_VM_SECONDARYATTACK_EMPTY;
 	m_Attackinfos[1].m_flCosAngleTolerance = BAYONET_COS_TOLERANCE;
 	m_Attackinfos[1].m_flRetraceDuration = BAYONET_RETRACE_DURATION;
-	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN;
+	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 2;
 
 	m_pBayonetDeathNotice = "brownbess_bayonet";
 
@@ -334,6 +345,68 @@ DECLARE_BG2_WEAPON( charleville )
 #ifndef CLIENT_DLL
 MUSKET_ACTTABLE( charleville )
 #endif
+
+#ifdef CLIENT_DLL
+#define CWeaponlight_model_charleville C_Weaponlight_model_charleville
+#endif
+DECLARE_BG2_WEAPON(light_model_charleville)
+{
+	m_bCantAbortReload = true;
+
+	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.6f;
+	m_bQuickdraw = true;
+
+	//Iron sights viewmodel settings.
+	m_flIronsightFOVOffset = -2.5;
+
+	m_bWeaponHasSights = true;
+	//
+
+	//primary
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_FIREARM;
+	m_Attackinfos[0].m_iDamage = LMODEL_CHARLE_FIRE_DAMAGE;//75;
+	m_Attackinfos[0].m_flAttackrate = 1.0;
+	m_Attackinfos[0].m_flRecoil = 0.3;
+	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
+	m_Attackinfos[0].m_flCrouchMoving = 7.5f;
+	m_Attackinfos[0].m_flCrouchStill = 3.1f;
+	m_Attackinfos[0].m_flStandMoving = 7.7f; //11.5f;
+	m_Attackinfos[0].m_flStandStill = 3.1f;
+	//Iron Sights. These values will probably be changed.
+	m_Attackinfos[0].m_flStandAimStill = 2.1f;
+	m_Attackinfos[0].m_flStandAimMoving = 8.5f;
+	m_Attackinfos[0].m_flCrouchAimStill = 2.1f;
+	m_Attackinfos[0].m_flCrouchAimMoving = 7.7f;
+	//
+	m_Attackinfos[0].m_flConstantDamageRange = MUSKET_CONSTANT_DAMAGE_RANGE / 1.7f;
+	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
+	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
+
+	//secondary
+	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_STAB;
+	m_Attackinfos[1].m_iDamage = LMODEL_CHARLE_BAYONET_DAMAGE;//60;
+	m_Attackinfos[1].m_flAttackrate = 0.9f;//-0.7f;
+	m_Attackinfos[1].m_flRange = LMODEL_CHARLE_BAYONET_RANGE;
+	//m_Attackinfos[1].m_flCosAngleTolerance	= 0.95f;
+	m_Attackinfos[1].m_iAttackActivity = ACT_VM_SECONDARYATTACK;
+	m_Attackinfos[1].m_iAttackActivityEmpty = ACT_VM_SECONDARYATTACK_EMPTY;
+	m_Attackinfos[1].m_flCosAngleTolerance = BAYONET_COS_TOLERANCE;
+	m_Attackinfos[1].m_flRetraceDuration = BAYONET_RETRACE_DURATION;
+	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 2;
+
+	m_pBayonetDeathNotice = "charleville_bayonet";
+
+	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
+	m_flZeroRange = ZERO_RANGE_MUSKET;
+	m_iNumShot = 0;
+}
+
+#ifndef CLIENT_DLL
+MUSKET_ACTTABLE(light_model_charleville)
+#endif
+
 
 #ifdef CLIENT_DLL
 #define CWeaponold_model_charleville C_Weaponold_model_charleville
@@ -1344,6 +1417,7 @@ DECLARE_BG2_WEAPON( american_brownbess )
 
 	m_fHolsterTime = 0.75f;
 	m_flApproximateReloadTime = 7.6f;
+	m_flLockTime = 0.25f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset		= -2.5;
@@ -1353,7 +1427,7 @@ DECLARE_BG2_WEAPON( american_brownbess )
 
 	//primary
 	m_Attackinfos[0].m_iAttacktype			= ATTACKTYPE_FIREARM;
-	m_Attackinfos[0].m_iDamage				= BESS_FIRE_DAMAGE;//75;
+	m_Attackinfos[0].m_iDamage				= AMER_BESS_FIRE_DAMAGE;//75;
 	m_Attackinfos[0].m_flAttackrate			= 1.0;
 	m_Attackinfos[0].m_flRecoil				= 0.7;
 	m_Attackinfos[0].m_flRange				= MUSKET_RANGE;
@@ -1374,9 +1448,9 @@ DECLARE_BG2_WEAPON( american_brownbess )
 
 	//secondary
 	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_STAB;
-	m_Attackinfos[1].m_iDamage				= BESS_BAYONET_DAMAGE;//60;
+	m_Attackinfos[1].m_iDamage				= AMER_BESS_BAYONET_DAMAGE;//60;
 	m_Attackinfos[1].m_flAttackrate			= 1.0f;//-0.7f;
-	m_Attackinfos[1].m_flRange				= BESS_BAYONET_RANGE;
+	m_Attackinfos[1].m_flRange				= AMER_BESS_BAYONET_RANGE;
 	//m_Attackinfos[1].m_flCosAngleTolerance	= 0.95f;
 	m_Attackinfos[1].m_iAttackActivity		= ACT_VM_SECONDARYATTACK;
 	m_Attackinfos[1].m_iAttackActivityEmpty	= ACT_VM_SECONDARYATTACK_EMPTY;
@@ -1482,14 +1556,14 @@ DECLARE_BG2_WEAPON( brownbess_carbine )
 	//secondary
 	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_STAB;
 	m_Attackinfos[1].m_iDamage				= CARBINE_BAYONET_DAMAGE;//60;
-	m_Attackinfos[1].m_flAttackrate			= 0.95f;//1.0f;//-0.7f;
+	m_Attackinfos[1].m_flAttackrate			= 0.9f;//1.0f;//-0.7f;
 	m_Attackinfos[1].m_flRange				= CARBINE_BAYONET_RANGE;
 	//m_Attackinfos[1].m_flCosAngleTolerance	= 0.95f;
 	m_Attackinfos[1].m_iAttackActivity		= ACT_VM_SECONDARYATTACK;
 	m_Attackinfos[1].m_iAttackActivityEmpty	= ACT_VM_SECONDARYATTACK_EMPTY;
 	m_Attackinfos[1].m_flCosAngleTolerance  = BAYONET_COS_TOLERANCE;
 	m_Attackinfos[1].m_flRetraceDuration    = BAYONET_RETRACE_DURATION;
-	m_Attackinfos[1].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
+	m_Attackinfos[1].m_iStaminaDrain		= MELEE_STAMINA_DRAIN / 2;
 
 	m_pBayonetDeathNotice = "brownbess_bayonet";
 
@@ -1506,6 +1580,73 @@ DECLARE_BG2_WEAPON( brownbess_carbine )
 //roob - should be carbibe but someone borked the player anims!
 //CARBINE_ACTTABLE( brownbess_carbine )
 MUSKET_ACTTABLE( brownbess_carbine )
+#endif
+
+#ifdef CLIENT_DLL 
+#define CWeaponblunderbuss C_Weaponblunderbuss
+#endif
+DECLARE_BG2_WEAPON(blunderbuss)
+{
+	m_bCantAbortReload = true;
+
+	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.0f;
+	m_bSlowDraw = true;
+	m_bShotOnly = true;
+	m_flLockTime = 0.4f;
+
+	//Iron sights viewmodel settings.
+	m_flIronsightFOVOffset = 0;
+
+	m_bWeaponHasSights = true;
+	//
+
+	//primary
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_FIREARM;
+	m_Attackinfos[0].m_iDamage = CARBINE_FIRE_DAMAGE;
+	m_Attackinfos[0].m_flAttackrate = 1.0;
+	m_Attackinfos[0].m_flRecoil = 1.4;
+	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
+	m_Attackinfos[0].m_flCrouchMoving = 25.0f;
+	m_Attackinfos[0].m_flCrouchStill = 22.0f;
+	m_Attackinfos[0].m_flStandMoving = 25.0f;
+	m_Attackinfos[0].m_flStandStill = 22.0f;
+	//Iron Sights.
+	m_Attackinfos[0].m_flStandAimStill = 4.0f;
+	m_Attackinfos[0].m_flStandAimMoving = 8.1f;
+	m_Attackinfos[0].m_flCrouchAimStill = 4.0f;
+	m_Attackinfos[0].m_flCrouchAimMoving = 7.3f;
+	//
+	m_Attackinfos[0].m_flConstantDamageRange = MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
+	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
+
+	//secondary
+	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_STAB;
+	m_Attackinfos[1].m_iDamage = CARBINE_BAYONET_DAMAGE;//60;
+	m_Attackinfos[1].m_flAttackrate = 0.9f;//1.0f;//-0.7f;
+	m_Attackinfos[1].m_flRange = CARBINE_BAYONET_RANGE;
+	//m_Attackinfos[1].m_flCosAngleTolerance	= 0.95f;
+	m_Attackinfos[1].m_iAttackActivity = ACT_VM_SECONDARYATTACK;
+	m_Attackinfos[1].m_iAttackActivityEmpty = ACT_VM_SECONDARYATTACK_EMPTY;
+	m_Attackinfos[1].m_flCosAngleTolerance = BAYONET_COS_TOLERANCE;
+	m_Attackinfos[1].m_flRetraceDuration = BAYONET_RETRACE_DURATION;
+	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 2;
+
+	m_flShotAimModifier = 0.0f;
+	m_flShotSpread = 4.0f; //tight spread
+	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
+	m_flShotMuzzleVelocity = MUZZLE_VELOCITY_BUCKSHOT;
+	m_flZeroRange = ZERO_RANGE_MUSKET;
+	m_iNumShot = CARBINE_NUM_SHOT;
+	m_iDamagePerShot = BLUNDERBUSS_SHOT_DAMAGE;
+}
+
+#ifndef CLIENT_DLL
+//roob - should be carbibe but someone borked the player anims!
+//CARBINE_ACTTABLE( brownbess_carbine )
+MUSKET_ACTTABLE(blunderbuss)
 #endif
 
 #ifdef CLIENT_DLL 
