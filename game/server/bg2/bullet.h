@@ -37,7 +37,7 @@
 #define BULLET_SIMULATION_FREQUENCY 500 // scaled down from 1000
 #define BULLET_SIMULATION_RWC 10 // number of motions between collision detection
 
-void SpawnServerBullet(const Vector& position, const QAngle& angle, int iDamage, float flConstantDamageRange, float flRelativeDrag, float flMuzzleVelocity, CBasePlayer *pOwner);
+void SpawnServerBullet(const Vector& position, const QAngle& angle, int iDamage, float flConstantDamageRange, float flRelativeDrag, float flMuzzleVelocity, float flDamageDropoffMultiplier, CBasePlayer *pOwner);
 void UpdateBullets();
 
 #endif

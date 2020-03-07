@@ -652,7 +652,10 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 			}
 		}
 	
-		if (newInfo.GetDamageType() == DMG_BLAST && newInfo.GetDamage() > 20 && pVictim->RallyGetCurrentRallies() != RALLY_RALLY_ROUND) {
+		if ((newInfo.GetDamageType() == DMG_BLAST || pAttacker->IsUsingBuckshot()) 
+			&& newInfo.GetDamage() > 20 
+			&& pVictim->RallyGetCurrentRallies() != RALLY_RALLY_ROUND
+			&& !pVictim->GetPlayerClass()->m_bNerfResistance) {
 			pVictim->m_iStamina = 0;
 			BG3Buffs::RallyPlayer(0, pVictim);
 			BG3Buffs::RallyPlayer(NERF_SLOW, pVictim);
@@ -1663,6 +1666,8 @@ void CHL2MP_Player::OnRallyEffectEnable() {
 			else
 				FOVoffset = FOV_ADJUST_FIRE;
 			break;
+		case NERF_SLOW:
+			FOVoffset = FOV_ADJUST_SLOW;
 	}
 	this->SetFOV(this, GetDefaultFOV() + FOVoffset, FOVfadeTime);
 }

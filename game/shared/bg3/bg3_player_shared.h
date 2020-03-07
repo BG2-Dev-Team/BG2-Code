@@ -43,6 +43,14 @@ enum {
 
 #define AMMO_DEFAULT_NAME "357"
 
+//BG2 - Tjoppen - ammo kit definitions
+#define AMMO_KIT_BALL		0
+#define AMMO_KIT_BUCKSHOT	1
+//BG2 - Tjoppen - Note: We can save one bit on m_iCurrentAmmoKit if we restrict ourselves to only two ammy types for now
+#define AMMO_KIT_RESERVED1	2
+#define AMMO_KIT_RESERVED2	3
+//
+
 enum
 {
 	ATTACKTYPE_NONE = 0,
@@ -188,7 +196,7 @@ m_iCurrentRallies is a bit field so that a player can have multiple rallies at o
 #define RALLY_DURATION_LB_MOD	2.0f /*Duration of rally effects is multiplied by this*/
 
 #define NERF_SLOW				(1 << 7)
-#define NERF_SLOW_MOD			0.9f //Speed multiplier
+#define NERF_SLOW_MOD			0.8f //Speed multiplier
 
 #endif
 
@@ -203,6 +211,8 @@ Positive values increase FOV and make player feel faster, lower FOV tightens aim
 
 #define FOV_ADJUST_FIRE				-2.0 //zoom in!
 #define FOV_ADJUST_FIRE_LB			-7.0 //zoom in MORE
+
+#define FOV_ADJUST_SLOW				-7.0
 
 #define FOV_ADJUST_DEFAULT			4.0 //these are used if a rally-specific isn't specified
 #define FOV_ADJUST_DEFAULT_INTIME	1.0

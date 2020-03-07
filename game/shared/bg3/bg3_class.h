@@ -134,6 +134,7 @@ public:
 	bool			m_bCanDoVcommBuffs = false; //this will be true for officer
 	bool			m_bHasImplicitDamageResistance = false;
 	bool			m_bHasImplicitDamageWeakness = false;
+	bool			m_bNerfResistance = false;
 
 //Functions
 	inline bool isAmerican() const { return m_iDefaultTeam == TEAM_AMERICANS; }

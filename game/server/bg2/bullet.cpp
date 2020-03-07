@@ -70,7 +70,7 @@ extern ConVar sv_simulatedbullets_show_trajectories_timeout;
 class Bullet {
 	Vector m_vTrajStart, m_vPosition, m_vLastPosition, m_vVelocity;
 	int m_iDamage;
-	float m_flConstantDamageRange, m_flRelativeDrag, m_flMuzzleVelocity, m_flDyingTime;
+	float m_flConstantDamageRange, m_flRelativeDrag, m_flMuzzleVelocity, m_flDyingTime, m_flDamageDropoffMultiplier;
 	bool m_bHasPlayedNearmiss;
 	CBasePlayer *m_pOwner;
 	CBaseCombatWeapon* m_pWeapon;
@@ -88,7 +88,7 @@ public:
 			rwc = BULLET_SIMULATION_RWC;
 	}
 
-	Bullet(const Vector& position, const QAngle& angle, int iDamage, float flConstantDamageRange, float flRelativeDrag, float flMuzzleVelocity, CBasePlayer *pOwner)
+	Bullet(const Vector& position, const QAngle& angle, int iDamage, float flConstantDamageRange, float flRelativeDrag, float flMuzzleVelocity, float flDamageDropoffMultiplier, CBasePlayer *pOwner)
 	{
 		Vector vecDir;
 		AngleVectors( angle, &vecDir );
@@ -100,6 +100,7 @@ public:
 		m_flRelativeDrag = flRelativeDrag;
 		m_flMuzzleVelocity = flMuzzleVelocity;
 		m_flDyingTime = gpGlobals->curtime + /*LIFETIME*/ 3.0f;
+		m_flDamageDropoffMultiplier = flDamageDropoffMultiplier;
 		m_bHasPlayedNearmiss = false;
 		m_pOwner = pOwner;
 		m_pWeapon = m_pOwner->GetActiveWeapon();
@@ -302,8 +303,11 @@ private:
 			int dmg;
 			if( (tr.endpos - m_vTrajStart).Length() < m_flConstantDamageRange )
 				dmg = m_iDamage;
-			else
+			else {
 				dmg = (int)(m_iDamage * speed * speed / (m_flMuzzleVelocity*m_flMuzzleVelocity));
+				dmg = m_iDamage - (m_iDamage - dmg) * m_flDamageDropoffMultiplier; //scale damage dropof\f
+			}
+				
 
 			//no force!
 			CTakeDamageInfo	dmgInfo( m_pOwner, m_pOwner, m_pWeapon, dmg, DMG_BULLET | /*DMG_PREVENT_PHYSICS_FORCE |*/DMG_CRUSH | DMG_NEVERGIB ); //Changed to avoid asserts. -HairyPotter
@@ -359,7 +363,7 @@ private:
 static vector<Bullet> activeBullets;
 static const float step = 1.f / BULLET_SIMULATION_FREQUENCY;
 
-void SpawnServerBullet(const Vector& position, const QAngle& angle, int iDamage, float flConstantDamageRange, float flRelativeDrag, float flMuzzleVelocity, CBasePlayer *pOwner)
+void SpawnServerBullet(const Vector& position, const QAngle& angle, int iDamage, float flConstantDamageRange, float flRelativeDrag, float flMuzzleVelocity, float flDamageDropoffMultiplier, CBasePlayer *pOwner)
 {
 	bool flex = sv_simulatedbullets_flex.GetBool(); // BG2 - VisualMelon - store this, I'm not sure what lookup times are like
 
@@ -369,7 +373,7 @@ void SpawnServerBullet(const Vector& position, const QAngle& angle, int iDamage,
 
 	//BG2 - Tjoppen - bullet lag compensation
 	//simulate the bullet from when the client fired it up to the server's current time
-	Bullet bullet(position, angle, iDamage, flConstantDamageRange, flRelativeDrag, flMuzzleVelocity, pOwner);
+	Bullet bullet(position, angle, iDamage, flConstantDamageRange, flRelativeDrag, flMuzzleVelocity, flDamageDropoffMultiplier, pOwner);
 
 	//when Bullet::Think() is "run by an entity" the impact effects it does get filtered out for some reason
 	//this does not happen in UpdateBullets() since that gets called globally (not in the context of some entity)

@@ -617,7 +617,7 @@ namespace NClassWeaponStats {
 		
 		//calculate displayed stats from the attackinfos
 		if (bullet) {
-			bool buckshot = (g_pDisplayedAmmoButton->GetAmmoIndex() == AMMO_KIT_BUCKSHOT);
+			bool buckshot = (g_pDisplayedAmmoButton->GetAmmoIndex() == AMMO_KIT_BUCKSHOT || pWeapon->m_bShotOnly);
 
 			//calc accuracy
 			float accuracy;

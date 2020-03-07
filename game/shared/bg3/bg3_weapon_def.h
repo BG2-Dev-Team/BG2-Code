@@ -114,6 +114,7 @@ public:
 	float	m_flShotSpread;		//used when firing shot, if the current gun is capable of that
 	float	m_flMuzzleVelocity;
 	float	m_flShotMuzzleVelocity;	//muzzle velocity when firing buckshot
+	float	m_flDamageDropoffMultiplier;
 	float	m_flZeroRange;		//range to zero the gun in at
 	uint8	m_iNumShot;
 	float	m_iDamagePerShot;
@@ -124,6 +125,7 @@ public:
 
 	bool	m_bDontAutoreload;
 	bool	m_bCantAbortReload;
+	float	m_flReloadMovementSpeedModifier;
 
 	WeaponType m_eWeaponType;
 

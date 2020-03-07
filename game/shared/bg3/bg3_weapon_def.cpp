@@ -51,6 +51,8 @@ CWeaponDef::CWeaponDef(const char* pszWeaponName) {
 
 	m_bDontAutoreload = true;
 	m_bCantAbortReload = true;
+	m_flReloadMovementSpeedModifier = 1.0f;
+	m_flDamageDropoffMultiplier = 1.0f;
 	//m_iOwnerSpeedModOnKill = m_iAerialDamageMod = 0;
 
 	m_eWeaponType = GENERIC;

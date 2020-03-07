@@ -56,6 +56,8 @@ namespace BG3Buffs {
 	void	SetNextRallyTime(int iTeam, float flTime); //For when round restarts etc.
 
 	void	Reset();
+
+	bool	PlayerCanRally(const CHL2MP_Player* pRequester); //Checks against times
 #else
 	CHudTexture* RallyIconFrom(int rallyFlags);
 	enum RallyAsInt {
@@ -89,7 +91,6 @@ namespace BG3Buffs {
 	float	GetRallyDuration(int rallyFlags);
 
 	bool	PlayersClassHasRallyAbility(const CHL2MP_Player* pPlayer); //Checks that we're of the right class
-	bool	PlayerCanRally(const CHL2MP_Player* pRequester); //Checks against times
 
 	int		ParseRallyCommand(int vcommCommand); //Given a vcomm command, parses it into rally flags. Returns -1 if its an unusable vcomm
 }

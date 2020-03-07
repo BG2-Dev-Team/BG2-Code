@@ -216,7 +216,7 @@ void CBuffIcons::Paint() {
 		m_pCurIcon = BG3Buffs::RallyIconFrom(m_iRallyFlags);
 		m_iTeam = m_pPlayer->GetTeamNumber();
 
-		if (m_bOfficerView) {
+		if (m_bOfficerView && m_iRallyFlags != NERF_SLOW) {
 			PaintOfficerView();
 			HideShowLabels(true);
 		}
@@ -366,6 +366,8 @@ void CBuffIcons::LocalizeEffectLabels(int iRallyFlags) {
 	case RALLY_RETREAT:
 		text = BG3Buffs::GetTextForBuff(BG3Buffs::RETREAT);
 		break;
+	case NERF_SLOW:
+		text = BG3Buffs::GetTextForBuff(BG3Buffs::SLOW);
 	}
 	m_pBuffEffectLabel->SetText(text);
 	m_pBuffEffectLabel->SizeToContents();

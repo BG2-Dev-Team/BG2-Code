@@ -409,7 +409,9 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 			SpawnServerBullet( vecSrc, angDir, iDamage,
 									Def()->m_Attackinfos[iAttack].m_flConstantDamageRange,
 									Def()->m_Attackinfos[iAttack].m_flRelativeDrag,
-									muzzleVelocity, pPlayer );
+									muzzleVelocity,
+									Def()->m_flDamageDropoffMultiplier,
+									pPlayer );
 #endif
 		}
 

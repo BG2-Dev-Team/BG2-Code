@@ -182,8 +182,12 @@ namespace BG3Buffs {
 		}
 
 		//Don't let us be rallied again if we're already being rallied
-		if (pPlayer->m_iCurrentRallies)
+		//but let rally-round cancel the slow
+		if (pPlayer->m_iCurrentRallies && (pPlayer->m_iCurrentRallies != NERF_SLOW || rallyFlags != RALLY_RALLY_ROUND))
 			return;
+
+		if (rallyFlags == RALLY_RALLY_ROUND)
+			pPlayer->m_iStamina = 100;
 
 		//Okay now actually set the rally flags
 		pPlayer->m_iCurrentRallies = rallyFlags;
@@ -206,6 +210,31 @@ namespace BG3Buffs {
 	void	Reset() {
 		mp_nextrally_amer.SetValue(gpGlobals->curtime);
 		mp_nextrally_brit.SetValue(gpGlobals->curtime);
+	}
+
+	//Checks against times and player status
+	//@requires pRequester is non-null
+	bool	PlayerCanRally(const CHL2MP_Player* pRequester) {
+		if (!pRequester->IsAlive())
+			return false;
+
+		if (!PlayersClassHasRallyAbility(pRequester))
+			return false;
+
+		int iTeam = pRequester->GetTeamNumber();
+		if (!(iTeam == TEAM_AMERICANS || iTeam == TEAM_BRITISH))
+			return false;
+
+		//check against times
+		if (gpGlobals->curtime < NextRallyTimeCvarFor(iTeam)->GetFloat())
+			return false;
+
+		//slow nerf suppresses officer rally
+		if (pRequester->m_iCurrentRallies == NERF_SLOW)
+			return false;
+
+		//we've passed all checks, return true
+			return true;
 	}
 
 #else
@@ -234,17 +263,17 @@ namespace BG3Buffs {
 	}
 
 
-	CHudTexture* g_ppIcons[5];
+	CHudTexture* g_ppIcons[6];
 	void InitializeIcons() {
 		g_ppIcons[ADVANCE]		= gHUD.GetIcon("buff_advance");
 		g_ppIcons[FIRE]			= gHUD.GetIcon("buff_fire");
 		g_ppIcons[RALLY_ROUND]	= gHUD.GetIcon("buff_rally_round");
 		g_ppIcons[RETREAT]		= gHUD.GetIcon("buff_retreat");
-		//g_ppIcons[SLOW]			= gHUD.GetIcon("nerf_slow");
+		g_ppIcons[SLOW]			= gHUD.GetIcon("nerf_slow");
 		g_ppIcons[NONE]			= gHUD.GetIcon("buff_empty");
 	}
 
-	static wchar_t g_aaBuffTexts[4][64];
+	static wchar_t g_aaBuffTexts[5][64];
 	//RALLY_SPEED_RELOAD is an appoximation
 	//normally while reloading we move at 50% of top speed.
 	//with the buff, we move at 25% of top speed
@@ -259,6 +288,8 @@ namespace BG3Buffs {
 			(int)(RALLY_STAMINA_MOD * 100 - 100), (int)((1.0f - RALLY_ARMOR_MOD) * 100));
 		V_snwprintf(g_aaBuffTexts[3], 64, g_pVGuiLocalize->Find("#BG3_Effect_Retreat"),
 			(int)((1.0f - RALLY_ARMOR_MOD) * 100), RALLY_SPEED_RELOAD_APPROX);
+		V_snwprintf(g_aaBuffTexts[4], 64, g_pVGuiLocalize->Find("#BG3_Effect_Slow"),
+			(int)((1.0f - NERF_SLOW_MOD) * 100));
 	}
 
 	wchar_t* GetTextForBuff(RallyAsInt buff) {
@@ -350,26 +381,7 @@ namespace BG3Buffs {
 		return bAllow;
 	}
 
-	//Checks against times and player status
-	//@requires pRequester is non-null
-	bool	PlayerCanRally(const CHL2MP_Player* pRequester) {
-		if (!pRequester->IsAlive())
-			return false;
 
-		if (!PlayersClassHasRallyAbility(pRequester))
-			return false;
-
-		int iTeam = pRequester->GetTeamNumber();
-		if (!(iTeam == TEAM_AMERICANS || iTeam == TEAM_BRITISH))
-			return false;
-
-		//check against times
-		if (gpGlobals->curtime < NextRallyTimeCvarFor(iTeam)->GetFloat())
-			return false;
-
-		//we've passed all checks, return true
-		return true;
-	}
 	//Given a vcomm command, parses it into rally flags. Returns -1 if its an unusable vcomm
 	int		ParseRallyCommand(int vcommCommand) {
 		int newRallyFlags;
@@ -398,11 +410,11 @@ namespace BG3Buffs {
 CON_COMMAND_F(rallyme, "", FCVAR_CHEAT | FCVAR_HIDDEN) {
 	CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_GetCommandClient());
 	if (pPlayer) {
-		BG3Buffs::RallyPlayer(RALLY_ADVANCE, pPlayer);
+		BG3Buffs::RallyPlayer(NERF_SLOW, pPlayer);
 
 		//Set end and next rally times
 		ConVar* pcvEndTime = EndRallyTimeCvarFor(pPlayer->GetTeamNumber());
-		pcvEndTime->SetValue(gpGlobals->curtime + BG3Buffs::GetRallyDuration(RALLY_ADVANCE));
+		pcvEndTime->SetValue(gpGlobals->curtime + BG3Buffs::GetRallyDuration(NERF_SLOW));
 	}
 }
 #endif

@@ -169,7 +169,7 @@ int CHL2MP_Player::GetCurrentSpeed(void) const
 			//Check if we have the reload-movement-speed rally
 			if (m_iCurrentRallies & RALLY_SPEED_RELOAD)
 				baseMod = FLerp(baseMod, 1, 0, 1, RALLY_SPEED_RELOAD_LERP);
-			scale *= baseMod;
+			scale *= baseMod * pWeapon->Def()->m_flReloadMovementSpeedModifier;
 		}
 	}
 

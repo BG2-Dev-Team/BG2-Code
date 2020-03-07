@@ -448,6 +448,7 @@ DEC_BG3_PLAYER_CLASS(BInfantry, inf, b) {
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess";
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_longpattern";
 	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_sea_service";
+	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_oldpattern";
 	m_aWeapons[2].m_iMovementSpeedModifier = 3;
 
 
@@ -539,6 +540,7 @@ DEC_BG3_PLAYER_CLASS(BLinf, linf, b) {
 
 	m_flBaseSpeed = SPEED_LIGHT_INF;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_LIGHT_INFANTRY;
+	m_bNerfResistance = true;
 
 	m_pszPlayerModel = MODEL_BLINF;
 	m_pszJoinName = "Light Infantry";
@@ -689,6 +691,7 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 	m_iDefaultTeam = TEAM_AMERICANS;
 	m_iClassNumber = CLASS_SKIRMISHER;
 	m_bHasImplicitDamageWeakness = true;
+	m_bNerfResistance = true;
 
 	m_flBaseSpeed = SPEED_SKIRMISHER;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_SKIRMISHER;
@@ -716,6 +719,7 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 	m_aWeapons[2].m_iSleeveSkinOverride = SLEEVE_ASTATEMILITIA;
 
 	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_blunderbuss";
+	m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_dagger";
 
 #ifdef CLIENT_DLL
 	m_aWeapons[2].SetLocalizedName("weapon_longpattern_state");

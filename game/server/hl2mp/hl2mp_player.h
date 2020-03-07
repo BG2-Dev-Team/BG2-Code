@@ -243,6 +243,8 @@ private:
 	//return the player's speed based on whether which class we are, which weapon kit we're using etc.
 	int		GetCurrentSpeed(void) const;
 
+	inline bool IsUsingBuckshot() { return m_iCurrentAmmoKit == AMMO_KIT_BUCKSHOT || (GetActiveWeapon() && GetActiveWeapon()->Def()->m_bShotOnly); }
+
 public:
 	void	OnRallyEffectEnable(); //visual effects, not functionality. Exact behavior depends on m_iCurrentRallies
 	void	OnRallyEffectDisable();
@@ -290,13 +292,7 @@ public:
 	//void HUD_GameMessage(const char* pszText, EHANDLE hPlayerName);
 };
 
-//BG2 - Tjoppen - ammo kit definitions
-#define AMMO_KIT_BALL		0
-#define AMMO_KIT_BUCKSHOT	1
-//BG2 - Tjoppen - Note: We can save one bit on m_iCurrentAmmoKit if we restrict ourselves to only two ammy types for now
-#define AMMO_KIT_RESERVED1	2
-#define AMMO_KIT_RESERVED2	3
-//
+
 inline CHL2MP_Player *ToHL2MPPlayer( CBaseEntity *pEntity )
 {
 	if ( !pEntity || !pEntity->IsPlayer() )
