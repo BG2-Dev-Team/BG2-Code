@@ -20,6 +20,7 @@
 #include "grenade_satchel.h"
 #include "eventqueue.h"
 #include "gamestats.h"
+#include "player_resource.h"
 
 #include "engine/IEngineSound.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
@@ -60,7 +61,7 @@ ConVar sv_saferespawntime("sv_saferespawntime", "2.5f", FCVAR_GAMEDLL | FCVAR_NO
 //
 
 //BG2 - Spawn point optimization test - HairyPotter
-CUtlVector<CBaseEntity *> m_MultiSpawns, m_AmericanSpawns, m_BritishSpawns;
+CUtlVector<CBaseEntity *> g_MultiSpawns, g_MultiPrioritySpawns, g_AmericanSpawns, g_BritishSpawns, g_AmericanPrioritySpawns, g_BritishPrioritySpawns;
 //
 
 ConVar weapon_test("weapon_test", "0", FCVAR_HIDDEN | FCVAR_GAMEDLL);
@@ -96,6 +97,7 @@ DEFINE_INPUTFUNC(FIELD_VOID, "ToggleTeam", InputToggleTeam),
 DEFINE_INPUTFUNC(FIELD_VOID, "SetAmerican", InputAmerican),
 DEFINE_INPUTFUNC(FIELD_VOID, "SetBritish", InputBritish),
 //
+
 END_DATADESC()
 //
 
@@ -450,7 +452,7 @@ void CHL2MP_Player::Spawn(void)
 	m_iStamina = 100;						//BG2 - Draco - reset stamina to 100
 	m_fNextStamRegen = gpGlobals->curtime;	//BG2 - Draco - regen stam now!
 
-	pl.deadflag = false;
+	//pl.deadflag = false;
 	RemoveSolidFlags(FSOLID_NOT_SOLID);
 
 	RemoveEffects(EF_NODRAW);
@@ -583,21 +585,40 @@ bool CHL2MP_Player::Weapon_Switch(CBaseCombatWeapon *pWeapon, int viewmodelindex
 	return bRet;
 }
 
+bool BuckshotHitDrainsStamina(const CTakeDamageInfo &info) {
+	int g = info.GetHitGroup();
+	return g == HITGROUP_CHEST || g == HITGROUP_HEAD || g == HITGROUP_STOMACH;
+}
+
 //For this function, CBasePlayer will take care of most of it, we just need to scale the damage appropriately
 //and check against auto-officer protection
+ConVar sv_headhits_only("sv_headhits_only", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY);
+ConVar mp_friendlyfire_grenades("mp_friendlyfire_grenades", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator)
 {
+	//check for headshots only
+	if (sv_headhits_only.GetBool() && ptr->hitgroup != HITGROUP_HEAD)
+		return;
+
 	bool bApplyDamage = true;
 	const CTakeDamageInfo * dmgInfo = &info;
-
 
 	CHL2MP_Player * pAttacker = ToHL2MPPlayer(info.GetAttacker());
 	CHL2MP_Player * pVictim = ToHL2MPPlayer(ptr->m_pEnt);
 	if (ptr && pAttacker && pVictim) {
 
+		bool friendly = pAttacker->GetTeamNumber() == pVictim->GetTeamNumber();
+
 		//Okay, we're good to go, construct a new CTakeDamageInfo and later pass that instead
 		CTakeDamageInfo newInfo = info;
 		dmgInfo = &newInfo;
+
+		//check against team grenade damage
+		if (info.GetDamageType() == DMG_BLAST
+			&& mp_friendlyfire_grenades.GetInt() == 0
+			&& friendlyfire.GetInt() == 0
+			&& friendly)
+			return;
 
 		//Hitgroup modifiers - do this first
 		switch (ptr->hitgroup)
@@ -652,11 +673,12 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 			}
 		}
 	
-		if ((newInfo.GetDamageType() == DMG_BLAST || pAttacker->IsUsingBuckshot()) 
-			&& newInfo.GetDamage() > 20 
+		if ((newInfo.GetDamageType() == DMG_BLAST || (pAttacker->IsUsingBuckshot() && BuckshotHitDrainsStamina(newInfo)))
+			&& (newInfo.GetDamage() > 20 || pAttacker->IsUsingBuckshot())
 			&& pVictim->RallyGetCurrentRallies() != RALLY_RALLY_ROUND
-			&& !pVictim->GetPlayerClass()->m_bNerfResistance) {
-			pVictim->m_iStamina = 0;
+			&& !pVictim->GetPlayerClass()->m_bNerfResistance
+			&& (friendlyfire.GetBool() || !friendly)) {
+			pVictim->m_iStamina = pAttacker->IsUsingBuckshot() ? min(50, m_iStamina) : 0;
 			BG3Buffs::RallyPlayer(0, pVictim);
 			BG3Buffs::RallyPlayer(NERF_SLOW, pVictim);
 		}
@@ -1249,25 +1271,30 @@ void ClientPrinttTalkAll(char *str, int type)
 	UTIL_ClientPrintFilter(filter, type, str);
 }
 //
-
+																							
 //BG2 - Tjoppen - PlayermodelTeamClass - gives models for specified team/class -- Restructured a bit. -HairyPotter
 // BG2 - VisualMelon - skinid is used for classes where we can change the sleeve colour - skin is a poor term used due to some misconceptions
 // TODO: Obsolve the term "skin" where it is used inappropriatley
+ConVar sv_player_model_scale("sv_player_model_scale", "1.0", FCVAR_GAMEDLL | FCVAR_CHEAT);
+ConVar sv_player_model_override("sv_player_model_override", "", FCVAR_GAMEDLL | FCVAR_CHEAT);
 void CHL2MP_Player::PlayermodelTeamClass()
 {
 	const char* pszModel = m_pCurClass->m_pszPlayerModel;
 	const char* pszWeaponOverride = m_pCurClass->m_aWeapons[m_iGunKit].m_pszPlayerModelOverrideName;
 	if (pszWeaponOverride) pszModel = pszWeaponOverride;
+	if (strlen(sv_player_model_override.GetString()) > 0) pszModel = sv_player_model_override.GetString();
 	SetModel(pszModel);
 
 	//Handle skins separately pls - Awesome
 	m_nSkin = GetAppropriateSkin();
 
 	//If we're a grenadier, we're big and strong so our model is slightly bigger
-	if (m_pCurClass->m_bHasImplicitDamageResistance)
+	if (m_pCurClass == PlayerClasses::g_pAFrenchGre || m_pCurClass == PlayerClasses::g_pBGrenadier)
 		this->SetModelScale(1.07f);
 	else
 		this->SetModelScale(1.0f);
+
+	this->SetModelScale(this->GetModelScale() * sv_player_model_scale.GetFloat());
 }
 
 //Looks at our member variables to determine what our player model's skin should be
@@ -1402,6 +1429,7 @@ void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass)
 		
 			
 		if (MayRespawnOnTeamChange(previousTeam)) {
+			m_bInSpawnRoom = false; //ignore spawn room on team change
 			Spawn();
 		}
 	}
@@ -1435,12 +1463,13 @@ void CHL2MP_Player::ForceJoin(const CPlayerClass* pClass, int iTeam, int iClass)
 	}
 
 	//BG3 - use this as an entry point to check if we have a preserved score available
-	if (!DeathCount()) {
+	if (!DamageScoreCount()) {
 		NScorePreserve::NotifyConnected(this->entindex());
 	}
 }
 
 void CHL2MP_Player::CheckQuickRespawn() {
+
 	//BG3 if we're not switching teams and we're in a spawn room, just respawn instantly
 	extern ConVar sv_class_switch_time;
 	extern ConVar sv_class_switch_time_lb_multiplier;
@@ -1648,6 +1677,14 @@ void CHL2MP_Player::DrainStamina(int iAmount)
 	//clamp
 	if (m_iStamina < 0)
 		m_iStamina = 0;
+}
+
+CBaseBG2Weapon* CHL2MP_Player::GetActiveBG3Weapon() { 
+	return dynamic_cast<CBaseBG2Weapon*>(GetActiveWeapon()); 
+}
+
+bool CHL2MP_Player::IsUsingBuckshot() {
+	return (m_iCurrentAmmoKit == AMMO_KIT_BUCKSHOT || (GetActiveWeapon() && GetActiveWeapon()->Def()->m_bShotOnly)) && GetActiveBG3Weapon()->GetLastAttackType() == ATTACKTYPE_FIREARM; 
 }
 
 //visual effects, not functionality. Exact functionality depends on m_iRallyFlags
@@ -2045,8 +2082,8 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	{
 		CBasePlayer * pAttacker2 = (CBasePlayer *)pAttacker;
 		//subtract 3x damage for attacking teammates!
-		pAttacker2->IncrementDeathCount((int)inputInfo.GetDamage()
-			* (GetTeamNumber() == pAttacker2->GetTeamNumber() ? -3 : 1));
+		pAttacker2->IncrementDamageScoreCount((int)inputInfo.GetDamage()
+			* (GetTeamNumber() == pAttacker2->GetTeamNumber() ? -2 : 1));
 	}
 
 	//BG2 - Tjoppen - take damage => lose some stamina
@@ -2130,6 +2167,7 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 
 	EmitSound(filter, entindex(), ep);
 
+	g_pPlayerResource->DispatchUpdateTransmitState();
 	
 	//
 	//gamestats->Event_PlayerDamage( this, inputInfo );
@@ -2195,32 +2233,37 @@ void CHL2MP_Player::DeathSound(const CTakeDamageInfo &info)
 	}
 }
 
-CBaseEntity* CHL2MP_Player::HandleSpawnList(const CUtlVector<CBaseEntity *>& spawns)
+
+CBaseEntity* CHL2MP_Player::HandleSpawnList(const CUtlVector<CBaseEntity *>* spawnLists[NUM_SPAWN_LISTS])
 {
-	//BG2 - Tjoppen - the code below was broken out of EntSelectSpawnPoint()
-	int offset = RandomInt(0, spawns.Count() - 1);	//start at a random offset into the list
+	for (int i = 0; i < NUM_SPAWN_LISTS; i++) {
+		const CUtlVector<CBaseEntity*>& spawns = *spawnLists[i];
 
-	for (int x = 0; x < spawns.Count(); x++)
-	{
-		CSpawnPoint *pSpawn = static_cast<CSpawnPoint*>(spawns[(x + offset) % spawns.Count()]);
-		if (pSpawn && !pSpawn->m_bReserved && pSpawn->IsEnabled() && pSpawn->GetTeam() == GetTeamNumber())
+		//BG2 - Tjoppen - the code below was broken out of EntSelectSpawnPoint()
+		int offset = RandomInt(0, spawns.Count() - 1);	//start at a random offset into the list
+
+		for (int x = 0; x < spawns.Count(); x++)
 		{
-			CBaseEntity *ent = NULL;
-			bool IsTaken = false;
-			//32 world units seems... safe.. -HairyPotter
-			for (CEntitySphereQuery sphere(pSpawn->GetAbsOrigin(), 32); (ent = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity())
+			CSpawnPoint *pSpawn = static_cast<CSpawnPoint*>(spawns[(x + offset) % spawns.Count()]);
+			if (pSpawn && pSpawn->GetTeam() == GetTeamNumber() && !pSpawn->m_bReserved && pSpawn->CanSpawnClass(m_iNextClass) && pSpawn->IsEnabled())
 			{
-				// Check to see if the ent is a player.
-				if (ent->IsPlayer())
+				CBaseEntity *ent = NULL;
+				bool IsTaken = false;
+				//32 world units seems... safe.. -HairyPotter
+				for (CEntitySphereQuery sphere(pSpawn->GetAbsOrigin(), 32); (ent = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity())
 				{
-					IsTaken = true;
+					// Check to see if the ent is a player.
+					if (ent->IsPlayer() && ent->IsAlive())
+					{
+						IsTaken = true;
+					}
 				}
-			}
-			if (IsTaken) //Retry?
-				continue;
+				if (IsTaken) //Retry?
+					continue;
 
-			pSpawn->m_bReserved = true;
-			return pSpawn;
+				pSpawn->m_bReserved = true;
+				return pSpawn;
+			}
 		}
 	}
 
@@ -2244,17 +2287,23 @@ CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint(void)
 		return NULL;	//BG2 - Tjoppen - spectators/unassigned don't spawn..
 
 	CBaseEntity *pSpot = NULL;
-	CUtlVector<CBaseEntity *> spots;
+	CUtlVector<CBaseEntity *>* spots;
+	CUtlVector<CBaseEntity *>* prioritySpots;
 
-	if (GetTeamNumber() == TEAM_AMERICANS)
-		spots = m_AmericanSpawns;
-	else if (GetTeamNumber() == TEAM_BRITISH)
-		spots = m_BritishSpawns;
+	if (GetTeamNumber() == TEAM_AMERICANS) {
+		spots = &g_AmericanSpawns;
+		prioritySpots = &g_AmericanPrioritySpawns;
+	}
+	else if (GetTeamNumber() == TEAM_BRITISH) {
+		spots = &g_BritishSpawns;
+		prioritySpots = &g_BritishPrioritySpawns;
+	}	
 	else
 		return NULL;
 
-	spots.AddVectorToTail(m_MultiSpawns);
-	pSpot = HandleSpawnList(spots);
+	const CUtlVector<CBaseEntity*>* spawnLists[] = { prioritySpots, &g_MultiPrioritySpawns, spots, &g_MultiSpawns };
+
+	pSpot = HandleSpawnList(spawnLists);
 
 	if (pSpot)
 		return pSpot;
@@ -2318,17 +2367,9 @@ CON_COMMAND_F(timeleft, "prints the time remaining in the match", FCVAR_CLIENTCM
 	}
 }
 
-CON_COMMAND(printscores_server, "Prints scores to console\n") {
-	for (int i = 1; i < gpGlobals->maxClients; i++) {
-		CBasePlayer* pPlayer = UTIL_PlayerByIndex(i);
-		if (pPlayer)
-			Msg("%30s: %i\n", pPlayer->GetPlayerName(), pPlayer->DeathCount());
-	}
-}
-
 void CHL2MP_Player::Reset()
 {
-	ResetDeathCount();
+	ResetDamageScoreCount();
 	ResetFragCount();
 }
 

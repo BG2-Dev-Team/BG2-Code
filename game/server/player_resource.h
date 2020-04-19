@@ -28,22 +28,26 @@ public:
 	//BG2 - Tjoppen - health fix
 	void SetPlayerHealth(int entindex, int health);
 	void SetPlayerScore(int entindex, int score);
+	void SetPlayerDamageScore(int entindex, int damage);
 	//
 
 	int GetPing(int index) const { return m_iPing[index]; }
+	int GetDamageScore(int index) const { return m_iDamageScore[index]; }
 
 protected:
 	// Data for each player that's propagated to all clients
 	// Stored in individual arrays so they can be sent down via datatables
 	CNetworkArray( int, m_iPing, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_iScore, MAX_PLAYERS+1 );
-	CNetworkArray( int, m_iDeaths, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_iDamageScore, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_bConnected, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_iTeam, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_bAlive, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_iHealth, MAX_PLAYERS+1 );
 		
-	int	m_nUpdateCounter;
+	CNetworkVar(int, m_iPlayerCounts);
+
+	int	m_nUpdateCounter; //BRITISH (8 bits) - AMERICAN (8 bits) - ALIVE BRITISH (8 bits) - ALIVE AMERICANS (8 bits)
 };
 
 extern CPlayerResource *g_pPlayerResource;

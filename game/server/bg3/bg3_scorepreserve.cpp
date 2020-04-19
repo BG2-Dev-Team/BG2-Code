@@ -87,7 +87,7 @@ namespace NScorePreserve {
 				if (foundIndex != -1) {
 					//alright we have his score, now just move it in
 					pPlayer->AddPoints(g_scores[foundIndex].m_score, false);
-					pPlayer->SetDeathCount(g_scores[foundIndex].m_damage);
+					pPlayer->SetDamageScoreCount(g_scores[foundIndex].m_damage);
 
 					g_scores.erase(g_scores.begin() + foundIndex);
 				}
@@ -105,7 +105,7 @@ namespace NScorePreserve {
 
 			if (pPlayer->GetSteamID(&id)) {
 				short score = pPlayer->FragCount();
-				short damage = pPlayer->DeathCount();
+				short damage = pPlayer->DamageScoreCount();
 				float removalTime = gpGlobals->curtime + sv_preserve_score_time.GetFloat();
 
 				//construct his info and put it onto the end

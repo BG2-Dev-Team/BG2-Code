@@ -279,7 +279,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		if ( !(client->IsNetClient()) )	// Not a client ? (should never be true)
 			continue;
 
-		bool differentTeams = pPlayer->GetTeamNumber() != client->GetTeamNumber();
+		bool differentTeams = pPlayer && pPlayer->GetTeamNumber() != client->GetTeamNumber();
 		if ( teamonly && differentTeams )
 			continue;
 

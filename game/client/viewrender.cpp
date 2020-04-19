@@ -962,6 +962,9 @@ bool CViewRender::ShouldDrawViewModel( bool bDrawViewmodel )
 	if ( !r_drawviewmodel.GetBool() )
 		return false;
 
+	if (C_BasePlayer::GetLocalPlayer()->GetObserverMode() == OBS_MODE_DEATHCAM)
+		return false;
+
 	if ( C_BasePlayer::ShouldDrawLocalPlayer() )
 		return false;
 

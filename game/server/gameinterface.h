@@ -182,7 +182,7 @@ public:
 
 //extern CUtlLinkedList<CMapEntityRef, unsigned short> g_MapEntityRefs;
 
-extern CUtlVector<CBaseEntity *> m_MultiSpawns, m_AmericanSpawns, m_BritishSpawns;
+extern CUtlVector<CBaseEntity *> g_MultiSpawns, g_AmericanSpawns, g_BritishSpawns, g_MultiPrioritySpawns, g_AmericanPrioritySpawns, g_BritishPrioritySpawns;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -212,13 +212,13 @@ public:
 
 			//BG2 - Spawn point optimization test. - HairyPotter
 			if (!Q_strcmp(pClassname, "info_player_multispawn"))
-				m_MultiSpawns.AddToTail(pRet);
+				g_MultiSpawns.AddToTail(pRet);
 
 			if (!Q_strcmp(pClassname, "info_player_american"))
-				m_AmericanSpawns.AddToTail(pRet);
+				g_AmericanSpawns.AddToTail(pRet);
 
 			if (!Q_strcmp(pClassname, "info_player_british"))
-				m_BritishSpawns.AddToTail(pRet);
+				g_BritishSpawns.AddToTail(pRet);
 			//
 		}
 

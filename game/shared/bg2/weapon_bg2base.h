@@ -93,6 +93,12 @@ public:
 	{
 		return iAttack != ATTACK_NONE ? Def()->m_Attackinfos[iAttack].m_iAttacktype : ATTACK_NONE;
 	}
+#ifndef CLIENT_DLL
+	int		GetLastAttackType()
+	{
+		return m_iLastAttackType;
+	}
+#endif
 
 	float	GetRange( int iAttack )
 	{
@@ -206,6 +212,23 @@ public:
 		}
 		return (base + modifier) * multiplier;
 	}
+
+	inline bool ShouldTightenVerticalAccuracy() {
+		extern ConVar sv_perfectaim;
+		extern ConVar mp_respawnstyle;
+		extern ConVar lb_tighten_vertical_accuracy;
+		return (m_bIsIronsighted && mp_respawnstyle.GetInt() == 4 && !sv_perfectaim.GetBool() && lb_tighten_vertical_accuracy.GetBool());
+	}
+
+	float GetVerticalAccuracyScale() {
+		if (!ShouldTightenVerticalAccuracy()) {
+			return 1.0f;
+		}
+
+		return Def()->m_flVerticalAccuracyScale;
+	}
+
+	float GetHitDropProbability();
 
 	Activity	GetActivity( int iAttack )
 	{

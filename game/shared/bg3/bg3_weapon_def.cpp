@@ -54,6 +54,7 @@ CWeaponDef::CWeaponDef(const char* pszWeaponName) {
 	m_flReloadMovementSpeedModifier = 1.0f;
 	m_flDamageDropoffMultiplier = 1.0f;
 	//m_iOwnerSpeedModOnKill = m_iAerialDamageMod = 0;
+	m_flVerticalAccuracyScale = 0.5;
 
 	m_eWeaponType = GENERIC;
 	m_flLockTime = 0.135f;

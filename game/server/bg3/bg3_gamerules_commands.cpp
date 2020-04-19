@@ -36,6 +36,7 @@ commented on the following form:
 #include "../shared/bg3/bg3_map_model.h"
 #include "../shared/bg3/Math/bg3_rand.h"
 #include "../shared/bg3/bg3_class_quota.h"
+#include "../shared/bg3/bg3_buffs.h"
 #include "team.h"
 
 void PerPlayerCommand(CHL2MP_Player* pRequester, const char* pszPlayerSearchTerm, void(*pFunc)(CHL2MP_Player*));
@@ -298,6 +299,10 @@ static void LinebattleSetClass(int iTeam, const char* pszAbbreviation, bool inst
 			const char* pszSelector = iTeam == TEAM_AMERICANS ? "@amer" : "@brit";
 			//set all players of correct team to that class
 			PerPlayerCommand(NULL, pszSelector, [](CHL2MP_Player* pPlayer){
+				//don't change players who are officers
+				if (BG3Buffs::PlayersClassHasRallyAbility(pPlayer))
+					return;
+
 				pPlayer->ForceJoin(g_pNextLinebattleClass, g_pNextLinebattleClass->m_iDefaultTeam, g_pNextLinebattleClass->m_iClassNumber);
 			});
 		}
@@ -355,7 +360,7 @@ static void LinebattleSetKit(int iTeam, int iWeapon, int iUniform, int iAmmo) {
 	//tell all players on team to change and spawn with new kit
 	for (int i = 1; i <= gpGlobals->maxClients; i++) {
 		CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-		if (pPlayer && pPlayer->GetTeamNumber() == iTeam) {
+		if (pPlayer && pPlayer->GetTeamNumber() == iTeam && !BG3Buffs::PlayersClassHasRallyAbility(pPlayer)) {
 			pPlayer->m_iClassSkin = iUniform;
 			pPlayer->m_iGunKit = iWeapon;
 			pPlayer->m_iAmmoKit = iAmmo;

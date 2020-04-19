@@ -663,7 +663,7 @@ public:
 
 	// Accessor methods
 	int		FragCount() const		{ return m_iFrags; }
-	int		DeathCount() const		{ return m_iDeaths;}
+	int		DamageScoreCount() const{ return m_iDamageScore;}
 	bool	IsConnected() const		{ return m_iConnected != PlayerDisconnected; }
 	bool	IsDisconnecting() const	{ return m_iConnected == PlayerDisconnecting; }
 	bool	IsSuitEquipped() const	{ return m_Local.m_bWearingSuit; }
@@ -688,14 +688,14 @@ public:
 	virtual void	ResetPerRoundStats( void ) { return; }
 	void			AllowInstantSpawn( void ) { m_bAllowInstantSpawn = true; }
 
-	virtual void	ResetScores( void ) { ResetFragCount(); ResetDeathCount(); }
+	virtual void	ResetScores( void ) { ResetFragCount(); ResetDamageScoreCount(); }
 	void	ResetFragCount();
 	void	IncrementFragCount( int nCount );
 	void	SetFragCount(int nCount) { m_iFrags = nCount; }
 
-	void	ResetDeathCount();
-	void	IncrementDeathCount( int nCount );
-	void	SetDeathCount(int nCount) { m_iDeaths = nCount; }
+	void	ResetDamageScoreCount();
+	void	IncrementDamageScoreCount( int nCount );
+	void	SetDamageScoreCount(int nCount) { m_iDamageScore = nCount; }
 
 	//void	SetArmorValue( int value );
 	//void	IncrementArmorValue( int nCount, int nMaxValue = -1 );
@@ -1054,7 +1054,7 @@ private:
 	int						m_lastx, m_lasty;	// These are the previous update's crosshair angles, DON"T SAVE/RESTORE
 
 	int						m_iFrags;
-	CNetworkVar(int,		m_iDeaths);
+	int						m_iDamageScore;
 
 
 	float					m_flNextDecalTime;// next time this player can spray a decal

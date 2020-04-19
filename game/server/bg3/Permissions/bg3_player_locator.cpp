@@ -183,7 +183,7 @@ void GetPlayersFromString(CHL2MP_Player** pPlayerList, const char* pszString, CH
 		}
 
 		if (!pFoundPlayer && pszString[0] == '#') {
-			int id = atoi(pszString + 1) - 1;
+			int id = atoi(pszString + 1);
 			pFoundPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(id));
 		}
 		pPlayerList[0] = pFoundPlayer;

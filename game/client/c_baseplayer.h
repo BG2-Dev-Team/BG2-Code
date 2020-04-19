@@ -13,6 +13,7 @@
 #endif
 
 #include "c_playerlocaldata.h"
+#include "c_playerresource.h"
 #include "c_basecombatcharacter.h"
 #include "PlayerState.h"
 #include "usercmd.h"
@@ -497,13 +498,13 @@ protected:
 	float			m_flFreezeFrameDistance;
 	bool			m_bWasFreezeFraming; 
 	float			m_flDeathTime;		// last time player died
-	int				m_iDeaths;
+	//int				m_iDamageScore;
 
 	float			m_flStepSoundTime;
 	bool			m_IsFootprintOnLeft;
 
 public:
-	int DeathCount() const { return m_iDeaths; }
+	int DamageScoreCount() const { return g_PR->GetDamageScore(entindex()); }
 
 private:
 	// Make sure no one calls this...

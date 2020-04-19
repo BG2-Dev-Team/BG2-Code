@@ -444,18 +444,27 @@ void CHudBG2::PaintTopCenterHUD(/*C_HL2MP_Player* pPlayer*/) {
 	//displays based on tickets in ticket mode, score otherwise
 	C_Team *pAmer = GetGlobalTeam(TEAM_AMERICANS);
 	C_Team *pBrit = GetGlobalTeam(TEAM_BRITISH);
+
+	if (!pAmer || !pBrit)
+		return;
+
 	int swingScoreA, swingScoreB;
 	if (HL2MPRules()->UsingTickets()) {
-		swingScoreA = pAmer ? pAmer->m_iTicketsLeft : 0;
-		swingScoreB = pBrit ? pBrit->m_iTicketsLeft : 0;
+		swingScoreA = pAmer->m_iTicketsLeft;
+		swingScoreB = pBrit->m_iTicketsLeft;
+	}
+	else if (IsLMS()) {
+		//in linebattle/lms, show remaining players
+		swingScoreA = pAmer->GetNumPlayersAlive();
+		swingScoreB = pBrit->GetNumPlayersAlive();
 	}
 	else {
-		swingScoreA = pAmer ? pAmer->Get_Score() : 0;
-		swingScoreB = pBrit ? pBrit->Get_Score() : 0;
+		swingScoreA = pAmer->Get_Score();
+		swingScoreB = pBrit->Get_Score();
 	}
 	PaintSwingometer(/*pPlayer,*/ swingScoreA, swingScoreB);
 
-	//NUMBER OF ROUNDS WON
+	//TICKETS REMAINING / PLAYERS ALIVE / SKIRM SCORE
 	Q_snprintf(g_hudBuffer, 512, "%i ", swingScoreB);
 	m_pLabelBTickets->SetText(g_hudBuffer);
 	//m_pLabelBTickets->SizeToContents();
@@ -471,8 +480,8 @@ void CHudBG2::PaintTopCenterHUD(/*C_HL2MP_Player* pPlayer*/) {
 	m_pAmerFlagImage->DrawSelf(halfx - g_iFlagOffset - flagW, 0, flagW, flagH, COLOR_WHITE);
 	m_pBritFlagImage->DrawSelf(halfx + g_iFlagOffset, 0, flagW, flagH, COLOR_WHITE);
 
-	//SWINGOMETER SCORE LABELS
-	if (mp_rounds.GetBool() && pAmer && pBrit) {
+	//LEVEL 2 ROUND SCORE LABELS
+	if (!IsSkirmish()) {
 		Q_snprintf(g_hudBuffer, 512, "%i ", pBrit->Get_Score());	//BG2 - Tjoppen - avoid NULL
 		m_pLabelBScore->SetText(g_hudBuffer);
 		//m_pLabelBScore->SizeToContents();
@@ -811,8 +820,8 @@ void CHudBG2::Reset( void )
 
 void CHudBG2::HideShowAllTeam( bool visible )
 {
-	m_pLabelAScore->SetVisible(visible && HL2MPRules()->UsingTickets());
-	m_pLabelBScore->SetVisible(visible && HL2MPRules()->UsingTickets());
+	m_pLabelAScore->SetVisible(visible && !IsSkirmish());
+	m_pLabelBScore->SetVisible(visible && !IsSkirmish());
 	m_pLabelBTickets->SetVisible(visible);
 	m_pLabelATickets->SetVisible(visible);
 

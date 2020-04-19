@@ -785,7 +785,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 				//BG2 - Draco
 				//pVictim->IncrementFragCount( -1 );
 				if (pVictim->GetTeamNumber() > TEAM_SPECTATOR)	//no penalty to selecting team. only for switching while alive
-					pVictim->IncrementDeathCount(-100); //Take away 100 damage points for 'kill'ing yourself
+					pVictim->IncrementDamageScoreCount(-100); //Take away 100 damage points for 'kill'ing yourself
 			}			
 		}
 		else if ( pScorer )

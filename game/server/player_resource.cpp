@@ -17,12 +17,13 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 //	SendPropArray( SendPropString( SENDINFO(m_szName[0]) ), SENDARRAYINFO(m_szName) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iPing), SendPropInt( SENDINFO_ARRAY(m_iPing), 10, SPROP_UNSIGNED ) ),
 //	SendPropArray( SendPropInt( SENDINFO_ARRAY(m_iPacketloss), 7, SPROP_UNSIGNED ), m_iPacketloss ),
-	SendPropArray3( SENDINFO_ARRAY3(m_iScore), SendPropInt( SENDINFO_ARRAY(m_iScore), 12 ) ),
-	//SendPropArray3( SENDINFO_ARRAY3(m_iDeaths), SendPropInt( SENDINFO_ARRAY(m_iDeaths), 12 ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_iScore), SendPropInt( SENDINFO_ARRAY(m_iScore), 12, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_iDamageScore), SendPropInt( SENDINFO_ARRAY(m_iDamageScore), 20 ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_bConnected), SendPropInt( SENDINFO_ARRAY(m_bConnected), 1, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iTeam), SendPropInt( SENDINFO_ARRAY(m_iTeam), 4 ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_bAlive), SendPropInt( SENDINFO_ARRAY(m_bAlive), 1, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iHealth), SendPropInt( SENDINFO_ARRAY(m_iHealth), -1, SPROP_VARINT | SPROP_UNSIGNED ) ),
+	SendPropInt(SENDINFO(m_iPlayerCounts)),
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CPlayerResource )
@@ -56,7 +57,7 @@ void CPlayerResource::Spawn( void )
 	{
 		m_iPing.Set( i, 0 );
 		m_iScore.Set( i, 0 );
-		m_iDeaths.Set( i, 0 );
+		m_iDamageScore.Set( i, 0 );
 		m_bConnected.Set( i, 0 );
 		m_iTeam.Set( i, 0 );
 		m_bAlive.Set( i, 0 );
@@ -87,6 +88,15 @@ void CPlayerResource::SetPlayerScore(int entindex, int score)
 //
 
 //-----------------------------------------------------------------------------
+// Purpose: Sets damage score value for a particular client
+//-----------------------------------------------------------------------------
+void CPlayerResource::SetPlayerDamageScore(int entindex, int damage)
+{
+	m_iDamageScore.Set(entindex, damage);
+}
+//
+
+//-----------------------------------------------------------------------------
 // Purpose: The Player resource is always transmitted to clients
 //-----------------------------------------------------------------------------
 int CPlayerResource::UpdateTransmitState()
@@ -112,6 +122,10 @@ void CPlayerResource::ResourceThink( void )
 //-----------------------------------------------------------------------------
 void CPlayerResource::UpdatePlayerData( void )
 {
+	bool periodicUpdate = !(m_nUpdateCounter % 20);
+
+	uint8 numAmericans, numBritish, numAliveAmericans, numAliveBritish;
+	numAmericans = numBritish = numAliveAmericans = numAliveBritish = 0;
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex( i );
@@ -119,15 +133,15 @@ void CPlayerResource::UpdatePlayerData( void )
 		if ( pPlayer && pPlayer->IsConnected() )
 		{
 			m_iScore.Set( i, pPlayer->FragCount() );
-			m_iDeaths.Set( i, pPlayer->DeathCount() );
+			m_iDamageScore.Set( i, pPlayer->DamageScoreCount() );
 			m_bConnected.Set( i, 1 );
 			m_iTeam.Set( i, pPlayer->GetTeamNumber() );
 			m_bAlive.Set( i, pPlayer->IsAlive()?1:0 );
 			m_iHealth.Set(i, MAX( 0, pPlayer->GetHealth() ) );
 
-			// Don't update ping / packetloss everytime
-
-			if ( !(m_nUpdateCounter%20) )
+			
+			// Don't update ping / packetloss / player counts everytime
+			if (periodicUpdate)
 			{
 				// update ping all 20 think ticks = (20*0.1=2seconds)
 				int ping, packetloss;
@@ -139,11 +153,30 @@ void CPlayerResource::UpdatePlayerData( void )
 				
 				m_iPing.Set( i, ping );
 				// m_iPacketloss.Set( i, packetloss );
+
+				if (pPlayer->GetTeamNumber() == TEAM_BRITISH) {
+					if (pPlayer->IsAlive()) numAliveBritish++;
+					numBritish++;
+				}
+				else if (pPlayer->GetTeamNumber() == TEAM_AMERICANS) {
+					if (pPlayer->IsAlive()) numAliveAmericans++;
+					numAmericans++;
+				}
 			}
 		}
 		else
 		{
 			m_bConnected.Set( i, 0 );
 		}
+	}
+
+	//put player counts into variable
+	if (periodicUpdate) {
+		int playerCounts = 0;
+		playerCounts |= numBritish << 24;
+		playerCounts |= numAmericans << 16;
+		playerCounts |= numAliveBritish << 8;
+		playerCounts |= numAliveAmericans;
+		m_iPlayerCounts = playerCounts;
 	}
 }

@@ -10,6 +10,7 @@
 #pragma once
 
 class CHL2MP_Player;
+class CBaseBG2Weapon;
 
 #include "basemultiplayerplayer.h"
 #include "hl2_playerlocaldata.h"
@@ -44,8 +45,7 @@ class CHL2MP_Player : public CHL2_Player
 {
 	friend class CSpawnRoom;
 
-	//BG2 - returns an abitrary free spawn point from the given list
-	CBaseEntity* HandleSpawnList(const CUtlVector<CBaseEntity *>& spawns);
+	
 
 public:
 	DECLARE_CLASS( CHL2MP_Player, CHL2_Player );
@@ -93,6 +93,9 @@ public:
 	virtual void UpdateOnRemove( void );
 	virtual void DeathSound( const CTakeDamageInfo &info );
 	virtual CBaseEntity* EntSelectSpawnPoint( void );
+	//BG2 - returns an abitrary free spawn point from the given list
+#define NUM_SPAWN_LISTS 4 //static value
+	CBaseEntity* HandleSpawnList(const CUtlVector<CBaseEntity *>* spawnLists[NUM_SPAWN_LISTS]);
 	//BG2 - Tjoppen - virtuals in CHL2MP_Player
 			bool MayRespawnOnTeamChange(int previousTeam); //BG3 - specialized this function to team changes - Awesome
 			void HandleSpeedChanges(void);
@@ -243,7 +246,8 @@ private:
 	//return the player's speed based on whether which class we are, which weapon kit we're using etc.
 	int		GetCurrentSpeed(void) const;
 
-	inline bool IsUsingBuckshot() { return m_iCurrentAmmoKit == AMMO_KIT_BUCKSHOT || (GetActiveWeapon() && GetActiveWeapon()->Def()->m_bShotOnly); }
+	CBaseBG2Weapon* GetActiveBG3Weapon();
+	bool IsUsingBuckshot();
 
 public:
 	void	OnRallyEffectEnable(); //visual effects, not functionality. Exact behavior depends on m_iCurrentRallies

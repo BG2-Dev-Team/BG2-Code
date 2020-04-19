@@ -75,15 +75,6 @@ PLAYER_COMMAND(spectate) {
 	}
 }
 
-/*PLAYER_COMMAND(kit) {
-	if (args.ArgC() < 4)
-		return;
-	pPlayer->m_iGunKit = atoi(args[1]);
-	pPlayer->m_iAmmoKit = atoi(args[2]);
-	pPlayer->m_iClassSkin = atoi(args[3]);
-	pPlayer->CheckQuickRespawn();
-}*/
-
 //BG3 - Awesome - merged classkit command
 PLAYER_COMMAND(classkit) {
 	if (args.ArgC() < 6)

@@ -106,7 +106,7 @@ public:
 	uint8		m_iDefaultPrimaryAmmoCount;
 	uint8		m_iDefaultSecondaryAmmoCount = 0;
 	const char* m_pszPrimaryAmmo = AMMO_DEFAULT_NAME;
-	const char* m_pszSecondaryAmmo = nullptr;
+	const char* m_pszSecondaryAmmo = "Grenade";
 	
 
 	float		m_flBaseSpeed = 190.f;

@@ -8,6 +8,7 @@
 #include "c_playerresource.h"
 #include "c_team.h"
 #include "gamestringpool.h"
+#include "steam\steamclientpublic.h"
 
 #ifdef HL2MP
 #include "hl2mp_gamerules.h"
@@ -21,11 +22,12 @@ const float PLAYER_RESOURCE_THINK_INTERVAL = 0.2f;
 IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerResource)
 	RecvPropArray3( RECVINFO_ARRAY(m_iPing), RecvPropInt( RECVINFO(m_iPing[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iScore), RecvPropInt( RECVINFO(m_iScore[0]))),
-	//RecvPropArray3( RECVINFO_ARRAY(m_iDeaths), RecvPropInt( RECVINFO(m_iDeaths[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_iDamageScore), RecvPropInt( RECVINFO(m_iDamageScore[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_bConnected), RecvPropInt( RECVINFO(m_bConnected[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iTeam), RecvPropInt( RECVINFO(m_iTeam[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_bAlive), RecvPropInt( RECVINFO(m_bAlive[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iHealth), RecvPropInt( RECVINFO(m_iHealth[0]))),
+	RecvPropInt(RECVINFO(m_iPlayerCounts)),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_PlayerResource )
@@ -33,7 +35,7 @@ BEGIN_PREDICTION_DATA( C_PlayerResource )
 	DEFINE_PRED_ARRAY( m_szName, FIELD_STRING, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_iPing, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_iScore, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
-	//DEFINE_PRED_ARRAY( m_iDeaths, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
+	DEFINE_PRED_ARRAY( m_iDamageScore, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_bConnected, FIELD_BOOLEAN, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_iTeam, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_bAlive, FIELD_BOOLEAN, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
@@ -41,13 +43,6 @@ BEGIN_PREDICTION_DATA( C_PlayerResource )
 
 END_PREDICTION_DATA()	
 
-CON_COMMAND(printscores_client, "Prints scores to console\n") {
-	for (int i = 1; i < gpGlobals->maxClients; i++) {
-		CBasePlayer* pPlayer = UTIL_PlayerByIndex(i);
-		if (pPlayer)
-			Msg("%30s: %i\n", pPlayer->GetPlayerName(), g_PR->GetDeaths(i));
-	}
-}
 
 C_PlayerResource *g_PR;
 
@@ -61,7 +56,7 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_iPing, 0, sizeof( m_iPing ) );
 //	memset( m_iPacketloss, 0, sizeof( m_iPacketloss ) );
 	memset( m_iScore, 0, sizeof( m_iScore ) );
-	memset( m_iDeaths, 0, sizeof( m_iDeaths ) );
+	memset( m_iDamageScore, 0, sizeof( m_iDamageScore ) );
 	memset( m_bConnected, 0, sizeof( m_bConnected ) );
 	memset( m_iTeam, 0, sizeof( m_iTeam ) );
 	memset( m_bAlive, 0, sizeof( m_bAlive ) );
@@ -297,17 +292,17 @@ int	C_PlayerResource::GetPlayerScore( int iIndex )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int	C_PlayerResource::GetDeaths( int iIndex )
+int	C_PlayerResource::GetDamageScore( int iIndex )
 {
 	if ( !IsConnected( iIndex ) )
 		return 0;
 
 	//BG3- damage score isn't transmitted correctly for some reason,
 	//so we're going to use a separate network var
-	C_BasePlayer* pPlayer = UTIL_PlayerByIndex(iIndex);
-	return pPlayer ? pPlayer->DeathCount() : 0;
+	//C_BasePlayer* pPlayer = UTIL_PlayerByIndex(iIndex);
+	//return pPlayer ? pPlayer->DamageScoreCount() : 0;
 
-	//return m_iDeaths[iIndex];
+	return m_iDamageScore[iIndex];
 }
 
 //-----------------------------------------------------------------------------
@@ -344,4 +339,27 @@ bool C_PlayerResource::IsConnected( int iIndex )
 		return false;
 	else
 		return m_bConnected[iIndex];
+}
+
+void convertSteamIDToString(const CSteamID& id, char* buffer, int bufferSize) {
+	Q_snprintf(buffer, bufferSize, "STEAM_%u:%u:%u", id.GetEUniverse(), id.GetAccountID() & 1, id.GetAccountID() >> 1);
+}
+
+CON_COMMAND(status, "Prints player info to console") {
+	Msg("Map name: %s\n", g_pGameRules->MapName());
+	Msg("Players: (%i/%i)\n", HL2MPRules()->NumConnectedClients(), gpGlobals->maxClients);
+	Msg("=======================================================================================\n");
+	Msg("\tid  steamid              name                           scr  dmg    ping\n");
+	for (int i = 1; i < gpGlobals->maxClients; i++) {
+		C_HL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+		if (pPlayer) {
+			CSteamID id;
+			pPlayer->GetSteamID(&id);
+			char buffer[20];
+			convertSteamIDToString(id, buffer, sizeof(buffer));
+			//										 index				steamid			name					   score									damage score				ping
+			Msg("\t%3i %20s %30s %4i %6i %3i\n", pPlayer->entindex(), buffer, pPlayer->GetPlayerName(), g_PR->GetTeamScore(pPlayer->entindex()), pPlayer->DamageScoreCount(), g_PR->GetPing(pPlayer->entindex()));
+		}
+
+	}
 }

@@ -630,7 +630,7 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_old_model_charleville";
 	m_aWeapons[4].m_pszWeaponPrimaryName = "weapon_dutch";
 	m_aWeapons[5].m_pszWeaponPrimaryName = "weapon_american_brownbess";
-	m_aWeapons[6].m_pszWeaponPrimaryName = "weapon_light_model_charleville";
+	//m_aWeapons[6].m_pszWeaponPrimaryName = "weapon_light_model_charleville";
 
 	postClassConstruct(this);
 }

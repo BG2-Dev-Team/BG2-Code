@@ -88,6 +88,8 @@ namespace BG3Buffs {
 		return MAX(0.0, tTime);
 	}
 
+	float	GetRallyInterval(int rallyFlags);
+
 	float	GetRallyDuration(int rallyFlags);
 
 	bool	PlayersClassHasRallyAbility(const CHL2MP_Player* pPlayer); //Checks that we're of the right class

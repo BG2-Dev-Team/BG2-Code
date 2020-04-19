@@ -157,7 +157,7 @@ namespace BG3Buffs {
 
 			//If our requester was a player, reset the next time
 			if (pPlayer)
-				SetNextRallyTime(iTeam, gpGlobals->curtime + RALLY_INTERVAL);
+				SetNextRallyTime(iTeam, gpGlobals->curtime + GetRallyInterval(newRallyFlags));
 
 			//notify clients of rallying, activating HUD events
 			CEffectData data;
@@ -331,6 +331,12 @@ namespace BG3Buffs {
 //-----------------------------------------------------------------------------
 	float	GetNextRallyTime(int iTeam) {
 		return NextRallyTimeCvarFor(iTeam)->GetFloat();
+	}
+
+	float	GetRallyInterval(int rallyFlags) {
+		float interval = RALLY_INTERVAL;
+		if (rallyFlags == RALLY_RALLY_ROUND) interval = RALLY_ROUND_INTERVAL;
+		return interval;
 	}
 
 	float	GetRallyDuration(int rallyFlags) {

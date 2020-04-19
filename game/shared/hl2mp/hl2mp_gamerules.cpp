@@ -26,6 +26,7 @@
 	#include "items.h"
 	#include "entitylist.h"
 	#include "mapentities.h"
+	#include "player_resource.h"
 	#include "in_buttons.h"
 	#include <ctype.h>
 	#include "voice_gamemgr.h"
@@ -201,7 +202,8 @@ LINK_ENTITY_TO_CLASS( hl2mp_gamerules, CHL2MPGameRulesProxy );
 IMPLEMENT_NETWORKCLASS_ALIASED( HL2MPGameRulesProxy, DT_HL2MPGameRulesProxy )
 
 static HL2MPViewVectors g_HL2MPViewVectors(
-Vector(0, 0, 60),       //VEC_VIEW (m_vView) //BG2 - Awesome[Was 64, but lowered it to match 2007 height. The 2007 height was 64 too but for some reason the 2013 one was still too high so I lowered it here]
+	Vector(0, 0, 60),       //VEC_VIEW (m_vView) //BG2 - Awesome[Was 64, but lowered it to match 2007 height. 
+											//The 2007 height was 64 too but for some reason the 2013 one was still too high so I lowered it here]
 							  
 	Vector(-16, -16, 0 ),	  //VEC_HULL_MIN (m_vHullMin)
 	Vector( 16,  16,  72 ),	  //VEC_HULL_MAX (m_vHullMax)
@@ -680,14 +682,14 @@ void CHL2MPRules::Think( void )
 				CBasePlayer *pPlayer = pAmericans->GetPlayer(x);
 				if (!pPlayer)
 					continue;
-				m_iAmericanDmg += pPlayer->DeathCount();
+				m_iAmericanDmg += pPlayer->DamageScoreCount();
 			}
 			for (int x = 0; x < pBritish->GetNumPlayers(); x++)
 			{
 				CBasePlayer *pPlayer = pBritish->GetPlayer(x);
 				if (!pPlayer)
 					continue;
-				m_iBritishDmg += pPlayer->DeathCount();
+				m_iBritishDmg += pPlayer->DamageScoreCount();
 			}
 
 			UTIL_LogPrintf("American Scores: DAMAGE: %i   SCORE: %i   \n", m_iAmericanDmg, mp_americanscore.GetInt());
@@ -1546,7 +1548,7 @@ void CHL2MPRules::RestartGame()
 			continue;
 
 		pPlayer->ResetFragCount();//...for cap points...
-		pPlayer->ResetDeathCount();//...and damage
+		pPlayer->ResetDamageScoreCount();//...and damage
 	}
 	for (x = 0; x < g_Teams[TEAM_BRITISH]->GetNumPlayers(); x++) {
 		CBasePlayer *pPlayer = g_Teams[TEAM_BRITISH]->GetPlayer(x);
@@ -1554,7 +1556,7 @@ void CHL2MPRules::RestartGame()
 			continue;
 
 		pPlayer->ResetFragCount();//...for cap points...
-		pPlayer->ResetDeathCount();//...and damage
+		pPlayer->ResetDamageScoreCount();//...and damage
 	}
 	m_iCurrentRound = 1;
 	RestartRound(false);	//BG2 - Tjoppen - restart round

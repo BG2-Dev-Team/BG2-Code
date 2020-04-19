@@ -43,6 +43,8 @@
 #include "ndebugoverlay.h"
 #include "ilagcompensationmanager.h"
 #include "ipredictionsystem.h"
+#include "../shared/bg2/weapon_bg2base.h"
+#include "../shared/bg3/Math/bg3_rand.h"
 
 //Needed for linux compile.
 //#ifdef min 
@@ -67,6 +69,9 @@ extern ConVar sv_simulatedbullets_rwc;
 extern ConVar sv_simulatedbullets_show_trajectories;
 extern ConVar sv_simulatedbullets_show_trajectories_timeout;
 
+ConVar sv_muzzlevelocity_scale("sv_muzzlevelocity_scale", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY);
+ConVar sv_simulatedbullets_gravity("sv_simulatedbullets_gravity", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY);
+
 class Bullet {
 	Vector m_vTrajStart, m_vPosition, m_vLastPosition, m_vVelocity;
 	int m_iDamage;
@@ -75,6 +80,7 @@ class Bullet {
 	CBasePlayer *m_pOwner;
 	CBaseCombatWeapon* m_pWeapon;
 	int m_iBounces;
+	float m_flHitDropProbability;
 
 public:
 	// BG2 - VisualMelon - RayWaitCounter
@@ -94,7 +100,7 @@ public:
 		AngleVectors( angle, &vecDir );
 
 		m_vTrajStart = m_vLastPosition = m_vPosition = position;
-		m_vVelocity = vecDir * flMuzzleVelocity;
+		m_vVelocity = vecDir * flMuzzleVelocity * sv_muzzlevelocity_scale.GetFloat();
 		m_iDamage = iDamage;
 		m_flConstantDamageRange = flConstantDamageRange;
 		m_flRelativeDrag = flRelativeDrag;
@@ -104,6 +110,7 @@ public:
 		m_bHasPlayedNearmiss = false;
 		m_pOwner = pOwner;
 		m_pWeapon = m_pOwner->GetActiveWeapon();
+		m_flHitDropProbability = ((CBaseBG2Weapon*) m_pWeapon)->GetHitDropProbability();
 		m_iBounces = 0;
 
 		resetRwc(sv_simulatedbullets_flex.GetBool());
@@ -181,7 +188,7 @@ private:
 		//	speed = 1000;	//clamp
 
 		m_vVelocity = vecDir * speed;
-		m_vVelocity.z -= sv_gravity.GetFloat() * dt;
+		m_vVelocity.z -= sv_gravity.GetFloat() * sv_simulatedbullets_gravity.GetFloat() * dt;
 	}
 
 	void DoNearmiss()
@@ -291,7 +298,11 @@ private:
 			extern ConVar friendlyfire;
 			if (tr.m_pEnt->GetTeamNumber() == m_pOwner->GetTeamNumber()
 				&& !friendlyfire.GetBool())
-				return false;
+				return true;
+
+			//pass random hit drop
+			if ((tr.endpos - m_vTrajStart).Length() > 2200.f && RndBool(m_flHitDropProbability))
+				return false; //pretend we didn't hit anything and pass through, this will reward situations where an LB line outflannks another
 
 			//we hit something that can be damaged
 			//trace through arms

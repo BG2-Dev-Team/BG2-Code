@@ -370,7 +370,7 @@ BEGIN_DATADESC( CBasePlayer )
 	//DEFINE_FIELD( m_lasty, FIELD_INTEGER ),
 
 	DEFINE_FIELD( m_iFrags, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iDeaths, FIELD_INTEGER ),
+	DEFINE_FIELD( m_iDamageScore, FIELD_INTEGER ),
 	DEFINE_FIELD( m_bAllowInstantSpawn, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flNextDecalTime, FIELD_TIME ),
 	//DEFINE_AUTO_ARRAY( m_szTeamName, FIELD_STRING ), // mp
@@ -2974,16 +2974,16 @@ void CBasePlayer::IncrementFragCount( int nCount )
 	pl.frags = m_iFrags;
 }
 
-void CBasePlayer::ResetDeathCount()
+void CBasePlayer::ResetDamageScoreCount()
 {
-	m_iDeaths = 0;
-	pl.deaths = m_iDeaths;
+	m_iDamageScore = 0;
+	pl.deaths = m_iDamageScore;
 }
 
-void CBasePlayer::IncrementDeathCount( int nCount )
+void CBasePlayer::IncrementDamageScoreCount( int nCount )
 {
-	m_iDeaths += nCount;
-	pl.deaths = m_iDeaths;
+	m_iDamageScore += nCount;
+	pl.deaths = m_iDamageScore;
 }
 
 void CBasePlayer::AddPoints( int score, bool bAllowNegativeScore )
@@ -7973,7 +7973,7 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropFloat		( SENDINFO( m_flConstraintSpeedFactor ), 0, SPROP_NOSCALE ),
 
 		SendPropFloat		( SENDINFO( m_flDeathTime ), 0, SPROP_NOSCALE ),
-		SendPropInt			( SENDINFO( m_iDeaths), 0),
+		//SendPropInt			( SENDINFO( m_iDamageScore), 0),
 
 		SendPropInt			( SENDINFO( m_nWaterLevel ), 2, SPROP_UNSIGNED ),
 		SendPropFloat		( SENDINFO( m_flLaggedMovementValue ), 0, SPROP_NOSCALE ),
@@ -9036,7 +9036,7 @@ int	CPlayerInfo::GetFragCount()
 int	CPlayerInfo::GetDeathCount() 
 { 
 	Assert( m_pParent );
-	return m_pParent->DeathCount(); 
+	return m_pParent->DamageScoreCount(); 
 }
 
 bool CPlayerInfo::IsConnected() 

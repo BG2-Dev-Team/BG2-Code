@@ -819,6 +819,7 @@ void CFlag::ResetFlag( void )
 	m_vOverloadingPlayers.RemoveAll();
 	m_vTriggerBritishPlayers.RemoveAll();
 	m_vTriggerAmericanPlayers.RemoveAll();
+	m_flNextTeamBonus = gpGlobals->curtime + m_iTeamBonusInterval;
 	m_iNearbyPlayers = 0;
 
 	if ( HasSpawnFlags( CFlag_START_DISABLED ) )

@@ -45,7 +45,8 @@ const float PISTOL_CONSTANT_DAMAGE_RANGE = 8 * 36,	//8 yards
 
 const int	PISTOL_STAMINA_DRAIN = 0,
 			MUSKET_RIFLE_STAMINA_DRAIN = 0,
-			MELEE_STAMINA_DRAIN = 25;
+			MELEE_STAMINA_DRAIN = 25,
+			MELEE_STAMINA_DRAIN_HEAVY = 33;
 
 const float LOCK_TIME_RIFLE = 0.0675f;
 
@@ -57,7 +58,7 @@ const int BESS_BAYONET_RANGE = 83;
 
 const int AMER_BESS_FIRE_DAMAGE = 116;			//60 * 1.85
 const int AMER_BESS_BAYONET_DAMAGE = 66;			//43 * 0.8 * 1.85
-const int AMER_BESS_BAYONET_RANGE = 83;
+const int AMER_BESS_BAYONET_RANGE = 84;
 
 const int REVOL_FIRE_DAMAGE = 104;			//58 * 1.85 // BG2 - VisualMelon - Formerly 107 (now about 3% less)
 const int REVOL_BAYONET_DAMAGE = 61;		//41 * 0.8 * 1.85 + 1
@@ -83,7 +84,7 @@ const int LMODEL_CHARLE_FIRE_DAMAGE = 100;
 const int LMODEL_CHARLE_BAYONET_DAMAGE = 57;
 const int LMODEL_CHARLE_BAYONET_RANGE = 81;
 
-const int SEASERVICE_FIRE_DAMAGE = 104;			//60 * 1.85
+const int SEASERVICE_FIRE_DAMAGE = 108;			//60 * 1.85
 const int SEASERVICE_BAYONET_DAMAGE = 63;			//43 * 0.8 * 1.85
 const int SEASERVICE_BAYONET_RANGE = 78;
 
@@ -124,7 +125,7 @@ const int SABRE_DAMAGE = 74;				//40 * 1.85
 const int TOMAHAWK_DAMAGE = 79;				//43 * 1.85
 const int CLUB_DAMAGE		= 82;
 const int HIRSCHFAENGER_DAMAGE = 55;		//used to be knife's damage, but then knife was changed from 55 to 45
-const int HANGER_DAMAGE = 70;			//this ought to be a good number
+const int HANGER_DAMAGE = 74;			//this ought to be a good number
 
 //BG2 - Tjoppen - own constants, interpreted from various places in the BG source
 const float SABRE_RANGE = 57.0;
@@ -420,7 +421,7 @@ DECLARE_BG2_WEAPON(old_model_charleville)
 {
 	m_bCantAbortReload = true;
 
-	m_flRandomAdditionalLockTimeMax = 0.35f;
+	m_flRandomAdditionalLockTimeMax = 0.25f;
 
 	m_fHolsterTime = 0.75f;
 	m_flApproximateReloadTime = 7.6f;
@@ -1342,7 +1343,7 @@ DECLARE_BG2_WEAPON( longpattern )
 	m_Attackinfos[1].m_iAttackActivityEmpty	= ACT_VM_SECONDARYATTACK_EMPTY;
 	m_Attackinfos[1].m_flCosAngleTolerance  = BAYONET_COS_TOLERANCE;
 	m_Attackinfos[1].m_flRetraceDuration    = BAYONET_RETRACE_DURATION;
-	m_Attackinfos[1].m_iStaminaDrain		= MELEE_STAMINA_DRAIN;
+	m_Attackinfos[1].m_iStaminaDrain		= MELEE_STAMINA_DRAIN_HEAVY;
 
 	m_pBayonetDeathNotice = "longpattern_bayonet";
 
@@ -1405,7 +1406,7 @@ DECLARE_BG2_WEAPON(oldpattern)
 	m_Attackinfos[1].m_iAttackActivityEmpty = ACT_VM_SECONDARYATTACK_EMPTY;
 	m_Attackinfos[1].m_flCosAngleTolerance = BAYONET_COS_TOLERANCE;
 	m_Attackinfos[1].m_flRetraceDuration = BAYONET_RETRACE_DURATION;
-	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN * 1.2f;
+	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN * 1.5f;
 
 	m_pBayonetDeathNotice = "longpattern_bayonet";
 
@@ -1557,6 +1558,7 @@ DECLARE_BG2_WEAPON( american_brownbess )
 	m_pBayonetDeathNotice = "brownbess_bayonet";
 
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
+	m_flDamageDropoffMultiplier = 0.8;
 	m_flZeroRange = ZERO_RANGE_MUSKET;
 	m_iNumShot = 0;
 }

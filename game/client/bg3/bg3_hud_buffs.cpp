@@ -289,7 +289,7 @@ void CBuffIcons::PaintOfficerView() {
 
 			//now to draw the black bar... it grows from the top and shrinks from the bottom as time passes
 			//get a float ratio of how much of the icon should be "empty"
-			float flRatioEmpty = BG3Buffs::GetTimeUntilNextRally(m_iTeam) / RALLY_INTERVAL;
+			float flRatioEmpty = BG3Buffs::GetTimeUntilNextRally(m_iTeam) / BG3Buffs::GetRallyInterval(m_iRallyFlags);
 			Clamp(flRatioEmpty, 0.0f, 1.0f);
 
 			g_pEmptyDarkIcon->DrawSelfCropped(x, y, 0, 0,

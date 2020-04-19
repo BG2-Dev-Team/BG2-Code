@@ -245,7 +245,7 @@ void CBaseBG2Weapon::DoAttack( int iAttack )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-
+ConVar sv_flintlock_delay_offset("sv_flintlock_delay_offset", "0.0f", FCVAR_GAMEDLL | FCVAR_NOTIFY | FCVAR_REPLICATED);
 void CBaseBG2Weapon::Fire( int iAttack )
 {
 	m_bLastAttackStab = false;
@@ -306,11 +306,12 @@ void CBaseBG2Weapon::Fire( int iAttack )
 		flintlockDelay += RndFloat(0, Def()->m_flRandomAdditionalLockTimeMax) * pingScale;
 	}
 
+	flintlockDelay += sv_flintlock_delay_offset.GetFloat();
 
 	if( sv_turboshots.GetInt() == 0 )
-		m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + flintlockDelay;
+		m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + max(flintlockDelay, GetAttackRate(iAttack));
 	else
-		m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + 0.1f;
+		m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + flintlockDelay;
 
 	WeaponSound(SINGLE);
 
@@ -336,7 +337,27 @@ void CBaseBG2Weapon::Fire( int iAttack )
 	m_bShouldFireDelayed = true;
 	m_flNextDelayedFire = gpGlobals->curtime + flintlockDelay;
 
-	m_fNextHolster = gpGlobals->curtime + max(flintlockDelay, 0.2f); //Keep people from switching weapons right after shooting.
+	m_fNextHolster = gpGlobals->curtime + max(flintlockDelay + 0.05f, 0.2f); //Keep people from switching weapons right after shooting.
+}
+
+ConVar lb_tighten_vertical_accuracy("lb_tighten_vertical_accuracy", "0", FCVAR_GAMEDLL | FCVAR_REPLICATED | FCVAR_NOTIFY);
+
+float CBaseBG2Weapon::GetHitDropProbability() {
+	//count all hits when not ironsighted
+	if (!ShouldTightenVerticalAccuracy())
+		return 0.0f;
+
+	float defaultAccuracy = GetAccuracy(m_iLastAttack);
+	float vertScale = Def()->m_flVerticalAccuracyScale;
+	float vertAccuracy = defaultAccuracy * vertScale;
+
+	float defaultArea = defaultAccuracy * defaultAccuracy; //area of circle equation with pi factored away
+	float newArea = defaultAccuracy * vertAccuracy; //area of ellipse equation with pi factored away
+
+	//ex suppose defaultArea is 1, newArea is 0.5, we are are 100% more accurate, and we want to drop 50% of shots
+	//ex suppose defaultArea is 1, newArea is 
+	//float accuracyPercentageIncrease = 1.0f - (defaultArea / newArea); //hit dropping proportional to vertical accuracy increase, such that overall hit count remains the same
+	return (defaultArea - newArea) / defaultArea;
 }
 
 void CBaseBG2Weapon::FireBullets( int iAttack )
@@ -659,13 +680,14 @@ void CBaseBG2Weapon::Swing( int iAttack, bool bIsFirstAttempt )
 		SendWeaponAnim( GetActivity( iAttack ) );
 		pOwner->SetAnimation( PLAYER_ATTACK2 );
 
-		//BG2 - Draco - you cant stab very fast when your nackered, add quarter of a second
+		
 #ifndef CLIENT_DLL
 		CHL2MP_Player *pHL2Player = ToHL2MPPlayer( GetOwner() );
 #else
 		C_HL2MP_Player *pHL2Player = ToHL2MPPlayer( GetOwner() );
 #endif
 
+		//BG2 - Draco - you cant stab very fast when your nackered, add quarter of a second
 		if (pHL2Player && pHL2Player->m_iStamina <= 35)
 			m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + GetAttackRate(iAttack) + 0.25f;
 		else
@@ -767,7 +789,10 @@ void CBaseBG2Weapon::ItemPostFrame( void )
 		AngleVectors( angles, &vecAiming );
 		CShotManipulator manipulator( vecAiming );
 
-		m_vLastForward = manipulator.ApplySpread( sv_perfectaim.GetInt() == 0 ? Cone( GetAccuracy( m_iLastAttack ) ) : vec3_origin );
+		Vector cone = Cone(GetAccuracy(m_iLastAttack));
+		cone.y *= GetVerticalAccuracyScale();
+
+		m_vLastForward = manipulator.ApplySpread( sv_perfectaim.GetInt() == 0 ? cone : vec3_origin );
 		m_bShouldSampleForward = false;
 
 	}

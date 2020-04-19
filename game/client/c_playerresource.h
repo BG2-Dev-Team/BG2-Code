@@ -48,7 +48,8 @@ public : // IGameResources intreface
 	virtual int		GetPing( int index );
 //	virtual int		GetPacketloss( int index );
 	virtual int		GetPlayerScore( int index );
-	virtual int		GetDeaths( int index );
+	virtual int		GetDamageScore( int index );
+	virtual int		GetDeaths(int index) { return GetDamageScore(index); };
 	virtual int		GetTeam( int index );
 	virtual int		GetFrags( int index );
 	virtual int		GetHealth( int index );
@@ -56,6 +57,11 @@ public : // IGameResources intreface
 	virtual void	ClientThink();
 	virtual	void	OnDataChanged(DataUpdateType_t updateType);
 
+	int GetNumBritish() const { return m_iPlayerCounts >> 24; };
+	int GetNumAmericans() const { return (m_iPlayerCounts >> 16) & 0xFF; };
+	int GetNumAliveBritish() const { return (m_iPlayerCounts >> 8) & 0xFF; };
+	int GetNumAliveAmericans() const { return m_iPlayerCounts & 0xFF; }
+	unsigned int		m_iPlayerCounts;
 protected:
 	void	UpdatePlayerName( int slot );
 
@@ -64,13 +70,15 @@ protected:
 	string_t	m_szName[MAX_PLAYERS+1];
 	int		m_iPing[MAX_PLAYERS+1];
 	int		m_iScore[MAX_PLAYERS+1];
-	int		m_iDeaths[MAX_PLAYERS+1];
+	int		m_iDamageScore[MAX_PLAYERS+1];
 	bool	m_bConnected[MAX_PLAYERS+1];
 	int		m_iTeam[MAX_PLAYERS+1];
 	bool	m_bAlive[MAX_PLAYERS+1];
 	int		m_iHealth[MAX_PLAYERS+1];
 	Color	m_Colors[MAX_TEAMS];
 	string_t m_szUnconnectedName;
+
+	
 
 };
 

@@ -161,6 +161,14 @@ int C_Team::Get_Ping( void )
 //-----------------------------------------------------------------------------
 int C_Team::Get_Number_Players( void )
 {
+	//BG3 - use network data for important teams, this data is more accurate
+	if (m_iTeamNum == TEAM_BRITISH) {
+		return g_PR->GetNumBritish();
+	}
+	else if (m_iTeamNum == TEAM_AMERICANS) {
+		return g_PR->GetNumAmericans();
+	}
+
 	//BG2 - Tjoppen - part of bandwidth saving
 	int n = 0;
 	for (int x = 1; x <= gpGlobals->maxClients; x++)
@@ -168,6 +176,29 @@ int C_Team::Get_Number_Players( void )
 		C_BasePlayer *pPlayer = UTIL_PlayerByIndex(x);
 
 		if (pPlayer && pPlayer->GetTeamNumber() == GetTeamNumber())
+			n++;
+	}
+
+	return n;
+	//return m_aPlayers.Size();
+}
+
+int C_Team::GetNumPlayersAlive(void)
+{
+	if (m_iTeamNum == TEAM_BRITISH) {
+		return g_PR->GetNumAliveBritish();
+	}
+	else if (m_iTeamNum == TEAM_AMERICANS) {
+		return g_PR->GetNumAliveAmericans();
+	}
+
+	//BG2 - Tjoppen - part of bandwidth saving
+	int n = 0;
+	for (int x = 1; x <= gpGlobals->maxClients; x++)
+	{
+		C_BasePlayer *pPlayer = UTIL_PlayerByIndex(x);
+
+		if (pPlayer && pPlayer->GetTeamNumber() == GetTeamNumber() && pPlayer->IsAlive())
 			n++;
 	}
 

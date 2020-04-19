@@ -115,6 +115,7 @@ public:
 	float	m_flMuzzleVelocity;
 	float	m_flShotMuzzleVelocity;	//muzzle velocity when firing buckshot
 	float	m_flDamageDropoffMultiplier;
+	float	m_flVerticalAccuracyScale;
 	float	m_flZeroRange;		//range to zero the gun in at
 	uint8	m_iNumShot;
 	float	m_iDamagePerShot;

@@ -225,6 +225,7 @@ int CHL2MP_Player::GetCurrentSpeed(void) const
 	return (base + m_iSpeedModifier) * scale * terrainScale;
 
 #else
+
 	return (base + m_iSpeedModifier) * scale;
 #endif
 }

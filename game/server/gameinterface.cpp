@@ -1031,9 +1031,12 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 		// Clear out entity references, and parse the entities into it.
 		//g_MapEntityRefs.Purge(); 
 		//BG2 - Spawn point optimization test. - HairyPotter
-		m_AmericanSpawns.Purge();
-		m_BritishSpawns.Purge();
-		m_MultiSpawns.Purge();
+		g_AmericanSpawns.Purge();
+		g_BritishSpawns.Purge();
+		g_MultiSpawns.Purge();
+		g_AmericanPrioritySpawns.Purge();
+		g_BritishPrioritySpawns.Purge();
+		g_MultiPrioritySpawns.Purge();
 		//
 		CMapLoadEntityFilter filter;
 		MapEntity_ParseAllEntities( pMapEntities, &filter );

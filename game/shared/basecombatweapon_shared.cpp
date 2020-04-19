@@ -1576,8 +1576,8 @@ bool CBaseCombatWeapon::ReloadOrSwitchWeapons( void )
 		if (UsesClipsForAmmo1() &&
 			(m_iClip1 == 0) &&
 			(GetWeaponFlags() & ITEM_FLAG_NOAUTORELOAD) == false &&
-			m_flNextPrimaryAttack < gpGlobals->curtime &&
-			m_flNextSecondaryAttack < gpGlobals->curtime &&
+			//m_flNextPrimaryAttack < gpGlobals->curtime &&
+			//m_flNextSecondaryAttack < gpGlobals->curtime &&
 			!Def()->m_bDontAutoreload)
 		{
 			// if we're successfully reloading, we're done
@@ -2004,7 +2004,7 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	// -----------------------
 	//  Reload pressed / Clip Empty
 	//  Can only start the Reload Cycle after the firing cycle
-	if ( ( pOwner->m_nButtons & IN_RELOAD ) && m_flNextPrimaryAttack <= gpGlobals->curtime && UsesClipsForAmmo1() && !m_bInReload ) 
+	if ( ( pOwner->m_nButtons & IN_RELOAD ) /*&& m_flNextPrimaryAttack <= gpGlobals->curtime*/ && UsesClipsForAmmo1() && !m_bInReload ) //BG3 - Awesome - don't let attack time determine reload
 	{
 		// reload when reload is pressed, or if no buttons are down and weapon is empty.
 		Reload();
