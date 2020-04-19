@@ -205,6 +205,13 @@ $Project "Server (HL2MP)"
 				$File "bg3\Bots\bg3_player_search.h"
 				$File "$SRCDIR\game\shared\bg3\bg3_bots_cvars_shared.cpp"
 			}
+			$Folder "Controls"
+			{
+				$File "bg3\controls\bg3_voting_system.cpp"
+				$File "bg3\controls\bg3_voting_system.h"
+				$File "$SRCDIR\game\shared\bg3\controls\bg3_voting_system_shared.h"
+			}
+			
 			$Folder "LinebattleControls"
 			{
 				$File "bg3\LinebattleControls\bg3_battle_line.h"

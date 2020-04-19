@@ -150,6 +150,12 @@ $Project "Client (HL2MP)"
 		
 		$Folder "BG3"
 		{
+			$Folder "a11y"
+			{
+				$File "bg3\atty\colorblind_mode.h"
+				$File "bg3\atty\colorblind_mode.cpp"
+			}
+			
 			$Folder "Math"
 			{
 				$File "$SRCDIR\game\shared\bg3\bg3_math_shared.cpp"
@@ -164,6 +170,15 @@ $Project "Client (HL2MP)"
 			}
 			$Folder "vgui"
 			{
+				$Folder "admin"
+				{
+					$File "bg3\vgui\admin\bg3_admin_mainmenu.cpp"
+					$File "bg3\vgui\admin\bg3_admin_submenu.cpp"
+					$File "bg3\vgui\admin\bg3_admin_submenu.h"
+					$File "bg3\vgui\admin\bg3_listed_menu.cpp"
+					$File "bg3\vgui\admin\vgui_adminmenu.h"
+					$File "bg3\vgui\admin\vgui_adminmenu.cpp"
+				}
 				$File "$SRCDIR\game\shared\bg3\vgui\bg3_buff_sprite.cpp"
 				$File "$SRCDIR\game\shared\bg3\vgui\bg3_buff_sprite.h"
 				$File "bg3\vgui\bg3_button_close.cpp"
