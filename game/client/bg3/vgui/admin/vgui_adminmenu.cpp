@@ -21,7 +21,7 @@
 
 #include <game/client/iviewport.h>
 #include "commandmenu.h"
-#include "hltvcamera.h"
+#include "hltvcamera.h"	
 
 #include "IGameUIFuncs.h" // for key bindings
 

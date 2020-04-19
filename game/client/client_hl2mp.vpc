@@ -152,8 +152,8 @@ $Project "Client (HL2MP)"
 		{
 			$Folder "a11y"
 			{
-				$File "bg3\atty\colorblind_mode.h"
-				$File "bg3\atty\colorblind_mode.cpp"
+				$File "bg3\a11y\colorblind_mode.h"
+				$File "bg3\a11y\colorblind_mode.cpp"
 			}
 			
 			$Folder "Math"
