@@ -120,8 +120,6 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 				break;
 			}
 			const char* playerName = curPlayer->GetPlayerName();
-			int childCount = playerPages[i]->m_iNumChildren;
-			childCount = childCount;
 			playerPages[i]->m_aChildren[j+1] = CreatePlayerActionMenuEntry(action, playerName, j);
 			j++;
 		}
