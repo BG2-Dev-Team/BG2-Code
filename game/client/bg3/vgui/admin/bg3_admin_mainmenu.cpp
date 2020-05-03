@@ -35,6 +35,106 @@ commented on the following form:
 #include "bg3_admin_submenu.h"
 #include "../shared/hl2mp/hl2mp_gamerules.h"
 
+const char* GetPlayerActionTitle(AdminMenuPlayerAction action) {
+	switch (action)
+	{
+	case AdminMenuPlayerAction::Mute:
+		return "Mute";
+	case AdminMenuPlayerAction::Unmute:
+		return "Unmute"; 
+	case AdminMenuPlayerAction::Spawn:
+		return "Spawn";
+	case AdminMenuPlayerAction::Kill:
+		return "Kill";
+	case AdminMenuPlayerAction::Kick:
+		return "Kick";
+	case AdminMenuPlayerAction::Ban:
+		return "Ban";
+	default:
+		return "INVALID ACTION SELECTION";
+	}
+}
+
+const char* GetPlayerActionCommand(AdminMenuPlayerAction action) {
+	switch (action)
+	{
+	case AdminMenuPlayerAction::Mute:
+		return "mute %s";
+	case AdminMenuPlayerAction::Unmute:
+		return "unmute %s";
+	case AdminMenuPlayerAction::Spawn:
+		return "spawn %s";
+	case AdminMenuPlayerAction::Kill:
+		return "slay %s";
+	case AdminMenuPlayerAction::Kick:
+		return "kick %s";
+	case AdminMenuPlayerAction::Ban:
+		return "ban %s";
+	default:
+		return "INVALID ACTION SELECTION";
+	}
+}
+
+CAdminSubMenu* CreatePlayerActionMenuEntry(AdminMenuPlayerAction action, const char* Playername, int slot) {
+	const char* command = GetPlayerActionCommand(action);
+	CAdminSubMenu* result = new CAdminSubMenu(Playername, "");
+	result->m_pszLineItemText = Playername;
+	result->m_pszTitle = command;
+	result->m_pszFunc = [](uint8, CAdminSubMenu* pSelf){ SayServerCommand(pSelf->m_pszTitle, pSelf->m_pszLineItemText); return true; };
+	return result;
+}
+
+CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
+	int maxClients = 0;
+	for (int i = 1; i < gpGlobals->maxClients; i++) {
+		//Trick to get the real Playercount not the maximal possible children
+		CHL2MP_Player* curPlayer = static_cast<CHL2MP_Player*>(UTIL_PlayerByIndex(i));
+		if (!curPlayer) {
+			break;
+		}
+		maxClients = i;
+	}
+	int menuPagesCount = maxClients / PLAYER_PER_PAGE +1;
+	CAdminSubMenu** playerPages = new CAdminSubMenu*[menuPagesCount];
+	const char* actionName = GetPlayerActionTitle(action);
+	for (int i = 0; i < menuPagesCount; i++) {
+		playerPages[i] = new CAdminSubMenu;
+		bool isLastPage = (i + 1 == menuPagesCount);
+		int childCount = 0;
+		if (isLastPage) {
+			 //We need the last remaining player +1 Menuentry for back
+			childCount = (maxClients % PLAYER_PER_PAGE) + 1;
+		} else {
+			//Otherwise we have a full page of players plus 2 options for back and next page
+			childCount = PLAYER_PER_PAGE + 2;
+		}
+		playerPages[i]->m_aChildren = new CAdminSubMenu*[childCount];
+		playerPages[i]->m_iNumChildren = childCount;
+		playerPages[i]->m_aChildren[0] = g_pAdminBackButton;
+		playerPages[i]->m_pszLineItemText = "#BG3_Adm_Next";
+		playerPages[i]->m_pszTitle = actionName;
+		int j = 0;
+		while ((j < 8) && ((i * 8 + j) < maxClients)){
+			CHL2MP_Player* curPlayer = static_cast<CHL2MP_Player*>(UTIL_PlayerByIndex(i * 8 + j +1));
+			if (!curPlayer) {
+				break;
+			}
+			const char* playerName = curPlayer->GetPlayerName();
+			int childCount = playerPages[i]->m_iNumChildren;
+			childCount = childCount;
+			playerPages[i]->m_aChildren[j+1] = CreatePlayerActionMenuEntry(action, playerName, j);
+			j++;
+		}
+	}
+	for (int i = 0; i < menuPagesCount-1; i++) {
+		//All Fullpages get the next Page as their last Child
+		playerPages[i]->m_aChildren[9] = playerPages[i + 1];
+	}
+
+	playerPages[0]->m_pszLineItemText = actionName;
+	return playerPages[0];
+}
+
 //ADMIN MENU CONSTRUCTOR - THIS DEFINES THE MAIN STRUCTURE OF THE ENTIRE MENU
 static CAdminMainMenu* g_pAdminMainMenu = NULL;
 CAdminMainMenu::CAdminMainMenu() {
@@ -154,6 +254,17 @@ CAdminMainMenu::CAdminMainMenu() {
 		set(8, "Deathmatch 30 Rounds", "")
 		{ SayServerCommand("dm 30"); return false; };
 	}
+
+	//Player Action Menu
+	pPlayerActionMenu->m_iNumChildren = 7;
+	pChildren = pPlayerActionMenu->m_aChildren = new CAdminSubMenu*[pPlayerActionMenu->m_iNumChildren];
+	pPlayerActionMenu->m_aChildren[0] = pBackButton;
+	pPlayerActionMenu->m_aChildren[1] = CreatePlayerActionMenu(AdminMenuPlayerAction::Mute);
+	pPlayerActionMenu->m_aChildren[2] = CreatePlayerActionMenu(AdminMenuPlayerAction::Unmute);
+	pPlayerActionMenu->m_aChildren[3] = CreatePlayerActionMenu(AdminMenuPlayerAction::Spawn);
+	pPlayerActionMenu->m_aChildren[4] = CreatePlayerActionMenu(AdminMenuPlayerAction::Kill);
+	pPlayerActionMenu->m_aChildren[5] = CreatePlayerActionMenu(AdminMenuPlayerAction::Kick);
+	pPlayerActionMenu->m_aChildren[6] = CreatePlayerActionMenu(AdminMenuPlayerAction::Ban);
 
 	//OPTIONS MENU
 	pOptionsMenu->m_iNumChildren = 10;

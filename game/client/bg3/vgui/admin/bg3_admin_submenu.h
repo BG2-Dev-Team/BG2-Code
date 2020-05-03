@@ -44,6 +44,17 @@ class CHL2MP_Player;
 
 #define NUM_ADMIN_MENU_LABELS 10
 
+#define PLAYER_PER_PAGE 8
+
+enum class AdminMenuPlayerAction {
+	Mute,
+	Unmute,
+	Spawn,
+	Kill,
+	Kick,
+	Ban,
+};
+
 class CAdminSubMenu {
 public:
 	CAdminSubMenu();

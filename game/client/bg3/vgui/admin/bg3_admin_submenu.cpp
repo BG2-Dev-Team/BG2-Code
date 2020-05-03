@@ -63,7 +63,6 @@ void CAdminSubMenu::getLineItemText(uint8 iForSlot, wchar* buffer, int bufferSiz
 		wcscpy_s(localBuffer, g_pVGuiLocalize->Find(m_pszLineItemText));
 	else
 		g_pVGuiLocalize->ConvertANSIToUnicode(m_pszLineItemText, localBuffer, 128);
-
 	int displayedInt = iForSlot + 1;
 	if (displayedInt == 10) displayedInt = 0;
 
