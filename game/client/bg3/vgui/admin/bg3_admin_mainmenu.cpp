@@ -405,8 +405,5 @@ CAdminMainMenu::CAdminMainMenu() {
 }
 
 CAdminMainMenu* CAdminMainMenu::Get() {
-	if (!g_pAdminMainMenu)
-		g_pAdminMainMenu = new CAdminMainMenu();
-	return g_pAdminMainMenu;
+		return new CAdminMainMenu();
 }
-
