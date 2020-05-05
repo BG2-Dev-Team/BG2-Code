@@ -113,6 +113,8 @@ public:
 
 	virtual	bool		EnableJoystickMode();
 
+	void					ForceDepressZoom();
+
 // Private Implementation
 protected:
 	// Implementation specific initialization

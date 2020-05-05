@@ -795,7 +795,6 @@ void CBaseCombatWeapon::DisableIronsights(void)
 void CBaseCombatWeapon::Drop( const Vector &vecVelocity )
 {
 #if !defined( CLIENT_DLL )
-
 	// Once somebody drops a gun, it's fair game for removal when/if
 	// a game_weapon_manager does a cleanup on surplus weapons in the
 	// world.

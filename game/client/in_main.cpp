@@ -1872,3 +1872,6 @@ void CInput::LevelInit( void )
 #endif
 }
 
+void CInput::ForceDepressZoom() { 
+	KeyUp(&in_zoom, NULL); 
+}
