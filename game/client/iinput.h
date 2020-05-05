@@ -111,6 +111,7 @@ public:
 	virtual void		CAM_CameraThirdThink( void ) = 0;
 
 	virtual	bool		EnableJoystickMode() = 0;
+	virtual void		ForceDepressZoom() = 0;
 };
 
 extern ::IInput *input;

@@ -5,6 +5,7 @@
 //=============================================================================//
 
 #include "cbase.h"
+#include "input.h"
 #include "vcollide_parse.h"
 #include "c_hl2mp_player.h"
 #include "view.h"
@@ -554,6 +555,12 @@ void C_HL2MP_Player::OnDataChanged( DataUpdateType_t type )
 	{
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
+
+	//Unpress zoom key on player death - fixes ironsights reappering on respawn
+	if (!IsAlive() && this == C_HL2MP_Player::GetLocalHL2MPPlayer()) {
+		::input->ForceDepressZoom();
+	}
+	
 
 	UpdateVisibility();
 }

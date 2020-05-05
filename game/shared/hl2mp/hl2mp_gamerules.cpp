@@ -148,8 +148,9 @@ ConVar mp_rounds("mp_rounds", "0", CVAR_FLAGS, "Maximum number of rounds - round
 ConVar mp_roundtime("mp_roundtime", "300", CVAR_FLAGS, "Maximum length of round");
 ConVar mp_tickets_a("mp_tickets_a", "100", CVAR_FLAGS, "Tickets given to americans on round start");
 ConVar mp_tickets_b("mp_tickets_b", "100", CVAR_FLAGS, "Tickets given to british on round start");
-ConVar mp_tickets_drain_a("mp_tickets_drain_a", "12.5", CVAR_FLAGS, "Number of tickets drained every ten seconds when the americans have more than half of their cappable flags. Can have decimals");
-ConVar mp_tickets_drain_b("mp_tickets_drain_b", "12.5", CVAR_FLAGS, "Number of tickets drained every ten seconds when the british have more than half of their cappable flags. Can have decimals");
+ConVar mp_tickets_drain_a("mp_tickets_drain_a", "12.5", CVAR_FLAGS, "Number of tickets drained every interval when the americans have more than half of their cappable flags. Can have decimals");
+ConVar mp_tickets_drain_b("mp_tickets_drain_b", "12.5", CVAR_FLAGS, "Number of tickets drained every interval when the british have more than half of their cappable flags. Can have decimals");
+ConVar mp_tickets_drain_interval("mp_tickets_drain_interval", "10", CVAR_FLAGS, "How often tickets will be drained in mp_respawnstyle = 3");
 
 //BG3 - Awesome - linebattle cvars
 ConVar lb_enforce_weapon_amer("lb_enforce_weapon_amer", "0", CVAR_FLAGS_HIDDEN, "How to enforce continental soldier's weapon in linebattle mode. 0 is disabled, 1 is enforce first weapon, 2 is enforce second weapon");
@@ -730,7 +731,7 @@ void CHL2MPRules::Think( void )
 		if (UsingTickets())
 		{
 			CheckTicketDrain();
-			m_fNextFlagUpdate = gpGlobals->curtime + 10;
+			m_fNextFlagUpdate = gpGlobals->curtime + mp_tickets_drain_interval.GetInt();
 		}
 		else
 		{
