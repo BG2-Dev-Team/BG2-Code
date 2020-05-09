@@ -50,7 +50,7 @@ enum class AdminMenuPlayerAction {
 	Mute,
 	Unmute,
 	Spawn,
-	Kill,
+	Slay,
 	Kick,
 	Ban,
 };

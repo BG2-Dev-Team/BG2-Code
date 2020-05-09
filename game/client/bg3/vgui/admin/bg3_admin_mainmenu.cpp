@@ -44,8 +44,8 @@ const char* GetPlayerActionTitle(AdminMenuPlayerAction action) {
 		return "Unmute"; 
 	case AdminMenuPlayerAction::Spawn:
 		return "Spawn";
-	case AdminMenuPlayerAction::Kill:
-		return "Kill";
+	case AdminMenuPlayerAction::Slay:
+		return "Slay";
 	case AdminMenuPlayerAction::Kick:
 		return "Kick";
 	case AdminMenuPlayerAction::Ban:
@@ -64,7 +64,7 @@ const char* GetPlayerActionCommand(AdminMenuPlayerAction action) {
 		return "unmute %s";
 	case AdminMenuPlayerAction::Spawn:
 		return "spawn %s";
-	case AdminMenuPlayerAction::Kill:
+	case AdminMenuPlayerAction::Slay:
 		return "slay %s";
 	case AdminMenuPlayerAction::Kick:
 		return "kick %s";
@@ -88,11 +88,10 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 	int maxClients = 0;
 	for (int i = 1; i < gpGlobals->maxClients; i++) {
 		//Trick to get the real Playercount not the maximal possible children
-		CHL2MP_Player* curPlayer = static_cast<CHL2MP_Player*>(UTIL_PlayerByIndex(i));
-		if (!curPlayer) {
-			break;
+		CHL2MP_Player* curPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+		if (curPlayer) {
+			maxClients++;
 		}
-		maxClients = i;
 	}
 	int menuPagesCount = maxClients / PLAYER_PER_PAGE +1;
 	CAdminSubMenu** playerPages = new CAdminSubMenu*[menuPagesCount];
@@ -112,7 +111,9 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 		playerPages[i]->m_iNumChildren = childCount;
 		playerPages[i]->m_aChildren[0] = g_pAdminBackButton;
 		playerPages[i]->m_pszLineItemText = "#BG3_Adm_Next";
-		playerPages[i]->m_pszTitle = actionName;
+		char title[50];
+		sprintf_s(title, "%s Page %d", actionName, i + 1);
+		playerPages[i]->m_pszTitle = title;
 		int j = 0;
 		while ((j < 8) && ((i * 8 + j) < maxClients)){
 			CHL2MP_Player* curPlayer = static_cast<CHL2MP_Player*>(UTIL_PlayerByIndex(i * 8 + j +1));
@@ -260,7 +261,7 @@ CAdminMainMenu::CAdminMainMenu() {
 	pPlayerActionMenu->m_aChildren[1] = CreatePlayerActionMenu(AdminMenuPlayerAction::Mute);
 	pPlayerActionMenu->m_aChildren[2] = CreatePlayerActionMenu(AdminMenuPlayerAction::Unmute);
 	pPlayerActionMenu->m_aChildren[3] = CreatePlayerActionMenu(AdminMenuPlayerAction::Spawn);
-	pPlayerActionMenu->m_aChildren[4] = CreatePlayerActionMenu(AdminMenuPlayerAction::Kill);
+	pPlayerActionMenu->m_aChildren[4] = CreatePlayerActionMenu(AdminMenuPlayerAction::Slay);
 	pPlayerActionMenu->m_aChildren[5] = CreatePlayerActionMenu(AdminMenuPlayerAction::Kick);
 	pPlayerActionMenu->m_aChildren[6] = CreatePlayerActionMenu(AdminMenuPlayerAction::Ban);
 
