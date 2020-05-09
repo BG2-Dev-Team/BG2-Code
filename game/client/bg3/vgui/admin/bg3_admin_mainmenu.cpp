@@ -67,9 +67,9 @@ const char* GetPlayerActionCommand(AdminMenuPlayerAction action) {
 	case AdminMenuPlayerAction::Slay:
 		return "slay %s";
 	case AdminMenuPlayerAction::Kick:
-		return "kick %s";
+		return "rkick %s";
 	case AdminMenuPlayerAction::Ban:
-		return "ban %s";
+		return "rban %s";
 	default:
 		return "INVALID ACTION SELECTION";
 	}
@@ -85,15 +85,26 @@ CAdminSubMenu* CreatePlayerActionMenuEntry(AdminMenuPlayerAction action, const c
 }
 
 CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
-	int maxClients = 0;
-	for (int i = 1; i < gpGlobals->maxClients; i++) {
+	int numClients = 0;
+	for (int i = 1; i <= gpGlobals->maxClients; i++) {
 		//Trick to get the real Playercount not the maximal possible children
 		CHL2MP_Player* curPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
 		if (curPlayer) {
-			maxClients++;
+			numClients++;
 		}
 	}
-	int menuPagesCount = maxClients / PLAYER_PER_PAGE +1;
+	const char** clientNames;
+	clientNames = new const char*[numClients];
+	int j = 0;
+	for (int i = 1; i <= gpGlobals->maxClients; i++) {
+		//Trick to get the real Playercount not the maximal possible children
+		CHL2MP_Player* curPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+		if (curPlayer) {
+			clientNames[j] = curPlayer->GetPlayerName();
+			j++;
+		}
+	}
+	int menuPagesCount = numClients / PLAYER_PER_PAGE + 1;
 	CAdminSubMenu** playerPages = new CAdminSubMenu*[menuPagesCount];
 	const char* actionName = GetPlayerActionTitle(action);
 	for (int i = 0; i < menuPagesCount; i++) {
@@ -102,7 +113,7 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 		int childCount = 0;
 		if (isLastPage) {
 			 //We need the last remaining player +1 Menuentry for back
-			childCount = (maxClients % PLAYER_PER_PAGE) + 1;
+			childCount = (numClients % PLAYER_PER_PAGE) + 1;
 		} else {
 			//Otherwise we have a full page of players plus 2 options for back and next page
 			childCount = PLAYER_PER_PAGE + 2;
@@ -111,20 +122,20 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 		playerPages[i]->m_iNumChildren = childCount;
 		playerPages[i]->m_aChildren[0] = g_pAdminBackButton;
 		playerPages[i]->m_pszLineItemText = "#BG3_Adm_Next";
-		char title[50];
-		sprintf_s(title, "%s Page %d", actionName, i + 1);
-		playerPages[i]->m_pszTitle = title;
+		playerPages[i]->m_pszTitle = actionName;
 		int j = 0;
-		while ((j < 8) && ((i * 8 + j) < maxClients)){
+		while ((j < 8) && ((i * 8 + j) < numClients)){
 			CHL2MP_Player* curPlayer = static_cast<CHL2MP_Player*>(UTIL_PlayerByIndex(i * 8 + j +1));
 			if (!curPlayer) {
 				break;
 			}
-			const char* playerName = curPlayer->GetPlayerName();
+			const char* playerName = clientNames[i * 8 + j];
 			playerPages[i]->m_aChildren[j+1] = CreatePlayerActionMenuEntry(action, playerName, j);
 			j++;
 		}
 	}
+	delete[] clientNames;
+	clientNames = NULL;
 	for (int i = 0; i < menuPagesCount-1; i++) {
 		//All Fullpages get the next Page as their last Child
 		playerPages[i]->m_aChildren[9] = playerPages[i + 1];
