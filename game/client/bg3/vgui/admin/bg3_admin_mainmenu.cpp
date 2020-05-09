@@ -86,10 +86,9 @@ CAdminSubMenu* CreatePlayerActionMenuEntry(AdminMenuPlayerAction action, const c
 
 CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 	int numClients = 0;
-	for (int i = 1; i <= gpGlobals->maxClients; i++) {
+	for (int i = 1; i <= gpGlobals->maxClients*2; i++) {
 		//Trick to get the real Playercount not the maximal possible children
-		CHL2MP_Player* curPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-		if (curPlayer) {
+		if (g_PR->IsConnected(i)) {
 			numClients++;
 		}
 	}
@@ -97,10 +96,9 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 	clientNames = new const char*[numClients];
 	int j = 0;
 	for (int i = 1; i <= gpGlobals->maxClients; i++) {
-		//Trick to get the real Playercount not the maximal possible children
-		CHL2MP_Player* curPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-		if (curPlayer) {
-			clientNames[j] = curPlayer->GetPlayerName();
+		if (g_PR->IsConnected(i)) {
+			const char* playerName = g_PR->GetPlayerName(i);
+			clientNames[j] = playerName;
 			j++;
 		}
 	}
@@ -125,10 +123,6 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 		playerPages[i]->m_pszTitle = actionName;
 		int j = 0;
 		while ((j < 8) && ((i * 8 + j) < numClients)){
-			CHL2MP_Player* curPlayer = static_cast<CHL2MP_Player*>(UTIL_PlayerByIndex(i * 8 + j +1));
-			if (!curPlayer) {
-				break;
-			}
 			const char* playerName = clientNames[i * 8 + j];
 			playerPages[i]->m_aChildren[j+1] = CreatePlayerActionMenuEntry(action, playerName, j);
 			j++;
