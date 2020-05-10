@@ -102,7 +102,7 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 			j++;
 		}
 	}
-	int menuPagesCount = numClients / PLAYER_PER_PAGE + 1;
+	int menuPagesCount = Ceil2Int((float)numClients / (float)PLAYER_PER_PAGE);
 	CAdminSubMenu** playerPages = new CAdminSubMenu*[menuPagesCount];
 	const char* actionName = GetPlayerActionTitle(action);
 	for (int i = 0; i < menuPagesCount; i++) {
