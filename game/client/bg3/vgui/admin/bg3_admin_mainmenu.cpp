@@ -111,7 +111,14 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 		int childCount = 0;
 		if (isLastPage) {
 			 //We need the last remaining player +1 Menuentry for back
-			childCount = (numClients % PLAYER_PER_PAGE) + 1;
+			int modulo = numClients % PLAYER_PER_PAGE;
+			//But only if the we not by chance got a number of players % PLAYER_PER_PAGE = 0
+			if (modulo != 0){
+				childCount = (numClients % PLAYER_PER_PAGE) + 1;
+			}
+			else {
+				childCount = PLAYER_PER_PAGE + 1;
+			}
 		} else {
 			//Otherwise we have a full page of players plus 2 options for back and next page
 			childCount = PLAYER_PER_PAGE + 2;
