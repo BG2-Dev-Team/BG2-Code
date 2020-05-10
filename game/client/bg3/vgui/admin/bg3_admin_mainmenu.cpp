@@ -48,8 +48,10 @@ const char* GetPlayerActionTitle(AdminMenuPlayerAction action) {
 		return "Slay";
 	case AdminMenuPlayerAction::Kick:
 		return "Kick";
-	case AdminMenuPlayerAction::Ban:
-		return "Ban";
+	case AdminMenuPlayerAction::Ban60:
+		return "Ban 60 Minutes";
+	case AdminMenuPlayerAction::BanIndef:
+		return "Ban indefinitely";
 	default:
 		return "INVALID ACTION SELECTION";
 	}
@@ -68,7 +70,9 @@ const char* GetPlayerActionCommand(AdminMenuPlayerAction action) {
 		return "slay %s";
 	case AdminMenuPlayerAction::Kick:
 		return "rkick %s";
-	case AdminMenuPlayerAction::Ban:
+	case AdminMenuPlayerAction::Ban60:
+		return "rban %s 60";
+	case AdminMenuPlayerAction::BanIndef:
 		return "rban %s";
 	default:
 		return "INVALID ACTION SELECTION";
@@ -267,7 +271,7 @@ CAdminMainMenu::CAdminMainMenu() {
 	}
 
 	//Player Action Menu
-	pPlayerActionMenu->m_iNumChildren = 7;
+	pPlayerActionMenu->m_iNumChildren = 8;
 	pChildren = pPlayerActionMenu->m_aChildren = new CAdminSubMenu*[pPlayerActionMenu->m_iNumChildren];
 	pPlayerActionMenu->m_aChildren[0] = pBackButton;
 	pPlayerActionMenu->m_aChildren[1] = CreatePlayerActionMenu(AdminMenuPlayerAction::Mute);
@@ -275,7 +279,8 @@ CAdminMainMenu::CAdminMainMenu() {
 	pPlayerActionMenu->m_aChildren[3] = CreatePlayerActionMenu(AdminMenuPlayerAction::Spawn);
 	pPlayerActionMenu->m_aChildren[4] = CreatePlayerActionMenu(AdminMenuPlayerAction::Slay);
 	pPlayerActionMenu->m_aChildren[5] = CreatePlayerActionMenu(AdminMenuPlayerAction::Kick);
-	pPlayerActionMenu->m_aChildren[6] = CreatePlayerActionMenu(AdminMenuPlayerAction::Ban);
+	pPlayerActionMenu->m_aChildren[6] = CreatePlayerActionMenu(AdminMenuPlayerAction::Ban60);
+	pPlayerActionMenu->m_aChildren[7] = CreatePlayerActionMenu(AdminMenuPlayerAction::BanIndef);
 
 	//OPTIONS MENU
 	pOptionsMenu->m_iNumChildren = 10;

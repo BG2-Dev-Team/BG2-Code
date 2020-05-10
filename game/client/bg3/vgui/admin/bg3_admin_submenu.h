@@ -52,7 +52,8 @@ enum class AdminMenuPlayerAction {
 	Spawn,
 	Slay,
 	Kick,
-	Ban,
+	Ban60,
+	BanIndef
 };
 
 class CAdminSubMenu {
