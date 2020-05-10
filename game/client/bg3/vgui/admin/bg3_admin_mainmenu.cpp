@@ -148,6 +148,22 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 
 	playerPages[0]->m_pszLineItemText = actionName;
 	return playerPages[0];
+	delete[] playerPages;
+	playerPages = NULL;
+}
+
+void CreatePlayerActionTopMenu(CAdminSubMenu* pPlayerActionMenu) {
+	pPlayerActionMenu->m_iNumChildren = 8;
+	pPlayerActionMenu->m_aChildren = new CAdminSubMenu*[pPlayerActionMenu->m_iNumChildren];
+	pPlayerActionMenu->m_aChildren[0] = new CAdminSubMenu("#BG3_Adm_Back", "");
+	pPlayerActionMenu->m_aChildren[0]->m_pszFunc = [](uint8, CAdminSubMenu*)->bool { return true; };
+	pPlayerActionMenu->m_aChildren[1] = CreatePlayerActionMenu(AdminMenuPlayerAction::Mute);
+	pPlayerActionMenu->m_aChildren[2] = CreatePlayerActionMenu(AdminMenuPlayerAction::Unmute);
+	pPlayerActionMenu->m_aChildren[3] = CreatePlayerActionMenu(AdminMenuPlayerAction::Spawn);
+	pPlayerActionMenu->m_aChildren[4] = CreatePlayerActionMenu(AdminMenuPlayerAction::Slay);
+	pPlayerActionMenu->m_aChildren[5] = CreatePlayerActionMenu(AdminMenuPlayerAction::Kick);
+	pPlayerActionMenu->m_aChildren[6] = CreatePlayerActionMenu(AdminMenuPlayerAction::Ban60);
+	pPlayerActionMenu->m_aChildren[7] = CreatePlayerActionMenu(AdminMenuPlayerAction::BanIndef);
 }
 
 //ADMIN MENU CONSTRUCTOR - THIS DEFINES THE MAIN STRUCTURE OF THE ENTIRE MENU
@@ -169,7 +185,7 @@ CAdminMainMenu::CAdminMainMenu() {
 	//Admin menu children
 	CAdminSubMenu* pModeMenu					= new CAdminSubMenu("Gamemode", "Choose Gamemode");
 	CAdminSubMenu* pMapMenu						= new CAdminSubMenu("Change Map", "Select Map (default maps only)");
-	CAdminSubMenu* pPlayerActionMenu			= new CAdminSubMenu("Player Actions (Unavailable)", "Select Player Action");
+	CAdminSubMenu* pPlayerActionMenu			= new CAdminSubMenu("Player Actions", "Select Player Action");
 	CAdminSubMenu* pOptionsMenu					= new CAdminSubMenu("#BG3_Adm_GameOptions", "#BG3_Adm_GameOptions");
 	CAdminSubMenu* pCustomCFGMenu				= new CAdminSubMenu("Community CFGs", "Select Custom CFG");
 	CAdminSubMenu* pTeamwideClassmenu			= new CAdminSubMenu("#BG3_Teamwide_Classmenu", "");
@@ -271,16 +287,7 @@ CAdminMainMenu::CAdminMainMenu() {
 	}
 
 	//Player Action Menu
-	pPlayerActionMenu->m_iNumChildren = 8;
-	pChildren = pPlayerActionMenu->m_aChildren = new CAdminSubMenu*[pPlayerActionMenu->m_iNumChildren];
-	pPlayerActionMenu->m_aChildren[0] = pBackButton;
-	pPlayerActionMenu->m_aChildren[1] = CreatePlayerActionMenu(AdminMenuPlayerAction::Mute);
-	pPlayerActionMenu->m_aChildren[2] = CreatePlayerActionMenu(AdminMenuPlayerAction::Unmute);
-	pPlayerActionMenu->m_aChildren[3] = CreatePlayerActionMenu(AdminMenuPlayerAction::Spawn);
-	pPlayerActionMenu->m_aChildren[4] = CreatePlayerActionMenu(AdminMenuPlayerAction::Slay);
-	pPlayerActionMenu->m_aChildren[5] = CreatePlayerActionMenu(AdminMenuPlayerAction::Kick);
-	pPlayerActionMenu->m_aChildren[6] = CreatePlayerActionMenu(AdminMenuPlayerAction::Ban60);
-	pPlayerActionMenu->m_aChildren[7] = CreatePlayerActionMenu(AdminMenuPlayerAction::BanIndef);
+
 
 	//OPTIONS MENU
 	pOptionsMenu->m_iNumChildren = 10;
@@ -423,5 +430,9 @@ CAdminMainMenu::CAdminMainMenu() {
 }
 
 CAdminMainMenu* CAdminMainMenu::Get() {
-		return new CAdminMainMenu();
+	if (!g_pAdminMainMenu) {
+		g_pAdminMainMenu = new CAdminMainMenu();
+	}
+	CreatePlayerActionTopMenu(g_pAdminMainMenu->m_aChildren[2]);
+	return g_pAdminMainMenu;
 }
