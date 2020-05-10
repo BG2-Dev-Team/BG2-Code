@@ -86,7 +86,7 @@ CAdminSubMenu* CreatePlayerActionMenuEntry(AdminMenuPlayerAction action, const c
 
 CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 	int numClients = 0;
-	for (int i = 1; i <= gpGlobals->maxClients*2; i++) {
+	for (int i = 1; i <= gpGlobals->maxClients; i++) {
 		//Trick to get the real Playercount not the maximal possible children
 		if (g_PR->IsConnected(i)) {
 			numClients++;
