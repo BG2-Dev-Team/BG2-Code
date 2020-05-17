@@ -160,7 +160,7 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 }
 
 void CreatePlayerActionTopMenu(CAdminSubMenu* pPlayerActionMenu) {
-	const int NUM_CHILDREN = 8;
+	const int NUM_CHILDREN = PLAYER_PER_PAGE;
 
 	//delete any existing old data
 	if (pPlayerActionMenu->m_aChildren) {
