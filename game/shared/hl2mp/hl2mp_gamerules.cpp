@@ -736,7 +736,7 @@ void CHL2MPRules::Think( void )
 		else
 		{
 			CheckFullcap();
-			m_fNextFlagUpdate = gpGlobals->curtime + 1;
+			m_fNextFlagUpdate = gpGlobals->curtime + 10; //because flags notify us for checking fullcaps, we could theoretically put FLT_MAX here, but that would break the game if the gamemode switched to tickets
 		}
 	}
 	else if (m_fNextFlagUpdate == 0)

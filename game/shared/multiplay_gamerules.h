@@ -250,7 +250,7 @@ public:
 	virtual bool IsManualMapChangeOkay( const char **pszReason ) OVERRIDE;
 
 protected:
-	virtual bool UseSuicidePenalty() { return true; }		// apply point penalty for suicide?
+	virtual bool UseSuicidePenalty() { extern ConVar mp_suicide_penalty; return mp_suicide_penalty.GetBool(); }		// apply point penalty for suicide?
  	virtual float GetLastMajorEventTime( void ){ return -1.0f; }
 
 public:

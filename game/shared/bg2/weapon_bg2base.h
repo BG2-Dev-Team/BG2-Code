@@ -215,9 +215,10 @@ public:
 
 	inline bool ShouldTightenVerticalAccuracy() {
 		extern ConVar sv_perfectaim;
+		extern ConVar sv_perfectaim_training;
 		extern ConVar mp_respawnstyle;
 		extern ConVar lb_tighten_vertical_accuracy;
-		return (m_bIsIronsighted && mp_respawnstyle.GetInt() == 4 && !sv_perfectaim.GetBool() && lb_tighten_vertical_accuracy.GetBool());
+		return (m_bIsIronsighted && mp_respawnstyle.GetInt() == 4 && !sv_perfectaim.GetBool() && lb_tighten_vertical_accuracy.GetBool() && !sv_perfectaim_training.GetBool());
 	}
 
 	float GetVerticalAccuracyScale() {

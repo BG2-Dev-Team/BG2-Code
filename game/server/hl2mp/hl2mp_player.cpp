@@ -2073,7 +2073,7 @@ const char* CHL2MP_Player::GetHitgroupPainSound(int hitgroup, int team)
 		return 0;
 }
 //
-
+ConVar mp_teamdamage_score_multiplier("mp_teamdamage_score_multiplier", "-2", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 {
 	//BG2 - Draco
@@ -2083,7 +2083,7 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		CBasePlayer * pAttacker2 = (CBasePlayer *)pAttacker;
 		//subtract 3x damage for attacking teammates!
 		pAttacker2->IncrementDamageScoreCount((int)inputInfo.GetDamage()
-			* (GetTeamNumber() == pAttacker2->GetTeamNumber() ? -2 : 1));
+			* (GetTeamNumber() == pAttacker2->GetTeamNumber() ? mp_teamdamage_score_multiplier.GetInt() : 1));
 	}
 
 	//BG2 - Tjoppen - take damage => lose some stamina

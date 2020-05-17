@@ -760,6 +760,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 	//=========================================================
 	// PlayerKilled - someone/something killed this player
 	//=========================================================
+	ConVar mp_suicide_penalty("mp_suicide_penalty", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 	void CMultiplayRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info )
 	{
 		DeathNotice( pVictim, info );

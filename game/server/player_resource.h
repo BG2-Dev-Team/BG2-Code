@@ -34,6 +34,11 @@ public:
 	int GetPing(int index) const { return m_iPing[index]; }
 	int GetDamageScore(int index) const { return m_iDamageScore[index]; }
 
+	int GetNumBritish() const { return m_iPlayerCounts >> 24; };
+	int GetNumAmericans() const { return (m_iPlayerCounts >> 16) & 0xFF; };
+	int GetNumAliveBritish() const { return (m_iPlayerCounts >> 8) & 0xFF; };
+	int GetNumAliveAmericans() const { return m_iPlayerCounts & 0xFF; }
+
 protected:
 	// Data for each player that's propagated to all clients
 	// Stored in individual arrays so they can be sent down via datatables
