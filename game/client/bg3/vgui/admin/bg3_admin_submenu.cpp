@@ -83,4 +83,21 @@ void SayServerCommand(const char* pszFormat, ...) {
 	va_end(args);
 }
 
+//DEFAULT PLAYER SUBMENU CONSTRUCTORS
+CAdminPlayerSubMenu::CAdminPlayerSubMenu(){
+	m_aChildren = NULL;
+	m_iNumChildren = 0;
+	m_pszLineItemText = "DEFAULT LINE ITEM TEXT";
+	m_pszTitle = "DEFAULT SUBMENU TITLE";
+	m_pszFunc = defaultSubMenuFunction;
+}
+
+CAdminPlayerSubMenu::CAdminPlayerSubMenu(const char* pszLineItemText, const char* pszTitle) {
+	m_aChildren = NULL;
+	m_iNumChildren = 0;
+	m_pszLineItemText = pszLineItemText;
+	m_pszTitle = pszTitle;
+	m_pszFunc = defaultSubMenuFunction;
+}
+
 CAdminSubMenu* g_pAdminBackButton;

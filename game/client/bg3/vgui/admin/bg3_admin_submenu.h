@@ -88,6 +88,15 @@ public:
 	bool(*m_pszFunc)(uint8 iSlot, CAdminSubMenu* pSelf);
 };
 
+//Special Player entries
+class CAdminPlayerSubMenu : public CAdminSubMenu {
+public:
+	CAdminPlayerSubMenu();
+
+	CAdminPlayerSubMenu(const char* pszLineItemText, const char* pszTitle);
+	int	m_iPlayerID;
+};
+
 //top-level singleton
 class CAdminMainMenu : public CAdminSubMenu {
 public:

@@ -79,12 +79,14 @@ const char* GetPlayerActionCommand(AdminMenuPlayerAction action) {
 	}
 }
 
-CAdminSubMenu* CreatePlayerActionMenuEntry(AdminMenuPlayerAction action, const char* Playername, int slot) {
+CAdminPlayerSubMenu* CreatePlayerActionMenuEntry(AdminMenuPlayerAction action, const char* Playername, int PlayerID) {
 	const char* command = GetPlayerActionCommand(action);
-	CAdminSubMenu* result = new CAdminSubMenu(Playername, "");
+	CAdminPlayerSubMenu* result = new CAdminPlayerSubMenu(Playername, "");
 	result->m_pszLineItemText = Playername;
 	result->m_pszTitle = command;
-	result->m_pszFunc = [](uint8, CAdminSubMenu* pSelf){ SayServerCommand(pSelf->m_pszTitle, pSelf->m_pszLineItemText); return true; };
+	result->m_iPlayerID = PlayerID;
+	result->m_pszFunc = [](uint8, CAdminSubMenu* pSelf)
+	{ return true; };
 	return result;
 }
 
@@ -96,13 +98,12 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 			numClients++;
 		}
 	}
-	const char** clientNames;
-	clientNames = new const char*[numClients];
+	int* clientIDs;
+	clientIDs = new int[numClients];
 	int j = 0;
 	for (int i = 1; i <= gpGlobals->maxClients; i++) {
 		if (g_PR->IsConnected(i)) {
-			const char* playerName = g_PR->GetPlayerName(i);
-			clientNames[j] = playerName;
+			clientIDs[j] = i;
 			j++;
 		}
 	}
@@ -133,14 +134,15 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 		playerPages[i]->m_pszLineItemText = "#BG3_Adm_Next";
 		playerPages[i]->m_pszTitle = actionName;
 		int j = 0;
-		while ((j < 8) && ((i * 8 + j) < numClients)){
-			const char* playerName = clientNames[i * 8 + j];
-			playerPages[i]->m_aChildren[j+1] = CreatePlayerActionMenuEntry(action, playerName, j);
+		while ((j < PLAYER_PER_PAGE) && ((i * PLAYER_PER_PAGE + j) < numClients)){
+			int playerID = clientIDs[i * PLAYER_PER_PAGE + j];
+			const char* playerName = g_PR->GetPlayerName(playerID);
+			playerPages[i]->m_aChildren[j + 1] = CreatePlayerActionMenuEntry(action, playerName, playerID);
 			j++;
 		}
 	}
-	delete[] clientNames;
-	clientNames = NULL;
+	delete[] clientIDs;
+	clientIDs = NULL;
 	for (int i = 0; i < menuPagesCount-1; i++) {
 		//All Fullpages get the next Page as their last Child
 		playerPages[i]->m_aChildren[9] = playerPages[i + 1];
