@@ -62,6 +62,20 @@ public:
 
 	CAdminSubMenu(const char* pszLineItemText, const char* pszTitle);
 
+	~CAdminSubMenu() {
+		extern CAdminSubMenu* g_pAdminBackButton;
+
+		//delete children
+		for (int i = 0; i < m_iNumChildren; i++) {
+			if (m_aChildren[i] != g_pAdminBackButton) {
+				delete m_aChildren[i];
+			}
+		}
+
+		//delete the array itself
+		delete[] m_aChildren;
+	}
+
 	//variable-length array of children
 	//if there are no children, this is NULL and 
 	//this submenu is only an option of another submenu

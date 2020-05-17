@@ -85,8 +85,13 @@ CAdminPlayerSubMenu* CreatePlayerActionMenuEntry(AdminMenuPlayerAction action, c
 	result->m_pszLineItemText = Playername;
 	result->m_pszTitle = command;
 	result->m_iPlayerID = PlayerID;
-	result->m_pszFunc = [](uint8, CAdminSubMenu* pSelf)
-	{ return true; };
+	result->m_pszFunc = [](uint8, CAdminSubMenu* pSelf) { 
+		int playerId = static_cast<CAdminPlayerSubMenu*>(pSelf)->m_iPlayerID;
+		char idBuffer[5]; //we have to put a # symbol in front of player id in order for the name matching to work
+		Q_snprintf(idBuffer, sizeof(idBuffer), "#%i", playerId);
+		SayServerCommand(pSelf->m_pszTitle, idBuffer);
+		return false; 
+	};
 	return result;
 }
 
@@ -155,7 +160,18 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
 }
 
 void CreatePlayerActionTopMenu(CAdminSubMenu* pPlayerActionMenu) {
-	pPlayerActionMenu->m_iNumChildren = 8;
+	const int NUM_CHILDREN = 8;
+
+	//delete any existing old data
+	if (pPlayerActionMenu->m_aChildren) {
+		for (int i = 0; i < NUM_CHILDREN; i++) {
+			delete pPlayerActionMenu->m_aChildren[i];
+		}
+		delete[] pPlayerActionMenu->m_aChildren;
+	}
+	
+
+	pPlayerActionMenu->m_iNumChildren = NUM_CHILDREN;
 	pPlayerActionMenu->m_aChildren = new CAdminSubMenu*[pPlayerActionMenu->m_iNumChildren];
 	pPlayerActionMenu->m_aChildren[0] = new CAdminSubMenu("#BG3_Adm_Back", "");
 	pPlayerActionMenu->m_aChildren[0]->m_pszFunc = [](uint8, CAdminSubMenu*)->bool { return true; };
@@ -171,7 +187,7 @@ void CreatePlayerActionTopMenu(CAdminSubMenu* pPlayerActionMenu) {
 //ADMIN MENU CONSTRUCTOR - THIS DEFINES THE MAIN STRUCTURE OF THE ENTIRE MENU
 static CAdminMainMenu* g_pAdminMainMenu = NULL;
 CAdminMainMenu::CAdminMainMenu() {
-	m_pszTitle = "Admin Menu Version 0.1 Alpha";
+	m_pszTitle = "Admin Menu Version 0.2 Alpha";
 
 	//placeholder menu does nothing but occupy a functionless spot
 	//CAdminSubMenu* pPlaceholderMenu				= new CAdminSubMenu; 
