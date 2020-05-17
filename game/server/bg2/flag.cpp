@@ -392,6 +392,9 @@ void CFlag::Think( void )
 //this is actually the old think funtion, slightly modified
 void CFlag::ThinkUncapped( void )
 {
+	if (g_fGameOver)
+		return;
+
 	CBasePlayer *pPlayer = NULL;
 	
 	if ( !m_bIsParent )
@@ -560,6 +563,9 @@ void CFlag::ThinkUncapped( void )
 
 void CFlag::Capture( int iTeam )
 {
+	if (g_fGameOver)
+		return;
+
 	//iTeam is either americans or british
 	//this function handles a lot of the capture related stuff
 	//CBasePlayer *pPlayer = NULL;
@@ -580,6 +586,10 @@ void CFlag::Capture( int iTeam )
 		g_Teams[iTeam]->AddScore( m_iTeamBonus );
 
 	m_flNextTeamBonus = (gpGlobals->curtime + m_iTeamBonusInterval);
+
+	//check for full-cap right away in skirmish mode
+	if (IsSkirmish())
+		HL2MPRules()->MarkFullcapCheckNextFrame();
 
 	//award capping players some points and put them on the overload list
 	m_vOverloadingPlayers.RemoveAll();

@@ -35,10 +35,159 @@ commented on the following form:
 #include "bg3_admin_submenu.h"
 #include "../shared/hl2mp/hl2mp_gamerules.h"
 
+const char* GetPlayerActionTitle(AdminMenuPlayerAction action) {
+	switch (action)
+	{
+	case AdminMenuPlayerAction::Mute:
+		return "Mute";
+	case AdminMenuPlayerAction::Unmute:
+		return "Unmute"; 
+	case AdminMenuPlayerAction::Spawn:
+		return "Spawn";
+	case AdminMenuPlayerAction::Slay:
+		return "Slay";
+	case AdminMenuPlayerAction::Kick:
+		return "Kick";
+	case AdminMenuPlayerAction::Ban60:
+		return "Ban 60 Minutes";
+	case AdminMenuPlayerAction::BanIndef:
+		return "Ban indefinitely";
+	default:
+		return "INVALID ACTION SELECTION";
+	}
+}
+
+const char* GetPlayerActionCommand(AdminMenuPlayerAction action) {
+	switch (action)
+	{
+	case AdminMenuPlayerAction::Mute:
+		return "mute %s";
+	case AdminMenuPlayerAction::Unmute:
+		return "unmute %s";
+	case AdminMenuPlayerAction::Spawn:
+		return "spawn %s";
+	case AdminMenuPlayerAction::Slay:
+		return "slay %s";
+	case AdminMenuPlayerAction::Kick:
+		return "rkick %s";
+	case AdminMenuPlayerAction::Ban60:
+		return "rban %s 60";
+	case AdminMenuPlayerAction::BanIndef:
+		return "rban %s";
+	default:
+		return "INVALID ACTION SELECTION";
+	}
+}
+
+CAdminPlayerSubMenu* CreatePlayerActionMenuEntry(AdminMenuPlayerAction action, const char* Playername, int PlayerID) {
+	const char* command = GetPlayerActionCommand(action);
+	CAdminPlayerSubMenu* result = new CAdminPlayerSubMenu(Playername, "");
+	result->m_pszLineItemText = Playername;
+	result->m_pszTitle = command;
+	result->m_iPlayerID = PlayerID;
+	result->m_pszFunc = [](uint8, CAdminSubMenu* pSelf) { 
+		int playerId = static_cast<CAdminPlayerSubMenu*>(pSelf)->m_iPlayerID;
+		char idBuffer[5]; //we have to put a # symbol in front of player id in order for the name matching to work
+		Q_snprintf(idBuffer, sizeof(idBuffer), "#%i", playerId);
+		SayServerCommand(pSelf->m_pszTitle, idBuffer);
+		return false; 
+	};
+	return result;
+}
+
+CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
+	int numClients = 0;
+	for (int i = 1; i <= gpGlobals->maxClients; i++) {
+		//Trick to get the real Playercount not the maximal possible children
+		if (g_PR->IsConnected(i)) {
+			numClients++;
+		}
+	}
+	int* clientIDs;
+	clientIDs = new int[numClients];
+	int j = 0;
+	for (int i = 1; i <= gpGlobals->maxClients; i++) {
+		if (g_PR->IsConnected(i)) {
+			clientIDs[j] = i;
+			j++;
+		}
+	}
+	int menuPagesCount = Ceil2Int((float)numClients / (float)PLAYER_PER_PAGE);
+	CAdminSubMenu** playerPages = new CAdminSubMenu*[menuPagesCount];
+	const char* actionName = GetPlayerActionTitle(action);
+	for (int i = 0; i < menuPagesCount; i++) {
+		playerPages[i] = new CAdminSubMenu;
+		bool isLastPage = (i + 1 == menuPagesCount);
+		int childCount = 0;
+		if (isLastPage) {
+			 //We need the last remaining player +1 Menuentry for back
+			int modulo = numClients % PLAYER_PER_PAGE;
+			//But only if the we not by chance got a number of players % PLAYER_PER_PAGE = 0
+			if (modulo != 0){
+				childCount = (numClients % PLAYER_PER_PAGE) + 1;
+			}
+			else {
+				childCount = PLAYER_PER_PAGE + 1;
+			}
+		} else {
+			//Otherwise we have a full page of players plus 2 options for back and next page
+			childCount = PLAYER_PER_PAGE + 2;
+		}
+		playerPages[i]->m_aChildren = new CAdminSubMenu*[childCount];
+		playerPages[i]->m_iNumChildren = childCount;
+		playerPages[i]->m_aChildren[0] = g_pAdminBackButton;
+		playerPages[i]->m_pszLineItemText = "#BG3_Adm_Next";
+		playerPages[i]->m_pszTitle = actionName;
+		int j = 0;
+		while ((j < PLAYER_PER_PAGE) && ((i * PLAYER_PER_PAGE + j) < numClients)){
+			int playerID = clientIDs[i * PLAYER_PER_PAGE + j];
+			const char* playerName = g_PR->GetPlayerName(playerID);
+			playerPages[i]->m_aChildren[j + 1] = CreatePlayerActionMenuEntry(action, playerName, playerID);
+			j++;
+		}
+	}
+	delete[] clientIDs;
+	clientIDs = NULL;
+	for (int i = 0; i < menuPagesCount-1; i++) {
+		//All Fullpages get the next Page as their last Child
+		playerPages[i]->m_aChildren[9] = playerPages[i + 1];
+	}
+
+	playerPages[0]->m_pszLineItemText = actionName;
+	return playerPages[0];
+	delete[] playerPages;
+	playerPages = NULL;
+}
+
+void CreatePlayerActionTopMenu(CAdminSubMenu* pPlayerActionMenu) {
+	const int NUM_CHILDREN = PLAYER_PER_PAGE;
+
+	//delete any existing old data
+	if (pPlayerActionMenu->m_aChildren) {
+		for (int i = 0; i < NUM_CHILDREN; i++) {
+			delete pPlayerActionMenu->m_aChildren[i];
+		}
+		delete[] pPlayerActionMenu->m_aChildren;
+	}
+	
+
+	pPlayerActionMenu->m_iNumChildren = NUM_CHILDREN;
+	pPlayerActionMenu->m_aChildren = new CAdminSubMenu*[pPlayerActionMenu->m_iNumChildren];
+	pPlayerActionMenu->m_aChildren[0] = new CAdminSubMenu("#BG3_Adm_Back", "");
+	pPlayerActionMenu->m_aChildren[0]->m_pszFunc = [](uint8, CAdminSubMenu*)->bool { return true; };
+	pPlayerActionMenu->m_aChildren[1] = CreatePlayerActionMenu(AdminMenuPlayerAction::Mute);
+	pPlayerActionMenu->m_aChildren[2] = CreatePlayerActionMenu(AdminMenuPlayerAction::Unmute);
+	pPlayerActionMenu->m_aChildren[3] = CreatePlayerActionMenu(AdminMenuPlayerAction::Spawn);
+	pPlayerActionMenu->m_aChildren[4] = CreatePlayerActionMenu(AdminMenuPlayerAction::Slay);
+	pPlayerActionMenu->m_aChildren[5] = CreatePlayerActionMenu(AdminMenuPlayerAction::Kick);
+	pPlayerActionMenu->m_aChildren[6] = CreatePlayerActionMenu(AdminMenuPlayerAction::Ban60);
+	pPlayerActionMenu->m_aChildren[7] = CreatePlayerActionMenu(AdminMenuPlayerAction::BanIndef);
+}
+
 //ADMIN MENU CONSTRUCTOR - THIS DEFINES THE MAIN STRUCTURE OF THE ENTIRE MENU
 static CAdminMainMenu* g_pAdminMainMenu = NULL;
 CAdminMainMenu::CAdminMainMenu() {
-	m_pszTitle = "Admin Menu Version 0.1 Alpha";
+	m_pszTitle = "Admin Menu Version 0.2 Alpha";
 
 	//placeholder menu does nothing but occupy a functionless spot
 	//CAdminSubMenu* pPlaceholderMenu				= new CAdminSubMenu; 
@@ -54,7 +203,7 @@ CAdminMainMenu::CAdminMainMenu() {
 	//Admin menu children
 	CAdminSubMenu* pModeMenu					= new CAdminSubMenu("Gamemode", "Choose Gamemode");
 	CAdminSubMenu* pMapMenu						= new CAdminSubMenu("Change Map", "Select Map (default maps only)");
-	CAdminSubMenu* pPlayerActionMenu			= new CAdminSubMenu("Player Actions (Unavailable)", "Select Player Action");
+	CAdminSubMenu* pPlayerActionMenu			= new CAdminSubMenu("Player Actions", "Select Player Action");
 	CAdminSubMenu* pOptionsMenu					= new CAdminSubMenu("#BG3_Adm_GameOptions", "#BG3_Adm_GameOptions");
 	CAdminSubMenu* pCustomCFGMenu				= new CAdminSubMenu("Community CFGs", "Select Custom CFG");
 	CAdminSubMenu* pTeamwideClassmenu			= new CAdminSubMenu("#BG3_Teamwide_Classmenu", "");
@@ -154,6 +303,9 @@ CAdminMainMenu::CAdminMainMenu() {
 		set(8, "Deathmatch 30 Rounds", "")
 		{ SayServerCommand("dm 30"); return false; };
 	}
+
+	//Player Action Menu
+
 
 	//OPTIONS MENU
 	pOptionsMenu->m_iNumChildren = 10;
@@ -296,8 +448,9 @@ CAdminMainMenu::CAdminMainMenu() {
 }
 
 CAdminMainMenu* CAdminMainMenu::Get() {
-	if (!g_pAdminMainMenu)
+	if (!g_pAdminMainMenu) {
 		g_pAdminMainMenu = new CAdminMainMenu();
+	}
+	CreatePlayerActionTopMenu(g_pAdminMainMenu->m_aChildren[2]);
 	return g_pAdminMainMenu;
 }
-

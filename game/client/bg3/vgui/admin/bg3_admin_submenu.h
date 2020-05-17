@@ -44,11 +44,37 @@ class CHL2MP_Player;
 
 #define NUM_ADMIN_MENU_LABELS 10
 
+#define PLAYER_PER_PAGE 8
+
+enum class AdminMenuPlayerAction {
+	Mute,
+	Unmute,
+	Spawn,
+	Slay,
+	Kick,
+	Ban60,
+	BanIndef
+};
+
 class CAdminSubMenu {
 public:
 	CAdminSubMenu();
 
 	CAdminSubMenu(const char* pszLineItemText, const char* pszTitle);
+
+	~CAdminSubMenu() {
+		extern CAdminSubMenu* g_pAdminBackButton;
+
+		//delete children
+		for (int i = 0; i < m_iNumChildren; i++) {
+			if (m_aChildren[i] != g_pAdminBackButton) {
+				delete m_aChildren[i];
+			}
+		}
+
+		//delete the array itself
+		delete[] m_aChildren;
+	}
 
 	//variable-length array of children
 	//if there are no children, this is NULL and 
@@ -74,6 +100,15 @@ public:
 	//Called when this submenu is opened from the parent menu
 	//If returns true, then menu goes back up to parent's parent (back button)
 	bool(*m_pszFunc)(uint8 iSlot, CAdminSubMenu* pSelf);
+};
+
+//Special Player entries
+class CAdminPlayerSubMenu : public CAdminSubMenu {
+public:
+	CAdminPlayerSubMenu();
+
+	CAdminPlayerSubMenu(const char* pszLineItemText, const char* pszTitle);
+	int	m_iPlayerID;
 };
 
 //top-level singleton

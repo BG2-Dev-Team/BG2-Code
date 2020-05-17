@@ -103,6 +103,7 @@ ConVar sv_retracing_melee( "sv_retracing_melee", "1", FCVAR_NOTIFY | FCVAR_REPLI
 ConVar sv_infiniteammo( "sv_infiniteammo", "0", FCVAR_CHEAT | FCVAR_NOTIFY | FCVAR_REPLICATED, "Bullet weapons don\'t use up ammo\n" );
 ConVar sv_turboshots( "sv_turboshots", "0", FCVAR_CHEAT | FCVAR_NOTIFY | FCVAR_REPLICATED, "Turns all guns into machineguns\n" );
 ConVar sv_perfectaim( "sv_perfectaim", "0", FCVAR_CHEAT | FCVAR_NOTIFY | FCVAR_REPLICATED, "No spread for bullet weapons\n" );
+ConVar sv_perfectaim_training("sv_perfectaim_training", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "No spread for bullet weapons, but only when all players are on one team\n");
 ConVar sv_steadyhand( "sv_steadyhand", "0", FCVAR_CHEAT | FCVAR_NOTIFY | FCVAR_REPLICATED, "No recoil for bullet weapons\n" );
 
 ConVar mp_disable_melee( "mp_disable_melee", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "When non-zero, melee weapons are disabled" );
@@ -792,9 +793,18 @@ void CBaseBG2Weapon::ItemPostFrame( void )
 		Vector cone = Cone(GetAccuracy(m_iLastAttack));
 		cone.y *= GetVerticalAccuracyScale();
 
-		m_vLastForward = manipulator.ApplySpread( sv_perfectaim.GetInt() == 0 ? cone : vec3_origin );
-		m_bShouldSampleForward = false;
+#ifdef CLIENT_DLL
+		bool bAmericans = !!g_PR->GetNumAmericans();
+		bool bBritish = !!g_PR->GetNumBritish();
+#else
+		bool bAmericans = !!g_pPlayerResource->GetNumAmericans();
+		bool bBritish = !!g_pPlayerResource->GetNumBritish();
+#endif
+		bool bNoCone = sv_perfectaim.GetBool() || (bAmericans != bBritish && sv_perfectaim_training.GetBool());
 
+		m_vLastForward = manipulator.ApplySpread(bNoCone ? vec3_origin : cone);
+		m_bShouldSampleForward = false;
+		
 	}
 
 	if( m_bShouldFireDelayed && m_flNextDelayedFire <= gpGlobals->curtime )

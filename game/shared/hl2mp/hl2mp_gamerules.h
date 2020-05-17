@@ -289,6 +289,9 @@ public:
 	void CheckFullcap();
 	void CheckTicketDrain();
 
+	//Call this for fullcap to be checked next frame
+	void MarkFullcapCheckNextFrame() { m_fNextFlagUpdate = -FLT_MAX; }
+
 	//
 
 	/*

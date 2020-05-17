@@ -63,7 +63,6 @@ void CAdminSubMenu::getLineItemText(uint8 iForSlot, wchar* buffer, int bufferSiz
 		wcscpy_s(localBuffer, g_pVGuiLocalize->Find(m_pszLineItemText));
 	else
 		g_pVGuiLocalize->ConvertANSIToUnicode(m_pszLineItemText, localBuffer, 128);
-
 	int displayedInt = iForSlot + 1;
 	if (displayedInt == 10) displayedInt = 0;
 
@@ -82,6 +81,23 @@ void SayServerCommand(const char* pszFormat, ...) {
 	engine->ServerCmd(buffer);
 
 	va_end(args);
+}
+
+//DEFAULT PLAYER SUBMENU CONSTRUCTORS
+CAdminPlayerSubMenu::CAdminPlayerSubMenu(){
+	m_aChildren = NULL;
+	m_iNumChildren = 0;
+	m_pszLineItemText = "DEFAULT LINE ITEM TEXT";
+	m_pszTitle = "DEFAULT SUBMENU TITLE";
+	m_pszFunc = defaultSubMenuFunction;
+}
+
+CAdminPlayerSubMenu::CAdminPlayerSubMenu(const char* pszLineItemText, const char* pszTitle) {
+	m_aChildren = NULL;
+	m_iNumChildren = 0;
+	m_pszLineItemText = pszLineItemText;
+	m_pszTitle = pszTitle;
+	m_pszFunc = defaultSubMenuFunction;
 }
 
 CAdminSubMenu* g_pAdminBackButton;
