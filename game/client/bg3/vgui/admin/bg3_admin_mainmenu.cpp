@@ -120,9 +120,10 @@ CAdminSubMenu* CreateDynamicMenu(const std::vector<CAdminSubMenu*> &elements, in
 	}
 
 	menuPages[0]->m_pszLineItemText = menuTitle;
-	return menuPages[0];
+	auto result = menuPages[0];
 	delete[] menuPages;
 	menuPages = NULL;
+	return result;
 }
 
 CAdminPlayerSubMenu* CreatePlayerActionMenuEntry(AdminMenuPlayerAction action, const char* Playername, int PlayerID) {
@@ -150,17 +151,21 @@ CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action, std::vector<
 	return CreateDynamicMenu(playerItems, PLAYER_PER_PAGE, GetPlayerActionTitle(action));
 }
 
+void ClearMenu(CAdminSubMenu* subMenu, const int maxChildren) {
+	if (subMenu->m_aChildren) {
+		for (int i = 0; i < maxChildren; i++) {
+			delete subMenu->m_aChildren[i];
+		}
+		delete[] subMenu->m_aChildren;
+	}
+}
+
 void CreatePlayerActionTopMenu(CAdminSubMenu* pPlayerActionMenu) {
 	const int NUM_CHILDREN = PLAYER_PER_PAGE;
 
 	//delete any existing old data
-	if (pPlayerActionMenu->m_aChildren) {
-		for (int i = 0; i < NUM_CHILDREN; i++) {
-			delete pPlayerActionMenu->m_aChildren[i];
-		}
-		delete[] pPlayerActionMenu->m_aChildren;
-	}
-	
+	ClearMenu(pPlayerActionMenu, NUM_CHILDREN);
+
 	std::vector <int> playerIDs;
 	for (int i = 1; i <= gpGlobals->maxClients; i++) {
 		if (g_PR->IsConnected(i)) {
@@ -229,13 +234,13 @@ CAdminMainMenu::CAdminMainMenu() {
 	//CPlayerActionMenu* pPlayerActionMenu		= new CPlayerActionMenu;
 	m_iNumChildren = 7;
 	CAdminSubMenu** pChildren = m_aChildren		= new CAdminSubMenu*[m_iNumChildren]; {
-		pChildren[0] = pModeMenu;
-		pChildren[1] = pMapMenu;
-		pChildren[2] = pPlayerActionMenu;
-		pChildren[3] = pOptionsMenu;
-		pChildren[4] = pCustomCFGMenu;
-		pChildren[5] = pTeamwideClassmenu;
-		pChildren[6] = pCancelButton;
+		pChildren[static_cast<int>(AdminMenuOptionsPositons::Cancel)] = pCancelButton;
+		pChildren[static_cast<int>(AdminMenuOptionsPositons::Mode)] = pModeMenu;
+		pChildren[static_cast<int>(AdminMenuOptionsPositons::Map)] = pMapMenu;
+		pChildren[static_cast<int>(AdminMenuOptionsPositons::PlayerAction)] = pPlayerActionMenu;
+		pChildren[static_cast<int>(AdminMenuOptionsPositons::Options)] = pOptionsMenu;
+		pChildren[static_cast<int>(AdminMenuOptionsPositons::CustomCFG)] = pCustomCFGMenu;
+		pChildren[static_cast<int>(AdminMenuOptionsPositons::Class)] = pTeamwideClassmenu;
 	};
 
 #define set(i, lineItemText, title) \
@@ -426,15 +431,9 @@ CAdminMainMenu* CAdminMainMenu::Get() {
 	if (!g_pAdminMainMenu) {
 		g_pAdminMainMenu = new CAdminMainMenu();
 	}
-	CreatePlayerActionTopMenu(g_pAdminMainMenu->m_aChildren[2]);
+	CreatePlayerActionTopMenu(g_pAdminMainMenu->m_aChildren[static_cast<int>(AdminMenuOptionsPositons::PlayerAction)]);
 
-	if (g_pAdminMainMenu->m_aChildren[1]->m_aChildren) {
-		for (int i = 0; i < MAPS_PER_PAGE; i++) {
-			delete g_pAdminMainMenu->m_aChildren[1]->m_aChildren[i];
-		}
-		delete[] g_pAdminMainMenu->m_aChildren[1]->m_aChildren;
-	}
-
+	ClearMenu(g_pAdminMainMenu->m_aChildren[static_cast<int>(AdminMenuOptionsPositons::Map)], MAPS_PER_PAGE);
 	std::vector<const char*> mapList;
 	mapList.push_back("bg_ambush");
 	mapList.push_back("bg_freemans_farm");
@@ -455,6 +454,6 @@ CAdminMainMenu* CAdminMainMenu::Get() {
 	mapList.push_back("sg_siege");
 	mapList.push_back("sq");
 
-	g_pAdminMainMenu->m_aChildren[1] = CreateMapMenu(mapList);
+	g_pAdminMainMenu->m_aChildren[static_cast<int>(AdminMenuOptionsPositons::Map)] = CreateMapMenu(mapList);
 	return g_pAdminMainMenu;
 }

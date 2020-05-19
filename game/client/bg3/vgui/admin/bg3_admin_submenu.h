@@ -58,6 +58,16 @@ enum class AdminMenuPlayerAction {
 	BanIndef
 };
 
+enum class AdminMenuOptionsPositons {
+	Cancel,
+	Mode,
+	Map,
+	PlayerAction,
+	Options,
+	CustomCFG,
+	Class
+};
+
 class CAdminSubMenu {
 public:
 	CAdminSubMenu();
