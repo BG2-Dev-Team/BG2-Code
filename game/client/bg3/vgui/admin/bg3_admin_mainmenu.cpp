@@ -79,6 +79,52 @@ const char* GetPlayerActionCommand(AdminMenuPlayerAction action) {
 	}
 }
 
+CAdminSubMenu* CreateDynamicMenu(const std::vector<CAdminSubMenu*> &elements, int elementsPerPage, const char* menuTitle) {
+	int numMaps = elements.size();
+	int menuPagesCount = Ceil2Int((float)numMaps / (float)elementsPerPage);
+	CAdminSubMenu** menuPages = new CAdminSubMenu*[menuPagesCount];
+	for (int i = 0; i < menuPagesCount; i++) {
+		menuPages[i] = new CAdminSubMenu;
+		bool isLastPage = (i + 1 == menuPagesCount);
+		int childCount = 0;
+		if (isLastPage) {
+			//We need the last remaining player +1 Menuentry for back
+			int modulo = numMaps % elementsPerPage;
+			//But only if the we not by chance got a number of players % PLAYER_PER_PAGE = 0
+			if (modulo != 0){
+				childCount = (numMaps % elementsPerPage) + 1;
+			}
+			else {
+				childCount = elementsPerPage + 1;
+			}
+		}
+		else {
+			//Otherwise we have a full page of players plus 2 options for back and next page
+			childCount = elementsPerPage + 2;
+		}
+		menuPages[i]->m_aChildren = new CAdminSubMenu*[childCount];
+		menuPages[i]->m_iNumChildren = childCount;
+		menuPages[i]->m_aChildren[0] = new CAdminSubMenu("#BG3_Adm_Back", "");
+		menuPages[i]->m_aChildren[0]->m_pszFunc = [](uint8, CAdminSubMenu*)->bool { return true; };
+		menuPages[i]->m_pszLineItemText = "#BG3_Adm_Next";
+		menuPages[i]->m_pszTitle = menuTitle;
+		int j = 0;
+		while ((j < elementsPerPage) && ((i * elementsPerPage + j) < numMaps)){
+			menuPages[i]->m_aChildren[j + 1] = elements.at(i * elementsPerPage + j);
+			j++;
+		}
+	}
+	for (int i = 0; i < menuPagesCount - 1; i++) {
+		//All Fullpages get the next Page as their last Child
+		menuPages[i]->m_aChildren[9] = menuPages[i + 1];
+	}
+
+	menuPages[0]->m_pszLineItemText = menuTitle;
+	return menuPages[0];
+	delete[] menuPages;
+	menuPages = NULL;
+}
+
 CAdminPlayerSubMenu* CreatePlayerActionMenuEntry(AdminMenuPlayerAction action, const char* Playername, int PlayerID) {
 	const char* command = GetPlayerActionCommand(action);
 	CAdminPlayerSubMenu* result = new CAdminPlayerSubMenu(Playername, "");
@@ -95,68 +141,13 @@ CAdminPlayerSubMenu* CreatePlayerActionMenuEntry(AdminMenuPlayerAction action, c
 	return result;
 }
 
-CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action) {
-	int numClients = 0;
-	for (int i = 1; i <= gpGlobals->maxClients; i++) {
-		//Trick to get the real Playercount not the maximal possible children
-		if (g_PR->IsConnected(i)) {
-			numClients++;
-		}
+CAdminSubMenu* CreatePlayerActionMenu(AdminMenuPlayerAction action, std::vector<int> &playerIDs) {
+	std::vector<CAdminSubMenu*> playerItems;
+	for (auto playerID = playerIDs.begin(); playerID != playerIDs.end(); ++playerID) {
+		CAdminPlayerSubMenu* item = CreatePlayerActionMenuEntry(action, g_PR->GetPlayerName(*playerID), *playerID);
+		playerItems.push_back(item);
 	}
-	int* clientIDs;
-	clientIDs = new int[numClients];
-	int j = 0;
-	for (int i = 1; i <= gpGlobals->maxClients; i++) {
-		if (g_PR->IsConnected(i)) {
-			clientIDs[j] = i;
-			j++;
-		}
-	}
-	int menuPagesCount = Ceil2Int((float)numClients / (float)PLAYER_PER_PAGE);
-	CAdminSubMenu** playerPages = new CAdminSubMenu*[menuPagesCount];
-	const char* actionName = GetPlayerActionTitle(action);
-	for (int i = 0; i < menuPagesCount; i++) {
-		playerPages[i] = new CAdminSubMenu;
-		bool isLastPage = (i + 1 == menuPagesCount);
-		int childCount = 0;
-		if (isLastPage) {
-			 //We need the last remaining player +1 Menuentry for back
-			int modulo = numClients % PLAYER_PER_PAGE;
-			//But only if the we not by chance got a number of players % PLAYER_PER_PAGE = 0
-			if (modulo != 0){
-				childCount = (numClients % PLAYER_PER_PAGE) + 1;
-			}
-			else {
-				childCount = PLAYER_PER_PAGE + 1;
-			}
-		} else {
-			//Otherwise we have a full page of players plus 2 options for back and next page
-			childCount = PLAYER_PER_PAGE + 2;
-		}
-		playerPages[i]->m_aChildren = new CAdminSubMenu*[childCount];
-		playerPages[i]->m_iNumChildren = childCount;
-		playerPages[i]->m_aChildren[0] = g_pAdminBackButton;
-		playerPages[i]->m_pszLineItemText = "#BG3_Adm_Next";
-		playerPages[i]->m_pszTitle = actionName;
-		int j = 0;
-		while ((j < PLAYER_PER_PAGE) && ((i * PLAYER_PER_PAGE + j) < numClients)){
-			int playerID = clientIDs[i * PLAYER_PER_PAGE + j];
-			const char* playerName = g_PR->GetPlayerName(playerID);
-			playerPages[i]->m_aChildren[j + 1] = CreatePlayerActionMenuEntry(action, playerName, playerID);
-			j++;
-		}
-	}
-	delete[] clientIDs;
-	clientIDs = NULL;
-	for (int i = 0; i < menuPagesCount-1; i++) {
-		//All Fullpages get the next Page as their last Child
-		playerPages[i]->m_aChildren[9] = playerPages[i + 1];
-	}
-
-	playerPages[0]->m_pszLineItemText = actionName;
-	return playerPages[0];
-	delete[] playerPages;
-	playerPages = NULL;
+	return CreateDynamicMenu(playerItems, PLAYER_PER_PAGE, GetPlayerActionTitle(action));
 }
 
 void CreatePlayerActionTopMenu(CAdminSubMenu* pPlayerActionMenu) {
@@ -170,18 +161,43 @@ void CreatePlayerActionTopMenu(CAdminSubMenu* pPlayerActionMenu) {
 		delete[] pPlayerActionMenu->m_aChildren;
 	}
 	
+	std::vector <int> playerIDs;
+	for (int i = 1; i <= gpGlobals->maxClients; i++) {
+		if (g_PR->IsConnected(i)) {
+			playerIDs.push_back(i);
+		}
+	}
+	
 
 	pPlayerActionMenu->m_iNumChildren = NUM_CHILDREN;
 	pPlayerActionMenu->m_aChildren = new CAdminSubMenu*[pPlayerActionMenu->m_iNumChildren];
 	pPlayerActionMenu->m_aChildren[0] = new CAdminSubMenu("#BG3_Adm_Back", "");
 	pPlayerActionMenu->m_aChildren[0]->m_pszFunc = [](uint8, CAdminSubMenu*)->bool { return true; };
-	pPlayerActionMenu->m_aChildren[1] = CreatePlayerActionMenu(AdminMenuPlayerAction::Mute);
-	pPlayerActionMenu->m_aChildren[2] = CreatePlayerActionMenu(AdminMenuPlayerAction::Unmute);
-	pPlayerActionMenu->m_aChildren[3] = CreatePlayerActionMenu(AdminMenuPlayerAction::Spawn);
-	pPlayerActionMenu->m_aChildren[4] = CreatePlayerActionMenu(AdminMenuPlayerAction::Slay);
-	pPlayerActionMenu->m_aChildren[5] = CreatePlayerActionMenu(AdminMenuPlayerAction::Kick);
-	pPlayerActionMenu->m_aChildren[6] = CreatePlayerActionMenu(AdminMenuPlayerAction::Ban60);
-	pPlayerActionMenu->m_aChildren[7] = CreatePlayerActionMenu(AdminMenuPlayerAction::BanIndef);
+	pPlayerActionMenu->m_aChildren[1] = CreatePlayerActionMenu(AdminMenuPlayerAction::Mute, playerIDs);
+	pPlayerActionMenu->m_aChildren[2] = CreatePlayerActionMenu(AdminMenuPlayerAction::Unmute, playerIDs);
+	pPlayerActionMenu->m_aChildren[3] = CreatePlayerActionMenu(AdminMenuPlayerAction::Spawn, playerIDs);
+	pPlayerActionMenu->m_aChildren[4] = CreatePlayerActionMenu(AdminMenuPlayerAction::Slay, playerIDs);
+	pPlayerActionMenu->m_aChildren[5] = CreatePlayerActionMenu(AdminMenuPlayerAction::Kick, playerIDs);
+	pPlayerActionMenu->m_aChildren[6] = CreatePlayerActionMenu(AdminMenuPlayerAction::Ban60, playerIDs);
+	pPlayerActionMenu->m_aChildren[7] = CreatePlayerActionMenu(AdminMenuPlayerAction::BanIndef, playerIDs);
+}
+
+CAdminSubMenu* CreateMapMenuEntry(const char * mapName) {
+	CAdminSubMenu* result = new CAdminSubMenu(mapName, "");
+	result->m_pszLineItemText = mapName;
+	result->m_pszFunc = [](uint8, CAdminSubMenu* pSelf)
+	{ SayServerCommand("changemap %s", pSelf->m_pszLineItemText); 
+	return false; };
+	return result;
+}
+
+CAdminSubMenu* CreateMapMenu(const std::vector<const char*> &maps) {
+	std::vector<CAdminSubMenu*> mapItems;
+	for (auto map = maps.begin(); map != maps.end(); ++map) {
+		CAdminSubMenu* item = CreateMapMenuEntry(*map);
+		mapItems.push_back(item);
+	}
+	return CreateDynamicMenu(mapItems, MAPS_PER_PAGE, "Select Map");
 }
 
 //ADMIN MENU CONSTRUCTOR - THIS DEFINES THE MAIN STRUCTURE OF THE ENTIRE MENU
@@ -227,47 +243,6 @@ CAdminMainMenu::CAdminMainMenu() {
 	pChildren[i]->m_pszFunc = [](uint8 slot, CAdminSubMenu*)->bool
 
 	//MAP MENU
-	auto mapChangeFunc = [](uint8, CAdminSubMenu* pSelf){ SayServerCommand("changemap %s", pSelf->m_pszLineItemText); return false; };
-	pMapMenu->m_iNumChildren = 10;
-	pChildren = pMapMenu->m_aChildren = new CAdminSubMenu*[pMapMenu->m_iNumChildren]; {
-		pChildren[0] = pBackButton;
-
-#define setmap(i, mapName) \
-	pChildren[i] = new CAdminSubMenu(mapName, ""); \
-	pChildren[i]->m_pszFunc = mapChangeFunc
-
-		setmap(1, "bg_ambush");
-		setmap(2, "bg_freemans_farm");
-		setmap(3, "bg_maricopa");
-		setmap(4, "bg_plateau");
-		setmap(5, "bg_townguard");
-		setmap(6, "bg_trenton");
-		setmap(7, "bg_woodland");
-		setmap(8, "ctf_mill_creek");
-		
-		pChildren[9] = new CAdminSubMenu("#BG3_Adm_Next", "Select Map (default maps only)");
-		pChildren[9]->m_iNumChildren = 10;
-		pChildren = pChildren[9]->m_aChildren = new CAdminSubMenu*[pChildren[9]->m_iNumChildren]; {
-
-			pChildren[0] = pBackButton;
-			setmap(1, "ctf_road");
-			setmap(2, "ctf_stonefort");
-			setmap(3, "lb_alpinepass");
-			setmap(4, "lb_battleofconcord");
-			setmap(5, "lb_battleofvalcourisland");
-			setmap(6, "lb_continental");
-			setmap(7, "lb_nativevalley");
-			setmap(8, "sg_fall");
-
-			pChildren[9] = new CAdminSubMenu("#BG3_Adm_Next", "Select Map (default maps only)");
-			pChildren[9]->m_iNumChildren = 3;
-			pChildren = pChildren[9]->m_aChildren = new CAdminSubMenu*[pChildren[9]->m_iNumChildren]; {
-				pChildren[0] = pBackButton;
-				setmap(1, "sg_siege");
-				setmap(2, "sq");
-			}
-		}
-	}
 
 	//MODE MENU
 	pModeMenu->m_iNumChildren = 9;
@@ -452,5 +427,34 @@ CAdminMainMenu* CAdminMainMenu::Get() {
 		g_pAdminMainMenu = new CAdminMainMenu();
 	}
 	CreatePlayerActionTopMenu(g_pAdminMainMenu->m_aChildren[2]);
+
+	if (g_pAdminMainMenu->m_aChildren[1]->m_aChildren) {
+		for (int i = 0; i < MAPS_PER_PAGE; i++) {
+			delete g_pAdminMainMenu->m_aChildren[1]->m_aChildren[i];
+		}
+		delete[] g_pAdminMainMenu->m_aChildren[1]->m_aChildren;
+	}
+
+	std::vector<const char*> mapList;
+	mapList.push_back("bg_ambush");
+	mapList.push_back("bg_freemans_farm");
+	mapList.push_back("bg_maricopa");
+	mapList.push_back("bg_plateau");
+	mapList.push_back("bg_townguard");
+	mapList.push_back("bg_trenton");
+	mapList.push_back("bg_woodland");
+	mapList.push_back("ctf_mill_creek");
+	mapList.push_back("ctf_road");
+	mapList.push_back("ctf_stonefort");
+	mapList.push_back("lb_alpinepass");
+	mapList.push_back("lb_battleofconcord");
+	mapList.push_back("lb_battleofvalcourisland");
+	mapList.push_back("lb_continental");
+	mapList.push_back("lb_nativevalley");
+	mapList.push_back("sg_fall");
+	mapList.push_back("sg_siege");
+	mapList.push_back("sq");
+
+	g_pAdminMainMenu->m_aChildren[1] = CreateMapMenu(mapList);
 	return g_pAdminMainMenu;
 }

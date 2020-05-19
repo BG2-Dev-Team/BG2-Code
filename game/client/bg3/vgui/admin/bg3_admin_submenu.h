@@ -38,6 +38,7 @@ commented on the following form:
 #endif
 
 #include <string>
+#include <vector>
 #include "cbase.h"
 
 class CHL2MP_Player;
@@ -45,6 +46,7 @@ class CHL2MP_Player;
 #define NUM_ADMIN_MENU_LABELS 10
 
 #define PLAYER_PER_PAGE 8
+#define MAPS_PER_PAGE PLAYER_PER_PAGE
 
 enum class AdminMenuPlayerAction {
 	Mute,
