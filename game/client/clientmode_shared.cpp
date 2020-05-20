@@ -80,6 +80,7 @@ ConVar cl_drawhud( "cl_drawhud", "1", 0, "Enable the rendering of the hud" ); //
 ConVar hud_takesshots( "hud_takesshots", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Auto-save a scoreboard screenshot at the end of a map." );
 ConVar hud_freezecamhide( "hud_freezecamhide", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Hide the HUD during freeze-cam" );
 ConVar cl_show_num_particle_systems( "cl_show_num_particle_systems", "0", FCVAR_CLIENTDLL, "Display the number of active particle systems." );
+ConVar cl_auto_export_csv("cl_auto_export_csv", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Auto export a scores CSV at the end of a map.");
 
 extern ConVar v_viewmodel_fov;
 extern ConVar voice_modenable;
@@ -256,6 +257,11 @@ static void __MsgFunc_VGUIMenu( bf_read &msg )
 		if ( hud_takesshots.GetBool() == true )
 		{
 			gHUD.SetScreenShotTime( gpGlobals->curtime + 1.0 ); // take a screenshot in 1 second
+		}
+
+		if (cl_auto_export_csv.GetBool() == true)
+		{
+			engine->ClientCmd("csv_export");
 		}
 	}
 
