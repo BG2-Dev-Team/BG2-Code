@@ -166,7 +166,6 @@ CON_COMMAND(csv_export, "Generates a CSV inside a \'csv\' folder containing curr
 
 			//ping
 			buffer.PutInt(g_PR->GetPing(i));
-			buffer.PutChar(',');
 
 			//line delimiter
 			buffer.PutChar('\n');
