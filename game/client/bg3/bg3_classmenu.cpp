@@ -592,6 +592,7 @@ namespace NClassWeaponStats {
 			g_pnLockTime->SetText("");
 			g_pnBulletDamage->SetText("");
 			g_pnReloadSpeed->SetText("");
+			g_pnAccuracy->SetText("");
 		}
 	}
 
@@ -621,6 +622,11 @@ namespace NClassWeaponStats {
 
 			//calc accuracy
 			float accuracy;
+			if (pWeapon->m_bWeaponHasSights)
+				accuracy = bullet->m_flCrouchAimStill;
+			else
+				accuracy = (bullet->m_flStandStill);
+			float rawAccuracy = accuracy;
 			if (!buckshot) {
 				
 				//this weird function was designed to emphasize differences around 2.3, where most muskets live, 
@@ -635,30 +641,24 @@ namespace NClassWeaponStats {
 						(1.6 * atan(20*r - 16)) / max(8, abs(20*r - 16)) + //focuses around 0.8
 						r + 0.2;
 				};
+				
+				accuracy = effectiveAccuracy(bullet->m_flCrouchAimStill);
 
-				/*if (pWeapon->m_bWeaponHasSights)
-					accuracy = 1 / (bullet->m_flCrouchAimStill);
-				else
-					accuracy = 1 / (bullet->m_flStandStill);
-				float maxAccuracy = 1 / (CWeaponDef::GetDefForWeapon("weapon_pennsylvania")->m_Attackinfos[0].m_flCrouchAimStill);*/
-
-				if (pWeapon->m_bWeaponHasSights)
-					accuracy = effectiveAccuracy(bullet->m_flCrouchAimStill);
-				else
-					accuracy = (bullet->m_flStandStill);
 				float maxAccuracy = effectiveAccuracy(CWeaponDef::GetDefForWeapon("weapon_pennsylvania")->m_Attackinfos[0].m_flCrouchAimStill);
 
 				float diff = accuracy - maxAccuracy; //positive number, because maxAccuracy < accuracy
 				float lerp = 1 - (diff / 6.5f);
 				accuracy = lerp;
 
-				//the negative value pulls lower accuracies farther to the left, enhancing differentiation
-				//accuracy = FLerp(-0.2f, 1.0f, accuracy);
+				Q_snprintf(buffer, sizeof(buffer), "%.3f", rawAccuracy * rawAccuracy);
 			}
 			else {
 				accuracy = 1 / pWeapon->m_flShotSpread; //really inaccurate
+				Q_snprintf(buffer, sizeof(buffer), "%.1f + %.1f", (rawAccuracy * rawAccuracy), (pWeapon->m_flShotSpread * pWeapon->m_flShotSpread));
+
 			}
 			set(Accuracy, accuracy);
+			g_pnAccuracy->SetText(buffer);
 			
 			//calc bullet damage
 			int iDamage = bullet->m_iDamage;
@@ -683,7 +683,7 @@ namespace NClassWeaponStats {
 				g_pnBulletDamage->SetText(buffer);
 			}
 			else {
-				Q_snprintf(buffer, sizeof(buffer), "%i", bullet->m_iDamage);
+				Q_snprintf(buffer, sizeof(buffer), "%i@%iy", bullet->m_iDamage, (int)bullet->m_flConstantDamageRange / 36);
 				g_pnBulletDamage->SetText(buffer);
 			}
 
@@ -736,6 +736,7 @@ namespace NClassWeaponStats {
 			g_pMeleeSpeed		= new Label(pParent, "MeleeSpeedLabel", "");
 
 			g_pnClassSpeed		= new Label(pParent, "ClassSpeedNumber", "");
+			g_pnAccuracy		= new Label(pParent, "AccuracyNumber", "");
 			g_pnReloadSpeed		= new Label(pParent, "ReloadSpeedNumber", "");
 			g_pnLockTime		= new Label(pParent, "LockTimeNumber", "");
 			g_pnBulletDamage	= new Label(pParent, "BulletDamageNumber", "");
@@ -748,12 +749,16 @@ namespace NClassWeaponStats {
 	void CreateLayout() {
 		int offset = yBase - g_iRowSpacing;
 
+		//label width extends to end of screen
+		int labelWidth = ScreenWidth() - xBase;
+
 #define set(a)  offset += g_iRowSpacing; a->SetPos(xBase, offset); a->SetSize(g_iBarWidth * 1.5, g_iBarHeight);
-#define setn(a) a->SetPos(xBase + g_iBarWidth + 3, offset + g_iBarHeight); a->SetSize(80, g_iBarHeight);
+#define setn(a) a->SetPos(xBase + g_iBarWidth + 3, offset + g_iBarHeight); a->SetSize(labelWidth, g_iBarHeight);
 
 		set(g_pClassSpeed);
 		setn(g_pnClassSpeed);
 		set(g_pAccuracy);
+		setn(g_pnAccuracy);
 		set(g_pBulletDamage);
 		setn(g_pnBulletDamage);
 		set(g_pReloadSpeed);
@@ -777,6 +782,7 @@ namespace NClassWeaponStats {
 		set(ClassSpeed);
 		set(nClassSpeed);
 		set(Accuracy);
+		set(nAccuracy);
 		set(BulletDamage);
 		set(nBulletDamage);
 		set(ReloadSpeed);
@@ -848,8 +854,6 @@ namespace NClassWeaponStats {
 	}
 
 	Label* g_pClassSpeed = nullptr;
-	//Label* g_pClassNotes; //comments on strengths/weaknesses/abilities
-
 	Label* g_pAccuracy;
 	Label* g_pBulletDamage;
 	Label* g_pReloadSpeed;
@@ -860,6 +864,7 @@ namespace NClassWeaponStats {
 	Label* g_pMeleeSpeed;
 
 	Label* g_pnClassSpeed;
+	Label* g_pnAccuracy;
 	Label* g_pnBulletDamage;
 	Label* g_pnReloadSpeed;
 	Label* g_pnLockTime;

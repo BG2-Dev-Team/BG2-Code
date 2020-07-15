@@ -594,6 +594,7 @@ bool BuckshotHitDrainsStamina(const CTakeDamageInfo &info) {
 //and check against auto-officer protection
 ConVar sv_headhits_only("sv_headhits_only", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 ConVar mp_friendlyfire_grenades("mp_friendlyfire_grenades", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY);
+ConVar mp_damage_kill_cap("mp_damage_kill_cap", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator)
 {
 	//check for headshots only
@@ -672,8 +673,14 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 				newInfo.SetDamage((float)(DMG_MOD_SKI * DMG_MOD_SKI_CAP));
 			}
 		}
-	
-		if ((newInfo.GetDamageType() == DMG_BLAST || (pAttacker->IsUsingBuckshot() && BuckshotHitDrainsStamina(newInfo)))
+
+		//we've calculated the final damage amount, now cap it if applicable
+		bool bFatal = newInfo.GetDamage() >= pVictim->GetHealth();
+		if (bFatal && mp_damage_kill_cap.GetBool()) {
+			newInfo.SetDamage(pVictim->GetHealth());
+		}
+		else if (!bFatal
+			&& (newInfo.GetDamageType() == DMG_BLAST || (pAttacker->IsUsingBuckshot() && BuckshotHitDrainsStamina(newInfo)))
 			&& (newInfo.GetDamage() > 20 || pAttacker->IsUsingBuckshot())
 			&& pVictim->RallyGetCurrentRallies() != RALLY_RALLY_ROUND
 			&& !pVictim->GetPlayerClass()->m_bNerfResistance
@@ -1683,12 +1690,16 @@ CBaseBG2Weapon* CHL2MP_Player::GetActiveBG3Weapon() {
 	return dynamic_cast<CBaseBG2Weapon*>(GetActiveWeapon()); 
 }
 
-bool CHL2MP_Player::IsUsingBuckshot() {
+bool CHL2MP_Player::IsUsingBuckshot() {										
 	return (m_iCurrentAmmoKit == AMMO_KIT_BUCKSHOT || (GetActiveWeapon() && GetActiveWeapon()->Def()->m_bShotOnly)) && GetActiveBG3Weapon()->GetLastAttackType() == ATTACKTYPE_FIREARM; 
 }
 
 //visual effects, not functionality. Exact functionality depends on m_iRallyFlags
 void CHL2MP_Player::OnRallyEffectEnable() {
+	//snipers don't get FOV adjustments, so that their aiming still works as normal
+	if (m_iClass == CLASS_SNIPER)
+		return;
+
 	float FOVoffset = FOV_ADJUST_DEFAULT;
 	float FOVfadeTime = FOV_ADJUST_DEFAULT_INTIME;
 

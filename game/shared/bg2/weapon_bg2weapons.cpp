@@ -39,6 +39,8 @@ const float	LONG_RANGE = 1000 * 3 * 12,		//since damage decreases with range, we
 			MUSKET_RANGE = LONG_RANGE,		//175 * 3 * 12,	//175 yards
 			RIFLE_RANGE = LONG_RANGE;		//195 * 3 * 12;		//195 yards
 
+#define DAMAGE_ADJUSTED_RANGE() MUSKET_CONSTANT_DAMAGE_RANGE + 2000 * ((m_Attackinfos[0].m_iDamage - 107.f) / 107)
+
 const float PISTOL_CONSTANT_DAMAGE_RANGE = 8 * 36,	//8 yards
 			MUSKET_CONSTANT_DAMAGE_RANGE = 30 * 36,	//30 yards
 			RIFLE_CONSTANT_DAMAGE_RANGE  = 40 * 36;	//40 yards
@@ -201,7 +203,7 @@ DECLARE_BG2_WEAPON( brownbess )
 	m_Attackinfos[0].m_flCrouchAimStill		= 2.4f;
 	m_Attackinfos[0].m_flCrouchAimMoving	= 8.0f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange= MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange= DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag		= 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
@@ -259,7 +261,7 @@ DECLARE_BG2_WEAPON(sea_service)
 	m_Attackinfos[0].m_flCrouchAimStill = 2.4f;
 	m_Attackinfos[0].m_flCrouchAimMoving = 8.0f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange = MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
@@ -323,7 +325,7 @@ DECLARE_BG2_WEAPON( charleville )
 	m_Attackinfos[0].m_flCrouchAimStill		= 2.2f;
 	m_Attackinfos[0].m_flCrouchAimMoving	= 7.7f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange= MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange= DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag		= 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
@@ -384,7 +386,7 @@ DECLARE_BG2_WEAPON(light_model_charleville)
 	m_Attackinfos[0].m_flCrouchAimStill = 2.1f;
 	m_Attackinfos[0].m_flCrouchAimMoving = 7.7f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange = MUSKET_CONSTANT_DAMAGE_RANGE / 1.7f;
+	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
@@ -448,7 +450,7 @@ DECLARE_BG2_WEAPON(old_model_charleville)
 	m_Attackinfos[0].m_flCrouchAimStill = 2.15f;
 	m_Attackinfos[0].m_flCrouchAimMoving = 7.0f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange = MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
@@ -510,7 +512,7 @@ DECLARE_BG2_WEAPON(dutch)
 	m_Attackinfos[0].m_flCrouchAimStill = 2.35f;
 	m_Attackinfos[0].m_flCrouchAimMoving = 8.0f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange = MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
@@ -572,7 +574,7 @@ DECLARE_BG2_WEAPON(miquelet)
 	m_Attackinfos[0].m_flCrouchAimStill = 2.3f;
 	m_Attackinfos[0].m_flCrouchAimMoving = 7.7f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange = MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
@@ -1086,7 +1088,7 @@ DECLARE_BG2_WEAPON( revolutionnaire )
 	//m_Attackinfos[0].m_flCrouchAimStill		= 2.15f;
 	//m_Attackinfos[0].m_flCrouchAimMoving	= 7.5f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange= MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange= DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag		= 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
@@ -1158,7 +1160,7 @@ DECLARE_BG2_WEAPON(revolutionnaire_nobayo)
 	//m_Attackinfos[0].m_flCrouchAimStill		= 2.15f;
 	//m_Attackinfos[0].m_flCrouchAimMoving	= 7.5f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange = MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
@@ -1204,7 +1206,7 @@ DECLARE_BG2_WEAPON( brownbess_nobayo )
 	m_Attackinfos[0].m_flCrouchAimStill		= 2.4f;
 	m_Attackinfos[0].m_flCrouchAimMoving	= 8.0f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange= MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange= DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag		= 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
@@ -1278,7 +1280,7 @@ DECLARE_BG2_WEAPON( fowler )
 	m_Attackinfos[0].m_flCrouchAimStill		= 2.05f;
 	m_Attackinfos[0].m_flCrouchAimMoving	= 7.4f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange= MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange= DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag		= 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
@@ -1328,7 +1330,7 @@ DECLARE_BG2_WEAPON( longpattern )
 	m_Attackinfos[0].m_flCrouchAimStill		= 2.3f;
 	m_Attackinfos[0].m_flCrouchAimMoving	= 7.3f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange= MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange= DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag		= 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
@@ -1391,7 +1393,7 @@ DECLARE_BG2_WEAPON(oldpattern)
 	m_Attackinfos[0].m_flCrouchAimStill = 2.2f;
 	m_Attackinfos[0].m_flCrouchAimMoving = 7.3f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange = MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
@@ -1451,7 +1453,7 @@ DECLARE_BG2_WEAPON( longpattern_nobayo )
 	m_Attackinfos[0].m_flCrouchAimStill		= 2.3f;
 	m_Attackinfos[0].m_flCrouchAimMoving	= 7.3f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange= MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange= DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag		= 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
@@ -1538,7 +1540,7 @@ DECLARE_BG2_WEAPON( american_brownbess )
 	m_Attackinfos[0].m_flCrouchAimStill		= 2.5f;
 	m_Attackinfos[0].m_flCrouchAimMoving	= 8.1f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange= MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange= DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag		= 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
@@ -1599,7 +1601,7 @@ DECLARE_BG2_WEAPON( american_brownbess_nobayo )
 	m_Attackinfos[0].m_flCrouchAimStill		= 2.4f;
 	m_Attackinfos[0].m_flCrouchAimMoving	= 8.0f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange= MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange= DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag		= 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
@@ -1646,7 +1648,7 @@ DECLARE_BG2_WEAPON( brownbess_carbine )
 	m_Attackinfos[0].m_flCrouchAimStill		= 2.6f;
 	m_Attackinfos[0].m_flCrouchAimMoving	= 7.3f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange= MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange= DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag		= 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain		= MUSKET_RIFLE_STAMINA_DRAIN;
@@ -1715,7 +1717,7 @@ DECLARE_BG2_WEAPON(blunderbuss)
 	m_Attackinfos[0].m_flCrouchAimStill = 4.0f;
 	m_Attackinfos[0].m_flCrouchAimMoving = 7.3f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange = MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
@@ -1768,7 +1770,7 @@ DECLARE_BG2_WEAPON(brownbess_carbine_nobayo)
 	m_Attackinfos[0].m_flCrouchAimStill = 2.6f;
 	m_Attackinfos[0].m_flCrouchAimMoving = 7.3f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange = MUSKET_CONSTANT_DAMAGE_RANGE;
+	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;

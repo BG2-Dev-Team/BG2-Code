@@ -236,6 +236,7 @@ namespace NClassWeaponStats {
 
 	//number labels for weapon stats
 	dec(g_pnClassSpeed);
+	dec(g_pnAccuracy);
 	dec(g_pnBulletDamage);
 	dec(g_pnReloadSpeed);
 	dec(g_pnLockTime);
