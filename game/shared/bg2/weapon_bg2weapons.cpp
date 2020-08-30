@@ -100,6 +100,8 @@ const int OLDPATTERN_FIRE_DAMAGE = 124;	//62 * 1.85
 const int OLDPATTERN_BAYONET_DAMAGE = 74;	//45 * 0.8 * 1.85
 const int OLDPATTERN_BAYONET_RANGE = 87;
 
+const int TRADE_FIRE_DAMAGE = 149;	//just enough for 1-shot arm kills
+
 const int SPONTOON_DAMAGE = 55;
 const int SPONTOON_RANGE = 83;
 
@@ -112,6 +114,10 @@ const int CARBINE_SHOT_DAMAGE = 30;			//damage per shot. 11 * 1.85 -> 20 -> 8*20
 const int CARBINE_NUM_SHOT = 7;				// BG2 - VisualMelon - formerly 10
 const int CARBINE_BAYONET_DAMAGE = 60;		//BG3 - formerly equivalant to bess damage, 63, now 58
 const int CARBINE_BAYONET_RANGE = 72;
+
+const int FRE_CARBINE_FIRE_DAMAGE = 100;		//damage per ball. between fowler and normal brown bess. 58 * 1.85
+const int FRE_CARBINE_SHOT_DAMAGE = 28;			//damage per shot. 11 * 1.85 -> 20 -> 8*20 = 160 - VisualMelon - changed to 22 (formlery 20)
+const int FRE_CARBINE_NUM_SHOT = 7;				// BG2 - VisualMelon - formerly 10
 
 const int BLUNDERBUSS_SHOT_DAMAGE = 46;
 
@@ -140,7 +146,6 @@ const float CLUB_RANGE = 57.0f;
 
 const float BAYONET_COS_TOLERANCE = 0.9961946980917;		//+-5 degrees
 const float BAYONET_RETRACE_DURATION = 0.1;
-
 ConVar sv_bayonet_angle_tolerance("sv_bayonet_angle_tolerance", "5", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "How many angles the sights are allowed to move before retracing stops");
 ConVar sv_bayonet_retrace_duration("sv_bayonet_retrace_duration", "0.1", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "How long bayonet melee traces happen for");
 
@@ -1434,6 +1439,7 @@ DECLARE_BG2_WEAPON( longpattern_nobayo )
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset		= -2.5;
 
+
 	m_bWeaponHasSights = true; 
 	//
 
@@ -1465,6 +1471,54 @@ DECLARE_BG2_WEAPON( longpattern_nobayo )
 
 #ifndef CLIENT_DLL
 MUSKET_ACTTABLE( longpattern_nobayo )
+#endif
+
+#ifdef CLIENT_DLL
+#define CWeapontrade_musket C_Weapontrade_musket
+#endif
+DECLARE_BG2_WEAPON(trade_musket)
+{
+	m_bCantAbortReload = true;
+
+	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 8.2f;
+
+	//Iron sights viewmodel settings.
+	m_flIronsightFOVOffset = -5;
+	m_bSlowDraw = true;
+	m_flLockTime = 0.2f;
+
+	m_bWeaponHasSights = true;
+	//
+
+	//primary
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_FIREARM;
+	m_Attackinfos[0].m_iDamage = TRADE_FIRE_DAMAGE;//75;
+	m_Attackinfos[0].m_flAttackrate = 1.0;
+	m_Attackinfos[0].m_flRecoil = 0.9;
+	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
+	m_Attackinfos[0].m_flCrouchMoving = 11.0f;
+	m_Attackinfos[0].m_flCrouchStill = 5.5f; //2.4
+	m_Attackinfos[0].m_flStandMoving = 12.2f; //12.0f
+	m_Attackinfos[0].m_flStandStill = 6.f; //2.4
+	//Iron Sights. These values will probably be changed.
+	m_Attackinfos[0].m_flStandAimStill = 2.2f;
+	m_Attackinfos[0].m_flStandAimMoving = 8.1f;
+	m_Attackinfos[0].m_flCrouchAimStill = 2.2f;
+	m_Attackinfos[0].m_flCrouchAimMoving = 7.3f;
+	//
+	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
+	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
+	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
+
+	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
+	m_flZeroRange = ZERO_RANGE_MUSKET;
+	m_iNumShot = 0;
+}
+
+#ifndef CLIENT_DLL
+MUSKET_ACTTABLE(trade_musket)
 #endif
 
 #ifdef CLIENT_DLL
@@ -1788,6 +1842,60 @@ DECLARE_BG2_WEAPON(brownbess_carbine_nobayo)
 //roob - should be carbibe but someone borked the player anims!
 //CARBINE_ACTTABLE( brownbess_carbine )
 MUSKET_ACTTABLE(brownbess_carbine_nobayo)
+#endif
+
+#ifdef CLIENT_DLL 
+#define CWeaponfrench_carbine C_Weaponfrench_carbine
+#endif
+DECLARE_BG2_WEAPON(french_carbine)
+{
+	m_bCantAbortReload = true;
+
+	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.0f;
+	m_bQuickdraw = true;
+
+	//Iron sights viewmodel settings.
+	m_flIronsightFOVOffset = -2.5;
+
+	m_bWeaponHasSights = true;
+	m_flLockTime = 0.12f;
+	//
+
+	//primary
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_FIREARM;
+	m_Attackinfos[0].m_iDamage = FRE_CARBINE_FIRE_DAMAGE;
+	m_Attackinfos[0].m_flAttackrate = 1.0;
+	m_Attackinfos[0].m_flRecoil = 0.7;
+	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
+	m_Attackinfos[0].m_flCrouchMoving = 12.0f;
+	m_Attackinfos[0].m_flCrouchStill = 3.6f;
+	m_Attackinfos[0].m_flStandMoving = 13.2f;
+	m_Attackinfos[0].m_flStandStill = 3.6f;
+	//Iron Sights.
+	m_Attackinfos[0].m_flStandAimStill = 2.2f;
+	m_Attackinfos[0].m_flStandAimMoving = 8.1f;
+	m_Attackinfos[0].m_flCrouchAimStill = 2.2f;
+	m_Attackinfos[0].m_flCrouchAimMoving = 7.3f;
+	//
+	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
+	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
+	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
+
+	m_flShotAimModifier = -1.0f;
+	m_flShotSpread = 7.64f * 0.75f;		//4 m spread at 30 m -> (4 / 2) / 30 / sin(0.5)
+	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
+	m_flShotMuzzleVelocity = MUZZLE_VELOCITY_BUCKSHOT;
+	m_flZeroRange = ZERO_RANGE_MUSKET;
+	m_iNumShot = CARBINE_NUM_SHOT;
+	m_iDamagePerShot = CARBINE_SHOT_DAMAGE;
+}
+
+#ifndef CLIENT_DLL
+//roob - should be carbibe but someone borked the player anims!
+//CARBINE_ACTTABLE( brownbess_carbine )
+MUSKET_ACTTABLE(french_carbine)
 #endif
 
 //jäger rifle, but spelled jaeger to avoid any charset problems

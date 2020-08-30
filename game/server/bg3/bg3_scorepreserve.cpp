@@ -34,6 +34,7 @@ commented on the following form:
 #include "cbase.h"
 #include "bg3_scorepreserve.h"
 #include "player_resource.h"
+#include "hl2mp/hl2mp_player.h"
 #include "vector"
 
 using namespace std;
@@ -44,11 +45,12 @@ namespace NScorePreserve {
 	//Score preservation data type
 	struct scoreinfo_t {
 		AccountID_t m_id;
-		short m_score;
-		short m_damage;
-		float m_flRemovalTime;
+		short	m_score;
+		short	m_damage;
+		bool	m_muted;
+		float	m_flRemovalTime;
 
-		scoreinfo_t(AccountID_t id, short score, short damage, float removalTime) : m_id(id), m_score(score), m_damage(damage), m_flRemovalTime(removalTime) {}
+		scoreinfo_t(AccountID_t id, short score, short damage, bool muted, float removalTime) : m_id(id), m_score(score), m_damage(damage), m_muted(muted), m_flRemovalTime(removalTime) {}
 	};
 
 	//global list of scores to preserve
@@ -89,6 +91,9 @@ namespace NScorePreserve {
 					pPlayer->AddPoints(g_scores[foundIndex].m_score, false);
 					pPlayer->SetDamageScoreCount(g_scores[foundIndex].m_damage);
 
+					//set mute status
+					((CHL2MP_Player*)pPlayer)->m_bMuted = g_scores[foundIndex].m_muted;
+
 					g_scores.erase(g_scores.begin() + foundIndex);
 				}
 			}
@@ -107,9 +112,10 @@ namespace NScorePreserve {
 				short score = pPlayer->FragCount();
 				short damage = pPlayer->DamageScoreCount();
 				float removalTime = gpGlobals->curtime + sv_preserve_score_time.GetFloat();
+				bool muted = ((CHL2MP_Player*)pPlayer)->m_bMuted;
 
 				//construct his info and put it onto the end
-				g_scores.emplace_back(scoreinfo_t(id.GetAccountID(), score, damage, removalTime));
+				g_scores.emplace_back(scoreinfo_t(id.GetAccountID(), score, damage, muted, removalTime));
 			}
 		}
 	}

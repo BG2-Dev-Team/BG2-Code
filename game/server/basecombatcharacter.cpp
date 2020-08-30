@@ -61,6 +61,9 @@
 //extern int	g_interactionBarnacleVictimReleased;
 //#endif //HL2_DLL
 
+//BG3 - use our own sensible RNG - Awesome
+#include "bg3/Math/bg3_rand.h"
+
 extern ConVar weapon_showproficiency;
 
 ConVar ai_show_hull_attacks( "ai_show_hull_attacks", "0" );
@@ -1895,7 +1898,14 @@ void CBaseCombatCharacter::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector
 
 	if ( IsPlayer() )
 	{
-		Vector vThrowPos = Weapon_ShootPosition() - Vector(0,0,12);
+		//Vector vThrowPos = Weapon_ShootPosition() - Vector(0,0,12);
+		//Vector vThrowPos = GetAbsOrigin() + Vector(0,0,60);
+		
+		Vector vThrowPos = EyePosition() + Vector(0,0,20);
+		QAngle eyeAngles = EyeAngles();
+		Vector vForward;
+		AngleVectors(eyeAngles, &vForward);
+		vThrowPos += vForward.Normalized() * 20.f; //15 units in front of eyes
 
 		if( UTIL_PointContents(vThrowPos) & CONTENTS_SOLID )
 		{
@@ -1904,9 +1914,10 @@ void CBaseCombatCharacter::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector
 
 		pWeapon->SetAbsOrigin( vThrowPos );
 
-		QAngle gunAngles;
-		VectorAngles( BodyDirection2D(), gunAngles );
-		pWeapon->SetAbsAngles( gunAngles );
+		//BG3 - Our weapons were spawning backwards, so negate the direction
+		vForward.Negate();
+		VectorAngles(vForward, eyeAngles);
+		pWeapon->SetAbsAngles(eyeAngles);
 	}
 	else
 	{
@@ -1995,9 +2006,10 @@ void CBaseCombatCharacter::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector
 		}
 		else
 		{
-			// Nowhere in particular; just drop it.
-			float throwForce = ( IsPlayer() ) ? 400.0f : random->RandomInt( 64, 128 );
-			vecThrow = BodyDirection3D() * throwForce;
+			// Drops based on carrier's movement
+			//float throwForce = ;
+			//vecThrow = BodyDirection3D() * throwForce;
+			vecThrow = GetAbsVelocity() * RndFloat(-0.4f, 1.2f);
 		}
 	}
 
@@ -2009,7 +2021,6 @@ void CBaseCombatCharacter::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector
 		// Don't drop weapons when the super physgun is happening.
 		UTIL_Remove( pWeapon );
 	}
-
 }
 
 

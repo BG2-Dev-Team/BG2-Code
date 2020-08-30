@@ -68,6 +68,7 @@ CWeaponDef::CWeaponDef(const char* pszWeaponName) {
 	m_bAltFiresUnderwater = false;
 
 	g_dictWeaponDefs.Insert(pszWeaponName, this);
+	m_pszWeaponDefName = pszWeaponName;
 
 	m_bShotOnly = false;
 }
@@ -92,3 +93,13 @@ const CWeaponDef* CWeaponDef::GetDefForWeapon(const char* pszWeaponName) {
 	int index = g_dictWeaponDefs.Find(pszWeaponName);
 	return g_dictWeaponDefs[index];
 }
+
+#ifdef CLIENT_DLL
+CON_COMMAND(weapon_list, "Lists all standard BG3 weapons, excluding grenades") {
+	for (int i = 0; i < g_dictWeaponDefs.MaxElement(); i++) {
+		if (g_dictWeaponDefs.IsValidIndex(i)) {
+			Msg("%s\n", g_dictWeaponDefs[i]->m_pszWeaponDefName);
+		}
+	}
+}
+#endif

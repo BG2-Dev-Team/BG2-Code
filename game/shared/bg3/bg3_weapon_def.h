@@ -143,6 +143,7 @@ public:
 	float	m_flRandomAdditionalLockTimeMax;
 	float	m_flApproximateReloadTime; //approximate because the actual time used is based on the animation. These values need to be kept up-to-date with animation times
 
+	const char* m_pszWeaponDefName;
 	CWeaponDef(const char* pszWeaponName);
 
 	static const CWeaponDef* GetDefForWeapon(const char* pszWeaponName);

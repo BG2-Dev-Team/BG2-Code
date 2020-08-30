@@ -1097,6 +1097,44 @@ void CTeamToggleButton::OnCursorEntered() {
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Unlock menu button opens/closes the unlock menu
+//-----------------------------------------------------------------------------
+CUnlockMenuButton::CUnlockMenuButton(const char* pszImgName) : m_bMouseOver(false),
+Button(g_pClassMenu, "UnlockMenuButton", "") {
+	SetPaintBackgroundEnabled(false);
+	SetPaintBorderEnabled(false);
+
+	m_pImage = scheme()->GetImage(pszImgName, false);
+}
+
+void CUnlockMenuButton::OnMousePressed(MouseCode code) {
+	
+	
+	PlaySelectSound();
+}
+
+void CUnlockMenuButton::Paint() {
+
+	int w, h;
+	GetSize(w, h);
+	m_pImage->SetSize(w, h);
+	m_pImage->SetPos(0, 0);
+	m_pImage->Paint();
+
+	if (m_bMouseOver) {
+		g_pSelectionIcon->SetPos(0, 0);
+		g_pSelectionIcon->SetSize(w, h);
+		g_pSelectionIcon->Paint();
+	}
+}
+
+void CUnlockMenuButton::OnCursorEntered() {
+	m_bMouseOver = true;
+	PlayHoverSound();
+}
+
+
+//-----------------------------------------------------------------------------
 // Purpose: Begin class menu functions
 //-----------------------------------------------------------------------------
 CClassMenu::CClassMenu(vgui::VPANEL pParent) : Frame(NULL, PANEL_CLASSES) {
@@ -1168,9 +1206,11 @@ CClassMenu::CClassMenu(vgui::VPANEL pParent) : Frame(NULL, PANEL_CLASSES) {
 	g_pClassBuffLabel = new Label(this, "ClassBuffLabel", "");
 	g_pOfficerBuffsLabel = new Label(this, "OfficerBuffsLabel", "");
 
-	//Build TeamToggle and Close Buttons
+	//Build TeamToggle and Close Buttons and Unlock Menu
 	m_pCloseButton = new CCloseButton(this, "ClassMenuCloseButton", MENU_CLOSE_ICON);
 	m_pTeamToggleButton = new CTeamToggleButton(MENU_TEAM_SWITCH_ICON);
+	m_pUnlockMenuButton = new CUnlockMenuButton(MENU_UNLOCK_MENU_ICON);
+
 
 	//Be 100% sure that the runtime data we need from the classes has been initialized
 	//CPlayerClass::InitClientRunTimeData();
@@ -1501,12 +1541,15 @@ void CClassMenu::PerformLayout() {
 	//----------------------------------------------------------
 	//CLOSE & TEAM SWITCH BUTTONS
 	//----------------------------------------------------------
-	int smlsz = iconsz / 6;
+	int smlsz = iconsz / 4;
 	m_pCloseButton->SetPos(0, 0);
 	m_pCloseButton->SetSize(smlsz, smlsz);
 
 	m_pTeamToggleButton->SetPos(smlsz, 0);
 	m_pTeamToggleButton->SetSize(smlsz, smlsz);
+
+	m_pUnlockMenuButton->SetPos(smlsz * 2, 0);
+	m_pUnlockMenuButton->SetSize(smlsz, smlsz);
 
 	//----------------------------------------------------------
 	//GLOBAL TEXTS

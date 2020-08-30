@@ -66,9 +66,9 @@ extern CWeaponButton*	g_pWeaponButton;		//we only have one weapon button, which 
 extern CAmmoButton*		g_pCurrentAmmoButton;
 extern CUniformButton*	g_pCurrentUniformButton;
 
-extern vgui::IImage*			g_pSelectionIcon; //these are overlays
-extern vgui::IImage*			g_pDarkIcon;
-extern vgui::IImage*			g_pNoneIcon;
+extern ::vgui::IImage*			g_pSelectionIcon; //these are overlays
+extern ::vgui::IImage*			g_pDarkIcon;
+extern ::vgui::IImage*			g_pNoneIcon;
 
 //image file paths
 #define MENU_GO_ICON			"classmenu/go"
@@ -88,6 +88,7 @@ extern vgui::IImage*			g_pNoneIcon;
 #define MENU_ARROW_HOVER		"classmenu/weapons/arrow_hover"
 
 #define MENU_TEAM_SWITCH_ICON	"classmenu/team_switch"
+#define MENU_UNLOCK_MENU_ICON	"classmenu/unlock_menu"
 #define MENU_CLOSE_ICON			"classmenu/close"
 
 //-----------------------------------------------------------------------------
@@ -317,6 +318,22 @@ private:
 };
 
 //-----------------------------------------------------------------------------
+// Purpose: Opens/closes the unlock menu
+//-----------------------------------------------------------------------------
+class CUnlockMenuButton : public vgui::Button {
+public:
+	CUnlockMenuButton(const char* pszImgName);
+
+	void OnMousePressed(vgui::MouseCode code) override;
+	void Paint() override;
+	void OnCursorEntered() override;
+	void OnCursorExited() override { m_bMouseOver = false; }
+private:
+	vgui::IImage* m_pImage;
+	bool m_bMouseOver;
+};
+
+//-----------------------------------------------------------------------------
 // Purpose: Wraps everything into a handy menu
 //-----------------------------------------------------------------------------
 class CClassMenu : public vgui::Frame, public IViewPortPanel
@@ -367,6 +384,7 @@ private:
 
 	vgui::CCloseButton*	m_pCloseButton;
 	CTeamToggleButton*	m_pTeamToggleButton;
+	CUnlockMenuButton*	m_pUnlockMenuButton;
 };
 
 extern CClassMenu* g_pClassMenu;

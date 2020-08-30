@@ -597,6 +597,8 @@ ConVar mp_friendlyfire_grenades("mp_friendlyfire_grenades", "1", FCVAR_GAMEDLL |
 ConVar mp_damage_kill_cap("mp_damage_kill_cap", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator)
 {
+	
+
 	//check for headshots only
 	if (sv_headhits_only.GetBool() && ptr->hitgroup != HITGROUP_HEAD)
 		return;
@@ -607,6 +609,8 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 	CHL2MP_Player * pAttacker = ToHL2MPPlayer(info.GetAttacker());
 	CHL2MP_Player * pVictim = ToHL2MPPlayer(ptr->m_pEnt);
 	if (ptr && pAttacker && pVictim) {
+
+		bool buddha = !!(pVictim->m_debugOverlays & OVERLAY_BUDDHA_MODE);
 
 		bool friendly = pAttacker->GetTeamNumber() == pVictim->GetTeamNumber();
 
@@ -620,6 +624,8 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 			&& friendlyfire.GetInt() == 0
 			&& friendly)
 			return;
+
+		
 
 		//Hitgroup modifiers - do this first
 		switch (ptr->hitgroup)
@@ -688,6 +694,18 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 			pVictim->m_iStamina = pAttacker->IsUsingBuckshot() ? min(50, m_iStamina) : 0;
 			BG3Buffs::RallyPlayer(0, pVictim);
 			BG3Buffs::RallyPlayer(NERF_SLOW, pVictim);
+		}
+
+		//no-fatal arm hits to grenadiers with lit grenade
+		if (!bFatal && !buddha && ptr->hitgroup == HITGROUP_RIGHTARM) {
+			CBaseCombatWeapon* pWeapon = pVictim->GetActiveWeapon();
+			CWeaponFrag * pGrenade = dynamic_cast<CWeaponFrag*>(pWeapon);
+			if (pGrenade && pGrenade->IsPrimed()) {
+				pGrenade->RollGrenade(pVictim);
+				pGrenade->DecrementAmmo(pVictim);
+				StopSound(pGrenade->entindex(), GRENADE_FUSE_SOUND);
+				pGrenade->Remove(); //avoid grenade duplication
+			}
 		}
 	}
 	if (bApplyDamage){
