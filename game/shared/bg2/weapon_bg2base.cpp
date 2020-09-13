@@ -143,6 +143,8 @@ CBaseBG2Weapon::CBaseBG2Weapon( void )
 
 	m_bShouldSampleForward = false;
 	m_bShouldFireDelayed = false;
+
+	m_flPreviousAccuracy = 4.f;
 	
 
 	//m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_NONE;
@@ -241,6 +243,101 @@ void CBaseBG2Weapon::DoAttack( int iAttack )
 	if ( pHL2Player )
 		pHL2Player->DrainStamina( GetStaminaDrain( iAttack ) );
 #endif
+}
+
+GLOBAL_FLOAT(g_flAccuracyDecay, sv_accuracy_decay, 1.0f, CVAR_FLAGS, 0.0f, 10.f);
+GLOBAL_FLOAT(g_flHipFireAccuracy, sv_hipfire_accuracy, 1.0f, CVAR_FLAGS, 0.0f, 10.f);
+
+float CBaseBG2Weapon::GetAccuracy(int iAttack) {
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
+	if (iAttack == ATTACK_NONE || !pPlayer)
+		return 0.0f;
+
+	float modifier = 0;
+	float multiplier = 1.0f;
+
+	bool moving = false;
+	if (pPlayer->GetLocalVelocity().LengthSqr() > 25.0f ||
+		!(pPlayer->GetFlags() & FL_ONGROUND)) {
+		moving = !m_bIsIronsighted;	//moving fast enough or jumping increases spread..
+
+		//also check for extra accuracy penalty from speed buff
+		if (pPlayer->RallyGetCurrentRallies() & RALLY_SPEED && !m_bIsIronsighted && !(pPlayer->m_nButtons & IN_WALK)) {
+			multiplier *= RALLY_SPEED_MOD_ACCUR;
+		}
+	}
+
+	//Check for other accuracy modifications
+	if (Def()->m_iNumShot > 0 && (pPlayer->GetCurrentAmmoKit() == AMMO_KIT_BUCKSHOT || Def()->m_bShotOnly))
+		modifier = Def()->m_flShotAimModifier;
+	if ((pPlayer->RallyGetCurrentRallies() & RALLY_ACCURACY) && (m_bIsIronsighted || (pPlayer->GetFlags() & FL_DUCKING)))
+		multiplier = RALLY_ACCURACY_MOD;
+
+	float base;
+#ifndef CLIENT_DLL
+	float hipfireMuliplier = g_flHipFireAccuracy;
+#else
+	float hipfireMuliplier = sv_hipfire_accuracy.GetFloat();
+#endif
+
+	if ((pPlayer->GetFlags() & FL_DUCKING)) //we're crouching
+	{
+		if (moving) //we're moving.
+		{
+			if (m_bIsIronsighted) //So we're aiming... yet moving...
+				base = Def()->m_Attackinfos[iAttack].m_flCrouchAimMoving;
+			else //Hip shot.
+				base = Def()->m_Attackinfos[iAttack].m_flCrouchMoving;
+		}
+		else	//we're not moving.
+		{
+			if (m_bIsIronsighted) //So we're aiming...
+				base = Def()->m_Attackinfos[iAttack].m_flCrouchAimStill;
+			else //Hip shot.
+				base = Def()->m_Attackinfos[iAttack].m_flCrouchStill;
+		}
+	}
+	else if (moving && pPlayer->m_nButtons & IN_WALK){
+		if (m_bIsIronsighted) //So we're aiming...
+			base = FLerp(Def()->m_Attackinfos[iAttack].m_flStandAimMoving, Def()->m_Attackinfos[iAttack].m_flStandAimStill, 0, 1, ACCURACY_WALK_LERP);
+		else //Hip shot.
+			base = FLerp(Def()->m_Attackinfos[iAttack].m_flStandMoving, Def()->m_Attackinfos[iAttack].m_flStandStill, 0, 1, ACCURACY_WALK_LERP);
+	}
+	else //We're not crouching.
+	{
+		if (moving) //We're standing and moving.
+		{
+			if (m_bIsIronsighted) //So we're aiming...
+				base = Def()->m_Attackinfos[iAttack].m_flStandAimMoving;
+			else //Hip shot.
+				base = Def()->m_Attackinfos[iAttack].m_flStandMoving;
+		}
+		else // We're not moving.
+		{
+			if (m_bIsIronsighted) //So we're aiming...
+				base = Def()->m_Attackinfos[iAttack].m_flStandAimStill;
+			else //Hip shot.
+				base = Def()->m_Attackinfos[iAttack].m_flStandStill;
+		}
+	}
+	if (!m_bIsIronsighted)
+		multiplier *= hipfireMuliplier;
+
+	float idealAccuracy = (base + modifier) * multiplier;
+	
+	if (idealAccuracy > m_flPreviousAccuracy) {
+		m_flPreviousAccuracy = idealAccuracy;
+	}
+	else {
+#ifdef CLIENT_DLL
+		float ratio = gpGlobals->frametime * sv_accuracy_decay.GetFloat(); 
+#else
+		float ratio = gpGlobals->frametime * g_flAccuracyDecay;
+#endif
+		m_flPreviousAccuracy = (ratio * idealAccuracy) + ((1 - ratio) * m_flPreviousAccuracy);
+	}
+	
+	return m_flPreviousAccuracy;
 }
 
 //-----------------------------------------------------------------------------
@@ -760,6 +857,12 @@ void CBaseBG2Weapon::ItemPostFrame( void )
 
 	if( pOwner == NULL )
 		return;
+	
+#ifndef CLIENT_DLL
+	if (GetAttackType(ATTACK_PRIMARY) == ATTACKTYPE_FIREARM) {
+		GetAccuracy(ATTACK_PRIMARY);//update accuracy changes over time, server side only
+	}
+#endif
 
 	if( m_flStopAttemptingSwing > gpGlobals->curtime )
 	{

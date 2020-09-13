@@ -89,7 +89,7 @@ extern IGameUIFuncs *gameuifuncs; // for key binding details
 using namespace vgui;
 using namespace NMenuSounds;
 
-
+#undef CVAR_FLAGS
 #define CVAR_FLAGS	( FCVAR_ARCHIVE | FCVAR_USERINFO )
 
 //--------------------------------------------------------------------------------------------

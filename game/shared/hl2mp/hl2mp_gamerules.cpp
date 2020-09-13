@@ -92,14 +92,6 @@ extern CBaseEntity	 *g_pLastRebelSpawn;*/
 ConVar mp_autobalanceteams("mp_autobalanceteams", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_autobalancetolerance("mp_autobalancetolerance", "2", FCVAR_GAMEDLL | FCVAR_NOTIFY | FCVAR_REPLICATED, "When the teams differ in size by this number or greater, autobalance is active.", true, 2, false, 0);
 
-//BG2 - Tjoppen - beautiful defines. you will see another one further down
-#ifdef CLIENT_DLL
-#define CVAR_FLAGS	(FCVAR_REPLICATED | FCVAR_NOTIFY)
-#define CVAR_FLAGS_HIDDEN (FCVAR_REPLICATED)
-#else
-#define CVAR_FLAGS	(FCVAR_GAMEDLL | FCVAR_REPLICATED | FCVAR_NOTIFY)
-#define CVAR_FLAGS_HIDDEN (FCVAR_GAMEDLL | FCVAR_REPLICATED)
-#endif
 
 #define LIMIT_DEFINES( size, sizename )\
 	ConVar mp_limit_inf_a_##size( "mp_limit_inf_a_"#size, "-1", CVAR_FLAGS,\

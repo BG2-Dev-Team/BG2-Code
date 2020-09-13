@@ -709,4 +709,6 @@ protected:
 #endif // End Client .dll only
 };
 
+DECLARE_GLOBAL_FLOAT(g_flIronsightsTimeScale, sv_ironsights_time);
+
 #endif // COMBATWEAPON_SHARED_H

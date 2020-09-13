@@ -567,7 +567,10 @@ void CHudCrosshair::Paint( void )
 			r *= 0.05f;
 
 		//crosshair size changes faster when we're aiming in
-		r = lastr = r + (lastr - r) * expf((g_bPreviousFrameIronsighted * -3 - 13.0f) * gpGlobals->frametime);
+		//only decay into new crosshair size here if the new one is bigger than the old one
+		//as the accuracy equation already does the opposite for us
+		//if (r > lastr)
+			//r = lastr = r + (lastr - r) * expf((g_bPreviousFrameIronsighted * -3 - 13.0f) * gpGlobals->frametime);
 		
 
 

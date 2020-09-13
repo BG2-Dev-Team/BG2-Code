@@ -29,6 +29,14 @@
 #include "hl2mp_player.h"
 #endif
 
+//BG2 - Tjoppen - beautiful defines
+#ifdef CLIENT_DLL
+#define CVAR_FLAGS	(FCVAR_REPLICATED | FCVAR_NOTIFY)
+#define CVAR_FLAGS_HIDDEN (FCVAR_REPLICATED)
+#else
+#define CVAR_FLAGS	(FCVAR_GAMEDLL | FCVAR_REPLICATED | FCVAR_NOTIFY)
+#define CVAR_FLAGS_HIDDEN (FCVAR_GAMEDLL | FCVAR_REPLICATED)
+#endif
 
 
 #define VEC_CROUCH_TRACE_MIN	HL2MPRules()->GetHL2MPViewVectors()->m_vCrouchTraceMin

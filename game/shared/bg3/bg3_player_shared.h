@@ -318,3 +318,25 @@ Using this flag to use it as a special case for kill feed icons
 #if 1
 #define DMG_SWIVEL_GUN (DMG_LASTGENERICFLAG<<1)
 #endif
+
+//Creates a ConVar which is bound to a normal global variable, instead of being
+//converted from string all the time
+#ifndef CLIENT_DLL
+#define GLOBAL_FLOAT(varName, cvarName, defaultValue, flags, min, max) \
+	float varName = defaultValue; \
+	ConVar cvarName(#cvarName, #defaultValue, flags, "", true, min, true, max, [](IConVar* pVar, const char*, float){varName = ((ConVar*)pVar)->GetFloat();})
+#define DECLARE_GLOBAL_FLOAT(varName, cvarName) \
+	extern float varName; \
+	extern ConVar cvarName
+#else
+#define GLOBAL_FLOAT(varName, cvarName, defaultValue, flags, min, max) \
+	ConVar cvarName(#cvarName, #defaultValue, flags, "", true, min, true, max)
+#define DECLARE_GLOBAL_FLOAT(varName, cvarName) \
+	extern ConVar cvarName
+#endif
+
+#ifndef CLIENT_DLL
+
+#else
+
+#endif

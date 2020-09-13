@@ -89,10 +89,15 @@ void CBaseViewModel::CalcIronsights(Vector &pos, QAngle &ang)
 		return;
 
 	//get delta time for interpolation
-	float time = pWeapon->IsIronsighted() ? IRONSIGHTS_ANGLE_IN_TIME : IRONSIGHTS_ANGLE_OUT_TIME;
-	if (pWeapon->Def()->m_bQuickdraw) time /= 1.5f;
-	if (pWeapon->Def()->m_bSlowDraw) time *= 1.4f;
-	float delta((gpGlobals->curtime - pWeapon->m_flIronsightedTime) / time);
+	float fTime = pWeapon->IsIronsighted() ? IRONSIGHTS_ANGLE_IN_TIME : IRONSIGHTS_ANGLE_OUT_TIME;
+	if (pWeapon->Def()->m_bQuickdraw) fTime /= 1.5f;
+	if (pWeapon->Def()->m_bSlowDraw) fTime *= 1.4f;
+#ifndef CLIENT_DLL
+	fTime *= g_flIronsightsTimeScale;
+#else
+	fTime *= sv_ironsights_time.GetFloat();
+#endif
+	float delta((gpGlobals->curtime - pWeapon->m_flIronsightedTime) / fTime);
 	float exp = (pWeapon->IsIronsighted()) ?
 		(delta > 1.0f) ? 1.0f : delta : //normal blending
 		(delta > 1.0f) ? 0.0f : 1.0f - delta; //reverse interpolation

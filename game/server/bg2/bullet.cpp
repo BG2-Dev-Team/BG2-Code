@@ -105,7 +105,7 @@ public:
 		m_flConstantDamageRange = flConstantDamageRange;
 		m_flRelativeDrag = flRelativeDrag;
 		m_flMuzzleVelocity = flMuzzleVelocity;
-		m_flDyingTime = gpGlobals->curtime + /*LIFETIME*/ 3.0f;
+		m_flDyingTime = gpGlobals->curtime + /*LIFETIME*/ 6.0f;
 		m_flDamageDropoffMultiplier = flDamageDropoffMultiplier;
 		m_bHasPlayedNearmiss = false;
 		m_pOwner = pOwner;
@@ -154,6 +154,7 @@ public:
 		if (rwc <= 0)
 		{
 			m_vPosition += m_vVelocity * dt;
+			//Msg("(%.2f,%.2f,%.2f)\n", m_vPosition.x, m_vPosition.y, m_vPosition.z);
 
 			resetRwc(flex);
 

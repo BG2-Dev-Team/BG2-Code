@@ -85,7 +85,7 @@ public:
 		//sin(1/2) - see VECTOR_CONE_1DEGREES
 		const double flBaseSize = 0.008725;
 		float flCone = (float)flBaseSize * flConeSize;
-
+		
 		return Vector(flCone, flCone, flCone);
 	}
 
@@ -136,82 +136,8 @@ public:
 
 	//static float GetDamageScale(CHL2MP_Player * pAttacker, CHL2MP_Player * pHitPlayer);
 
-	float	GetAccuracy( int iAttack )
-	{
-		CHL2MP_Player *pPlayer = ToHL2MPPlayer( GetOwner() );
-		if( iAttack == ATTACK_NONE || !pPlayer)
-			return 0.0f;
-
-		float modifier = 0;
-		float multiplier = 1.0f;
-
-		bool moving = false;
-		if (pPlayer->GetLocalVelocity().LengthSqr() > 100.0f ||
-			!(pPlayer->GetFlags() & FL_ONGROUND)) {
-			moving = !m_bIsIronsighted;	//moving fast enough or jumping increases spread..
-
-			//also check for extra accuracy penalty from speed buff
-			if (pPlayer->RallyGetCurrentRallies() & RALLY_SPEED && !m_bIsIronsighted && !(pPlayer->m_nButtons & IN_WALK)) {
-				multiplier *= RALLY_SPEED_MOD_ACCUR;
-			}
-		}
-		/*if( GetOwner() && (GetOwner()->GetFlags() & FL_DUCKING) )
-			return m_Attackinfos[iAttack].m_vDuckSpread * (moving ? 2.0f : 1.0f);
-
-		return m_Attackinfos[iAttack].m_vStandSpread * (moving ? 2.0f : 1.0f);*/
-
-		//Check for other accuracy modifications
-		if (Def()->m_iNumShot > 0 && (pPlayer->GetCurrentAmmoKit() == AMMO_KIT_BUCKSHOT || Def()->m_bShotOnly))
-			modifier = Def()->m_flShotAimModifier;
-		if ((pPlayer->RallyGetCurrentRallies() & RALLY_ACCURACY) && (m_bIsIronsighted || (pPlayer->GetFlags() & FL_DUCKING)))
-			multiplier = RALLY_ACCURACY_MOD;
-		
-		
-
-		float base;
-
-		if( (pPlayer->GetFlags() & FL_DUCKING) ) //we're crouching
-		{
-			if( moving ) //we're moving.
-			{
-				if ( m_bIsIronsighted ) //So we're aiming... yet moving...
-					base = Def()->m_Attackinfos[iAttack].m_flCrouchAimMoving;
-				else //Hip shot.
-					base = Def()->m_Attackinfos[iAttack].m_flCrouchMoving;
-			}
-			else	//we're not moving.
-			{
-				if ( m_bIsIronsighted ) //So we're aiming...
-					base = Def()->m_Attackinfos[iAttack].m_flCrouchAimStill;
-				else //Hip shot.
-					base = Def()->m_Attackinfos[iAttack].m_flCrouchStill;
-			}
-		}
-		else if (moving && pPlayer->m_nButtons & IN_WALK){
-			if (m_bIsIronsighted) //So we're aiming...
-				base = FLerp(Def()->m_Attackinfos[iAttack].m_flStandAimMoving, Def()->m_Attackinfos[iAttack].m_flStandAimStill, 0, 1, ACCURACY_WALK_LERP);
-			else //Hip shot.
-				base = FLerp(Def()->m_Attackinfos[iAttack].m_flStandMoving, Def()->m_Attackinfos[iAttack].m_flStandStill, 0, 1, ACCURACY_WALK_LERP);
-		}
-		else //We're not crouching.
-		{
-			if( moving ) //We're standing and moving.
-			{
-				if ( m_bIsIronsighted ) //So we're aiming...
-					base = Def()->m_Attackinfos[iAttack].m_flStandAimMoving;
-				else //Hip shot.
-					base = Def()->m_Attackinfos[iAttack].m_flStandMoving;
-			}
-			else // We're not moving.
-			{
-				if ( m_bIsIronsighted ) //So we're aiming...
-					base = Def()->m_Attackinfos[iAttack].m_flStandAimStill;
-				else //Hip shot.
-					base = Def()->m_Attackinfos[iAttack].m_flStandStill;
-			}
-		}
-		return (base + modifier) * multiplier;
-	}
+	float m_flPreviousAccuracy = 4.f;
+	float	GetAccuracy(int iAttack);
 
 	inline bool ShouldTightenVerticalAccuracy() {
 		extern ConVar sv_perfectaim;

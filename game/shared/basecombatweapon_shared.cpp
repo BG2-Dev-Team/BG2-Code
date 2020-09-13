@@ -36,6 +36,7 @@
 
 #else
 #ifdef HL2MP
+	#include "hl2mp_gamerules.h"
 	#include "c_hl2mp_player.h"
 #endif
 
@@ -53,6 +54,8 @@
 #define MIN_HUDHINT_DISPLAY_TIME 7.0f
 
 #define HIDEWEAPON_THINK_CONTEXT			"BaseCombatWeapon_HideThink"
+
+GLOBAL_FLOAT(g_flIronsightsTimeScale, sv_ironsights_time, 1, CVAR_FLAGS, 0.1f, 4.0f);
 
 //BG2 -Added for Iron Sights Testing. Credits to z33ky for the code. -HairyPotter
 #if defined( TWEAK_IRONSIGHTS )
@@ -753,6 +756,11 @@ void CBaseCombatWeapon::EnableIronsights(void)
 
 	float attackDelay = Def()->m_bQuickdraw ? IRONSIGHTS_ATTACK_DELAY_IN_FAST : IRONSIGHTS_ATTACK_DELAY_IN;
 	attackDelay = Def()->m_bSlowDraw ? IRONSIGHTS_ATTACK_DELAY_IN_SLOW : attackDelay;
+#ifndef CLIENT_DLL
+	attackDelay *= g_flIronsightsTimeScale;
+#else
+	attackDelay *= sv_ironsights_time.GetFloat();
+#endif
 
 	//delay both attacks, but make sure we don't roll back the attack times
 	m_flNextPrimaryAttack = max(m_flNextPrimaryAttack, gpGlobals->curtime + attackDelay);
