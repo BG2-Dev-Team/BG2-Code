@@ -1710,6 +1710,7 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 		char buffer[256];
 		discordPresence.state = "In-Game";
 		sprintf(buffer, "Map: %s", pMapName);
+		discordPresence.startTimestamp = startTimestamp; // added time here as well
 		discordPresence.details = buffer;
 		discordPresence.largeImageKey = "bg3discordrpc";
 		Discord_UpdatePresence(&discordPresence);
