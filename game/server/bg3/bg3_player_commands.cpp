@@ -250,7 +250,10 @@ PLAYER_COMMAND(setname) {
 	}
 }*/
 
-
+PLAYER_COMMAND(vote) {
+	if (!pPlayer->GetPermissions()->m_bPlayerManage)
+		return;
+}
 
 
 
