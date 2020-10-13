@@ -916,6 +916,8 @@ $Project
 		$File	"$SRCDIR\public\vgui\Cursor.h"
 		$File	"$SRCDIR\public\vgui\Dar.h"
 		$File	"$SRCDIR\public\datamap.h"
+		$File   "$SRCDIR\public\discord_register.h"
+		$File	"$SRCDIR\public\discord_rpc.h"
 		$File	"$SRCDIR\public\tier0\dbg.h"
 		$File	"$SRCDIR\public\dlight.h"
 		$File	"$SRCDIR\public\dt_common.h"
