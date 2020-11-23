@@ -215,7 +215,7 @@ void CHudBG2::ApplySchemeSettings( IScheme *scheme )
 	m_pLabelLMS->SetFont(font);
 	m_pLabelCurrentRound->SetFont(font);
 	m_pLabelRoundTime->SetFont(font);
-	m_pLabelDeathMessage->SetFont(largeFont); // BG3 - Ricochet - can eventually set this to font once the fonts.cpp is updated so that the respawn timer shows on smaller resolutions
+	m_pLabelDeathMessage->SetFont(largeFont);
 	m_pLabelAmmo->SetFont(largeFont);
 	m_pLabelHealth->SetFont(font);
 	m_pLabelGameMessage->SetFont(font);
@@ -679,7 +679,6 @@ void CHudBG2::PaintDeathMessage() {
 
 			m_pLabelDeathMessage->SetText(buffer);
 		}
-		SetDefaultBG3FontScaled(g_pVGuiSchemeManager->GetIScheme(GetScheme()), m_pLabelDeathMessage); // BG3 - Ricochet - added for scaling ability
 		m_pLabelDeathMessage->SizeToContents();
 		PaintBackgroundOnto(m_pLabelDeathMessage);
 	}
