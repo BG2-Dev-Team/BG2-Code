@@ -215,7 +215,7 @@ void CHudBG2::ApplySchemeSettings( IScheme *scheme )
 	m_pLabelLMS->SetFont(font);
 	m_pLabelCurrentRound->SetFont(font);
 	m_pLabelRoundTime->SetFont(font);
-	m_pLabelDeathMessage->SetFont(font); // BG3 - Ricochet - originally largefont
+	m_pLabelDeathMessage->SetFont(largeFont); // BG3 - Ricochet - can eventually set this to font once the fonts.cpp is updated so that the respawn timer shows on smaller resolutions
 	m_pLabelAmmo->SetFont(largeFont);
 	m_pLabelHealth->SetFont(font);
 	m_pLabelGameMessage->SetFont(font);
