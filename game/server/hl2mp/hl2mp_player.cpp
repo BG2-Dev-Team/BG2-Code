@@ -705,6 +705,21 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 				pGrenade->DecrementAmmo(pVictim);
 				StopSound(pGrenade->entindex(), GRENADE_FUSE_SOUND);
 				pGrenade->Remove(); //avoid grenade duplication
+
+
+				for (int i = 0; i < pVictim->WeaponCount(); ++i)
+				{
+					CBaseCombatWeapon *pSwitchWeapon = pVictim->GetWeapon(i);
+					if (!pSwitchWeapon) {
+						continue;
+					}
+
+					if (!pSwitchWeapon->HasAmmo()) {
+						continue;
+					}
+
+					pVictim->Weapon_Switch(pSwitchWeapon);
+				}
 			}
 		}
 	}
