@@ -701,10 +701,25 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 			CBaseCombatWeapon* pWeapon = pVictim->GetActiveWeapon();
 			CWeaponFrag * pGrenade = dynamic_cast<CWeaponFrag*>(pWeapon);
 			if (pGrenade && pGrenade->IsPrimed()) {
-				pGrenade->RollGrenade(pVictim);
+				pGrenade->LobGrenade(this, 100.0f);
 				pGrenade->DecrementAmmo(pVictim);
 				StopSound(pGrenade->entindex(), GRENADE_FUSE_SOUND);
 				pGrenade->Remove(); //avoid grenade duplication
+
+
+				for (int i = 0; i < pVictim->WeaponCount(); ++i)
+				{
+					CBaseCombatWeapon *pSwitchWeapon = pVictim->GetWeapon(i);
+					if (!pSwitchWeapon) {
+						continue;
+					}
+
+					if (!pSwitchWeapon->HasAmmo()) {
+						continue;
+					}
+
+					pVictim->Weapon_Switch(pSwitchWeapon);
+				}
 			}
 		}
 	}
