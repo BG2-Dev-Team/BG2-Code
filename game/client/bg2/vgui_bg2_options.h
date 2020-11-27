@@ -24,7 +24,8 @@ extern ConVar	cl_crosshair,
 				cl_hitverif,
 				cl_hitdamageline,
 				cl_winmusic,
-				hud_takesshots;
+				hud_takesshots,
+				cl_auto_export_csv;
 
 
 class CBG2OptionsPanel : public vgui::Frame
@@ -70,6 +71,7 @@ class CBG2OptionsPanel : public vgui::Frame
 			cl_vcommsounds.SetValue( m_pVCommSoundsCheckButton->IsSelected() );
 			hud_takesshots.SetValue( m_pScreenShotCheckButton->IsSelected() );
 			hud_showtargetid.SetValue( m_pShowNamesCheckButton->IsSelected() );
+			cl_auto_export_csv.SetValue(m_pExportCsvCheckButton->IsSelected());
 		}
 
 		BaseClass::OnCommand( command );
@@ -109,6 +111,7 @@ class CBG2OptionsPanel : public vgui::Frame
 		m_pVCommSoundsCheckButton->SetSelected( cl_vcommsounds.GetBool() );
 		m_pScreenShotCheckButton->SetSelected( hud_takesshots.GetBool() );
 		m_pShowNamesCheckButton->SetSelected( hud_showtargetid.GetBool() );
+		m_pExportCsvCheckButton->SetSelected( cl_auto_export_csv.GetBool() );
 	}
 
 	/* CBG2OptionsPanel
@@ -177,6 +180,9 @@ class CBG2OptionsPanel : public vgui::Frame
 		m_pShowNamesCheckButton = new vgui::CheckButton( this, "ShowNamesCheckButton", "" );
 		m_pShowNamesCheckButton->AddActionSignalTarget( this );
 
+		m_pExportCsvCheckButton = new vgui::CheckButton(this, "AutoExportCheckButton", "");
+		m_pExportCsvCheckButton->AddActionSignalTarget(this);
+
 		//set sliders and checkboxes correctly
 		SetAdjustors();
 
@@ -220,7 +226,8 @@ class CBG2OptionsPanel : public vgui::Frame
 						*m_pVCommSoundsCheckButton,
 						*m_pShowNamesCheckButton,
 						*m_pWinmusicCheckButton,
-						*m_pScreenShotCheckButton;
+						*m_pScreenShotCheckButton,
+						*m_pExportCsvCheckButton;
 
 protected:
 	//virtual void OnCommand(const char *pCommand);
