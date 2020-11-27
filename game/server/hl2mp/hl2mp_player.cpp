@@ -702,9 +702,25 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 			CWeaponFrag * pGrenade = dynamic_cast<CWeaponFrag*>(pWeapon);
 			if (pGrenade && pGrenade->IsPrimed()) {
 				pGrenade->RollGrenade(pVictim);
+				pGrenade->LobGrenade(this, 100.0f); // BG3 - Roob - Stop grenade from flying away when hit in arm
 				pGrenade->DecrementAmmo(pVictim);
 				StopSound(pGrenade->entindex(), GRENADE_FUSE_SOUND);
 				pGrenade->Remove(); //avoid grenade duplication
+
+				// BG3 - Roob - Switch to next weapon with ammo if grenade is dropped after getting hit in arm
+				for (int i = 0; i < pVictim->WeaponCount(); ++i)
+				{
+					CBaseCombatWeapon *pSwitchWeapon = pVictim->GetWeapon(i);
+					if (!pSwitchWeapon) {
+						continue;
+					}
+
+					if (!pSwitchWeapon->HasAmmo()) {
+						continue;
+					}
+
+					pVictim->Weapon_Switch(pSwitchWeapon);
+				}
 			}
 		}
 	}
