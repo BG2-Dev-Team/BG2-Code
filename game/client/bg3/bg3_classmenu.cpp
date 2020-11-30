@@ -1209,8 +1209,9 @@ CClassMenu::CClassMenu(vgui::VPANEL pParent) : Frame(NULL, PANEL_CLASSES) {
 	//Build TeamToggle and Close Buttons and Unlock Menu
 	m_pCloseButton = new CCloseButton(this, "ClassMenuCloseButton", MENU_CLOSE_ICON);
 	m_pTeamToggleButton = new CTeamToggleButton(MENU_TEAM_SWITCH_ICON);
+#ifdef BETA
 	m_pUnlockMenuButton = new CUnlockMenuButton(MENU_UNLOCK_MENU_ICON);
-
+#endif
 
 	//Be 100% sure that the runtime data we need from the classes has been initialized
 	//CPlayerClass::InitClientRunTimeData();
@@ -1548,8 +1549,10 @@ void CClassMenu::PerformLayout() {
 	m_pTeamToggleButton->SetPos(smlsz, 0);
 	m_pTeamToggleButton->SetSize(smlsz, smlsz);
 
+#ifdef BETA
 	m_pUnlockMenuButton->SetPos(smlsz * 2, 0);
 	m_pUnlockMenuButton->SetSize(smlsz, smlsz);
+#endif
 
 	//----------------------------------------------------------
 	//GLOBAL TEXTS
