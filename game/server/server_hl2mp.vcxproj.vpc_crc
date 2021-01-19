@@ -6,7 +6,7 @@ d9b0a8f0 server_hl2mp.vpc
 4832e67a ..\..\vpc_scripts\source_dll_base.vpc
 d752cf80 ..\..\vpc_scripts\platform_dirs.vpc
 6c4a5ff1 ..\..\vpc_scripts\source_base.vpc
-34ca56eb ..\..\vpc_scripts\source_dll_win32_base.vpc
+21bc9058 ..\..\vpc_scripts\source_dll_win32_base.vpc
 486b766d ..\..\vpc_scripts\version.vpc
 846102f0 ..\..\vpc_scripts\loadaddress.vpc
 1355b11f ..\..\vpc_scripts\source_dll_win32_debug.vpc

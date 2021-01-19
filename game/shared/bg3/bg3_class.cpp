@@ -629,9 +629,9 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 	m_bLastUniformRestricted = true;
 	//m_bAllowUniformSelection = true;
 
-	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_longpattern";
-	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_charleville";
-	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_miquelet";
+	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_miquelet";
+	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_longpattern";
+	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_charleville";
 	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_old_model_charleville";
 	m_aWeapons[4].m_pszWeaponPrimaryName = "weapon_dutch";
 	m_aWeapons[5].m_pszWeaponPrimaryName = "weapon_american_brownbess";

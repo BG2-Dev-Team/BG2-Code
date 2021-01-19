@@ -246,7 +246,7 @@ void CBaseBG2Weapon::DoAttack( int iAttack )
 }
 
 GLOBAL_FLOAT(g_flAccuracyDecay, sv_accuracy_decay, 7.5f, CVAR_FLAGS | FCVAR_CHEAT, 0.0f, 10.f);
-GLOBAL_FLOAT(g_flHipFireAccuracy, sv_hipfire_accuracy, 1.5f, CVAR_FLAGS | FCVAR_CHEAT, 0.0f, 10.f);
+//GLOBAL_FLOAT(g_flHipFireAccuracy, sv_hipfire_accuracy, 1.5f, CVAR_FLAGS | FCVAR_CHEAT, 0.0f, 10.f);
 
 float CBaseBG2Weapon::GetAccuracy(int iAttack) {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
@@ -274,11 +274,11 @@ float CBaseBG2Weapon::GetAccuracy(int iAttack) {
 		multiplier = RALLY_ACCURACY_MOD;
 
 	float base;
-#ifndef CLIENT_DLL
+/*#ifndef CLIENT_DLL
 	float hipfireMuliplier = g_flHipFireAccuracy;
 #else
 	float hipfireMuliplier = sv_hipfire_accuracy.GetFloat();
-#endif
+#endif*/
 
 	if ((pPlayer->GetFlags() & FL_DUCKING)) //we're crouching
 	{
@@ -320,8 +320,8 @@ float CBaseBG2Weapon::GetAccuracy(int iAttack) {
 				base = Def()->m_Attackinfos[iAttack].m_flStandStill;
 		}
 	}
-	if (!m_bIsIronsighted)
-		multiplier *= hipfireMuliplier;
+	/*if (!m_bIsIronsighted)
+		multiplier *= hipfireMuliplier;*/
 
 	float idealAccuracy = (base + modifier) * multiplier;
 	

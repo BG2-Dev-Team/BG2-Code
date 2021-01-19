@@ -40,6 +40,7 @@ const float	LONG_RANGE = 1000 * 3 * 12,		//since damage decreases with range, we
 			RIFLE_RANGE = LONG_RANGE;		//195 * 3 * 12;		//195 yards
 
 #define DAMAGE_ADJUSTED_RANGE() MUSKET_CONSTANT_DAMAGE_RANGE + 2000 * ((m_Attackinfos[0].m_iDamage - 107.f) / 107)
+#define MOVING_ACCURACY_MULTIPLIER 1.6
 
 const float PISTOL_CONSTANT_DAMAGE_RANGE = 8 * 36,	//8 yards
 			MUSKET_CONSTANT_DAMAGE_RANGE = 30 * 36,	//30 yards
@@ -176,7 +177,7 @@ const float ZERO_RANGE_PISTOL = 10 * 36;	//ten yards
 const float ZERO_RANGE_MUSKET = 50 * 36;	//fifty yards
 const float ZERO_RANGE_RIFLE = 130 * 36;	//two hundred yards
 
-const float IRONSIGHTS_TIME_FAST = 0.1f; //lightweight carbines and muskets
+const float IRONSIGHTS_TIME_FAST = 0.2f; //lightweight carbines and muskets
 const float IRONSIGHTS_TIME_SLOW = 0.5f; //heavyweight muskets
 const float IRONSIGHTS_TIME_DEFAULT = 0.3f; //already assigned in default constructor
 
@@ -204,7 +205,7 @@ DECLARE_BG2_WEAPON( brownbess )
 	m_Attackinfos[0].m_flRange				= MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving		= 12.0f;
 	m_Attackinfos[0].m_flCrouchStill		= 3.6f; //2.4
-	m_Attackinfos[0].m_flStandMoving		= 13.2f; //12.0f
+	m_Attackinfos[0].m_flStandMoving		= 13.2f * MOVING_ACCURACY_MULTIPLIER; //12.0f
 	m_Attackinfos[0].m_flStandStill			= 3.6f; //2.4
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill		= 2.4f;	
@@ -236,6 +237,10 @@ DECLARE_BG2_WEAPON( brownbess )
 	m_iNumShot = 0;
 }
 
+#ifndef CLIENT_DLL
+MUSKET_ACTTABLE( brownbess )
+#endif
+
 #ifdef CLIENT_DLL
 #define CWeaponsea_service C_Weaponsea_service
 #endif
@@ -262,7 +267,7 @@ DECLARE_BG2_WEAPON(sea_service)
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 12.0f;
 	m_Attackinfos[0].m_flCrouchStill = 3.7f; //2.4
-	m_Attackinfos[0].m_flStandMoving = 13.2f; //12.0f
+	m_Attackinfos[0].m_flStandMoving = 13.2f * MOVING_ACCURACY_MULTIPLIER; //12.0f
 	m_Attackinfos[0].m_flStandStill = 3.7f; //2.4
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill = 2.4f;
@@ -298,9 +303,7 @@ DECLARE_BG2_WEAPON(sea_service)
 MUSKET_ACTTABLE(sea_service)
 #endif
 
-#ifndef CLIENT_DLL
-MUSKET_ACTTABLE( brownbess )
-#endif
+
 
 #ifdef CLIENT_DLL
 #define CWeaponcharleville C_Weaponcharleville
@@ -326,7 +329,7 @@ DECLARE_BG2_WEAPON( charleville )
 	m_Attackinfos[0].m_flRange				= MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving		= 11.5f;
 	m_Attackinfos[0].m_flCrouchStill		= 3.4f;
-	m_Attackinfos[0].m_flStandMoving		= 12.7f; //11.5f;
+	m_Attackinfos[0].m_flStandMoving		= 12.7f * MOVING_ACCURACY_MULTIPLIER; //11.5f;
 	m_Attackinfos[0].m_flStandStill			= 3.4f;
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill		= 2.2f;	
@@ -387,7 +390,7 @@ DECLARE_BG2_WEAPON(light_model_charleville)
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 7.5f;
 	m_Attackinfos[0].m_flCrouchStill = 3.1f;
-	m_Attackinfos[0].m_flStandMoving = 7.7f; //11.5f;
+	m_Attackinfos[0].m_flStandMoving = 7.7f * MOVING_ACCURACY_MULTIPLIER; //11.5f;
 	m_Attackinfos[0].m_flStandStill = 3.1f;
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill = 2.1f;
@@ -451,7 +454,7 @@ DECLARE_BG2_WEAPON(old_model_charleville)
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 11.1f;
 	m_Attackinfos[0].m_flCrouchStill = 3.35f;
-	m_Attackinfos[0].m_flStandMoving = 12.3f; //11.5f;
+	m_Attackinfos[0].m_flStandMoving = 12.3f * MOVING_ACCURACY_MULTIPLIER; //11.5f;
 	m_Attackinfos[0].m_flStandStill = 3.35f;
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill = 2.15f;
@@ -513,7 +516,7 @@ DECLARE_BG2_WEAPON(dutch)
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 12.0f;
 	m_Attackinfos[0].m_flCrouchStill = 3.5f; //2.4
-	m_Attackinfos[0].m_flStandMoving = 13.2f; //12.0f
+	m_Attackinfos[0].m_flStandMoving = 13.2f * MOVING_ACCURACY_MULTIPLIER; //12.0f
 	m_Attackinfos[0].m_flStandStill = 3.5f; //2.4
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill = 2.35f;
@@ -559,7 +562,7 @@ DECLARE_BG2_WEAPON(miquelet)
 
 	m_fHolsterTime = 0.75f;
 	m_flApproximateReloadTime = 7.6f;
-	m_flLockTime = 0.03f;
+	m_flLockTime = 0.05f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset = -2.5;
@@ -575,7 +578,7 @@ DECLARE_BG2_WEAPON(miquelet)
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 11.5f;
 	m_Attackinfos[0].m_flCrouchStill = 3.5f;
-	m_Attackinfos[0].m_flStandMoving = 12.7f; //11.5f;
+	m_Attackinfos[0].m_flStandMoving = 12.7f * MOVING_ACCURACY_MULTIPLIER; //11.5f;
 	m_Attackinfos[0].m_flStandStill = 3.5f;
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill = 2.3f;
@@ -637,7 +640,7 @@ DECLARE_BG2_WEAPON( jaeger )
 	m_Attackinfos[0].m_flRange				= RIFLE_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving		= 10.0f;
 	m_Attackinfos[0].m_flCrouchStill		= 2.4f; //0.83
-	m_Attackinfos[0].m_flStandMoving		= 11.0f; //8.0f
+	m_Attackinfos[0].m_flStandMoving		= 11.0f * MOVING_ACCURACY_MULTIPLIER; //8.0f
 	m_Attackinfos[0].m_flStandStill			= 3.0f; //2.0
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill		= 2.0f;	
@@ -689,7 +692,7 @@ DECLARE_BG2_WEAPON( pennsylvania )
 	m_Attackinfos[0].m_flRange				= RIFLE_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving		= 10.0f;
 	m_Attackinfos[0].m_flCrouchStill		= 2.3f; //0.75
-	m_Attackinfos[0].m_flStandMoving		= 12.0f; //8.0f
+	m_Attackinfos[0].m_flStandMoving		= 12.0f * MOVING_ACCURACY_MULTIPLIER; //8.0f
 	m_Attackinfos[0].m_flStandStill			= 3.0f; //1.75
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill		= 1.65f;	
@@ -1078,7 +1081,7 @@ DECLARE_BG2_WEAPON( revolutionnaire )
 	// new
 	m_Attackinfos[0].m_flCrouchMoving		= 11.12f;
 	m_Attackinfos[0].m_flCrouchStill		= 3.06f;  //2.4
-	m_Attackinfos[0].m_flStandMoving		= 12.3f; //12.0f
+	m_Attackinfos[0].m_flStandMoving		= 12.3f * MOVING_ACCURACY_MULTIPLIER; //12.0f
 	m_Attackinfos[0].m_flStandStill			= 3.06f; //2.4
 	// old
 	//m_Attackinfos[0].m_flCrouchMoving		= 11.3f;
@@ -1150,7 +1153,7 @@ DECLARE_BG2_WEAPON(revolutionnaire_nobayo)
 	// new
 	m_Attackinfos[0].m_flCrouchMoving = 11.12f;
 	m_Attackinfos[0].m_flCrouchStill = 3.06f;  //2.4
-	m_Attackinfos[0].m_flStandMoving = 12.3f; //12.0f
+	m_Attackinfos[0].m_flStandMoving = 12.3f * MOVING_ACCURACY_MULTIPLIER; //12.0f
 	m_Attackinfos[0].m_flStandStill = 3.06f; //2.4
 	// old
 	//m_Attackinfos[0].m_flCrouchMoving		= 11.3f;
@@ -1207,7 +1210,7 @@ DECLARE_BG2_WEAPON( brownbess_nobayo )
 	m_Attackinfos[0].m_flRange				= MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving		= 12.0f;
 	m_Attackinfos[0].m_flCrouchStill		= 3.6f; //2.4
-	m_Attackinfos[0].m_flStandMoving		= 13.2f; //12.0f
+	m_Attackinfos[0].m_flStandMoving		= 13.2f * MOVING_ACCURACY_MULTIPLIER; //12.0f
 	m_Attackinfos[0].m_flStandStill			= 3.6f; //2.4
 	//Iron Sights.
 	m_Attackinfos[0].m_flStandAimStill		= 2.4f;	
@@ -1281,7 +1284,7 @@ DECLARE_BG2_WEAPON( fowler )
 	m_Attackinfos[0].m_flRange				= MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving		= 12.1f;
 	m_Attackinfos[0].m_flCrouchStill		= 3.4f;
-	m_Attackinfos[0].m_flStandMoving		= 13.3f;
+	m_Attackinfos[0].m_flStandMoving		= 13.3f * MOVING_ACCURACY_MULTIPLIER;
 	m_Attackinfos[0].m_flStandStill			= 3.4f;
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill		= 2.05f;	
@@ -1331,7 +1334,7 @@ DECLARE_BG2_WEAPON( longpattern )
 	m_Attackinfos[0].m_flRange				= MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving		= 11.0f;
 	m_Attackinfos[0].m_flCrouchStill		= 3.5f; //2.4
-	m_Attackinfos[0].m_flStandMoving		= 12.2f; //12.0f
+	m_Attackinfos[0].m_flStandMoving		= 12.2f * MOVING_ACCURACY_MULTIPLIER; //12.0f
 	m_Attackinfos[0].m_flStandStill			= 3.5f; //2.4
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill		= 2.3f;	
@@ -1394,7 +1397,7 @@ DECLARE_BG2_WEAPON(oldpattern)
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 11.0f;
 	m_Attackinfos[0].m_flCrouchStill = 3.5f; //2.4
-	m_Attackinfos[0].m_flStandMoving = 12.2f; //12.0f
+	m_Attackinfos[0].m_flStandMoving = 12.2f * MOVING_ACCURACY_MULTIPLIER; //12.0f
 	m_Attackinfos[0].m_flStandStill = 3.5f; //2.4
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill = 2.2f;
@@ -1455,7 +1458,7 @@ DECLARE_BG2_WEAPON( longpattern_nobayo )
 	m_Attackinfos[0].m_flRange				= MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving		= 11.0f;
 	m_Attackinfos[0].m_flCrouchStill		= 3.5f; //2.4
-	m_Attackinfos[0].m_flStandMoving		= 12.2f; //12.0f
+	m_Attackinfos[0].m_flStandMoving		= 12.2f * MOVING_ACCURACY_MULTIPLIER; //12.0f
 	m_Attackinfos[0].m_flStandStill			= 3.5f; //2.4
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill		= 2.3f;	
@@ -1503,7 +1506,7 @@ DECLARE_BG2_WEAPON(trade_musket)
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 11.0f;
 	m_Attackinfos[0].m_flCrouchStill = 5.5f; //2.4
-	m_Attackinfos[0].m_flStandMoving = 12.2f; //12.0f
+	m_Attackinfos[0].m_flStandMoving = 12.2f * MOVING_ACCURACY_MULTIPLIER; //12.0f
 	m_Attackinfos[0].m_flStandStill = 6.f; //2.4
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill = 2.2f;
@@ -1590,7 +1593,7 @@ DECLARE_BG2_WEAPON( american_brownbess )
 	m_Attackinfos[0].m_flRange				= MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving		= 12.1f;
 	m_Attackinfos[0].m_flCrouchStill		= 3.7f; //2.4
-	m_Attackinfos[0].m_flStandMoving		= 13.3f; //12.0f
+	m_Attackinfos[0].m_flStandMoving		= 13.3f * MOVING_ACCURACY_MULTIPLIER; //12.0f
 	m_Attackinfos[0].m_flStandStill			= 3.7f; //2.4
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill		= 2.5f;	
@@ -1651,7 +1654,7 @@ DECLARE_BG2_WEAPON( american_brownbess_nobayo )
 	m_Attackinfos[0].m_flRange				= MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving		= 12.0f;
 	m_Attackinfos[0].m_flCrouchStill		= 3.6f; //2.4
-	m_Attackinfos[0].m_flStandMoving		= 13.2f; //12.0f
+	m_Attackinfos[0].m_flStandMoving		= 13.2f * MOVING_ACCURACY_MULTIPLIER; //12.0f
 	m_Attackinfos[0].m_flStandStill			= 3.6f; //2.4
 	//Iron Sights.
 	m_Attackinfos[0].m_flStandAimStill		= 2.4f;	
@@ -1698,7 +1701,7 @@ DECLARE_BG2_WEAPON( brownbess_carbine )
 	m_Attackinfos[0].m_flRange				= MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving		= 12.0f;
 	m_Attackinfos[0].m_flCrouchStill		= 3.6f;
-	m_Attackinfos[0].m_flStandMoving		= 13.2f;
+	m_Attackinfos[0].m_flStandMoving		= 13.2f * MOVING_ACCURACY_MULTIPLIER;
 	m_Attackinfos[0].m_flStandStill			= 3.6f;
 	//Iron Sights.
 	m_Attackinfos[0].m_flStandAimStill		= 2.6f;	
@@ -1767,7 +1770,7 @@ DECLARE_BG2_WEAPON(blunderbuss)
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 25.0f;
 	m_Attackinfos[0].m_flCrouchStill = 22.0f;
-	m_Attackinfos[0].m_flStandMoving = 25.0f;
+	m_Attackinfos[0].m_flStandMoving = 25.0f * MOVING_ACCURACY_MULTIPLIER;
 	m_Attackinfos[0].m_flStandStill = 22.0f;
 	//Iron Sights.
 	m_Attackinfos[0].m_flStandAimStill = 4.0f;
@@ -1820,7 +1823,7 @@ DECLARE_BG2_WEAPON(brownbess_carbine_nobayo)
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 12.0f;
 	m_Attackinfos[0].m_flCrouchStill = 3.6f;
-	m_Attackinfos[0].m_flStandMoving = 13.2f;
+	m_Attackinfos[0].m_flStandMoving = 13.2f * MOVING_ACCURACY_MULTIPLIER;
 	m_Attackinfos[0].m_flStandStill = 3.6f;
 	//Iron Sights.
 	m_Attackinfos[0].m_flStandAimStill = 2.6f;
@@ -1874,7 +1877,7 @@ DECLARE_BG2_WEAPON(french_carbine)
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 12.0f;
 	m_Attackinfos[0].m_flCrouchStill = 3.6f;
-	m_Attackinfos[0].m_flStandMoving = 13.2f;
+	m_Attackinfos[0].m_flStandMoving = 13.2f * MOVING_ACCURACY_MULTIPLIER;
 	m_Attackinfos[0].m_flStandStill = 3.6f;
 	//Iron Sights.
 	m_Attackinfos[0].m_flStandAimStill = 2.2f;
@@ -1930,7 +1933,7 @@ DECLARE_BG2_WEAPON(pattern1776)
 
 	m_Attackinfos[0].m_flCrouchMoving = 12.1f;
 	m_Attackinfos[0].m_flCrouchStill = 3.0f;
-	m_Attackinfos[0].m_flStandMoving = 13.3f;
+	m_Attackinfos[0].m_flStandMoving = 13.3f * MOVING_ACCURACY_MULTIPLIER;
 	m_Attackinfos[0].m_flStandStill = 3.3f;
 	//Iron Sights. These values will probably be changed.
 	m_Attackinfos[0].m_flStandAimStill = 2.05f;
@@ -1938,7 +1941,7 @@ DECLARE_BG2_WEAPON(pattern1776)
 	m_Attackinfos[0].m_flCrouchAimStill = 1.0f;
 	m_Attackinfos[0].m_flCrouchAimMoving = 7.4f;
 
-	m_Attackinfos[0].m_flConstantDamageRange = RIFLE_CONSTANT_DAMAGE_RANGE / 2;
+	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
 	m_Attackinfos[0].m_flRelativeDrag = 0.75;			//rifle
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
