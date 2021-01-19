@@ -448,7 +448,7 @@ DEC_BG3_PLAYER_CLASS(BInfantry, inf, b) {
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess";
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_longpattern";
 	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_sea_service";
-	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_oldpattern";
+	//m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_oldpattern";
 	m_aWeapons[2].m_iMovementSpeedModifier = 3;
 
 
@@ -530,8 +530,8 @@ DEC_BG3_PLAYER_CLASS(BNative, ski, b) {
 	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_club";
 	m_aWeapons[2].m_iMovementSpeedModifier = 5;
 
-	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_trade_musket";
-	m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_knife";
+	//m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_trade_musket";
+	//m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_knife";
 	m_aWeapons[3].m_iMovementSpeedModifier = -15;
 
 
@@ -560,6 +560,7 @@ DEC_BG3_PLAYER_CLASS(BLinf, linf, b) {
 
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_pattern1776";
 	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_smallsword";
+	m_aWeapons[1].m_iMovementSpeedModifier = 5;
 
 	postClassConstruct(this);
 }
@@ -634,7 +635,7 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_old_model_charleville";
 	m_aWeapons[4].m_pszWeaponPrimaryName = "weapon_dutch";
 	m_aWeapons[5].m_pszWeaponPrimaryName = "weapon_american_brownbess";
-	m_aWeapons[6].m_pszWeaponPrimaryName = "weapon_light_model_charleville";
+	//m_aWeapons[6].m_pszWeaponPrimaryName = "weapon_light_model_charleville";
 
 	postClassConstruct(this);
 }
@@ -661,10 +662,10 @@ DEC_BG3_PLAYER_CLASS(AOfficer, off, a) {
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_sabre";
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_brownbess_carbine_nobayo";
 	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_sabre";
-	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_french_carbine";
-	m_aWeapons[2].m_pszWeaponSecondaryName = "weapon_sabre";
+	//m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_french_carbine";
+	//m_aWeapons[2].m_pszWeaponSecondaryName = "weapon_sabre";
 
-	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_spontoon";
+	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_spontoon";
 
 	postClassConstruct(this);
 }
@@ -724,8 +725,8 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 	m_aWeapons[2].m_pszPlayerModelOverrideName = MODEL_ASTATEMILITIA; //BG3 - minuteman/state class merge
 	m_aWeapons[2].m_iSleeveSkinOverride = SLEEVE_ASTATEMILITIA;
 
-	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_blunderbuss";
-	m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_dagger";
+	//m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_blunderbuss";
+	//m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_dagger";
 
 #ifdef CLIENT_DLL
 	m_aWeapons[2].SetLocalizedName("weapon_longpattern_state");

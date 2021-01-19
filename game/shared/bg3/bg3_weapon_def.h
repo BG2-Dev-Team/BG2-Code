@@ -132,8 +132,9 @@ public:
 
 	float	m_flIronsightFOVOffset;
 	bool	m_bWeaponHasSights;
-	bool	m_bQuickdraw;
-	bool	m_bSlowDraw;
+	//bool	m_bQuickdraw;
+	//bool	m_bSlowDraw;
+	float	m_flIronsightsTime;
 
 	bool	m_bFiresUnderwater,
 			m_bAltFiresUnderwater;

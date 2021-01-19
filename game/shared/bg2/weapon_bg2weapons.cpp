@@ -176,6 +176,10 @@ const float ZERO_RANGE_PISTOL = 10 * 36;	//ten yards
 const float ZERO_RANGE_MUSKET = 50 * 36;	//fifty yards
 const float ZERO_RANGE_RIFLE = 130 * 36;	//two hundred yards
 
+const float IRONSIGHTS_TIME_FAST = 0.1f; //lightweight carbines and muskets
+const float IRONSIGHTS_TIME_SLOW = 0.5f; //heavyweight muskets
+const float IRONSIGHTS_TIME_DEFAULT = 0.3f; //already assigned in default constructor
+
 #ifdef CLIENT_DLL
 #define CWeaponbrownbess C_Weaponbrownbess
 #endif
@@ -247,7 +251,7 @@ DECLARE_BG2_WEAPON(sea_service)
 	m_flIronsightFOVOffset = -2.5;
 
 	m_bWeaponHasSights = true;
-	m_bQuickdraw = true;
+	m_flIronsightsTime = IRONSIGHTS_TIME_FAST;
 	//
 
 	//primary
@@ -367,7 +371,7 @@ DECLARE_BG2_WEAPON(light_model_charleville)
 
 	m_fHolsterTime = 0.75f;
 	m_flApproximateReloadTime = 7.6f;
-	m_bQuickdraw = true;
+	m_flIronsightsTime = IRONSIGHTS_TIME_FAST;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset = -2.5;
@@ -1375,7 +1379,7 @@ DECLARE_BG2_WEAPON(oldpattern)
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset = -2.5;
-	m_bSlowDraw = true;
+	m_flIronsightsTime = IRONSIGHTS_TIME_SLOW;
 	m_flLockTime = 0.2f;
 	m_flRandomAdditionalLockTimeMax = 0.1f;
 
@@ -1485,7 +1489,7 @@ DECLARE_BG2_WEAPON(trade_musket)
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset = -5;
-	m_bSlowDraw = true;
+	m_flIronsightsTime = IRONSIGHTS_TIME_SLOW;
 	m_flLockTime = 0.2f;
 
 	m_bWeaponHasSights = true;
@@ -1683,7 +1687,7 @@ DECLARE_BG2_WEAPON( brownbess_carbine )
 	m_flIronsightFOVOffset = -2.5;
 
 	m_bWeaponHasSights = true; 
-	m_bQuickdraw = true;
+	m_flIronsightsTime = IRONSIGHTS_TIME_FAST;
 	//
 
 	//primary
@@ -1800,7 +1804,7 @@ DECLARE_BG2_WEAPON(brownbess_carbine_nobayo)
 
 	m_fHolsterTime = 0.75f;
 	m_flApproximateReloadTime = 7.0f;
-	m_bQuickdraw = true;
+	m_flIronsightsTime = IRONSIGHTS_TIME_FAST;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset = -2.5;
@@ -1853,7 +1857,7 @@ DECLARE_BG2_WEAPON(french_carbine)
 
 	m_fHolsterTime = 0.75f;
 	m_flApproximateReloadTime = 7.0f;
-	m_bQuickdraw = true;
+	m_flIronsightsTime = IRONSIGHTS_TIME_FAST;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset = -2.5;
@@ -1943,7 +1947,7 @@ DECLARE_BG2_WEAPON(pattern1776)
 	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_NONE;
 
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE; //Pattern1776 is shorter, use lower default velocity
-	m_flZeroRange = ZERO_RANGE_MUSKET; //this is more of a close range sniper, so use this instead
+	m_flZeroRange = (ZERO_RANGE_MUSKET + ZERO_RANGE_RIFLE) / 2; //this is more of a close range sniper, so use this instead
 	m_iNumShot = 0;
 }
 

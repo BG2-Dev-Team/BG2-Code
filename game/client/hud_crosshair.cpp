@@ -487,6 +487,7 @@ ConVar cl_dynamic_crosshair("cl_dynamic_crosshair", "1", FCVAR_ARCHIVE);
 
 static bool g_bPreviousFrameIronsighted = false;
 static float g_flEndCrosshairTime = -FLT_MAX;
+ConVar cl_persistent_crosshair("cl_persistent_crosshair", "0", FCVAR_CHEAT);
 void CHudCrosshair::Paint( void )
 {
 	//BG2 - found this stuff while porting to 2016 - Awesome
@@ -498,14 +499,14 @@ void CHudCrosshair::Paint( void )
 	if (!pWeapon)
 		return;
 
-	if (pWeapon->m_bIsIronsighted) //No crosshair in Iron Sights. -HairyPotter
+	if (pWeapon->m_bIsIronsighted && !cl_persistent_crosshair.GetBool()) //No crosshair in Iron Sights. -HairyPotter
 	{
 		IronPaint();
 		if (g_bPreviousFrameIronsighted && (gpGlobals->curtime > g_flEndCrosshairTime)) {
 			return;
 		}
 		else if (!g_bPreviousFrameIronsighted) {
-			g_flEndCrosshairTime = gpGlobals->curtime + 0.375f;
+			g_flEndCrosshairTime = gpGlobals->curtime + pWeapon->Def()->m_flIronsightsTime;
 		}
 	}
 	g_bPreviousFrameIronsighted = pWeapon->m_bIsIronsighted;

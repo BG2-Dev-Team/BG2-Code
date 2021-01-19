@@ -245,8 +245,8 @@ void CBaseBG2Weapon::DoAttack( int iAttack )
 #endif
 }
 
-GLOBAL_FLOAT(g_flAccuracyDecay, sv_accuracy_decay, 1.0f, CVAR_FLAGS, 0.0f, 10.f);
-GLOBAL_FLOAT(g_flHipFireAccuracy, sv_hipfire_accuracy, 1.0f, CVAR_FLAGS, 0.0f, 10.f);
+GLOBAL_FLOAT(g_flAccuracyDecay, sv_accuracy_decay, 7.5f, CVAR_FLAGS | FCVAR_CHEAT, 0.0f, 10.f);
+GLOBAL_FLOAT(g_flHipFireAccuracy, sv_hipfire_accuracy, 1.5f, CVAR_FLAGS | FCVAR_CHEAT, 0.0f, 10.f);
 
 float CBaseBG2Weapon::GetAccuracy(int iAttack) {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());

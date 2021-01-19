@@ -239,7 +239,7 @@ VCOMM RALLYING DEFINITIONS - these are just mergers of the raw rally types defin
 #define RALLY_RETREAT			(RALLY_SPEED_RELOAD | RALLY_ARMOR)
 #define RALLY_RETREAT_DURATION		RALLY_DURATION
 
-#define NERF_SLOW_DURATION			5.f
+#define NERF_SLOW_DURATION			4.f
 #endif
 
 

@@ -55,7 +55,7 @@
 
 #define HIDEWEAPON_THINK_CONTEXT			"BaseCombatWeapon_HideThink"
 
-GLOBAL_FLOAT(g_flIronsightsTimeScale, sv_ironsights_time, 1, CVAR_FLAGS, 0.1f, 4.0f);
+GLOBAL_FLOAT(g_flIronsightsTimeScale, sv_ironsights_time, 1.25f, CVAR_FLAGS, 0.1f, 4.0f);
 
 //BG2 -Added for Iron Sights Testing. Credits to z33ky for the code. -HairyPotter
 #if defined( TWEAK_IRONSIGHTS )
@@ -754,8 +754,9 @@ void CBaseCombatWeapon::EnableIronsights(void)
 	CBaseViewModel *vm = pOwner->GetViewModel(m_nViewModelIndex, false);
 	if (vm) vm->m_flSwayMultiplier = 1;
 
-	float attackDelay = Def()->m_bQuickdraw ? IRONSIGHTS_ATTACK_DELAY_IN_FAST : IRONSIGHTS_ATTACK_DELAY_IN;
-	attackDelay = Def()->m_bSlowDraw ? IRONSIGHTS_ATTACK_DELAY_IN_SLOW : attackDelay;
+	float attackDelay = Def()->m_flIronsightsTime;
+		/*Def()->m_bQuickdraw ? IRONSIGHTS_ATTACK_DELAY_IN_FAST : IRONSIGHTS_ATTACK_DELAY_IN;
+	attackDelay = Def()->m_bSlowDraw ? IRONSIGHTS_ATTACK_DELAY_IN_SLOW : attackDelay;*/
 #ifndef CLIENT_DLL
 	attackDelay *= g_flIronsightsTimeScale;
 #else
@@ -792,8 +793,8 @@ void CBaseCombatWeapon::DisableIronsights(void)
 	if (vm) vm->m_flSwayMultiplier = DEFAULT_VIEWMODEL_SWAY;
 
 	//delay both attacks, but make sure we don't roll back the attack times
-	m_flNextPrimaryAttack = max(m_flNextPrimaryAttack, gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_OUT);
-	m_flNextSecondaryAttack = max(m_flNextSecondaryAttack, gpGlobals->curtime + IRONSIGHTS_ATTACK_DELAY_OUT);
+	m_flNextPrimaryAttack = max(m_flNextPrimaryAttack, gpGlobals->curtime + Def()->m_flIronsightsTime / 2);
+	m_flNextSecondaryAttack = max(m_flNextSecondaryAttack, gpGlobals->curtime + Def()->m_flIronsightsTime / 2);
 }
 //
 
