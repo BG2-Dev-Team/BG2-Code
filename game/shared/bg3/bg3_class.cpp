@@ -367,23 +367,7 @@ void CPlayerClass::RemoveClassLimits() {
 	}
 }
 
-/*
-PLAYER MODEL PATHS AND NAMES - these are used repeatedly for precacheing the models and assigning them to players
-*/
 
-#define MODEL_BINFANTRY		"models/player/british/infantry/br_infantry.mdl"
-#define MODEL_BOFFICER		"models/player/british/light_b/light_b.mdl"
-#define MODEL_BJAEGER		"models/player/british/jager/jager.mdl"
-#define MODEL_BNATIVE		"models/player/british/mohawk/mohawk.mdl"
-#define MODEL_BLINF			"models/player/british/loyalist/loyalist.mdl"
-#define MODEL_BGRENADIER	"models/player/british/grenadier/br_grenadier.mdl"
-
-#define MODEL_AINFANTRY		"models/player/american/infantry/american_infantry.mdl"
-#define MODEL_AOFFICER		"models/player/american/light_a/light_a.mdl"
-#define MODEL_AFRONTIERSMAN "models/player/american/frontiersman/frontiersman.mdl"
-#define MODEL_AMILITIA		"models/player/american/minuteman/minuteman.mdl"
-#define MODEL_ASTATEMILITIA "models/player/american/state/state_militia.mdl"
-#define MODEL_AFRENCH		"models/player/american/french_gre/french_gre.mdl"
 
 #define SLEEVE_BINFANTRY		0
 #define SLEEVE_BOFFICER			0
@@ -443,12 +427,20 @@ DEC_BG3_PLAYER_CLASS(BInfantry, inf, b) {
 	m_iSleeveBase = SLEEVE_BINFANTRY;
 	m_iNumUniforms = 3;
 	m_bLastUniformRestricted = true;
+
+	m_pszUniformModelOverrides[0] = NULL;
+	m_pszUniformModelOverrides[1] = NULL;
+	m_pszUniformModelOverrides[2] = NULL;
+	m_pszUniformModelOverrides[3] = NULL;
+
+	m_pszDroppedHat = "models/player/british/infantry/british_hat.mdl";
+
 	//m_bAllowUniformSelection = true;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess";
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_longpattern";
 	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_sea_service";
-	//m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_oldpattern";
+	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_oldpattern";
 	m_aWeapons[2].m_iMovementSpeedModifier = 3;
 
 
@@ -470,6 +462,12 @@ DEC_BG3_PLAYER_CLASS(BOfficer, off, b) {
 	m_iSkinDepth = 1;
 	m_iSleeveBase = SLEEVE_BOFFICER;
 	m_iNumUniforms = 3;
+
+	m_pszUniformModelOverrides[0] = NULL;
+	m_pszUniformModelOverrides[1] = NULL;
+	m_pszUniformModelOverrides[2] = NULL;
+	m_pszUniformModelOverrides[3] = NULL;
+
 	//m_bAllowUniformSelection = true;
 	m_bCanDoVcommBuffs = true;
 
@@ -498,6 +496,11 @@ DEC_BG3_PLAYER_CLASS(BJaeger, rif, b) {
 	m_iSleeveBase = SLEEVE_BJAEGER;
 	m_iNumUniforms = 1;
 
+	m_pszUniformModelOverrides[0] = NULL;
+	m_pszUniformModelOverrides[1] = NULL;
+	m_pszUniformModelOverrides[2] = NULL;
+	m_pszUniformModelOverrides[3] = NULL;
+
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_jaeger";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_hirschf";
 
@@ -521,6 +524,11 @@ DEC_BG3_PLAYER_CLASS(BNative, ski, b) {
 	m_iSleeveBase = SLEEVE_BNATIVE;
 	m_iNumUniforms = 1;
 
+	m_pszUniformModelOverrides[0] = NULL;
+	m_pszUniformModelOverrides[1] = NULL;
+	m_pszUniformModelOverrides[2] = NULL;
+	m_pszUniformModelOverrides[3] = NULL;
+
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess_nobayo";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_tomahawk";
 
@@ -530,8 +538,8 @@ DEC_BG3_PLAYER_CLASS(BNative, ski, b) {
 	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_club";
 	m_aWeapons[2].m_iMovementSpeedModifier = 5;
 
-	//m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_trade_musket";
-	//m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_knife";
+	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_trade_musket";
+	m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_dagger";
 	m_aWeapons[3].m_iMovementSpeedModifier = -15;
 
 
@@ -553,7 +561,12 @@ DEC_BG3_PLAYER_CLASS(BLinf, linf, b) {
 
 	m_iSkinDepth = 1;
 	m_iSleeveBase = SLEEVE_BLINF;
-	m_iNumUniforms = 1;
+	m_iNumUniforms = 3;
+
+	m_pszUniformModelOverrides[0] = NULL;
+	m_pszUniformModelOverrides[1] = NULL;
+	m_pszUniformModelOverrides[2] = NULL;
+	m_pszUniformModelOverrides[3] = NULL;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess_carbine";
 	m_aWeapons[0].m_bAllowBuckshot = true;
@@ -583,7 +596,12 @@ DEC_BG3_PLAYER_CLASS(BGrenadier, gre, b) {
 
 	m_iSkinDepth = 8;
 	m_iSleeveBase = SLEEVE_BGRENADIER;
-	m_iNumUniforms = 1;
+	m_iNumUniforms = 2;
+
+	m_pszUniformModelOverrides[0] = NULL;
+	m_pszUniformModelOverrides[1] = MODEL_BGRENADIER_ALT;
+	m_pszUniformModelOverrides[2] = NULL;
+	m_pszUniformModelOverrides[3] = NULL;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess_nobayo";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_frag";
@@ -627,6 +645,12 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 	m_iNumUniforms = 3;
 	m_pszDroppedHat = "models/player/american/infantry/american_hat.mdl";
 	m_bLastUniformRestricted = true;
+
+	m_pszUniformModelOverrides[0] = NULL;
+	m_pszUniformModelOverrides[1] = NULL;
+	m_pszUniformModelOverrides[2] = NULL;
+	m_pszUniformModelOverrides[3] = NULL;
+
 	//m_bAllowUniformSelection = true;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_miquelet";
@@ -635,7 +659,7 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_old_model_charleville";
 	m_aWeapons[4].m_pszWeaponPrimaryName = "weapon_dutch";
 	m_aWeapons[5].m_pszWeaponPrimaryName = "weapon_american_brownbess";
-	//m_aWeapons[6].m_pszWeaponPrimaryName = "weapon_light_model_charleville";
+	m_aWeapons[6].m_pszWeaponPrimaryName = "weapon_light_model_charleville";
 
 	postClassConstruct(this);
 }
@@ -658,14 +682,22 @@ DEC_BG3_PLAYER_CLASS(AOfficer, off, a) {
 	//m_bAllowUniformSelection = true;
 	m_bCanDoVcommBuffs = true;
 
+	m_pszUniformModelOverrides[0] = NULL;
+	m_pszUniformModelOverrides[1] = NULL;
+	m_pszUniformModelOverrides[2] = NULL;
+	m_pszUniformModelOverrides[3] = NULL;
+
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_pistol_a";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_sabre";
-	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_brownbess_carbine_nobayo";
+	
+	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_french_carbine";
 	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_sabre";
-	//m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_french_carbine";
-	//m_aWeapons[2].m_pszWeaponSecondaryName = "weapon_sabre";
+	m_aWeapons[1].m_pszPlayerModelOverrideName = MODEL_AFRENCHOFFICER;
 
-	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_spontoon";
+	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_brownbess_carbine_nobayo";
+	m_aWeapons[2].m_pszWeaponSecondaryName = "weapon_sabre";
+
+	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_spontoon";
 
 	postClassConstruct(this);
 }
@@ -687,6 +719,11 @@ DEC_BG3_PLAYER_CLASS(AFrontiersman, rif, a) {
 	m_iSleeveBase = SLEEVE_AFRONTIERSMAN;
 	m_iNumUniforms = 3;
 	m_bForceRandomUniform = true;
+
+	m_pszUniformModelOverrides[0] = NULL;
+	m_pszUniformModelOverrides[1] = NULL;
+	m_pszUniformModelOverrides[2] = NULL;
+	m_pszUniformModelOverrides[3] = NULL;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_pennsylvania";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_knife";
@@ -713,6 +750,11 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 	m_iNumUniforms = 3;
 	m_bForceRandomUniform = true;
 
+	m_pszUniformModelOverrides[0] = NULL;
+	m_pszUniformModelOverrides[1] = NULL;
+	m_pszUniformModelOverrides[2] = NULL;
+	m_pszUniformModelOverrides[3] = NULL;
+
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_fowler";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_beltaxe";
 	m_aWeapons[0].m_bAllowBuckshot = true;
@@ -725,8 +767,8 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 	m_aWeapons[2].m_pszPlayerModelOverrideName = MODEL_ASTATEMILITIA; //BG3 - minuteman/state class merge
 	m_aWeapons[2].m_iSleeveSkinOverride = SLEEVE_ASTATEMILITIA;
 
-	//m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_blunderbuss";
-	//m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_dagger";
+	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_blunderbuss";
+	m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_dagger";
 
 #ifdef CLIENT_DLL
 	m_aWeapons[2].SetLocalizedName("weapon_longpattern_state");
@@ -783,7 +825,12 @@ DEC_BG3_PLAYER_CLASS(AFrenchGre, gre, a) {
 
 	m_iSkinDepth = 4;
 	m_iSleeveBase = SLEEVE_AFRENCH;
-	m_iNumUniforms = 1;
+	m_iNumUniforms = 2;
+
+	m_pszUniformModelOverrides[0] = NULL;
+	m_pszUniformModelOverrides[1] = MODEL_AFRENCH_ALT;
+	m_pszUniformModelOverrides[2] = NULL;
+	m_pszUniformModelOverrides[3] = NULL;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_revolutionnaire_nobayo";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_frag";

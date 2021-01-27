@@ -91,7 +91,7 @@ I'm tired of these stats and information being spread out into unwieldly functio
 so I'm putting them all into these separate files
 */
 class CPlayerClass {
-	
+
 public:
 	const char* m_pszAbbreviation; //for example, "off" or "gre", used for player class limits
 protected:
@@ -107,7 +107,7 @@ public:
 	uint8		m_iDefaultSecondaryAmmoCount = 0;
 	const char* m_pszPrimaryAmmo = AMMO_DEFAULT_NAME;
 	const char* m_pszSecondaryAmmo = "Grenade";
-	
+
 
 	float		m_flBaseSpeed = 190.f;
 	float		m_flFlagWeightMultiplier = 1.0f;
@@ -129,6 +129,7 @@ public:
 	bool			m_bForceRandomUniform = false;
 	bool			m_bLastUniformRestricted = false;
 	const char*		m_pszDroppedHat = 0;
+	const char*		m_pszUniformModelOverrides[4]; //per-uniform model overrides
 	//bool			m_bAllowUniformSelection = false; //allow uniform selection in the menu?
 
 	bool			m_bCanDoVcommBuffs = false; //this will be true for officer
@@ -223,5 +224,26 @@ namespace PlayerClasses {
 #undef dec
 	
 }
+
+/*
+PLAYER MODEL PATHS AND NAMES - these are used repeatedly for precacheing the models and assigning them to players
+*/
+
+#define MODEL_BINFANTRY			"models/player/british/infantry/br_infantry.mdl"
+#define MODEL_BOFFICER			"models/player/british/light_b/light_b.mdl"
+#define MODEL_BJAEGER			"models/player/british/jager/jager.mdl"
+#define MODEL_BNATIVE			"models/player/british/mohawk/mohawk.mdl"
+#define MODEL_BLINF				"models/player/british/loyalist/loyalist.mdl"
+#define MODEL_BGRENADIER		"models/player/british/grenadier/br_grenadier.mdl"
+#define MODEL_BGRENADIER_ALT		"models/player/british/grenadier/br_grenadier_alt.mdl"
+
+#define MODEL_AINFANTRY			"models/player/american/infantry/american_infantry.mdl"
+#define MODEL_AOFFICER			"models/player/american/light_a/light_a.mdl"
+#define MODEL_AFRONTIERSMAN		"models/player/american/frontiersman/frontiersman.mdl"
+#define MODEL_AMILITIA			"models/player/american/minuteman/minuteman.mdl"
+#define MODEL_ASTATEMILITIA		"models/player/american/state/state_militia.mdl"
+#define MODEL_AFRENCH			"models/player/american/french_gre/french_gre.mdl"
+#define MODEL_AFRENCH_ALT		"models/player/american/french_gre/french_gre_alt.mdl"
+#define MODEL_AFRENCHOFFICER	"models/player/american/french_officer/french_officer.mdl"
 
 #endif //BG3_PLAYER_CLASS

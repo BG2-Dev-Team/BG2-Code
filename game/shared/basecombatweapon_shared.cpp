@@ -903,6 +903,22 @@ void CBaseCombatWeapon::OnPickedUp( CBaseCombatCharacter *pNewOwner )
 #endif
 }
 
+bool PlayerHasDarkSkin(CHL2MP_Player* pPlayer) {
+	bool result = false; //default to false, then check specific class/uniform combos
+
+	const CPlayerClass* pc = pPlayer->GetPlayerClass();
+	const int uni = pPlayer->m_nSkin;
+
+	if (pc == PlayerClasses::g_pBInfantry) {
+		result = uni == 2 || uni == 14 || uni == 20;
+	}
+	if (pc == PlayerClasses::g_pAInfantry) {
+		result = uni == 4 || uni == 10 || uni == 17;
+	}
+
+	return result;
+}
+
 //BG3 - Awesome - moving this function to BaseCombatWeapon such
 //that OnPickedUp can call it without having to dererence any virtual
 //functions or do other expensive nonsense.
@@ -933,13 +949,23 @@ void CBaseCombatWeapon::UpdateBodyGroups() {
 		pViewModel->SetBodygroup(group, pOwner->GetTeamNumber() == TEAM_BRITISH);
 
 	//use the correct arms (natives don't have sleeves)
+	int handmodel = 0;
 	if ((group = pViewModel->FindBodygroupByName("arms")) >= 0) {
 		int armModel = 0;
-		if (pOwner->GetPlayerClass() == PlayerClasses::g_pBNative)
+		if (pOwner->GetPlayerClass() == PlayerClasses::g_pBNative) {
+			handmodel = 2; //hands built into arms, show blank
 			armModel = 1;
+		}
 		else if (pOwner->GetPlayerClass() == PlayerClasses::g_pBGrenadier)
 			armModel = 2;
 		pViewModel->SetBodygroup(group, armModel);
+	}
+
+	if ((group = pViewModel->FindBodygroupByName("hands")) >= 0) {
+		if (PlayerHasDarkSkin(pOwner)) {
+			handmodel = 1;
+		}
+		pViewModel->SetBodygroup(group, handmodel);
 	}
 
 

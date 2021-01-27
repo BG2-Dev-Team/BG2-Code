@@ -261,8 +261,6 @@ bool shouldUnlockableExperienceBeCounted(CHL2MP_Player* pPlayer, bool bForceUpda
 	if (pPlayer && (pPlayer->m_debugOverlays & OVERLAY_BUDDHA_MODE))
 		return false;
 #endif
-
-
 	//No experience gain when
 	//1. Any bots are in the game
 	//4. Server is not on an official map

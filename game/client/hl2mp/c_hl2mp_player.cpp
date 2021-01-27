@@ -1073,6 +1073,13 @@ void C_HL2MPRagdoll::CreateHL2MPRagdoll( void )
 			}
 		}
 	}
+
+	//set easter egg bodygroup so they don't just disappear
+	int easterEgg = pPlayer->FindBodygroupByName("easter_egg");
+	if (easterEgg >= 0) {
+		SetBodygroup(easterEgg, pPlayer->GetBodygroup(easterEgg));
+	}
+
 	if (m_bDropHat) {
 		static int iHat = FindBodygroupByName("hat");
 		//Msg("Hiding bodygroup %i\n", iHat);

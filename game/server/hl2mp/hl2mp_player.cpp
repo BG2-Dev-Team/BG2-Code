@@ -223,6 +223,13 @@ void CHL2MP_Player::Precache(void)
 			}
 		}
 
+		//precache per-uniform overrides
+		for (int j = 0; j < 4; j++) {
+			if (pClass->m_pszUniformModelOverrides[j]) {
+				PrecacheModel(pClass->m_pszUniformModelOverrides[j]);
+			}
+		}
+
 		//precache any dropped hat models
 		if (pClass->m_pszDroppedHat) PrecacheModel(pClass->m_pszDroppedHat);
 	}
@@ -1321,10 +1328,23 @@ ConVar sv_player_model_override("sv_player_model_override", "", FCVAR_GAMEDLL | 
 void CHL2MP_Player::PlayermodelTeamClass()
 {
 	const char* pszModel = m_pCurClass->m_pszPlayerModel;
+
+	//per-weapon-kit model override
 	const char* pszWeaponOverride = m_pCurClass->m_aWeapons[m_iGunKit].m_pszPlayerModelOverrideName;
 	if (pszWeaponOverride) pszModel = pszWeaponOverride;
-	if (strlen(sv_player_model_override.GetString()) > 0) pszModel = sv_player_model_override.GetString();
+
+	//per-uniform model override
+	const char* pszUniformOverride = m_pCurClass->m_pszUniformModelOverrides[m_iClassSkin];
+	if (pszUniformOverride) pszModel = pszUniformOverride;
+
+	//if (strlen(sv_player_model_override.GetString()) > 0) pszModel = sv_player_model_override.GetString();
 	SetModel(pszModel);
+
+	//easter egg body groups, ex. Baguette
+	int easterEgg;
+	if (RndFloat() < 0.01f && (easterEgg = FindBodygroupByName("easter_egg")) >= 0) {
+		SetBodygroup(easterEgg, 1);
+	}
 
 	//Handle skins separately pls - Awesome
 	m_nSkin = GetAppropriateSkin();
@@ -1558,6 +1578,7 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 		char *pClassString, *pTeamString;
 
 		//BG2 - Make it a switch for great justice. -HairyPotter
+		bool bFrenchOverride = false;
 		switch (m_iClass)
 		{
 		case CLASS_INFANTRY:
@@ -1565,6 +1586,13 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 			break;
 		case CLASS_OFFICER:
 			pClassString = "Off";
+
+			//Check for french officer
+			//checking model is easier, because player could change kit but not have spawned as it yet.
+			if (GetTeamNumber() == TEAM_AMERICANS && strcmp(GetModelName().ToCStr(), MODEL_AFRENCHOFFICER) == 0) {
+				pClassString = "Gre";
+				bFrenchOverride = true;
+			}
 			break;
 		case CLASS_SNIPER:
 			pClassString = "Rif";
@@ -1660,7 +1688,7 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 			UserMessageBegin(recpfilter, "VoiceComm");
 			WRITE_BYTE(entindex());	//voicecomm originator
 			WRITE_BYTE(comm | (GetTeamNumber() == TEAM_AMERICANS ? 32 : 0));	//pack comm number and team
-			WRITE_BYTE(m_iClass);	//class number
+			WRITE_BYTE(bFrenchOverride ? CLASS_LIGHT_INFANTRY : m_iClass);	//HACK HACK send class number, but if french officer pretend we're french grenadier (which is in the fifth 'light infantry' slot)
 			MessageEnd();
 		}
 	}
@@ -1980,10 +2008,14 @@ void CHL2MP_Player::CreateRagdollEntity(void)
 				pHat->SetCollisionGroup(COLLISION_GROUP_DEBRIS);
 
 				IPhysicsObject* pPhys = pHat->VPhysicsInitNormal(SOLID_VPHYSICS, FSOLID_NOT_STANDABLE, false);
-				Vector vel = GetAbsVelocity() * 1.1f;
-				AngularImpulse imp;
-				pPhys->SetVelocity(&vel, &imp);
-				
+				//if (pPhys) {
+					Vector vel = GetAbsVelocity() * 1.1f;
+					AngularImpulse imp;
+					pPhys->SetVelocity(&vel, &imp);
+				//}
+				//else {
+					//Warning("Hat model %s missing physics!", m_pCurClass->m_pszDroppedHat);
+				//}
 				
 				pRagdoll->m_hHat = pHat;
 			}

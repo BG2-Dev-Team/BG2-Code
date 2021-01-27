@@ -1422,7 +1422,7 @@ DECLARE_BG2_WEAPON(oldpattern)
 	m_Attackinfos[1].m_flRetraceDuration = BAYONET_RETRACE_DURATION;
 	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN * 1.5f;
 
-	m_pBayonetDeathNotice = "longpattern_bayonet";
+	m_pBayonetDeathNotice = "oldpattern_bayonet";
 
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flZeroRange = ZERO_RANGE_MUSKET;
