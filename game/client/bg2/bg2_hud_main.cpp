@@ -105,6 +105,9 @@ CHudBG2::CHudBG2( const char *pElementName ) :
 	createLabel(&m_pLabelAmmo);
 	createLabel(&m_pLabelDeathMessage);
 	createLabel(&m_pLabelRoundTime);
+	createLabel(&m_pLabelSkirmishIntermissionTime); // BG3 - Ricochet - skirmish intermission time label create
+	createLabel(&m_pLabelTicketsIntermissionTime); // BG3 - Ricochet - tickets intermission time label create
+	createLabel(&m_pLabelLMSIntermissionTime); // BG3 - Ricochet - lms/linebattle intermission time label create
 	createLabel(&m_pLabelDamageTaken);
 	createLabel(&m_pLabelDamageGiven);
 	createLabel(&m_pLabelLMS);
@@ -164,6 +167,17 @@ void CHudBG2::ApplySettings(KeyValues *inResourceData)
 	m_pLabelRoundTime->SetPos(halfx - 25, secondRowOffset);
 	m_pLabelRoundTime->SetContentAlignment(Label::Alignment::a_center);
 
+	// BG3 - Ricochet - position skirmish, tickets, and lms/linebattle intermission timers
+	int atBottom = ScreenHeight() - 60;
+	m_pLabelSkirmishIntermissionTime->SetPos(halfx - 65, atBottom);
+	m_pLabelSkirmishIntermissionTime->SetContentAlignment(Label::Alignment::a_center);
+
+	m_pLabelTicketsIntermissionTime->SetPos(halfx - 65, atBottom);
+	m_pLabelTicketsIntermissionTime->SetContentAlignment(Label::Alignment::a_center);
+
+	m_pLabelLMSIntermissionTime->SetPos(halfx - 65, atBottom);
+	m_pLabelLMSIntermissionTime->SetContentAlignment(Label::Alignment::a_center);
+
 	//round counter
 	m_pLabelCurrentRound->SetPos(halfx - 50, m_pLabelRoundTime->GetYPos() + m_pLabelRoundTime->GetTall());
 
@@ -215,6 +229,9 @@ void CHudBG2::ApplySchemeSettings( IScheme *scheme )
 	m_pLabelLMS->SetFont(font);
 	m_pLabelCurrentRound->SetFont(font);
 	m_pLabelRoundTime->SetFont(font);
+	m_pLabelSkirmishIntermissionTime->SetFont(font); // BG3 - Ricochet - skirmish intermission timer font
+	m_pLabelTicketsIntermissionTime->SetFont(font); // BG3 - Ricochet - tickets intermission timer font
+	m_pLabelLMSIntermissionTime->SetFont(font); // BG3 - Ricochet - lms/linebattle intermission timer font
 	m_pLabelDeathMessage->SetFont(largeFont);
 	m_pLabelAmmo->SetFont(largeFont);
 	m_pLabelHealth->SetFont(font);
@@ -438,6 +455,16 @@ void CHudBG2::PaintTopCenterHUD(/*C_HL2MP_Player* pPlayer*/) {
 	//BLACK ROUNDTIME BACKGROUND
 	if (m_pLabelCurrentRound->IsVisible()) PaintBackgroundOnto(m_pLabelCurrentRound);
 	PaintBackgroundOnto(m_pLabelRoundTime);
+
+	// BG3 - Ricochet - paint black background onto skirmish, tickets, and lms/linebattle intermission timers
+	if (m_pLabelSkirmishIntermissionTime->IsVisible())
+		PaintBackgroundOnto(m_pLabelSkirmishIntermissionTime);
+
+	if (m_pLabelTicketsIntermissionTime->IsVisible())
+		PaintBackgroundOnto(m_pLabelTicketsIntermissionTime);
+
+	if (m_pLabelLMSIntermissionTime->IsVisible())
+		PaintBackgroundOnto(m_pLabelLMSIntermissionTime);
 	
 	//SWINGOMETER
 	//swingometer
@@ -526,6 +553,57 @@ void CHudBG2::PaintTopCenterHUD(/*C_HL2MP_Player* pPlayer*/) {
 	}
 	m_pLabelRoundTime->SizeToContents();
 	m_pLabelRoundTime->SetFgColor(COLOR_WHITE);
+
+	// BG3 - Ricochet - TICKETS INTERMISSION TIMER
+	m_pLabelTicketsIntermissionTime->SetVisible(false);
+	if (IsTicketMode() && HL2MPRules()->m_iCurrentRound == mp_rounds.GetInt() && roundtime == 0)
+	{
+		m_pLabelTicketsIntermissionTime->SetVisible(true);
+		int ticketsIntermissionTime = HL2MPRules()->m_flIntermissionStartTime + HL2MPRules()->GetIntermissionTimeAmount() - gpGlobals->curtime;
+		roundtime = ticketsIntermissionTime;
+		Q_snprintf(g_hudBuffer, 32, "INTERMISSION: %i:%02i ", roundtime / 60, roundtime % 60);
+		m_pLabelTicketsIntermissionTime->SetText(g_hudBuffer);
+	}
+	else {
+		m_pLabelTicketsIntermissionTime->SetText(" ");
+	}
+	m_pLabelTicketsIntermissionTime->SizeToContents();
+	m_pLabelTicketsIntermissionTime->SetFgColor(COLOR_WHITE);
+
+	// BG3 - Ricochet - SKIRMISH INTERMISSION TIMER
+	m_pLabelSkirmishIntermissionTime->SetVisible(false);
+	if (HL2MPRules()->GetMapRemainingTime() <= 0.f && IsSkirmish())
+	{
+		m_pLabelSkirmishIntermissionTime->SetVisible(true);
+		int skirmishIntermissionTime = HL2MPRules()->m_flIntermissionStartTime + HL2MPRules()->GetIntermissionTimeAmount() - gpGlobals->curtime;
+		roundtime = skirmishIntermissionTime;
+		Q_snprintf(g_hudBuffer, 32, "INTERMISSION: %i:%02i ", roundtime / 60, roundtime % 60);
+		m_pLabelSkirmishIntermissionTime->SetText(g_hudBuffer);
+		//Msg("This code just ran!");
+	}
+	else {
+		m_pLabelSkirmishIntermissionTime->SetText(" ");
+	}
+	m_pLabelSkirmishIntermissionTime->SizeToContents();
+	m_pLabelSkirmishIntermissionTime->SetFgColor(COLOR_WHITE);
+
+	/*
+	// BG3 - Ricochet - LMS/LINEBATTLE INTERMISSION TIMER
+	m_pLabelLMSIntermissionTime->SetVisible(false);
+	if (IsLMS() && HL2MPRules()->m_iCurrentRound == mp_rounds.GetInt() && HL2MPRules()->IsIntermission() && pAmer->GetNumPlayersAlive() == 0 || pBrit->GetNumPlayersAlive() == 0)
+	{
+		m_pLabelLMSIntermissionTime->SetVisible(true);
+		int lmsIntermissionTime = HL2MPRules()->m_flIntermissionStartTime + HL2MPRules()->GetIntermissionTimeAmount() - gpGlobals->curtime;
+		roundtime = lmsIntermissionTime;
+		Q_snprintf(g_hudBuffer, 32, "INTERMISSION: %i:%02i ", roundtime / 60, roundtime % 60);
+		m_pLabelLMSIntermissionTime->SetText(g_hudBuffer);
+	}
+	else {
+		m_pLabelLMSIntermissionTime->SetText(" ");
+	}
+	m_pLabelLMSIntermissionTime->SizeToContents();
+	m_pLabelLMSIntermissionTime->SetFgColor(COLOR_WHITE);
+	*/
 
 	//GAME MESSAGE
 	PaintBackgroundOnto(m_pLabelGameMessage);

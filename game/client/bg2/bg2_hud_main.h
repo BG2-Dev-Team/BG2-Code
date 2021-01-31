@@ -81,6 +81,9 @@ private:
 	vgui::Label * m_pLabelAmmo; 
 	vgui::Label * m_pLabelDeathMessage; 
 	vgui::Label * m_pLabelRoundTime;
+	vgui::Label * m_pLabelSkirmishIntermissionTime; // BG3 - Ricochet - skirmish intermission timer
+	vgui::Label * m_pLabelTicketsIntermissionTime; // BG3 - Ricochet - tickets intermission timer
+	vgui::Label * m_pLabelLMSIntermissionTime; // BG3 - Ricochet - lms/linebattle intermission timer
 	vgui::Label * m_pLabelDamageTaken;
 	vgui::Label * m_pLabelDamageGiven;
 	vgui::Label * m_pLabelLMS;		//BG2 - Tjoppen - TODO: remove this when hintbox works correctly
