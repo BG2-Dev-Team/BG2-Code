@@ -162,6 +162,18 @@ ConVar lb_enforce_no_troll("lb_enforce_no_troll", "1", CVAR_FLAGS, "If on, preve
 
 ConVar sv_alltalk("sv_alltalk", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Players can hear all other players, no team restrictions");
 
+// BG3 - Ricochet - Swap teams in ticket mode intermission to 20 seconds (or user set time) instead of default 5 seconds
+ConVar mp_swap_teams_intermission("mp_swap_team_intermission", "0", CVAR_FLAGS, "Longer intermission when swapping teams. 0 is off, 1 is on.");
+ConVar mp_swap_teams_intermission_time("mp_swap_team_intermission_time", "20", CVAR_FLAGS, "Set a longer intermission time when swapping teams.", true, 1.f, true, 120.f);
+
+// BG3 - Ricochet - Change level intermission time for skirmish mode
+//ConVar mp_change_level_intermission("mp_change_level_intermission", "0", CVAR_FLAGS, "Longer intermission when changing map. 0 is off, 1 is on.");
+ConVar mp_change_level_intermission_time("mp_change_level_intermission_time", "14", CVAR_FLAGS, "Set a longer intermission time when changing map.", true, 5.f, true, 180.f);
+
+// Example of a ConVar with a min and max value
+//ConVar(const char *pName, const char *pDefaultValue, int flags,
+	//const char *pHelpString, bool bMin, float fMin, bool bMax, float fMax);
+
 // BG2 - VisualMelon - Can't find a better place to put this
 int hitVerificationHairs = 0;
 int hitVerificationLatency = 1.5;
@@ -176,12 +188,14 @@ BEGIN_NETWORK_TABLE_NOBASE( CHL2MPRules, DT_HL2MPRules )
 
 	#ifdef CLIENT_DLL
 		RecvPropFloat( RECVINFO(m_flGameStartTime)),
+		RecvPropFloat( RECVINFO(m_flIntermissionStartTime)), // BG3 - Ricochet
 		RecvPropBool( RECVINFO( m_bTeamPlayEnabled ) ),
 		RecvPropFloat( RECVINFO( m_fLastRespawnWave ) ), //BG2 This needs to be here for the timer to work. -HairyPotter
 		RecvPropFloat(RECVINFO(m_fLastRoundRestart)),
 		RecvPropInt(RECVINFO(m_iCurrentRound)),
 	#else
 		SendPropFloat( SENDINFO(m_flGameStartTime)),
+		SendPropFloat(SENDINFO(m_flIntermissionStartTime)), // BG3 - Ricochet
 		SendPropBool( SENDINFO( m_bTeamPlayEnabled ) ),
 		SendPropFloat(SENDINFO(m_fLastRespawnWave)), //BG2 This needs to be here for the timer to work. -HairyPotter
 		SendPropFloat(SENDINFO(m_fLastRoundRestart)),
@@ -331,6 +345,7 @@ CHL2MPRules::CHL2MPRules()
 	m_bTeamPlayEnabled = teamplay.GetBool();
 	m_flIntermissionEndTime = 0.0f;
 	m_flGameStartTime = 0;
+	m_flIntermissionStartTime = 0; // BG3 - Ricochet
 
 	m_hRespawnableItemsAndWeapons.RemoveAll();
 	m_tmNextPeriodicThink = 0;
@@ -540,22 +555,9 @@ void CHL2MPRules::HandleScores(int iTeam, int iScore, int msg_type, bool bRestar
 			m_iCurrentRound++;
 		}
 
-		//swap teams if using tickets
-		// BG2 - VisualMelon - decide whether to swap teams or not
-		int iSwapTeam = mp_swapteams.GetInt();
-		bool bSwapTeam = false;
-		if (bCycleRound
-			&& (
-				iSwapTeam == 1
-				|| (iSwapTeam == 0
-					&& maxRounds
-					//&& (UsingTickets() || IsLMS())
-					&& m_iCurrentRound == maxRounds / 2 + 1
-					)
-				)
-			)
-			bSwapTeam = true;
+		
 		//
+		bool bSwapTeam = ShouldSwapTeams(bCycleRound);
 		RestartRound(bSwapTeam, bCycleRound);
 
 		//if we're swapping teams, make a long delay
@@ -694,6 +696,7 @@ void CHL2MPRules::Think( void )
 		if ( m_flIntermissionEndTime < gpGlobals->curtime )
 		{
 			m_bHasDoneWinSong = false;
+
 			ChangeLevel(); // intermission is over
 		}
 
@@ -808,7 +811,20 @@ void CHL2MPRules::Think( void )
 		if (!m_bIsRestartingRound)
 		{
 			//this block of code only happens once, at the end of the round
-			m_flNextRoundRestart = gpGlobals->curtime + 5;
+
+			float restartDelay = 5.f;
+			bool bSwapTeam = ShouldSwapTeams(true, true);
+			
+			// BG3 - Ricochet - Decide whether the intermission time for swapping teams is the default 20 seconds or custom user set time
+
+			if (mp_swap_teams_intermission.GetBool() && bSwapTeam)
+			{
+				restartDelay = mp_swap_teams_intermission_time.GetFloat();
+
+				CSay("INTERMISSION: Swapping teams in %i minutes and %02i seconds!", (int)mp_swap_teams_intermission_time.GetFloat() / 60, (int)mp_swap_teams_intermission_time.GetFloat() % 60);
+			}
+			//Msg("restarting in %f seconds \n", restartDelay);
+			m_flNextRoundRestart = gpGlobals->curtime + restartDelay;
 			m_bIsRestartingRound = true;
 
 			//calculate the winning team
@@ -879,7 +895,13 @@ void CHL2MPRules::GoToIntermission( void )
 
 	g_fGameOver = true;
 
-	m_flIntermissionEndTime = gpGlobals->curtime + mp_chattime.GetInt();
+	//m_flIntermissionEndTime = gpGlobals->curtime + mp_chattime.GetInt();
+
+	m_flIntermissionStartTime = gpGlobals->curtime; // BG3 - Ricochet - snapshot of time when intermission begins
+
+	// BG3 - Ricochet - Default map end time of 14 seconds or custom user set time
+	m_flIntermissionEndTime = gpGlobals->curtime + (int)mp_change_level_intermission_time.GetFloat();
+	CSay("INTERMISSION: Changing map in %i minutes and %02i seconds!", (int)mp_change_level_intermission_time.GetFloat() / 60, (int)mp_change_level_intermission_time.GetFloat() % 60);
 
 	for ( int i = 0; i < MAX_PLAYERS; i++ )
 	{
@@ -1401,7 +1423,15 @@ bool CHL2MPRules::IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer )
 {
 	return true;
 }
- 
+
+// BG3 - Ricochet - Get function for the intermission time amount to be called in bg2_hud_main.cpp
+float CHL2MPRules::GetIntermissionTimeAmount()
+{
+	m_flTimeAmount = mp_change_level_intermission_time.GetFloat();
+	//Msg("m_flTimeAmount is %f", m_flTimeAmount);
+	return m_flTimeAmount;
+}
+
 float CHL2MPRules::GetMapRemainingTime()
 {
 	// if timelimit is disabled, return 0
@@ -1772,6 +1802,30 @@ const char *CHL2MPRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 #endif
 
 #ifndef CLIENT_DLL
+
+//-----------------------------------------------------------------------------
+// Purpose: BG3 - Moved this code into it's own function here to be called in several places
+//-----------------------------------------------------------------------------
+bool CHL2MPRules::ShouldSwapTeams(bool bCycleRound, bool bBeforeCycleRound)
+{
+	//swap teams if using tickets
+	// BG2 - VisualMelon - decide whether to swap teams or not
+	int iSwapTeam = mp_swapteams.GetInt();
+	bool bSwapTeam = false;
+	if (bCycleRound
+		&& (
+			iSwapTeam == 1
+			|| (iSwapTeam == 0
+			&& mp_rounds.GetBool()
+				//&& (UsingTickets() || IsLMS())
+				&& (m_iCurrentRound + bBeforeCycleRound) == mp_rounds.GetInt() / 2 + 1
+				)
+			)
+		)
+		bSwapTeam = true;
+
+	return bSwapTeam;
+}
 
 void CHL2MPRules::RestartRound(bool swapTeams, bool bSetLastRoundTime)
 {

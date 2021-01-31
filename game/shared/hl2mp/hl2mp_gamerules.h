@@ -192,6 +192,7 @@ public:
 	const HL2MPViewVectors* GetHL2MPViewVectors() const;
 
 	float	GetMapRemainingTime();
+	float	GetIntermissionTimeAmount(); // BG3 - Ricochet - get function for the intermission time
 	void	CleanUpMap();
 #ifndef CLIENT_DLL
 	void	RestartGame();
@@ -245,6 +246,7 @@ public:
 	//BG2 - Tjoppen - restart rounds a few seconds after the last person is killed. and other stuff
 	float	m_flNextRoundRestart = FLT_MAX;
 	bool	m_bIsRestartingRound = false;
+	float	m_flTimeAmount; // BG3 - Ricochet - comes from GetIntermissionTimeAmount function for timer
 	int		m_iTDMTeamThatWon, m_iAmericanDmg, m_iBritishDmg; //BG2 - HairyPotter
 	bool	m_bHasDoneWinSong, m_bHasLoggedScores;
 	float	m_fNextWinSong;
@@ -254,6 +256,7 @@ public:
 	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );
 	
 	CNetworkVar( float, m_flGameStartTime );
+	CNetworkVar(float, m_flIntermissionStartTime); // BG3 - Ricochet - gets us a "snapshot" of the time when intermission begins
 private:
 	
 	CNetworkVar( bool, m_bTeamPlayEnabled );
@@ -287,7 +290,7 @@ public:
 	* Note that no players are killed.
 	*/
 	void SwapTeams(void);
-
+	bool ShouldSwapTeams(bool bCycleRound, bool bBeforeCycleRound = false); // BG3 - Added this function to help implement intermission system for all gamemodes
 	void RestartRound(bool swapTeams, bool bSetLastRoundTime = true); //bSetLastRoundTime set to false is for fullcaps, so that fullcaps don't reset round clock
 	void RespawnAll();
 	void WinSong(int team, bool m_bWonMap = false);
