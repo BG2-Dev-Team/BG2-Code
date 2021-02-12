@@ -47,9 +47,10 @@ commented on the following form:
 #include "vgui_bitmapbutton.h"
 #include <vgui_controls/ImagePanel.h>
 #include <imagemouseoverbutton.h>
-#include "bg3/vgui//bg3_button_close.h"
+#include "bg3/vgui/bg3_button_close.h"
 
 #include <game/client/iviewport.h>
+#include "vgui/bg3_unlockable_menu.h"
 
 #include "hl2mp_gamerules.h" // BG2 - VisualMelon - moved from classmenu.cpp so we can get the ammo counts
 

@@ -173,16 +173,19 @@ bool UnlockableProfile::toggleItemActivation(Unlockable* pUnlockable) {
 
 void UnlockableProfile::addExperience(EExperienceEventType experience) {
 	//if someone is trying to hack us with illegal experience, block that
-	if (!shouldUnlockableExperienceBeCounted())
-		return;
-
+	/*if (!shouldUnlockableExperienceBeCounted())
+		return;*/
+	Msg("Received %i!\n", (uint32) experience);
 	m_iExperience += (uint32) experience;
 	uint32 expNextLevel = getExperienceForNextLevel();
+	Msg("Next level: %llu/%i\n", m_iExperience, expNextLevel);
 	if (m_iExperience > expNextLevel) {
 
 		//level up local variables
 		m_iLevel++;
 		m_iExperience -= expNextLevel;
+
+		Msg("Level-up! :D\n");
 
 		//TODO notify HUD
 	}
@@ -193,12 +196,20 @@ uint32 UnlockableProfile::getExperienceForNextLevel() {
 }
 
 //Singleton pattern for local
-static UnlockableProfile* g_pUnlockableProfile = NULL;
+static UnlockableProfile g_unlockableProfile;
+static bool g_bUnlockableProfileInitialized = false;
 UnlockableProfile* UnlockableProfile::get() {
-	if (g_pUnlockableProfile == NULL) {
-		g_pUnlockableProfile = new UnlockableProfile();
+	if (!g_bUnlockableProfileInitialized) {
+		g_unlockableProfile.readFromFile();
+		g_bUnlockableProfileInitialized = true;
 	}
-	return g_pUnlockableProfile;
+	return &g_unlockableProfile;
+}
+
+void UnlockableProfile::reset() {
+	m_iPointsSpent = m_iExperience = m_iActivatedBits = m_iUnlockedBits = 0ULL;
+	m_iVersionNumber = UNLOCKABLE_PROFILE_VERSION_CURRENT;
+	m_iLevel = 1;
 }
 
 #else
@@ -222,7 +233,7 @@ bool shouldUnlockableExperienceBeCounted(CHL2MP_Player* pPlayer, bool bForceUpda
 	if ((gpGlobals->curtime < g_flNextExperienceEnabledCheck) && !bForceUpdate) {
 		return g_bLastExperienceEnabledCheck;
 	}
-	g_flNextExperienceEnabledCheck = gpGlobals->curtime + 3;
+	g_flNextExperienceEnabledCheck = gpGlobals->curtime + 10;
 
 #ifndef CLIENT_DLL
 	extern ConVar* sv_cheats;
@@ -261,6 +272,8 @@ bool shouldUnlockableExperienceBeCounted(CHL2MP_Player* pPlayer, bool bForceUpda
 	if (pPlayer && (pPlayer->m_debugOverlays & OVERLAY_BUDDHA_MODE))
 		return false;
 #endif
+
+
 	//No experience gain when
 	//1. Any bots are in the game
 	//4. Server is not on an official map

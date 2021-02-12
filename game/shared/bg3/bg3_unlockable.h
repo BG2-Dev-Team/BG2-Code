@@ -41,6 +41,8 @@ commented on the following form:
 #endif
 class CHL2MP_Player;
 
+#define UNLOCKABLE_PROFILE_VERSION_CURRENT 1
+
 enum class EUnlockableType {
 	Weapon,
 	Uniform, //ex. new light infantry uniform
@@ -150,13 +152,13 @@ enum class EExperienceEventType {
 //Each player has their own profile, stored on their local system
 #define MAX_UNLOCKABLE_LEVEL 45
 class UnlockableProfile {
+public:
 	uint8 m_iVersionNumber = 1; //version number in case format changes later
 
-public:
 	uint64 m_iUnlockedBits; //What the user has unlocked, but not necessarily activated
 	uint64 m_iActivatedBits; //Which unlockables are actually enabled, as user may turn some off
 
-	uint32 m_iExperience; //resets to 0 on each level gain
+	uint64 m_iExperience; //resets to 0 on each level gain
 	uint32 m_iLevel; //current level
 	uint32 m_iPointsSpent; //points available = level - pointsSpent
 
@@ -164,6 +166,8 @@ public:
 	inline bool isUnlockableActivated(Unlockable* pUnlockable) { return isUnlockableUnlocked(pUnlockable) && !!(m_iActivatedBits & (1ULL << pUnlockable->m_iBit)); }
 
 #ifdef CLIENT_DLL
+	~UnlockableProfile() { saveToFile(); }
+
 	inline int	 getPointsAvailable() { return m_iPointsSpent - m_iLevel; }
 
 	void unlockItem(Unlockable* pUnlockable);
@@ -176,10 +180,11 @@ public:
 	void createExperienceEvent(CHL2MP_Player* pRecipient, EExperienceEventType type, float pointScale = 1.0f);
 
 #endif
-private:
+//private:
 
 #ifdef CLIENT_DLL
 	uint32 getExperienceForNextLevel();
+	void reset(); //sets everything back to 0. Does NOT save to file.
 	void saveToFile();
 	void readFromFile();
 	void encryptForServer(char* buffer, uint32 bufferlen);

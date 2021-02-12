@@ -2008,14 +2008,10 @@ void CHL2MP_Player::CreateRagdollEntity(void)
 				pHat->SetCollisionGroup(COLLISION_GROUP_DEBRIS);
 
 				IPhysicsObject* pPhys = pHat->VPhysicsInitNormal(SOLID_VPHYSICS, FSOLID_NOT_STANDABLE, false);
-				//if (pPhys) {
-					Vector vel = GetAbsVelocity() * 1.1f;
-					AngularImpulse imp;
-					pPhys->SetVelocity(&vel, &imp);
-				//}
-				//else {
-					//Warning("Hat model %s missing physics!", m_pCurClass->m_pszDroppedHat);
-				//}
+				Vector vel = GetAbsVelocity() * 1.1f;
+				AngularImpulse imp;
+				pPhys->SetVelocity(&vel, &imp);
+	
 				
 				pRagdoll->m_hHat = pHat;
 			}

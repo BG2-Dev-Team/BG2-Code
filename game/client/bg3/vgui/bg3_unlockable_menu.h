@@ -98,7 +98,7 @@ extern CUnlockableButton* g_pSelectedUnlockable;
 //-----------------------------------------------------------------------------
 // Purpose: Unlockable menu displays progression information and unlocked item buttons
 //-----------------------------------------------------------------------------
-extern CUnlockableMenu* g_pUnlockMenu;
+extern CUnlockableMenu* g_pUnlockableMenu;
 class CUnlockableMenu : public vgui::Panel {
 public:
 	DECLARE_CLASS_SIMPLE(CUnlockableMenu, vgui::Panel);
@@ -111,8 +111,9 @@ public:
 
 	//Mouse hovered over child button -- update menu texts
 	void			UnlockableButtonFocus(CUnlockableButton* pButton);
-
 	void			UnlockButtonPressed();
+	void			UpdateToMatchProfile();
+	void			SetVisible(bool bVisible) override;
 private:
 	//Array of pointers to our unlockable buttons
 	CUnlockableButton* m_aButtons[NUM_UNLOCKABLES];

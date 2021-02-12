@@ -82,6 +82,7 @@ commented on the following form:
 #include "../shared/bg3/Math/bg3_rand.h"
 #include "../shared/bg3/bg3_math_shared.h"
 #include "../shared/bg3/bg3_class_quota.h"
+#include "../shared/bg3/bg3_unlockable.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -1108,8 +1109,7 @@ Button(g_pClassMenu, "UnlockMenuButton", "") {
 }
 
 void CUnlockMenuButton::OnMousePressed(MouseCode code) {
-	
-	
+	g_pUnlockableMenu->SetVisible(!g_pUnlockableMenu->IsVisible());
 	PlaySelectSound();
 }
 
@@ -1210,6 +1210,8 @@ CClassMenu::CClassMenu(vgui::VPANEL pParent) : Frame(NULL, PANEL_CLASSES) {
 	m_pCloseButton = new CCloseButton(this, "ClassMenuCloseButton", MENU_CLOSE_ICON);
 	m_pTeamToggleButton = new CTeamToggleButton(MENU_TEAM_SWITCH_ICON);
 	m_pUnlockMenuButton = new CUnlockMenuButton(MENU_UNLOCK_MENU_ICON);
+
+	g_pUnlockableMenu = new CUnlockableMenu(this, "unlockable_menu");
 
 
 	//Be 100% sure that the runtime data we need from the classes has been initialized
@@ -1580,6 +1582,8 @@ void CClassMenu::PerformLayout() {
 
 	g_pOfficerBuffsLabel->SetPos(weaponx, uniformy + icon_half);
 	g_pOfficerBuffsLabel->SetSize(weaponw, 600);
+
+	g_pUnlockableMenu->PerformLayout();
 }
 
 void CClassMenu::UpdateToMatchTeam(int iTeam) {

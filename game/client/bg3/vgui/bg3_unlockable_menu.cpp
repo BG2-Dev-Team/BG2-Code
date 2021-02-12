@@ -97,9 +97,9 @@ CUnlockableButton* g_pHoveredUnlockable = NULL;
 CUnlockableButton* g_pSelectedUnlockable = NULL;
 
 
-CUnlockableMenu* g_pUnlockMenu = NULL;
+CUnlockableMenu* g_pUnlockableMenu = NULL;
 CUnlockableMenu::CUnlockableMenu(Panel* parent, const char* panelName) : Panel(parent, panelName) {
-	g_pUnlockMenu = this;
+	g_pUnlockableMenu = this;
 	m_pProfile = UnlockableProfile::get();
 
 	//create unlockable children buttons
@@ -131,6 +131,12 @@ void CUnlockableMenu::ApplySchemeSettings(IScheme* pScheme) {
 	m_pPointsRemainingText->SetFgColor(g_cBG3TextColor);
 
 	//TODO set fonts!
+	SetDefaultBG3FontScaled(pScheme, m_pUnlockableTitle);
+
+	m_pPointsRemainingText->SetText("#BG3_UnlockMenu_Points_Remaining");
+	m_pPointsRemainingCount->SetText("0");
+
+	SetDefaultBG3FontScaled(pScheme, m_pPointsRemainingCount);
 }
 
 void CUnlockableMenu::Paint() {
@@ -162,6 +168,7 @@ void CUnlockableMenu::PerformLayout() {
 
 	SetPos(ScreenWidth() / 2 - width / 2, ScreenHeight() / 2 - height / 2);
 	SetSize(width, height);
+	m_pBackground->SetSize(width, height);
 
 	//Buttons
 	for (uint8 i = 0; i < (uint8)NUM_UNLOCKABLES; i++) {
@@ -172,26 +179,32 @@ void CUnlockableMenu::PerformLayout() {
 		uint8 tier = i / 5; //5 items per tier, tiers are 0,1,2
 		uint8 rowPos = i - (tier * 5); //are we first in the row or last?
 
-		m_aButtons[i]->SetPos(50 + rowPos * 120, 120 + 80 * tier);
+		m_aButtons[i]->SetPos(50 + rowPos * 120, 140 + 80 * tier);
 	}
 
 	//Labels
-	m_pUnlockableTitle->SetPos(0, 0);
-	m_pUnlockableTitle->SetSize(width, 50);
-	m_pUnlockableDesc->SetPos(0, 50);
+	const int mx = 20;
+	const int my = 20;
+	m_pUnlockableTitle->SetPos(mx, my);
+	m_pUnlockableTitle->SetSize(width, 60);
+	m_pUnlockableDesc->SetPos(mx, my + 60);
 	m_pUnlockableDesc->SetSize(width, 50);
 
-	m_pPointsRemainingCount->SetPos(0, height - 50);
-	m_pPointsRemainingCount->SetSize(50, 50);
-	m_pPointsRemainingText->SetPos(50, height - 50);
+	m_pPointsRemainingCount->SetPos(mx, height - 80);
+	m_pPointsRemainingCount->SetSize(80, 80);
+	m_pPointsRemainingText->SetPos(mx + 80, height - 50);
 	m_pPointsRemainingText->SetSize(300, 50);
 }
 
 void CUnlockableMenu::UnlockableButtonFocus(CUnlockableButton* pButton) {
 	g_pSelectedUnlockable = pButton;
-	
-	m_pUnlockableTitle->SetText(pButton->GetUnlockable()->m_pszImagePath);
-	m_pUnlockableDesc->SetText(pButton->GetUnlockable()->m_pszImagePath);
+
+	char buffer[32];
+	Q_snprintf(buffer, sizeof(buffer), "#%s_Title", pButton->GetUnlockable()->m_pszImagePath);
+	m_pUnlockableTitle->SetText(buffer);
+
+	Q_snprintf(buffer, sizeof(buffer), "#%s_Desc", pButton->GetUnlockable()->m_pszImagePath);
+	m_pUnlockableDesc->SetText(buffer);
 
 	//TODO decide whether or not to show unlock button
 }
@@ -199,4 +212,18 @@ void CUnlockableMenu::UnlockableButtonFocus(CUnlockableButton* pButton) {
 void CUnlockableMenu::UnlockButtonPressed() {
 	//attempt unlocking the selected item
 	m_pProfile->unlockItem(g_pSelectedUnlockable->GetUnlockable());
+	UpdateToMatchProfile();
+}
+
+void CUnlockableMenu::UpdateToMatchProfile() {
+	char buffer[5];
+	Q_snprintf(buffer, sizeof(buffer), "%i", m_pProfile->getPointsAvailable());
+	m_pPointsRemainingCount->SetText(buffer);
+}
+
+void CUnlockableMenu::SetVisible(bool bVisible) {
+	BaseClass::SetVisible(bVisible);
+	if (bVisible) {
+		UpdateToMatchProfile();
+	}
 }
