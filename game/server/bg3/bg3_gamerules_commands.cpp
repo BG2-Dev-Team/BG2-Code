@@ -75,6 +75,30 @@ void MSay(const char* pszFormat, ...) {
 	MessageEnd();
 }
 
+//Prints a time based on current situation (swap teams, changing map, etc.) on screen below scoreboard
+void IntermissionSay(IntermissionType type, int seconds, const char* pszFormat, ...) {
+	va_list vl;
+	va_start(vl, pszFormat);
+	char buffer[256];
+	V_vsnprintf(buffer, sizeof(buffer), pszFormat, vl);
+
+	const char* pszMessage = buffer;
+	if (strlen(pszMessage) > 236) return; //avoid out-of-bounds strings
+
+	CReliableBroadcastRecipientFilter recpfilter;
+	UserMessageBegin(recpfilter, "IntermissionMsg");
+	WRITE_SHORT(type);
+	WRITE_SHORT(seconds);
+	WRITE_SHORT(strlen(pszMessage)); //length of message
+	WRITE_STRING(pszMessage);
+	MessageEnd();
+}
+
+CON_COMMAND(intermissionTest, "")
+{
+	IntermissionSay(INTERMISSION_SWAPTEAMS, 20, "");
+}
+
 /*
 The console commands here are shorthands for beginning different competitive matches
 */

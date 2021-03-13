@@ -21,6 +21,8 @@ void LocalGameMsg(const char* pszToken);
 void LocalGameMsg(const wchar* pszText);
 
 
+#define INTERMISSION_BUFFER_SIZE 256
+
 //==============================================
 // CHudBG2
 // Displays flag status
@@ -54,6 +56,7 @@ public:
 
 	void SetGameMsgText(const wchar* pszText);
 	void MsgFunc_GameMsg(bf_read& msg);
+	void MsgFunc_IntermissionMsg(bf_read& msg);
 	void MsgFunc_HitVerif( bf_read &msg );
 	void MsgFunc_WinMusic( bf_read &msg );
 	//HairyPotter
@@ -81,9 +84,7 @@ private:
 	vgui::Label * m_pLabelAmmo; 
 	vgui::Label * m_pLabelDeathMessage; 
 	vgui::Label * m_pLabelRoundTime;
-	vgui::Label * m_pLabelSkirmishIntermissionTime; // BG3 - Ricochet - skirmish intermission timer
-	vgui::Label * m_pLabelTicketsIntermissionTime; // BG3 - Ricochet - tickets intermission timer
-	vgui::Label * m_pLabelLMSIntermissionTime; // BG3 - Ricochet - lms/linebattle intermission timer
+	vgui::Label * m_pLabelIntermissionTime; // BG3 - Ricochet - intermission timer
 	vgui::Label * m_pLabelDamageTaken;
 	vgui::Label * m_pLabelDamageGiven;
 	vgui::Label * m_pLabelLMS;		//BG2 - Tjoppen - TODO: remove this when hintbox works correctly
@@ -94,6 +95,8 @@ private:
 	CAdminMenu  * m_pAdminMenu;
 
 	float m_flGameMessageExpireTime;
+	float m_flIntermissionMessageExpireTime;
+	wchar* m_pIntermissionMessageLabelText; // Dynamic memory
 	float m_flTakenExpireTime;
 	float m_flGivenExpireTime;
 	float m_flLastSwing;	//last frame's swingometer value

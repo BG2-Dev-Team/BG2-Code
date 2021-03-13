@@ -61,6 +61,12 @@ inline bool UseLineSpawn()	{ return IsLinebattle(); }
 
 void CSay(const char* pszFormat, ...);
 void MSay(const char* pszFormat, ...);
+enum IntermissionType
+{
+	INTERMISSION_SWAPTEAMS, INTERMISSION_MAPCHANGE, INTERMISSION_TIMEOUT
+};
+void IntermissionSay(IntermissionType type, int seconds, const char* pszFormat, ...);
+
 
 #ifndef CLIENT_DLL
 #define CON_COMMAND_SERVER(name, tooltip) \
@@ -193,6 +199,7 @@ public:
 
 	float	GetMapRemainingTime();
 	float	GetIntermissionTimeAmount(); // BG3 - Ricochet - get function for the intermission time
+	float	GetSwapIntermissionTimeAmount(); // BG3 - Ricochet - get function for the swap intermission time
 	void	CleanUpMap();
 #ifndef CLIENT_DLL
 	void	RestartGame();
@@ -247,6 +254,7 @@ public:
 	float	m_flNextRoundRestart = FLT_MAX;
 	bool	m_bIsRestartingRound = false;
 	float	m_flTimeAmount; // BG3 - Ricochet - comes from GetIntermissionTimeAmount function for timer
+	float   m_flSwapTimeAmount; // BG3 - Ricochet - comes from GetSwapIntermissionTimeAmount function for timer
 	int		m_iTDMTeamThatWon, m_iAmericanDmg, m_iBritishDmg; //BG2 - HairyPotter
 	bool	m_bHasDoneWinSong, m_bHasLoggedScores;
 	float	m_fNextWinSong;

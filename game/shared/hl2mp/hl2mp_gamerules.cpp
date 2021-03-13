@@ -822,6 +822,7 @@ void CHL2MPRules::Think( void )
 				restartDelay = mp_swap_teams_intermission_time.GetFloat();
 
 				CSay("INTERMISSION: Swapping teams in %i minutes and %02i seconds!", (int)mp_swap_teams_intermission_time.GetFloat() / 60, (int)mp_swap_teams_intermission_time.GetFloat() % 60);
+				IntermissionSay(INTERMISSION_SWAPTEAMS, (int)mp_swap_teams_intermission_time.GetFloat(), "");
 			}
 			//Msg("restarting in %f seconds \n", restartDelay);
 			m_flNextRoundRestart = gpGlobals->curtime + restartDelay;
@@ -902,6 +903,8 @@ void CHL2MPRules::GoToIntermission( void )
 	// BG3 - Ricochet - Default map end time of 14 seconds or custom user set time
 	m_flIntermissionEndTime = gpGlobals->curtime + (int)mp_change_level_intermission_time.GetFloat();
 	CSay("INTERMISSION: Changing map in %i minutes and %02i seconds!", (int)mp_change_level_intermission_time.GetFloat() / 60, (int)mp_change_level_intermission_time.GetFloat() % 60);
+	extern ConVar nextlevel;
+	IntermissionSay(INTERMISSION_MAPCHANGE, (int)mp_change_level_intermission_time.GetFloat(), nextlevel.GetString());
 
 	for ( int i = 0; i < MAX_PLAYERS; i++ )
 	{
@@ -1430,6 +1433,13 @@ float CHL2MPRules::GetIntermissionTimeAmount()
 	m_flTimeAmount = mp_change_level_intermission_time.GetFloat();
 	//Msg("m_flTimeAmount is %f", m_flTimeAmount);
 	return m_flTimeAmount;
+}
+
+// BG3 - Ricochet - Get function for the swap time amount to be called in bg2_hud_main.cpp
+float CHL2MPRules::GetSwapIntermissionTimeAmount()
+{
+	m_flSwapTimeAmount = mp_swap_teams_intermission_time.GetFloat();
+	return m_flSwapTimeAmount;
 }
 
 float CHL2MPRules::GetMapRemainingTime()
