@@ -17,6 +17,11 @@ void RndSeed(int seed) {
 	a = seed;
 }
 
+void RndSeed(uint64 seed) {
+	a = (int)seed;
+	b = (int)(seed >> 32ULL);
+}
+
 void RndSeed(int seeds[NUM_RND_CLIENT_SERVER_SYNC_SEEDS]) {
 	int sum = 0;
 	for (int i = 0; i < NUM_RND_CLIENT_SERVER_SYNC_SEEDS; i++) {

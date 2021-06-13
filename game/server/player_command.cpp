@@ -97,7 +97,7 @@ void CPlayerMove::CheckMovingGround( CBasePlayer *player, double frametime )
 {
 	VPROF( "CPlayerMove::CheckMovingGround()" );
 
-	CBaseEntity	    *groundentity;
+	/*CBaseEntity	    *groundentity;
 
 	if ( player->GetFlags() & FL_ONGROUND )
 	{
@@ -113,7 +113,7 @@ void CPlayerMove::CheckMovingGround( CBasePlayer *player, double frametime )
 			player->SetBaseVelocity( vecNewVelocity );
 			player->AddFlag( FL_BASEVELOCITY );
 		}
-	}
+	}*/
 
 	if ( !( player->GetFlags() & FL_BASEVELOCITY ) )
 	{

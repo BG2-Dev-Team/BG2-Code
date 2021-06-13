@@ -51,11 +51,15 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(info_swivel_muzzle, CTurretFire);
 
+extern ConVar mp_friendlyfire_swivel;
+
 void CTurretFire::DoFireEvent(CBasePlayer* pAttacker, const Vector& vMuzzle, Vector vDirection, float flAccuracyConeRadius, 
 	vec_t vRange, byte iBaseDamage, byte iNumBullets) {
 
 	//Make the direction unit length
 	vDirection.NormalizeInPlace();
+
+	bool ff = mp_friendlyfire_swivel.GetBool();
 
 	for (; iNumBullets > 0; iNumBullets--) {
 		//This will actually give us a cone with a spherical end (like an ice cream cone with the ice cream in it)
@@ -84,15 +88,17 @@ void CTurretFire::DoFireEvent(CBasePlayer* pAttacker, const Vector& vMuzzle, Vec
 
 		if (sv_simulatedbullets_show_trajectories.GetBool())
 			NDebugOverlay::Line(tr.startpos, tr.endpos, tr.DidHit() ? 0 : 255, tr.DidHitWorld() ? 0 : 255, tr.DidHitWorld() ? 255 : 0, true, sv_simulatedbullets_show_trajectories_timeout.GetFloat());
-
+		
 		CBaseEntity* pVictim = tr.m_pEnt;
 		if (tr.DidHitNonWorldEntity() && pVictim) {
 
+			if (!ff && pVictim->GetTeamNumber() == pAttacker->GetTeamNumber())
+				continue;
 
 			//linear ramp from full damage down to half damage
 			byte iDamage = (iBaseDamage / 2) + (iBaseDamage / 2) * (1.0f - tr.fraction);
 
-			CTakeDamageInfo info = CTakeDamageInfo(pAttacker, pAttacker, iDamage, DMG_BULLET | DMG_CRUSH | DMG_NEVERGIB);
+			CTakeDamageInfo info = CTakeDamageInfo(pAttacker, pAttacker, iDamage, DMG_BULLET | DMG_CRUSH | DMG_NEVERGIB | DMG_SWIVEL_GUN);
 			info.SetDamagePosition(tr.endpos);
 
 			pVictim->DispatchTraceAttack(info, vBubbledDirection, &tr);

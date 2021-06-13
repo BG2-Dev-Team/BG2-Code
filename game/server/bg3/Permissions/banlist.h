@@ -31,31 +31,14 @@ commented on the following form:
 //BG3 - <name of contributer>[ - <small description>]
 */
 
-#ifndef BG3_FONTS_H
-#define BG3_FONTS_H
+class CHL2MP_Player;
 
-#include <vgui/IScheme.h>
-#include <vgui_controls/Label.h>
+namespace NBans {
+	void AddPlayerToBanList(CHL2MP_Player* pPlayer, bool bPerma, bool bDevice, int durationMinutes = 0);
 
-namespace vgui {
-	extern Color				g_cBG3TextColor;
-	extern Color				g_cBG3TextTransparentColor;
-	extern Color				g_cBG3GraphKeylineColor;
-	extern Color				g_cBG3TextHighlightColor;
-	 
-	HFont GetDefaultBG3Font(IScheme* pScheme);
+	bool PlayerIsBanned(CHL2MP_Player* pPlayer);
 
-	HFont GetDefaultBG3FontScaledHorizontal(IScheme* pScheme, Label* pForLabel);
-	HFont GetDefaultBG3FontScaledVertical(IScheme* pScheme, Label* pForLabel);
+	void SaveBanListFile();
 
-	inline void SetDefaultBG3FontScaled(IScheme* pScheme, Label* pForLabel) {
-		pForLabel->SetFont(GetDefaultBG3FontScaledHorizontal(pScheme, pForLabel));
-	}
-	inline void SetDefaultBG3FontScaledVertical(IScheme* pScheme, Label* pForLabel) {
-		pForLabel->SetFont(GetDefaultBG3FontScaledVertical(pScheme, pForLabel));
-	}
-
-	void MsgW(wchar* text);
+	void LoadFromBanListFile();
 }
-
-#endif

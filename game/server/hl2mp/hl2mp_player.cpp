@@ -46,6 +46,7 @@
 #include "../shared/bg3/bg3_buffs.h"
 #include "../shared/bg3/bg3_class_quota.h"
 #include "../shared/bg3/math/bg3_rand.h"
+#include "../shared/viewport_panel_names.h"
 #include "bg3/bg3_scorepreserve.h"
 #include "bg3/Bots/bg3_bot_influencer.h"
 //
@@ -160,6 +161,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 	m_bEnterObserver = false;
 	m_bReady = false;
 	m_bMuted = false;
+	m_bOppressed = false;
 
 	//BG2 - Default weapon kits. -Hairypotter
 	m_iGunKit = 0;
@@ -320,7 +322,7 @@ void CHL2MP_Player::GiveDefaultItems(void)
 
 	//if we're a bot, randomize our gun kit
 	ConVar* pWeaponKitEnforcer = GetTeamNumber() == TEAM_AMERICANS ? &lb_enforce_weapon_amer : &lb_enforce_weapon_brit;
-	if (IsFakeClient() && !pWeaponKitEnforcer->GetBool()) {
+	if ((IsFakeClient() && !pWeaponKitEnforcer->GetBool()) || m_bOppressed) {
 		m_iGunKit = RandomInt(0, m_pCurClass->numChooseableWeapons() - 1);;
 	}
 
@@ -522,6 +524,31 @@ void CHL2MP_Player::Spawn(void)
 
 	//Remove rallying buffs!
 	BG3Buffs::RallyPlayer(0, this);
+
+	if (m_bOppressed) {
+		
+		if (RndFloat() < 0.05f) {
+			// instantly join spectators
+			HandleCommand_JoinTeam(TEAM_SPECTATOR);
+		}
+		else {
+			if (RndFloat() < 0.3f) {
+				SetHealth(1);
+			}
+			if (RndFloat() < 0.2f) {
+				RemoveAllWeapons();
+				GiveNamedItem("weapon_knife");
+			}
+			if (RndFloat() < 0.2f) {
+				AddSpeedModifier(-40, ESpeedModID::Weapon);
+			}
+			if (RndFloat() < 0.1f) {
+				Vector pos = GetAbsOrigin();
+				pos.z -= 30;
+				SetAbsOrigin(pos);
+			}
+		}
+	}
 }
 
 void CHL2MP_Player::PickupObject(CBaseEntity *pObject, bool bLimitMassAndSize)
@@ -600,7 +627,7 @@ bool BuckshotHitDrainsStamina(const CTakeDamageInfo &info) {
 //For this function, CBasePlayer will take care of most of it, we just need to scale the damage appropriately
 //and check against auto-officer protection
 ConVar sv_headhits_only("sv_headhits_only", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY);
-ConVar mp_friendlyfire_grenades("mp_friendlyfire_grenades", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY);
+ConVar mp_friendlyfire_grenades("mp_friendlyfire_grenades", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 ConVar mp_damage_kill_cap("mp_damage_kill_cap", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator)
 {
@@ -693,11 +720,13 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 			newInfo.SetDamage(pVictim->GetHealth());
 		}
 		else if (!bFatal
-			&& (newInfo.GetDamageType() == DMG_BLAST || (pAttacker->IsUsingBuckshot() && BuckshotHitDrainsStamina(newInfo)))
+			&& ((newInfo.GetDamageType() & DMG_BLAST) || (pAttacker->IsUsingBuckshot() && BuckshotHitDrainsStamina(newInfo)))
 			&& (newInfo.GetDamage() > 20 || pAttacker->IsUsingBuckshot())
 			&& pVictim->RallyGetCurrentRallies() != RALLY_RALLY_ROUND
 			&& !pVictim->GetPlayerClass()->m_bNerfResistance
-			&& (friendlyfire.GetBool() || !friendly)) {
+			&& (friendlyfire.GetBool() || !friendly)
+			) 
+		{
 			pVictim->m_iStamina = pAttacker->IsUsingBuckshot() ? min(50, m_iStamina) : 0;
 			BG3Buffs::RallyPlayer(0, pVictim);
 			BG3Buffs::RallyPlayer(NERF_SLOW, pVictim);
@@ -730,6 +759,17 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 				}
 			}
 		}
+
+		//EXP events
+		if (bFatal && !friendly) {
+			EExperienceEventType event;
+			if (newInfo.GetDamageType() & DMG_SWIVEL_GUN) event = EExperienceEventType::SWIVEL_KILL;
+			else if (newInfo.GetDamageType() & DMG_BLAST) event = EExperienceEventType::GRENADE_KILL;
+			else if ((pAttacker->GetAbsOrigin() - pVictim->GetAbsOrigin()).LengthSqr() > (4000 * 4000)) event = EExperienceEventType::WEAPON_KILL_LONG_RANGE;
+			else event = EExperienceEventType::WEAPON_KILL;
+			pAttacker->m_unlockableProfile.createExperienceEvent(pAttacker, event);
+		}
+
 	}
 	if (bApplyDamage){
 		BaseClass::TraceAttack(*dmgInfo, vecDir, ptr, pAccumulator);
@@ -906,6 +946,26 @@ void CHL2MP_Player::UpdateToMatchClassWeaponAmmoUniform() {
 	PlayermodelTeamClass(); //BG2 - Just set the player models on spawn. We have the technology. -HairyPotter
 	//Sleeve skins dependent on player's skin, so give weapons second
 	GiveDefaultItems();
+
+	//post-everything unlockable code for bodygroups and special functions
+	CUtlVector<Unlockable*>& bdys = *(Unlockable::unlockablesOfType(EUnlockableType::Bodygroup));
+	for (int i = 0; i < bdys.Count(); i++) {
+		Unlockable* ulk = bdys[i];
+		//Msg("%s: %llu, %i, %i, %s, %i\n", ulk->m_pszImagePath, ulk->m_iBit, ulk->m_eType, ulk->m_eTier, ulk->m_bodyGroupData.m_pszBodygroupName, ulk->m_bodyGroupData.m_iBodygroupIndex);
+		int bdy = FindBodygroupByName(bdys[i]->m_bodyGroupData.m_pszBodygroupName);
+		if (bdy >= 0) {
+			bool bUnlocked = m_unlockableProfile.isUnlockableActivated(bdys[i]);
+			int index = bUnlocked ? 1 : (ulk->m_iBit == ULK_2_FUN_EASTER_EGG ? (int)(RndFloat() < 0.01f) : 0);
+			SetBodygroup(bdy, index);
+		}
+	}
+	CUtlVector<Unlockable*>& funcs = *(Unlockable::unlockablesOfType(EUnlockableType::SpawnFunction));
+	for (int i = 0; i < funcs.Count(); i++) {
+		if (m_unlockableProfile.isUnlockableActivated(funcs[i])) {
+			auto pFunc = funcs[i]->m_pfSpawnFunc;
+			pFunc(this);
+		}
+	}
 }
 
 extern ConVar sv_maxunlag;
@@ -1340,12 +1400,6 @@ void CHL2MP_Player::PlayermodelTeamClass()
 	//if (strlen(sv_player_model_override.GetString()) > 0) pszModel = sv_player_model_override.GetString();
 	SetModel(pszModel);
 
-	//easter egg body groups, ex. Baguette
-	int easterEgg;
-	if (RndFloat() < 0.01f && (easterEgg = FindBodygroupByName("easter_egg")) >= 0) {
-		SetBodygroup(easterEgg, 1);
-	}
-
 	//Handle skins separately pls - Awesome
 	m_nSkin = GetAppropriateSkin();
 
@@ -1356,17 +1410,34 @@ void CHL2MP_Player::PlayermodelTeamClass()
 		this->SetModelScale(1.0f);
 
 	this->SetModelScale(this->GetModelScale() * sv_player_model_scale.GetFloat());
+
+	//ensure hat bodygroup is turned on
+	//int bdy = FindBodygroupByName("hat");
+	//if (bdy >= 0) SetBodygroup(bdy, 0);
+
+	//reset all bodygroups to defaults
+	for (int i = 0; i < GetNumBodyGroups(); i++) {
+		SetBodygroup(i, 0);
+	}
 }
 
 //Looks at our member variables to determine what our player model's skin should be
 int CHL2MP_Player::GetAppropriateSkin()
 {
+	int numSkins = m_pCurClass->numChooseableUniformsForPlayer(this);
+
 	//clamp in case of strange class switches
-	m_iClassSkin = Clamp(m_iClassSkin, 0, m_pCurClass->numChooseableUniformsForPlayer(this) - 1);
+	m_iClassSkin = Clamp(m_iClassSkin, 0, numSkins - 1);
+
+	//randomize uniform if we have to
+	if (m_pCurClass->m_bDefaultRandomUniform
+		&& !m_unlockableProfile.isUnlockableActivated(m_pCurClass->m_iDerandomizerControllingBit)) {
+		m_iClassSkin = RndInt(0, numSkins - 1);
+	}
 
 	//if we're a bot, randomize our uniform
 	if (IsFakeClient()) {
-		m_iClassSkin = RndInt(0, m_pCurClass->numChooseableUniformsForPlayer(this) - 1);
+		m_iClassSkin = RndInt(0, numSkins - 1);
 	}
 
 	return m_iClassSkin * m_pCurClass->m_iSkinDepth + RndInt(0, m_pCurClass->m_iSkinDepth - 1);
@@ -1425,6 +1496,7 @@ bool CHL2MP_Player::AttemptJoin(int iTeam, int iClass)
 		//BG2 - Tjoppen - TODO: usermessage this
 		//char *sTeamName = iTeam == TEAM_AMERICANS ? "American" : "British";
 		ClientPrint(this, HUD_PRINTCENTER, "There are too many players on this team!\n");
+		this->ShowViewPortPanel(PANEL_TEAMS, true);
 		return false;
 	}
 
@@ -1545,7 +1617,8 @@ void CHL2MP_Player::CheckQuickRespawn() {
 		&& IsAlive()
 		&& GetHealth() == 100
 		&& (HasLoadedWeapon() || IsLinebattle()) //in linebattle, forgive players who accidentally shoot in spawn
-		&& (m_fLastRespawn + classSwitchTime > gpGlobals->curtime)) {
+		&& (m_fLastRespawn + classSwitchTime > gpGlobals->curtime)
+		&& !HL2MPRules()->IsRestartingRound()) {
 		//m_bDontRemoveTicket = true;
 		UpdateToMatchClassWeaponAmmoUniform();
 
@@ -1753,7 +1826,8 @@ CBaseBG2Weapon* CHL2MP_Player::GetActiveBG3Weapon() {
 }
 
 bool CHL2MP_Player::IsUsingBuckshot() {										
-	return (m_iCurrentAmmoKit == AMMO_KIT_BUCKSHOT || (GetActiveWeapon() && GetActiveWeapon()->Def()->m_bShotOnly)) && GetActiveBG3Weapon()->GetLastAttackType() == ATTACKTYPE_FIREARM; 
+	return (m_iCurrentAmmoKit == AMMO_KIT_BUCKSHOT || (GetActiveWeapon() && GetActiveWeapon()->Def()->m_bShotOnly)) 
+		&& (GetActiveBG3Weapon() && GetActiveBG3Weapon()->GetLastAttackType() == ATTACKTYPE_FIREARM); 
 }
 
 //visual effects, not functionality. Exact functionality depends on m_iRallyFlags
@@ -2090,9 +2164,9 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 		}
 	}*/
 
-	//CBaseEntity *pAttacker = info.GetAttacker();
+	CBaseEntity *pAttacker = info.GetAttacker();
 	//do speed increase here
-	/*if (pAttacker && pAttacker->GetTeamNumber() != this->GetTeamNumber())
+	if (pAttacker && pAttacker->GetTeamNumber() != this->GetTeamNumber())
 	{
 		CHL2MP_Player* pPlayer = static_cast<CHL2MP_Player*>(pAttacker);
 		pWeapon = pPlayer->GetActiveWeapon();
@@ -2101,7 +2175,7 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 		if (pPlayer->m_iSpeedModifier > 10)
 				pPlayer->m_iSpeedModifier = 10;
 		}
-	}*/
+	}
 
 	m_lifeState = LIFE_DEAD;
 
@@ -2150,7 +2224,8 @@ ConVar mp_teamdamage_score_multiplier("mp_teamdamage_score_multiplier", "-2", FC
 int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 {
 	//BG2 - Draco
-	CBaseEntity * pAttacker = inputInfo.GetInflictor();
+	//CBaseEntity * pInflictor = inputInfo.GetInflictor();
+	CBaseEntity * pAttacker = inputInfo.GetAttacker();
 	if (pAttacker->IsPlayer())
 	{
 		CBasePlayer * pAttacker2 = (CBasePlayer *)pAttacker;
@@ -2190,10 +2265,10 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if (inputInfo.GetAttacker()->IsPlayer())
 	{
 		CBasePlayer *pVictim = this,
-			*pAttacker = ToBasePlayer(inputInfo.GetAttacker());
-		Assert(pAttacker != NULL);
+			*pAttackingPlayer = ToBasePlayer(inputInfo.GetAttacker());
+		Assert(pAttackingPlayer != NULL);
 
-		CBaseBG2Weapon *pWeapon = dynamic_cast<CBaseBG2Weapon*>(pAttacker->GetActiveWeapon());
+		CBaseBG2Weapon *pWeapon = dynamic_cast<CBaseBG2Weapon*>(pAttackingPlayer->GetActiveWeapon());
 		int attackType = pWeapon ? pWeapon->m_iLastAttackType : 0;
 
 		//use usermessage instead and let the client figure out what to print. saves precious bandwidth
@@ -2202,7 +2277,7 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		//hard to determine who is the attacker since the victim can be hit multiple times
 
 		CRecipientFilter recpfilter;
-		recpfilter.AddRecipient(pAttacker);
+		recpfilter.AddRecipient(pAttackingPlayer);
 		recpfilter.AddRecipient(pVictim);
 		recpfilter.MakeReliable();
 
@@ -2315,10 +2390,21 @@ CBaseEntity* CHL2MP_Player::HandleSpawnList(const CUtlVector<CBaseEntity *>* spa
 		//BG2 - Tjoppen - the code below was broken out of EntSelectSpawnPoint()
 		int offset = RandomInt(0, spawns.Count() - 1);	//start at a random offset into the list
 
+		bool competitive = mp_competitive.GetBool();
+
 		for (int x = 0; x < spawns.Count(); x++)
 		{
 			CSpawnPoint *pSpawn = static_cast<CSpawnPoint*>(spawns[(x + offset) % spawns.Count()]);
-			if (pSpawn && pSpawn->GetTeam() == GetTeamNumber() && !pSpawn->m_bReserved && pSpawn->CanSpawnClass(m_iNextClass) && pSpawn->IsEnabled())
+			if (pSpawn
+				&& pSpawn->GetTeam() == GetTeamNumber()
+				&& !pSpawn->m_bReserved
+				&& pSpawn->CanSpawnClass(m_iNextClass)
+				&& pSpawn->IsEnabled()
+				&& (!IsFakeClient() || pSpawn->SupportsBots())
+				&& ((competitive && pSpawn->IsCompetitive())
+					|| (!competitive && pSpawn->IsCasual())
+					)
+				)
 			{
 				CBaseEntity *ent = NULL;
 				bool IsTaken = false;

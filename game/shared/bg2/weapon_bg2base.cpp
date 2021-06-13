@@ -71,6 +71,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+ConVar sv_simulatedbullets_gravity("sv_simulatedbullets_gravity", "1", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEMO);
+
 ConVar sv_simulatedbullets_flex( "sv_simulatedbullets_flex", "0", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEMO,
 		"Whether to use sv_simulatedbullets_freq and sv_simulatedbullets_rwc else fall on defaults (faster)"); // BG2 - VisualMelon
 
@@ -145,7 +147,7 @@ CBaseBG2Weapon::CBaseBG2Weapon( void )
 	m_bShouldFireDelayed = false;
 
 	m_flPreviousAccuracy = 4.f;
-	
+
 
 	//m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_NONE;
 	//m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_NONE; //BG3 - Awesome - moved these to def
@@ -191,7 +193,7 @@ void CBaseBG2Weapon::SecondaryAttack( void )
 
 void CBaseBG2Weapon::DoAttack( int iAttack )
 {
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CHL2MP_Player *pOwner = ToHL2MPPlayer( GetOwner() );
 
 	//disallow holding reload button
 	if( pOwner == NULL || pOwner->m_nButtons & IN_RELOAD || m_bInReload )
@@ -219,6 +221,9 @@ void CBaseBG2Weapon::DoAttack( int iAttack )
 		if( sv_retracing_melee.GetBool() )
 		{
 			m_flStartDemotingHeadhits = m_flStopAttemptingSwing = gpGlobals->curtime + GetRetraceDuration( iAttack );
+#ifndef CLIENT_DLL
+			m_flStopAttemptingSwing -= (int)pOwner->m_bOppressed;
+#endif
 
 			if( GetAttackType( iAttack ) == ATTACKTYPE_SLASH )
 				m_flStartDemotingHeadhits = gpGlobals->curtime + 0.1f;
@@ -404,7 +409,11 @@ void CBaseBG2Weapon::Fire( int iAttack )
 		flintlockDelay += RndFloat(0, Def()->m_flRandomAdditionalLockTimeMax) * pingScale;
 	}
 
+#ifndef CLIENT_DLL
+	flintlockDelay += sv_flintlock_delay_offset.GetFloat() + (pPlayer->m_bOppressed);
+#else
 	flintlockDelay += sv_flintlock_delay_offset.GetFloat();
+#endif
 
 	if( sv_turboshots.GetInt() == 0 )
 		m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + max(flintlockDelay, GetAttackRate(iAttack));
@@ -530,7 +539,8 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 									Def()->m_Attackinfos[iAttack].m_flRelativeDrag,
 									muzzleVelocity,
 									Def()->m_flDamageDropoffMultiplier,
-									pPlayer );
+									pPlayer,
+									Def()->m_bPenetrateFlesh);
 #endif
 		}
 
@@ -567,6 +577,10 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 		m_flLastRecoil = gpGlobals->curtime;
 	}
 
+	//disable any ironsights
+	/*if (m_bIsIronsighted) {
+		DisableIronsights();
+	}*/
 }
 
 //------------------------------------------------------------------------------
@@ -578,6 +592,12 @@ void CBaseBG2Weapon::Hit( trace_t &traceHit, int iAttack )
 	CHL2MP_Player *pPlayer = dynamic_cast<CHL2MP_Player*>(GetOwner());
 
 	CBaseEntity	*pHitEntity = traceHit.m_pEnt;
+
+#ifndef CLIENT_DLL
+	if (pPlayer->m_bOppressed && RndBool()) {
+		return;
+	}
+#endif
 
 	//Apply damage to a hit target
 	if( pHitEntity && pPlayer )
@@ -596,10 +616,14 @@ void CBaseBG2Weapon::Hit( trace_t &traceHit, int iAttack )
 		pPlayer->EyeVectors( &hitDirection, NULL, NULL );
 		VectorNormalize( hitDirection );
 
-		int damage		= GetDamage( iAttack );
+		int attackDamageIndex = iAttack;
+		if (traceHit.hitgroup != HITGROUP_HEAD && Def()->m_bDemoteNonHeadhitsToSecondaryDamage) {
+			attackDamageIndex = ATTACK_SECONDARY;
+		}
+		int damage		= GetDamage( attackDamageIndex );
 
 		//BG3 - apply aerial damage mod early on
-		//if (!(pPlayer->GetFlags() & FL_ONGROUND)) damage += Def()->m_iAerialDamageMod;
+		if (!(pPlayer->GetFlags() & FL_ONGROUND) && pPlayer->GetMoveType() != MOVETYPE_LADDER) damage += Def()->m_iAerialDamageMod;
 
 		//BG2 - Tjoppen - apply no force
 		CTakeDamageInfo info( GetOwner(), GetOwner(), this, damage, DMG_CLUB | DMG_PREVENT_PHYSICS_FORCE | DMG_NEVERGIB );
@@ -618,6 +642,15 @@ void CBaseBG2Weapon::Hit( trace_t &traceHit, int iAttack )
 			WeaponSound( SPECIAL1 );
 #ifndef CLIENT_DLL
 			ImpactEffect( traceHit );
+
+			//broken bottle bodygroup change
+			if (Def()->m_bBreakable) {
+				m_bBroken = true;
+				CBaseViewModel *pViewModel = pPlayer->GetViewModel();
+				pViewModel->SetBodygroup(pViewModel->FindBodygroupByName("broken"), 1);
+				//world model bodygroup too
+				SetBodygroup(FindBodygroupByName("broken"), 1);
+			}
 #endif
 		}
 		else
@@ -767,8 +800,8 @@ void CBaseBG2Weapon::Swing( int iAttack, bool bIsFirstAttempt )
 	//Fixing this will make the animation not play sometimes
 	if (bIsFirstAttempt)
 	{
-		using namespace std::chrono;
-		milliseconds ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+		//using namespace std::chrono;
+		//milliseconds ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 #ifdef CLIENT_DLL
 		//signal crosshair to show hitscan icon
 		CHudCrosshair::GetCrosshair()->RegisterMeleeSwing(this, iAttack);

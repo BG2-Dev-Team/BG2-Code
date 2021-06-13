@@ -48,9 +48,10 @@ namespace NScorePreserve {
 		short	m_score;
 		short	m_damage;
 		bool	m_muted;
+		bool	m_oppressed;
 		float	m_flRemovalTime;
 
-		scoreinfo_t(AccountID_t id, short score, short damage, bool muted, float removalTime) : m_id(id), m_score(score), m_damage(damage), m_muted(muted), m_flRemovalTime(removalTime) {}
+		scoreinfo_t(AccountID_t id, short score, short damage, bool muted, bool oppressed, float removalTime) : m_id(id), m_score(score), m_damage(damage), m_muted(muted), m_oppressed(oppressed), m_flRemovalTime(removalTime) {}
 	};
 
 	//global list of scores to preserve
@@ -93,6 +94,7 @@ namespace NScorePreserve {
 
 					//set mute status
 					((CHL2MP_Player*)pPlayer)->m_bMuted = g_scores[foundIndex].m_muted;
+					((CHL2MP_Player*)pPlayer)->m_bOppressed = g_scores[foundIndex].m_oppressed;
 
 					g_scores.erase(g_scores.begin() + foundIndex);
 				}
@@ -113,9 +115,10 @@ namespace NScorePreserve {
 				short damage = pPlayer->DamageScoreCount();
 				float removalTime = gpGlobals->curtime + sv_preserve_score_time.GetFloat();
 				bool muted = ((CHL2MP_Player*)pPlayer)->m_bMuted;
+				bool oppressed = ((CHL2MP_Player*)pPlayer)->m_bOppressed;
 
 				//construct his info and put it onto the end
-				g_scores.emplace_back(scoreinfo_t(id.GetAccountID(), score, damage, muted, removalTime));
+				g_scores.emplace_back(scoreinfo_t(id.GetAccountID(), score, damage, muted, oppressed, removalTime));
 			}
 		}
 	}
@@ -124,7 +127,21 @@ namespace NScorePreserve {
 	* Makes server forget all the score information (for map start)
 	***********************************************************/
 	void Flush() {
+		//preserve mutes
+		std::vector<scoreinfo_t> preserve;
+		for (size_t i = 0; i < g_scores.size(); i++) {
+			if (g_scores[i].m_muted || g_scores[i].m_oppressed) {
+				scoreinfo_t info = g_scores[i];
+				info.m_damage = 0;
+				info.m_score = 0;
+				preserve.emplace_back(info);
+			}
+		}
 		g_scores.clear();
+
+		for (size_t i = 0; i < preserve.size(); i++) {
+			g_scores.emplace_back(preserve[i]);
+		}
 	}
 
 	CON_COMMAND(score_preserve_report, "Displays info on preserved scores\n") {

@@ -31,31 +31,8 @@ commented on the following form:
 //BG3 - <name of contributer>[ - <small description>]
 */
 
-#ifndef BG3_FONTS_H
-#define BG3_FONTS_H
-
-#include <vgui/IScheme.h>
-#include <vgui_controls/Label.h>
-
-namespace vgui {
-	extern Color				g_cBG3TextColor;
-	extern Color				g_cBG3TextTransparentColor;
-	extern Color				g_cBG3GraphKeylineColor;
-	extern Color				g_cBG3TextHighlightColor;
-	 
-	HFont GetDefaultBG3Font(IScheme* pScheme);
-
-	HFont GetDefaultBG3FontScaledHorizontal(IScheme* pScheme, Label* pForLabel);
-	HFont GetDefaultBG3FontScaledVertical(IScheme* pScheme, Label* pForLabel);
-
-	inline void SetDefaultBG3FontScaled(IScheme* pScheme, Label* pForLabel) {
-		pForLabel->SetFont(GetDefaultBG3FontScaledHorizontal(pScheme, pForLabel));
-	}
-	inline void SetDefaultBG3FontScaledVertical(IScheme* pScheme, Label* pForLabel) {
-		pForLabel->SetFont(GetDefaultBG3FontScaledVertical(pScheme, pForLabel));
-	}
-
-	void MsgW(wchar* text);
+namespace NVersioning {
+	bool HadDoneBetaTestParticipation();
+	void MarkBetaTestParticipation();
+	bool IsOnBetaBranch();
 }
-
-#endif

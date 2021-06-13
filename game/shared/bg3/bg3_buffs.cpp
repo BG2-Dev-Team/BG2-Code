@@ -379,8 +379,8 @@ namespace BG3Buffs {
 
 		bool bAllow; 
 
-		if (IsLinebattle() && officerClass->GetBool()) {
-			bAllow = pPlayer->GetTeamNumber() == officerClass->GetInt();
+		if (IsLinebattle()) {
+			bAllow = pPlayer->GetClass() == officerClass->GetInt();
 		} else {
 			bAllow = pPlayer->GetPlayerClass()->m_bCanDoVcommBuffs;
 		}

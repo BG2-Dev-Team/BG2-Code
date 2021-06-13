@@ -471,7 +471,8 @@ CMainMenu::CMainMenu( vgui::VPANEL parent ) : BaseClass( NULL, "CMainMenu" )
 
 	PerformDefaultLayout();
 
-	m_pCommunity->OpenURL("https://battlegrounds3.com", NULL);
+	
+	m_pCommunity->OpenURL("https://battlegrounds3.com/clans/", NULL);
 	m_pCommunity->SetVisible(true);
 
 	m_pBritishBackground = scheme()->GetImage("classmenu/background_b", false);

@@ -429,17 +429,17 @@ CSpectatorGUI::CSpectatorGUI(IViewPort *pViewPort) : EditablePanel( NULL, PANEL_
  	//m_pBottomBarBlank = new Panel( this, "bottombarblank" );
 
 	// m_pBannerImage = new ImagePanel( m_pTopBar, NULL );
-	m_pPlayerLabel = new Label( this, "playerlabel", "" );
-	m_pPlayerLabel->SetVisible( false );
-	TextImage *image = m_pPlayerLabel->GetTextImage();
-	if ( image )
+	//m_pPlayerLabel = new Label( this, "playerlabel", "" );
+	//m_pPlayerLabel->SetVisible( false );
+	//TextImage *image = m_pPlayerLabel->GetTextImage();
+	/*if ( image )
 	{
 		HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "DefaultVerySmallFallBack", false );
 		if ( INVALID_FONT != hFallbackFont )
 		{
 			image->SetUseFallbackFont( true, hFallbackFont );
 		}
-	}
+	}*/
 
 	SetPaintBorderEnabled(false);
 	SetPaintBackgroundEnabled(false);
@@ -613,9 +613,9 @@ void CSpectatorGUI::Update()
 	GetHudSize(wide, tall);
 	//m_pTopBar->GetBounds( bx, by, bwide, btall );
 
-	IGameResources *gr = GameResources();
+	/*IGameResources *gr = GameResources();
 	int specmode = GetSpectatorMode();
-	int playernum = GetSpectatorTarget();
+	int playernum = GetSpectatorTarget();*/
 
 	
 
@@ -650,15 +650,16 @@ void CSpectatorGUI::Update()
 		//m_pTopBar->SetPos( 0, 0 );
 	//}
 
-	m_pPlayerLabel->SetVisible( ShouldShowPlayerLabel(specmode) );
+	//BG3 - moved label to HUD
+	//m_pPlayerLabel->SetVisible( ShouldShowPlayerLabel(specmode) );
 
 	// update player name filed, text & color
 
-	if ( playernum > 0 && playernum <= gpGlobals->maxClients && gr )
+	/*if ( playernum > 0 && playernum <= gpGlobals->maxClients && gr )
 	{
 		Color c = gr->GetTeamColor( gr->GetTeam(playernum) ); // Player's team color
 
-		m_pPlayerLabel->SetFgColor( c );
+		//m_pPlayerLabel->SetFgColor( c );
 		
 		wchar_t playerText[ 80 ], playerName[ 64 ], health[ 10 ];
 		V_wcsncpy( playerText, L"Unable to find #Spec_PlayerItem*", sizeof( playerText ) );
@@ -681,7 +682,7 @@ void CSpectatorGUI::Update()
 	else
 	{
 		m_pPlayerLabel->SetText( L"" );
-	}
+	}*/
 
 	// update extra info field
 	/*wchar_t szEtxraInfo[1024];

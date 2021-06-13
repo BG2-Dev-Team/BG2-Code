@@ -1757,7 +1757,7 @@ void CBaseEntity::PhysicsRigidChild( void )
 void CBaseEntity::UpdateBaseVelocity( void )
 {
 #if !defined( CLIENT_DLL )
-	if ( GetFlags() & FL_ONGROUND )
+/*	if ( GetFlags() & FL_ONGROUND )
 	{
 		CBaseEntity	*groundentity = GetGroundEntity();
 		if ( groundentity )
@@ -1775,7 +1775,7 @@ void CBaseEntity::UpdateBaseVelocity( void )
 				SetBaseVelocity( vecNewBaseVelocity );
 			}
 		}
-	}
+	}*/
 #endif
 }
 

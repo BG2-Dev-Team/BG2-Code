@@ -10,7 +10,7 @@ version 2.1 of the License, or (at your option) any later version.
 The Battle Grounds 3 is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
+Lesser General Public License for more details.        
 
 You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
@@ -93,7 +93,10 @@ using namespace NMenuSounds;
 
 CClassButton*	g_pDisplayedClassButton; //which class is currently displayed?
 CClassButton*	g_pSelectedClassButton;	//what was the last class clicked on?
-CWeaponButton*	g_pWeaponButton;		//we only have one weapon button, which cycles through the possible weapons
+CKitButton*	g_pKitButton;		//we only have one weapon button, which cycles through the possible weapons
+CKitSelectionButton* g_pSelectedWeaponSelectionButton = NULL;
+CKitSelectionButton* g_pDisplayedWeaponSelectionButton = NULL;
+//CKitSelectionButton* g_ppWeaponSelectionButtons[NUM_POSSIBLE_WEAPON_KITS];
 CAmmoButton*	g_pCurrentAmmoButton;
 CAmmoButton*	g_pDisplayedAmmoButton;
 CUniformButton*	g_pCurrentUniformButton;
@@ -126,14 +129,43 @@ Label*			g_pOfficerBuffsLabel;
 
 int g_iCurrentTeammenuTeam = TEAM_INVALID;
 
+#define DOUBLE_CLICK_INTERBAL 0.4f
 
+void JoinRequestAuto() {
+	if (!g_pSelectedClassButton->IsAvailable())
+		return;
+
+	int gun = g_pKitButton->GetCurrentGunKit();
+	int ammo = g_pCurrentAmmoButton->GetAmmoIndex();
+	int skin = g_pCurrentUniformButton->GetUniformIndex();
+	int team = g_iCurrentTeammenuTeam;
+	int iClass = g_pSelectedClassButton->m_pPlayerClass->m_iClassNumber;
+	JoinRequest(gun, ammo, skin, team, iClass);
+	g_pClassMenu->ShowPanel(false);
+}
+
+void DrawLockedIconsOver(Panel* pPanel) {
+	int h = pPanel->GetTall();
+	int w = pPanel->GetWide();
+	int x = pPanel->GetXPos();
+	int y = pPanel->GetYPos();
+
+	g_pDarkenTexture->SetPos(x, y);
+	g_pDarkenTexture->SetSize(w, h);
+	g_pDarkenTexture->Paint();
+
+	int h2 = h * .8f;
+	int w2 = h * .6f;
+	g_pLockIcon->SetSize(w2, h2);
+	g_pLockIcon->SetPos(x + w / 2 - w2 / 2, y + h / 2 - h2 / 2);
+	g_pLockIcon->Paint();
+}
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Begin class button functions
 //-----------------------------------------------------------------------------
 CClassButton::CClassButton(Panel *parent, const char *panelName, const char *text, int index) : Button(parent, panelName, text), m_iIndex(index) {
-
 	m_pCountLabel = new Label(this, "ClassCountLabel", "--");
 }
 
@@ -149,15 +181,9 @@ void CClassButton::ApplySchemeSettings(vgui::IScheme* pScheme) {
 void CClassButton::OnMousePressed(vgui::MouseCode code) {
 	UpdateGamerulesData();
 	if (IsAvailable()) {
-		if (IsSelected() && m_flLastClickTime + 0.4f > gpGlobals->curtime) {
+		if (IsSelected() && m_flLastClickTime + DOUBLE_CLICK_INTERBAL > gpGlobals->curtime) {
 			//we've click on what we have selected, so let's try to join the team
-			int gun = g_pWeaponButton->GetCurrentGunKit();
-			int ammo = g_pCurrentAmmoButton->GetAmmoIndex();
-			int skin = g_pCurrentUniformButton->GetUniformIndex();
-			int team = g_iCurrentTeammenuTeam;
-			int iClass = m_pPlayerClass->m_iClassNumber;
-			JoinRequest(gun, ammo, skin, team, iClass);
-			g_pClassMenu->ShowPanel(false);
+			JoinRequestAuto();
 		}
 		else if (!IsSelected()) {
 			Select();
@@ -212,6 +238,19 @@ void CClassButton::ManualPaint() {
 }
 
 CClassButton* CClassButton::FindAvailableButton() {
+
+	//if local player is in-game, defer to that class first
+	const CPlayerClass* pClass = NULL;
+	if (C_HL2MP_Player::GetLocalHL2MPPlayer() 
+		&& C_HL2MP_Player::GetLocalHL2MPPlayer()->GetTeamNumber() >= TEAM_AMERICANS) {
+		pClass = C_HL2MP_Player::GetLocalHL2MPPlayer()->GetNextPlayerClass();
+		for (int i = 0; i < NUM_CLASS_BUTTONS; i++) {
+			CClassButton* pButton = g_ppClassButtons[i];
+			if (pButton->IsAvailable() && pButton->m_pPlayerClass == pClass)
+				return pButton;
+		}
+	}
+
 	//just loop until we find one and return it
 	for (int i = 0; i < NUM_CLASS_BUTTONS; i++) {
 		CClassButton* pButton = g_ppClassButtons[i];
@@ -275,8 +314,8 @@ void CClassButton::UpdateImage() {
 void CClassButton::UpdateDisplayedButton(CClassButton* pNext) {
 
 	//Don't bother if we're already displaying this class button on the current team
-	if (pNext == g_pDisplayedClassButton && g_pClassMenu->m_iPreviouslyShownTeam == g_iCurrentTeammenuTeam)
-		return;
+	//if (pNext == g_pDisplayedClassButton && g_pClassMenu->m_iPreviouslyShownTeam == g_iCurrentTeammenuTeam)
+		//return;
 
 	CClassButton* pOldButton = g_pDisplayedClassButton;
 	g_pDisplayedClassButton = pNext;
@@ -293,10 +332,10 @@ void CClassButton::UpdateDisplayedButton(CClassButton* pNext) {
 	NClassWeaponStats::UpdateToMatchClass(pNext->m_pPlayerClass);
 
 	//update weapon button display
-	g_pWeaponButton->UpdateToMatchPlayerClass(pNext->m_pPlayerClass);
+	g_pKitButton->UpdateToMatchPlayerClass(pNext->m_pPlayerClass);
 
 	//update skin buttons
-	CUniformButton::UpdateToMatchClass(pNext->m_pPlayerClass);
+	CUniformButton::UpdateToMatchClassKit(pNext->m_pPlayerClass, pNext->m_pPlayerClass->GetDefaultWeapon());
 
 	//update class art
 	g_pClassArt = pNext->m_pClassArt;
@@ -316,8 +355,8 @@ void CClassButton::UpdateToMatchClass(const CPlayerClass* pClass) {
 	Q_snprintf(buffer, ARRAYSIZE(buffer), "classmenu/class_art/%c/%s", team, pClass->m_pszAbbreviation);
 	m_pClassArt = scheme()->GetImage(buffer, false);
 	//go ahead and set sizes too
-	int arth = 7 * ScreenHeight() / 10;
-	m_pClassArt->SetPos(0, ScreenHeight() - arth);
+	int arth = 6 * ScreenHeight() / 10;
+	m_pClassArt->SetPos(50, ScreenHeight() - arth);
 	m_pClassArt->SetSize(arth * 2, arth);
 
 	//update gamerules data - this will also set our current image
@@ -363,29 +402,16 @@ void JoinRequest(int iGun, int iAmmo, int iSkin, int iTeam, int iClass) {
 		Q_snprintf(cmd, sizeof(cmd), "classkit %i %i %i %i %i\n", iTeam, iClass, iGun, iAmmo, iSkin);
 		engine->ServerCmd(cmd);
 	}
-
-	/*
-	Q_snprintf(cmd, sizeof(cmd), "kit %i %i %i \n", iGun, iAmmo, iSkin);
-	engine->ServerCmd(cmd);*/
-
-	// deprecated
-	//Q_snprintf( cmd, sizeof( cmd ), "classskin %i \n", skinId );
-	//engine->ServerCmd( cmd );
-
-	/*Q_snprintf(cmd, sizeof(cmd), "class %i %i \n", iTeam, iClass);
-	engine->ServerCmd(cmd);*/ //Send the class AFTER we've selected a gun, otherwise you won't spawn with the right kit.
+	//good as place as any to send unlockable settings too
+	UnlockableProfile::get()->sendSettingsToServer();
 }
-
-
-
-
 
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Begin weapon button functions
 //-----------------------------------------------------------------------------
-void CWeaponButton::ApplySchemeSettings(IScheme* pScheme) {
+void CKitButton::ApplySchemeSettings(IScheme* pScheme) {
 	BaseClass::ApplySchemeSettings(pScheme);
 	SetPaintBorderEnabled(false);
 
@@ -396,7 +422,7 @@ void CWeaponButton::ApplySchemeSettings(IScheme* pScheme) {
 	}
 
 	//make weapon button ready
-	g_pWeaponButton->MakeReadyForUse();
+	g_pKitButton->MakeReadyForUse();
 
 	//make ammo buttons ready
 	for (i = 0; i < NUM_AMMO_BUTTONS; i++)
@@ -408,29 +434,35 @@ void CWeaponButton::ApplySchemeSettings(IScheme* pScheme) {
 	}
 }
 
-void CWeaponButton::OnMousePressed(MouseCode code) {
+void CKitButton::OnMousePressed(MouseCode code) {
 	//cycle weapon count
-	SetCurrentGunKit(m_iCurrentWeapon + 1);
+	int offset = code == MOUSE_LEFT ? 1 : -1;
+	SetCurrentGunKit(m_iCurrentKit + offset);
+
+	//if we accidentally switched to a locked weapon, cycle again...
+	while (g_pSelectedWeaponSelectionButton->IsLocked()) {
+		SetCurrentGunKit(m_iCurrentKit + offset);
+	}
 
 	PlaySelectSound();
 }
 
-void CWeaponButton::OnCursorEntered() {
+void CKitButton::OnCursorEntered() {
 	m_bMouseOver = true;
 	PlayHoverSound();
-	if (m_iWeaponCount > 1) {
+	/*if (m_iWeaponCount > 1) {
 		g_pGlowyWeaponArrow->SetImage(MENU_ARROW_HOVER);
-	}
+	}*/
 }
 
-void CWeaponButton::OnCursorExited() { 
+void CKitButton::OnCursorExited() {
 	m_bMouseOver = false; 
-	if (m_iWeaponCount > 1) {
+	/*if (m_iWeaponCount > 1) {
 		g_pGlowyWeaponArrow->SetImage(MENU_ARROW_HOVER);
-	}
+	}*/
 }
 
-void CWeaponButton::ManualPaint() {
+void CKitButton::ManualPaint() {
 	int x, y;
 	GetPos(x, y);
 
@@ -445,31 +477,99 @@ void CWeaponButton::ManualPaint() {
 		g_pHoverIcon->SetSize(w, h);
 		g_pHoverIcon->Paint();
 	}
+
+	for (int i = 0; i < NUM_POSSIBLE_WEAPON_KITS; i++) {
+		if (m_ppKitSelectionButtons[i]->IsVisible())
+			m_ppKitSelectionButtons[i]->ManualPaint();
+	}
 }
 
-void CWeaponButton::UpdateToMatchPlayerClass(const CPlayerClass* pClass) {
-	m_iWeaponCount = pClass->numChooseableWeapons();
-	g_pGlowyWeaponArrow->SetVisible(m_iWeaponCount > 1);
+static bool g_bForceKitButtonUpdate = false;
+void OnYearSettingChanged(IConVar* pVar, const char* pszOldValue, float flOldValue) {
+	g_bForceKitButtonUpdate = true;
+}
+
+void CKitButton::UpdateToMatchPlayerClass(const CPlayerClass* pClass) {
+	
+	int buttonIndex = 0;
+	for (int i = 0; i < NUM_POSSIBLE_WEAPON_KITS; i++) {
+		CKitSelectionButton* b = m_ppKitSelectionButtons[buttonIndex];
+		if (i < NUM_POSSIBLE_WEAPON_KITS 
+			&& pClass->m_aWeapons[i].m_pszWeaponPrimaryName
+			&& pClass->m_aWeapons[i].AvailableForCurrentYear()) {
+			b->SetVisible(true);
+			b->Update(&pClass->m_aWeapons[i], i);
+			buttonIndex++;
+		}
+		else {
+			b->SetVisible(false);
+		}
+	}
+	m_iKitCount = buttonIndex + 1;
+
+	//hide all other buttons
+	for (; buttonIndex < NUM_POSSIBLE_WEAPON_KITS; buttonIndex++) {
+		m_ppKitSelectionButtons[buttonIndex]->SetVisible(false);
+	}
 
 	SetCurrentGunKit(pClass->GetDefaultWeapon());
+
+	//hide all kit selection buttons if only one is available
+	if (m_iKitCount == 1) {
+		for (int i = 0; i < NUM_POSSIBLE_WEAPON_KITS; i++) {
+			m_ppKitSelectionButtons[i]->SetVisible(false);
+		}
+	}
 }
 
-void CWeaponButton::SetCurrentGunKit(int iKit) {
+void CKitButton::SetCurrentGunKit(int iKit, bool bReverseCycle) {
+	if (iKit < 0) iKit = NUM_POSSIBLE_WEAPON_KITS - 1;
+	if (iKit >= NUM_POSSIBLE_WEAPON_KITS) iKit = 0;
+
+	auto kitValid = [&]() {
+		return GetDisplayedClass()->m_aWeapons[iKit].m_pszWeaponPrimaryName 
+			&& GetDisplayedClass()->m_aWeapons[iKit].AvailableForCurrentYear();
+	};
 
 	//clamp value, cycling
-	if (iKit >= m_iWeaponCount)
-		iKit = 0;
-	if (iKit < 0) iKit = 0;
-	m_iCurrentWeapon = iKit;
+	bool bKitSelectionValid = kitValid();
+	while (!bKitSelectionValid) {
+		if (bReverseCycle) {
+			iKit--;
+			if (iKit < 0) iKit = NUM_POSSIBLE_WEAPON_KITS - 1;
+		}
+		else {
+			iKit++;
+			if (iKit >= NUM_POSSIBLE_WEAPON_KITS) iKit = 0;
+		}
+		
+		bKitSelectionValid = kitValid();
+	}
+
+	m_iCurrentKit = iKit;
+	int8 buttonIndex = KitIndexToButtonIndex(iKit);
+
+	g_pSelectedWeaponSelectionButton = m_ppKitSelectionButtons[buttonIndex];
 
 	//update default weapon
-	GetDisplayedClass()->SetDefaultWeapon(m_iCurrentWeapon);
+	GetDisplayedClass()->SetDefaultWeapon(iKit);
+
+	CKitButton::SetDisplayedGunKit(iKit);
+}
+
+void CKitButton::SetDisplayedGunKit(int iKit) {
+	//see if button is available -- if not, cancel
+	int8 iButtonIndex = g_pKitButton->KitIndexToButtonIndex(iKit);
+	if (iButtonIndex == -1)
+		return;
+
+	g_pDisplayedWeaponSelectionButton = g_pKitButton->m_ppKitSelectionButtons[iButtonIndex];
 
 	//update image
-	const CGunKit* pKit = GetDisplayedClass()->getWeaponKitChooseable(m_iCurrentWeapon);
+	const CGunKit* pKit = GetDisplayedClass()->getWeaponKitChooseable(iKit);
 	//Msg("Updating weapon to %s\n", pKit->m_pszWeaponName);
-	UpdateImage(pKit);
-	
+	g_pKitButton->UpdateImage(pKit);
+
 	//update weapon name label
 	g_pWeaponNameLabel->SetText(pKit->GetLocalizedName());
 	g_pWeaponDescLabel->SetText(pKit->GetLocalizedDesc());
@@ -477,22 +577,99 @@ void CWeaponButton::SetCurrentGunKit(int iKit) {
 	//update the current ammo button
 	CAmmoButton::UpdateToMatchClassAndWeapon(GetDisplayedClass(), pKit);
 
+	//update uniform buttons in case our current kit overrides the uniform
+	CUniformButton::UpdateToMatchClassKit(GetDisplayedClass(), iKit);
+
 	//update weapon stats
 	NClassWeaponStats::UpdateWeaponStatsAllCurrent();
 }
 
-void CWeaponButton::UpdateImage(const CGunKit* pKit) {
+void CKitButton::UpdateImage(const CGunKit* pKit) {
 	char buffer[128];
 	const char* imageName = pKit->m_pszLocalizedNameOverride ? pKit->m_pszLocalizedNameOverride : pKit->m_pszWeaponPrimaryName;
 	Q_snprintf(buffer, ARRAYSIZE(buffer), "classmenu/weapons/%s", imageName);
 	m_pCurrentImage = scheme()->GetImage(buffer, false);
 }
 
+int8 CKitButton::KitIndexToButtonIndex(uint8 iKit) const {
+	int8 result = -1;
+	for (int8 i = 0; i < NUM_POSSIBLE_WEAPON_KITS; i++) {
+		if (m_ppKitSelectionButtons[i]->GetKitIndex() == iKit) {
+			result = i;
+			break;
+		}
+	}
+	return result;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Having a separate button for each weapon
+//-----------------------------------------------------------------------------
+void CKitSelectionButton::OnMousePressed(vgui::MouseCode code) {
+	//if we're locked, play deny sound and ignore
+	if (m_bLocked) {
+		PlayDenySound();
+		return;
+	}
+
+	if (g_pSelectedWeaponSelectionButton == this && m_flLastClickTime + DOUBLE_CLICK_INTERBAL > gpGlobals->curtime) {
+		JoinRequestAuto();
+	}
+
+	//cycle weapon count on main button
+	g_pKitButton->SetCurrentGunKit(m_iKitIndex);
+
+	PlaySelectSound();
+
+	m_flLastClickTime = gpGlobals->curtime;
+}
+
+void CKitSelectionButton::OnCursorEntered() {
+	CKitButton::SetDisplayedGunKit(m_iKitIndex);
+	PlayHoverSound();
+}
+
+void CKitSelectionButton::OnCursorExited() {
+	CKitButton::SetDisplayedGunKit(g_pKitButton->GetCurrentGunKit());
+}
+
+void CKitSelectionButton::Update(const CGunKit* pKit, uint8 iKit) {
+	m_iKitIndex = iKit;
+	char buffer[128];
+	const char* imageName = pKit->m_pszLocalizedNameOverride ? pKit->m_pszLocalizedNameOverride : pKit->m_pszWeaponPrimaryName;
+	Q_snprintf(buffer, ARRAYSIZE(buffer), "classmenu/weapons/%s", imageName);
+	m_pCurrentImage = scheme()->GetImage(buffer, false);
+
+	//check whether or not this kit is currently locked
+	extern ConVar sv_password_exists;
+	m_bLocked = pKit->ProgressionLocked() 
+		&& !UnlockableProfile::get()->isUnlockableUnlocked(pKit->m_iControllingBit)
+		&& !sv_password_exists.GetBool();
+}
+
+void CKitSelectionButton::ManualPaint() {
+	int x, y;
+	GetPos(x, y);
+
+	int w, h;
+	GetSize(w, h);
+	m_pCurrentImage->SetPos(x, y);
+	m_pCurrentImage->SetSize(w, h);
+	m_pCurrentImage->Paint();
+
+	//if we're locked, paint locked icons over us
+	if (m_bLocked) {
+		DrawLockedIconsOver(this);
+	}
+	
+}
+
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Glowing/pulsing arrow indicates that weapons can be swapped
 //-----------------------------------------------------------------------------
-GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons::GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons() {
+/*GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons::GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons() {
 	m_pImage = scheme()->GetImage(MENU_ARROW_HOVER, false);
 }
 
@@ -507,7 +684,7 @@ void GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons::PaintToScreen() {
 
 void GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons::SetImage(const char* pszImgName) 	{ 
 	m_pImage = scheme()->GetImage(pszImgName, false); 
-}
+}*/
 
 
 //-----------------------------------------------------------------------------
@@ -561,7 +738,7 @@ namespace NClassWeaponStats {
 
 		//Update player movement speed also, because that can be weapon-dependent!
 		float speed = GetDisplayedClass()->m_flBaseSpeed;
-		speed += GetDisplayedClass()->m_aWeapons[g_pWeaponButton->GetCurrentGunKit()].m_iMovementSpeedModifier;
+		speed += GetDisplayedClass()->m_aWeapons[g_pDisplayedWeaponSelectionButton->GetKitIndex()].m_iMovementSpeedModifier;
 		float relativeSpeed = FLerp(0.4f, 1.0f, SPEED_GRENADIER, SPEED_SKIRMISHER + 5, speed);
 		g_iClassSpeedWidth = g_iBarWidth * relativeSpeed;
 		char buffer[4];
@@ -574,7 +751,7 @@ namespace NClassWeaponStats {
 		const CWeaponDef* pSecondary;
 		const CWeaponDef* pTertiary; //this is just here for forward-compatibility
 
-		GetDisplayedClass()->getWeaponDef(g_pWeaponButton->GetCurrentGunKit(), &pPrimary, &pSecondary, &pTertiary);
+		GetDisplayedClass()->getWeaponDef(g_pDisplayedWeaponSelectionButton->GetKitIndex(), &pPrimary, &pSecondary, &pTertiary);
 
 		if (pPrimary)
 			NClassWeaponStats::UpdateToMatchWeapon(pPrimary);
@@ -665,7 +842,7 @@ namespace NClassWeaponStats {
 			int iDamage = bullet->m_iDamage;
 			if (buckshot)
 				iDamage = 120.f; //TODO find a better rep for shot damage
-			float damage = iDamage / 120.f;
+			float damage = (iDamage - 30) / 120.f;
 			set(BulletDamage, damage);
 
 			//calc reload speed
@@ -723,27 +900,33 @@ namespace NClassWeaponStats {
 
 
 
-	void Create(Panel* pParent) {
+	void Create(Panel* pParent, EClassmenuTab tab) {
 		//don't create the buttons if we already have them
 		if (!g_pClassSpeed) {
-			g_pClassSpeed		= new Label(pParent, "ClassSpeedLabel", "");
-			g_pAccuracy			= new Label(pParent, "AccuracyLabel", "");
-			g_pReloadSpeed		= new Label(pParent, "ReloadSpeedLabel", "");
-			g_pBulletDamage		= new Label(pParent, "BulletDamageLabel", "");
-			g_pLockTime			= new Label(pParent, "LockTimeLabel", "");
-			g_pMeleeDamage		= new Label(pParent, "MeleeDamageLabel", "");
-			g_pMeleeRange		= new Label(pParent, "MeleeRangeLabel", "");
-			g_pMeleeTolerance	= new Label(pParent, "MeleeToleranceLabel", "");
-			g_pMeleeSpeed		= new Label(pParent, "MeleeSpeedLabel", "");
+			auto createLabel = [&](Label** ppLabel, const char* pszName) {
+				*ppLabel = new Label(pParent, pszName, "");
+				g_pClassMenu->AddChildToTab(*ppLabel, tab);
+			};
 
-			g_pnClassSpeed		= new Label(pParent, "ClassSpeedNumber", "");
-			g_pnAccuracy		= new Label(pParent, "AccuracyNumber", "");
-			g_pnReloadSpeed		= new Label(pParent, "ReloadSpeedNumber", "");
-			g_pnLockTime		= new Label(pParent, "LockTimeNumber", "");
-			g_pnBulletDamage	= new Label(pParent, "BulletDamageNumber", "");
-			g_pnMeleeDamage		= new Label(pParent, "MeleeDamageNumber", "");
-			g_pnMeleeRange		= new Label(pParent, "MeleeRangeNumber", "");
-			g_pnMeleeSpeed		= new Label(pParent, "MeleeSpeedNumber", "");
+
+			createLabel(&g_pClassSpeed, "ClassSpeedLabel");
+			createLabel(&g_pAccuracy, "AccuracyLabel");
+			createLabel(&g_pReloadSpeed, "ReloadSpeedLabel");
+			createLabel(&g_pBulletDamage, "BulletDamageLabel");
+			createLabel(&g_pLockTime, "LockTimeLabel");
+			createLabel(&g_pMeleeDamage, "MeleeDamageLabel");
+			createLabel(&g_pMeleeRange, "MeleeRangeLabel");
+			createLabel(&g_pMeleeTolerance, "MeleeToleranceLabel");
+			createLabel(&g_pMeleeSpeed, "MeleeSpeedLabel");
+
+			createLabel(&g_pnClassSpeed, "ClassSpeedNumber");
+			createLabel(&g_pnAccuracy, "AccuracyNumber");
+			createLabel(&g_pnReloadSpeed, "ReloadSpeedNumber");
+			createLabel(&g_pnLockTime, "LockTimeNumber");
+			createLabel(&g_pnBulletDamage, "BulletDamageNumber");
+			createLabel(&g_pnMeleeDamage, "MeleeDamageNumber");
+			createLabel(&g_pnMeleeRange, "MeleeRangeNumber");
+			createLabel(&g_pnMeleeSpeed, "MeleeSpeedNumber");
 		}
 	}
 
@@ -817,6 +1000,9 @@ namespace NClassWeaponStats {
 	}
 
 	void ManualPaint() {
+		if (g_pClassMenu->GetCurrentTab() != EClassmenuTab::MAIN)
+			return;
+
 		g_imgStatBarOverlay->SetSize(g_iBarWidth, g_iBarHeight);
 
 		int y = yBase + g_iBarHeight; //the offset is to separate the images from the labels
@@ -900,9 +1086,13 @@ void CAmmoButton::ApplySchemeSettings(IScheme* pScheme) {
 }
 
 void CAmmoButton::OnMousePressed(MouseCode code) {
+	if (m_flLastClickTime + DOUBLE_CLICK_INTERBAL > gpGlobals->curtime) {
+		JoinRequestAuto();
+	}
 	SetAsCurrent();
 
 	PlaySelectSound();
+	m_flLastClickTime = gpGlobals->curtime;
 }
 
 void CAmmoButton::OnCursorEntered() {
@@ -994,8 +1184,17 @@ void CUniformButton::ApplySchemeSettings(IScheme* pScheme) {
 }
 
 void CUniformButton::OnMousePressed(MouseCode code) {
+	if (m_bLocked) {
+		PlayDenySound();
+		return;
+	}
+
+	if (m_flLastClickTime + DOUBLE_CLICK_INTERBAL > gpGlobals->curtime) {
+		JoinRequestAuto();
+	}
 	SetAsCurrent();
 	PlaySelectSound();
+	m_flLastClickTime = gpGlobals->curtime;
 }
 
 void CUniformButton::OnCursorEntered() {
@@ -1011,6 +1210,9 @@ void CUniformButton::ManualPaint() {
 	m_pCurrentImage->SetPos(x, y);
 	m_pCurrentImage->SetSize(w, h);
 	m_pCurrentImage->Paint();
+	if (m_bLocked) {
+		DrawLockedIconsOver(this);
+	}
 }
 
 void CUniformButton::SetAsCurrent() {
@@ -1027,33 +1229,68 @@ void CUniformButton::SetAsCurrent() {
 	GetDisplayedClass()->SetDefaultUniform(GetUniformIndex());
 }
 
-void CUniformButton::UpdateToMatchClass(const CPlayerClass* pClass) {
-	int idealUniform = pClass->GetDefaultUniform();
-
-	//clamp value
-	if (idealUniform >= pClass->numChooseableUniformsForPlayer(CBasePlayer::GetLocalPlayer()))
-		idealUniform = pClass->numChooseableUniformsForPlayer(CBasePlayer::GetLocalPlayer());
-	if (idealUniform < 0)
-		idealUniform = 0;
-
-	//set selected button
-	g_ppUniformButtons[idealUniform]->SetAsCurrent();
-
-	//hide/show buttons based on uniform count
-	char buffer[32];
-	for (int i = 0; i < NUM_UNIFORM_BUTTONS; i++) {
-		bool bVisible = i < pClass->numChooseableUniformsForPlayer(CBasePlayer::GetLocalPlayer());
-		CUniformButton* bt = g_ppUniformButtons[i];
-		bt->SetVisible(bVisible);
-		if (bVisible) {
-			//update our image here
-			Q_snprintf(buffer, sizeof(buffer), "classmenu/uniforms/%c/%s%i", charForTeam(pClass->m_iDefaultTeam), pClass->m_pszAbbreviation, bt->GetUniformIndex());
-			bt->m_pCurrentImage = scheme()->GetImage(buffer, false);
+void CUniformButton::UpdateToMatchClassKit(const CPlayerClass* pClass, int iKit) {
+	//if selected kit has sleeve override, hide the buttons
+	if (pClass->m_aWeapons[iKit].m_iSleeveSkinOverride != -1) {
+		for (int i = 0; i < NUM_UNIFORM_BUTTONS; i++) {
+			g_ppUniformButtons[i]->SetVisible(false);
 		}
 	}
+	else {
 
-	//don't show 1 button if there's only 1 uniform
-	g_ppUniformButtons[0]->SetVisible(pClass->numChooseableUniformsForPlayer(CBasePlayer::GetLocalPlayer()) > 1);
+		int idealUniform = pClass->GetDefaultUniform();
+		int numUni = pClass->numChooseableUniformsForPlayer(CBasePlayer::GetLocalPlayer());
+
+		//clamp value
+		if (idealUniform >= numUni)
+			idealUniform = numUni - 1;
+		if (idealUniform < 0)
+			idealUniform = 0;
+
+		//set selected button
+		g_ppUniformButtons[idealUniform]->SetAsCurrent();
+
+		//hide/show buttons based on uniform count
+		char buffer[32];
+		for (int i = 0; i < NUM_UNIFORM_BUTTONS; i++) {
+			bool bVisible;
+			if (pClass->m_bDefaultRandomUniform) {
+				bool bBelowMaximum = (i < numUni);
+				bool bDerandmized = UnlockableProfile::get()->isUnlockableActivated(pClass->m_iDerandomizerControllingBit);
+				bVisible = bBelowMaximum
+					&& bDerandmized;
+			}
+			else {
+				bVisible = (i < numUni);
+			}
+			
+			CUniformButton* bt = g_ppUniformButtons[i];
+			bt->SetVisible(bVisible);
+			if (bVisible) {
+				//update our image here
+				Q_snprintf(buffer, sizeof(buffer), "classmenu/uniforms/%c/%s%i", charForTeam(pClass->m_iDefaultTeam), pClass->m_pszAbbreviation, bt->GetUniformIndex());
+				bt->m_pCurrentImage = scheme()->GetImage(buffer, false);
+
+				bool bLockable = pClass->m_aUniformControllingBits[i] != 0 || pClass->m_aUniformControllingBitsActive[i];
+				bool bUnlocked = UnlockableProfile::get()->isUnlockableActivated(pClass->m_aUniformControllingBits[i]);
+
+				bt->m_bLocked = bLockable && !bUnlocked;
+			}
+		}
+
+		//don't show 1 button if there's only 1 uniform
+		if (numUni == 1) g_ppUniformButtons[0]->SetVisible(false);
+	}
+
+	//customize extra class info label height based on presence of uniform buttons
+	CUniformButton* b = g_ppUniformButtons[0];
+	bool bOffset = b->IsVisible();
+	if (bOffset) {
+		g_pClassBuffLabel->SetPos(b->GetXPos(), b->GetYPos() + b->GetTall());
+	}
+	else {
+		g_pClassBuffLabel->SetPos(b->GetXPos(), b->GetYPos());
+	}
 }
 
 
@@ -1100,7 +1337,7 @@ void CTeamToggleButton::OnCursorEntered() {
 //-----------------------------------------------------------------------------
 // Purpose: Unlock menu button opens/closes the unlock menu
 //-----------------------------------------------------------------------------
-CUnlockMenuButton::CUnlockMenuButton(const char* pszImgName) : m_bMouseOver(false),
+/*CUnlockMenuButton::CUnlockMenuButton(const char* pszImgName) : m_bMouseOver(false),
 Button(g_pClassMenu, "UnlockMenuButton", "") {
 	SetPaintBackgroundEnabled(false);
 	SetPaintBorderEnabled(false);
@@ -1131,8 +1368,44 @@ void CUnlockMenuButton::Paint() {
 void CUnlockMenuButton::OnCursorEntered() {
 	m_bMouseOver = true;
 	PlayHoverSound();
+}*/
+
+//-----------------------------------------------------------------------------
+// Purpose: Tab button shows/hide certains tabs
+//-----------------------------------------------------------------------------
+static IImage* g_pTabButtonImage;
+static IImage* g_pSelectedTabButtonImage;
+CTabButton::CTabButton(vgui::Panel* pParent, EClassmenuTab tab) : 
+Button(pParent, "UnlockMenuButton", "") {
+	SetPaintBackgroundEnabled(false);
+	SetPaintBorderEnabled(false);
+	m_tab = tab;
+	m_bMouseOver = false;
+	g_pTabButtonImage = scheme()->GetImage("classmenu/tab", false);
+	g_pSelectedTabButtonImage = scheme()->GetImage("classmenu/tab_selected", false);
 }
 
+void CTabButton::OnMousePressed(MouseCode code) {
+	g_pClassMenu->ShowTab(m_tab);
+	PlaySelectSound();
+}
+
+void CTabButton::OnCursorEntered() {
+	PlayHoverSound();
+	m_bMouseOver = true;
+}
+
+void CTabButton::ManualPaint() {
+	IImage* pImage = g_pTabButtonImage;
+	if (m_tab == g_pClassMenu->GetCurrentTab() || m_bMouseOver)
+		pImage = g_pSelectedTabButtonImage;
+
+	pImage->SetSize(GetWide(), GetTall());
+	pImage->SetPos(GetXPos(), GetYPos());
+	pImage->Paint();
+
+	//BaseClass::Paint();
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Begin class menu functions
@@ -1162,31 +1435,36 @@ CClassMenu::CClassMenu(vgui::VPANEL pParent) : Frame(NULL, PANEL_CLASSES) {
 	//Construct class buttons
 	g_ppClassButtons = new CClassButton*[NUM_CLASS_BUTTONS];
 	for (int i = 0; i < NUM_CLASS_BUTTONS; i++) {
-		g_ppClassButtons[i] = new CClassButton(this, "ClassButton", "", i);
+		AddChildToTab((g_ppClassButtons[i] = new CClassButton(this, "ClassButton", "", i)), EClassmenuTab::MAIN);
 	}
 
 	//Construct weapon button
-	g_pWeaponButton = new CWeaponButton(this, "WeaponButton", "");
+	AddChildToTab((g_pKitButton = new CKitButton(this, "WeaponButton", "")), EClassmenuTab::MAIN);
+
+	//weapon selection buttons
+	for (int i = 0; i < NUM_POSSIBLE_WEAPON_KITS; i++) {
+		AddChildToTab((g_pKitButton->m_ppKitSelectionButtons[i] = new CKitSelectionButton(i, this, "WeaponSelectionButton", "")), EClassmenuTab::MAIN);
+	}
 
 	//Create glowy arrow
-	g_pGlowyWeaponArrow = new GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons();
+	//AddChildToTab(g_pGlowyWeaponArrow = new GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons(), EClassmenuTab::MAIN);
 
 	//Construct ammo buttons
 	g_ppAmmoButtons = new CAmmoButton*[NUM_AMMO_BUTTONS];
-	g_ppAmmoButtons[AMMO_KIT_BALL] = new CAmmoButton(this, "AmmoButton", "", AMMO_KIT_BALL);
-	g_ppAmmoButtons[AMMO_KIT_BUCKSHOT] = new CAmmoButton(this, "Ammo", "", AMMO_KIT_BUCKSHOT);
+	AddChildToTab((g_ppAmmoButtons[AMMO_KIT_BALL] = new CAmmoButton(this, "AmmoButton", "", AMMO_KIT_BALL)), EClassmenuTab::MAIN);
+	AddChildToTab((g_ppAmmoButtons[AMMO_KIT_BUCKSHOT] = new CAmmoButton(this, "Ammo", "", AMMO_KIT_BUCKSHOT)), EClassmenuTab::MAIN);
 
 
 	//Construct uniform buttons
 	g_ppUniformButtons = new CUniformButton*[NUM_UNIFORM_BUTTONS];
 	for (int i = 0; i < NUM_UNIFORM_BUTTONS; i++) {
-		g_ppUniformButtons[i] = new CUniformButton(this, "UniformButton", "", i);
+		AddChildToTab((g_ppUniformButtons[i] = new CUniformButton(this, "UniformButton", "", i)), EClassmenuTab::MAIN);
 	}
 
 	//Create class/weapon stats layout
-	NClassWeaponStats::Create(this);
+	NClassWeaponStats::Create(this, EClassmenuTab::MAIN);
 
-	g_pGoButton = new FancyButton(this, "GoButton", MENU_GO_ICON, MENU_GO_ICON);
+	AddChildToTab((g_pGoButton = new FancyButton(this, "GoButton", MENU_GO_ICON, MENU_GO_ICON)), EClassmenuTab::MAIN);
 	g_pGoButton->SetSizeAll(200, 100);
 	g_pGoButton->SetText("#BG3_Classmenu_go");
 	g_pGoButton->SetCommandFunc([]() {
@@ -1198,20 +1476,18 @@ CClassMenu::CClassMenu(vgui::VPANEL pParent) : Frame(NULL, PANEL_CLASSES) {
 	g_pGoButton->MakeReadyForUse();
 
 	//Construct labels
-	g_pClassNameLabel = new Label(this, "ClassNameLabel", "");
-	g_pWeaponNameLabel = new Label(this, "WeaponNameLabel", "");
-	g_pClassDescLabel = new Label(this, "ClassDescLabel", "");
-	g_pWeaponDescLabel = new Label(this, "ClassDescLabel", "");
-	g_pTeamwidePickingLabel = new Label(this, "TeamwidePickingLabel", "");
-	g_pClassBuffLabel = new Label(this, "ClassBuffLabel", "");
-	g_pOfficerBuffsLabel = new Label(this, "OfficerBuffsLabel", "");
+	AddChildToTab((g_pClassNameLabel = new Label(this, "ClassNameLabel", "")), EClassmenuTab::MAIN);
+	AddChildToTab((g_pWeaponNameLabel = new Label(this, "WeaponNameLabel", "")), EClassmenuTab::MAIN);
+	AddChildToTab((g_pClassDescLabel = new Label(this, "ClassDescLabel", "")), EClassmenuTab::MAIN);
+	AddChildToTab((g_pWeaponDescLabel = new Label(this, "WeaponDescLabel", "")), EClassmenuTab::MAIN);
+	AddChildToTab((g_pTeamwidePickingLabel = new Label(this, "TeamwidePickingLabel", "")), EClassmenuTab::MAIN);
+	AddChildToTab((g_pClassBuffLabel = new Label(this, "ClassBuffLabel", "")), EClassmenuTab::MAIN);
+	/*AddChildToTab((*/g_pOfficerBuffsLabel = new Label(this, "OfficerBuffsLabel", "")/*), EClassmenuTab::MAIN)*/;
 
 	//Build TeamToggle and Close Buttons and Unlock Menu
-	m_pCloseButton = new CCloseButton(this, "ClassMenuCloseButton", MENU_CLOSE_ICON);
-	m_pTeamToggleButton = new CTeamToggleButton(MENU_TEAM_SWITCH_ICON);
-	m_pUnlockMenuButton = new CUnlockMenuButton(MENU_UNLOCK_MENU_ICON);
-
-	g_pUnlockableMenu = new CUnlockableMenu(this, "unlockable_menu");
+	AddChildToTab((m_pCloseButton = new CCloseButton(this, "ClassMenuCloseButton", MENU_CLOSE_ICON)), EClassmenuTab::MAIN);
+	AddChildToTab((m_pTeamToggleButton = new CTeamToggleButton(MENU_TEAM_SWITCH_ICON)), EClassmenuTab::MAIN);
+	//AddChildToTab((m_pUnlockMenuButton = new CUnlockMenuButton(MENU_UNLOCK_MENU_ICON)), EClassmenuTab::MAIN);
 
 
 	//Be 100% sure that the runtime data we need from the classes has been initialized
@@ -1228,6 +1504,18 @@ CClassMenu::CClassMenu(vgui::VPANEL pParent) : Frame(NULL, PANEL_CLASSES) {
 	g_pDarkIcon = scheme()->GetImage(MENU_DARK_ICON, false);
 	g_pNoneIcon = scheme()->GetImage(MENU_NONE_ICON, false);
 	//g_pGoButton->m_pCurrentImage = scheme()->GetImage(MENU_GO_ICON, false);
+
+	//Tab buttons
+	for (int i = 0; i < (int)EClassmenuTab::NUM_TABS; i++) {
+		m_aTabButtons[i] = new CTabButton(this, (EClassmenuTab) i);
+	}
+	m_aTabButtons[0]->SetText("#BG3_ClassmenuTabMain");
+	m_aTabButtons[1]->SetText("#BG3_ClassmenuTabDamageOverRange");
+	m_aTabButtons[2]->SetText("#BG3_ClassmenuTabUnlockables");
+
+
+	AddChildToTab((m_pDamageOverRangeMenu = new CDamageOverRangeMenu(this)), EClassmenuTab::DAMAGE_OVER_RANGE);
+	AddChildToTab((g_pUnlockableMenu = new CUnlockableMenu(this, "unlockable_menu")), EClassmenuTab::UNLOCKABLES);
 
 	PerformLayout();
 }
@@ -1278,29 +1566,42 @@ void CClassMenu::ShowPanel(bool bShow) {
 		HideCommMenu();
 		Activate();
 		PerformLayout();
-
-		m_pTeamToggleButton->SetVisible(!g_bClassMenuOfficerMode); //disable team toggle in officer mode
-		g_pTeamwidePickingLabel->SetVisible(g_bClassMenuOfficerMode);
-		for (int i = 0; i < NUM_CLASS_BUTTONS; i++) {
-			g_ppClassButtons[i]->m_pCountLabel->SetVisible(!g_bClassMenuOfficerMode);
+		if (g_iCurrentTeammenuTeam == TEAM_INVALID || g_iCurrentTeammenuTeam == TEAM_SPECTATOR) {
+			g_iCurrentTeammenuTeam = TEAM_BRITISH;
 		}
-
-		if (g_iCurrentTeammenuTeam != TEAM_INVALID)
-			UpdateToMatchTeam(g_iCurrentTeammenuTeam);
+		m_currentTab = EClassmenuTab::MAIN;
+		UpdateToMatchTeam(g_iCurrentTeammenuTeam);
+		//ShowTab(EClassmenuTab::MAIN);
 		Update();
+
+		//good as place as any to send unlockable settings too
+		UnlockableProfile::get()->sendSettingsToServer();
+		UnlockableProfile::get()->saveToFile();
 	}
-	else
+	else {
+		//Switch to main tab on close, because we always start on the main tab
+		//and tab system assumes we only use it to switch tabs
+		ShowTab(EClassmenuTab::MAIN);
+
 		SetVisible(false);
+	}
+		
 
 	SetMouseInputEnabled(bShow);
 	SetKeyBoardInputEnabled(bShow);
 }
 
 void CClassMenu::Paint() {
+	//before painting anything, check if we need to force the kit buttons to update after a year change
+	if (g_bForceKitButtonUpdate) {
+		g_bForceKitButtonUpdate = false;
+		g_pKitButton->UpdateToMatchPlayerClass(GetDisplayedClass());
+	}
+
 	//Paint background
 	m_pBackground->Paint();
 
-	if (g_pClassArt)
+	if (g_pClassArt && m_currentTab == EClassmenuTab::MAIN)
 		g_pClassArt->Paint();
 
 	/****************************************************
@@ -1322,11 +1623,12 @@ void CClassMenu::Paint() {
 	}
 	
 	//Paint weapon button
-	g_pWeaponButton->ManualPaint();
+	if (g_pKitButton->IsVisible())
+		g_pKitButton->ManualPaint();
 
 	//Paint glowy button on top
-	if (g_pGlowyWeaponArrow->IsVisible())
-		g_pGlowyWeaponArrow->PaintToScreen();
+	/*if (g_pGlowyWeaponArrow->IsVisible())
+		g_pGlowyWeaponArrow->PaintToScreen();*/
 
 	//call class weapon stats paint
 	//these will paint the images in the current frame
@@ -1336,11 +1638,13 @@ void CClassMenu::Paint() {
 	//class button first
 	int x, y;
 	int w, h;
-	g_pSelectedClassButton->GetPos(x, y);
-	g_pSelectedClassButton->GetSize(w, h);
-	g_pSelectionIcon->SetPos(x, y);
-	g_pSelectionIcon->SetSize(w, h);
-	g_pSelectionIcon->Paint();
+	if (g_pSelectedClassButton->IsVisible()) {
+		g_pSelectedClassButton->GetPos(x, y);
+		g_pSelectedClassButton->GetSize(w, h);
+		g_pSelectionIcon->SetPos(x, y);
+		g_pSelectionIcon->SetSize(w, h);
+		g_pSelectionIcon->Paint();
+	}
 
 	//g_pGoButton->ManualPaint();
 
@@ -1362,8 +1666,72 @@ void CClassMenu::Paint() {
 		g_pSelectionIcon->Paint();
 	}
 
+	//selected weapon selection button
+	if (g_pSelectedWeaponSelectionButton->IsVisible()) {
+		g_pSelectedWeaponSelectionButton->GetPos(x, y);
+		g_pSelectedWeaponSelectionButton->GetSize(w, h);
+		g_pSelectionIcon->SetPos(x, y);
+		g_pSelectionIcon->SetSize(w, h);
+		g_pSelectionIcon->Paint();
+	}
+
+	//hovered weapon selection button
+	if (g_pDisplayedWeaponSelectionButton->IsVisible()
+		&& !g_pDisplayedWeaponSelectionButton->IsLocked()) {
+		g_pDisplayedWeaponSelectionButton->GetPos(x, y);
+		g_pDisplayedWeaponSelectionButton->GetSize(w, h);
+		g_pHoverIcon->SetPos(x, y);
+		g_pHoverIcon->SetSize(w, h);
+		g_pHoverIcon->Paint();
+	}
+
 	//the darken overlays for the class buttons are painted in their paint code
 	//this way I don't have to write a loop
+
+	//tab buttons
+	for (i = 0; i < (int)EClassmenuTab::NUM_TABS; i++) {
+		if (m_aTabButtons[i]->IsVisible()) {
+			m_aTabButtons[i]->ManualPaint();
+		}
+	}
+}
+
+void CClassMenu::ShowTab(EClassmenuTab tab) {
+	//store state of current tab before switching
+	StoreTabState(m_currentTab);
+
+	m_currentTab = tab;
+
+	//hide everything in other tabs
+	for (int i = 0; i < (int)EClassmenuTab::NUM_TABS; i++) {
+		if (i != (int)tab) {
+			for (int j = 0; j < m_tabs[i].Count(); j++) {
+				m_tabs[i].Element(j).m_pPanel->SetVisible(false);
+				//Msg("%s %i\n", m_tabs[i].Element(j)->GetName(), visible);
+			}
+		}
+	}
+
+	//restore new tab state
+	RestoreTabState(tab);
+
+	if (tab == EClassmenuTab::MAIN) {
+		UpdateToMatchTeam(g_iCurrentTeammenuTeam, true);
+	}
+} 
+
+void CClassMenu::StoreTabState(EClassmenuTab tab) {
+	for (int i = 0; i < m_tabs[(unsigned int)tab].Count(); i++) {
+		STabPanelState* pState = &m_tabs[(unsigned int)tab].Element(i);
+		pState->m_bVisible = pState->m_pPanel->IsVisible();
+	}
+}
+
+void CClassMenu::RestoreTabState(EClassmenuTab tab) {
+	for (int i = 0; i < m_tabs[(unsigned int)tab].Count(); i++) {
+		STabPanelState* pState = &m_tabs[(unsigned int)tab].Element(i);
+		pState->m_pPanel->SetVisible(pState->m_bVisible);
+	}
 }
 
 void CClassMenu::OnThink() {
@@ -1400,7 +1768,7 @@ void CClassMenu::ApplySchemeSettings(IScheme* pScheme) {
 	for (int i = 0; i < NUM_CLASS_BUTTONS; i++) {
 		g_ppClassButtons[i]->MakeReadyForUse();
 	}
-	g_pWeaponButton->MakeReadyForUse();
+	g_pKitButton->MakeReadyForUse();
 	for (int i = 0; i < NUM_AMMO_BUTTONS; i++) {
 		g_ppAmmoButtons[i]->MakeReadyForUse();
 	}
@@ -1470,8 +1838,19 @@ void CClassMenu::PerformLayout() {
 
 	int weaponx = NUM_CLASS_BUTTONS * iconsz + xBase;
 	int weaponw = 4 * iconsz;
-	g_pWeaponButton->SetPos(weaponx, yBase);
-	g_pWeaponButton->SetSize(weaponw, iconsz);
+	g_pKitButton->SetPos(weaponx, yBase);
+	g_pKitButton->SetSize(weaponw, iconsz);
+
+	//----------------------------------------------------------
+	//WEAPON SELECTION BUTTONS
+	//----------------------------------------------------------
+	int weaponSelectionx = weaponx + iconsz * 2;
+	int weaponSelectionw = 2 * iconsz;
+	for (i = 0; i < NUM_POSSIBLE_WEAPON_KITS; i++) {
+		int y = yBase + iconsz + (iconsz / 2) * i;
+		g_pKitButton->m_ppKitSelectionButtons[i]->SetPos(weaponSelectionx, y);
+		g_pKitButton->m_ppKitSelectionButtons[i]->SetSize(weaponSelectionw, iconsz / 2);
+	}
 
 	//----------------------------------------------------------
 	//UNIFORM BUTTONS
@@ -1487,12 +1866,12 @@ void CClassMenu::PerformLayout() {
 	//----------------------------------------------------------
 	//GLOWY ARROW OVER WEAPON BUTTON
 	//----------------------------------------------------------
-	const int ARROW_SIZE = iconsz / 1.5f;
+	/*const int ARROW_SIZE = iconsz / 1.5f;
 	g_pGlowyWeaponArrow->SetSize(ARROW_SIZE);
 	g_pGlowyWeaponArrow->SetPulseSize(iconsz / 8);
 	const int ARROW_OFFSET = (iconsz - ARROW_SIZE) / 2;
 	g_pGlowyWeaponArrow->SetPosition(weaponx + 3 * iconsz + ARROW_OFFSET, yBase + ARROW_OFFSET);
-	g_pGlowyWeaponArrow->SetImage(MENU_ARROW_HOVER);
+	g_pGlowyWeaponArrow->SetImage(MENU_ARROW_HOVER);*/
 	
 
 	//----------------------------------------------------------
@@ -1550,8 +1929,22 @@ void CClassMenu::PerformLayout() {
 	m_pTeamToggleButton->SetPos(smlsz, 0);
 	m_pTeamToggleButton->SetSize(smlsz, smlsz);
 
-	m_pUnlockMenuButton->SetPos(smlsz * 2, 0);
-	m_pUnlockMenuButton->SetSize(smlsz, smlsz);
+	/*m_pUnlockMenuButton->SetPos(smlsz * 2, 0);
+	m_pUnlockMenuButton->SetSize(smlsz, smlsz);*/
+
+	//----------------------------------------------------------
+	//TABS and TAB BUTTONS
+	//----------------------------------------------------------
+	m_pDamageOverRangeMenu->SetPos(0, 0);
+	m_pDamageOverRangeMenu->SetSize(ScreenWidth(), ScreenHeight() - 50);
+	m_pDamageOverRangeMenu->SetVisible(false);
+	m_pDamageOverRangeMenu->PerformLayout();
+	for (int i = 0; i < (int)EClassmenuTab::NUM_TABS; i++) {
+		m_aTabButtons[i]->SetContentAlignment(vgui::Label::Alignment::a_center);
+		m_aTabButtons[i]->SetSize(200, 35);
+		m_aTabButtons[i]->SetPos(i * 200 + 1, ScreenHeight() - 36);
+		m_aTabButtons[i]->SetVisible(true);
+	}
 
 	//----------------------------------------------------------
 	//GLOBAL TEXTS
@@ -1575,23 +1968,37 @@ void CClassMenu::PerformLayout() {
 
 	g_pTeamwidePickingLabel->SetPos(0, ScreenHeight() - 200);
 	g_pTeamwidePickingLabel->SetSize(ScreenWidth() - 100, 200);
-	g_pTeamwidePickingLabel->SetText("#BG3_Classmenu_teamwide");
+	if (g_bClassMenuOfficerMode)
+		g_pTeamwidePickingLabel->SetText("#BG3_Classmenu_teamwide");
+	else if (mp_year_accuracy.GetBool()) {
+		wchar buffer[128];
+		V_snwprintf(buffer, sizeof(buffer), g_pVGuiLocalize->Find("#BG3_Year_Warning"), mp_year.GetInt());
+		g_pTeamwidePickingLabel->SetText(buffer);
+	}
 
 	g_pClassBuffLabel->SetPos(xBase, uniformy + 2);
 	g_pClassBuffLabel->SetSize(classw, 30);
 
 	g_pOfficerBuffsLabel->SetPos(weaponx, uniformy + icon_half);
 	g_pOfficerBuffsLabel->SetSize(weaponw, 600);
+	g_pOfficerBuffsLabel->SetVisible(false);
 
 	g_pUnlockableMenu->PerformLayout();
+	g_pUnlockableMenu->SetVisible(false);
 }
 
-void CClassMenu::UpdateToMatchTeam(int iTeam) {
+void CClassMenu::UpdateToMatchTeam(int iTeam, bool bForce) {
 	g_iCurrentTeammenuTeam = iTeam; //just in case
 
+	m_pTeamToggleButton->SetVisible(!g_bClassMenuOfficerMode); //disable team toggle in officer mode
+	g_pTeamwidePickingLabel->SetVisible(g_bClassMenuOfficerMode);
+	for (int i = 0; i < NUM_CLASS_BUTTONS; i++) {
+		g_ppClassButtons[i]->m_pCountLabel->SetVisible(!g_bClassMenuOfficerMode);
+	}
+
 	//don't bother updating if we're already showing this team
-	if (m_iPreviouslyShownTeam == iTeam)
-		return;
+	//if (!bForce && m_iPreviouslyShownTeam == iTeam)
+		//return;
 
 	//update class buttons, their classes and their visibility
 	int i = 0;
@@ -1609,7 +2016,6 @@ void CClassMenu::UpdateToMatchTeam(int iTeam) {
 	//find a default button to select
 	g_pSelectedClassButton = nullptr;
 	CClassButton* pAvailable = CClassButton::FindAvailableButton();
-	CClassButton::UpdateDisplayedButton(pAvailable);
 	pAvailable->Select();
 
 	//update background image
@@ -1625,6 +2031,13 @@ void CClassMenu::SetBackground(const char* pszImage) {
 	m_pBackground->SetSize(ScreenWidth(), ScreenHeight());
 	m_pBackground->SetPos(0, 0);
 
+}
+
+void CClassMenu::AddChildToTab(vgui::Panel* pPanel, EClassmenuTab tab) {
+	STabPanelState state;
+	state.m_pPanel = pPanel;
+	state.m_bVisible = true; // pPanel->IsVisible();
+	m_tabs[(unsigned int)tab].AddToTail(state);
 }
 
 CClassMenu* g_pClassMenu = nullptr;

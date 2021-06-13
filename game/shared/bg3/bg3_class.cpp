@@ -46,9 +46,11 @@ commented on the following form:
 #include "engine/IEngineSound.h"
 #include <vgui/ILocalize.h>
 #include "bg3_class_quota.h"
+#include "../shared/bg3/bg3_unlockable.h"
 
 #ifdef CLIENT_DLL
 #include "c_team.h"
+#include "bg3/persistent/versioning.h"
 #else
 #include "team.h"
 #endif
@@ -67,19 +69,48 @@ commented on the following form:
 
 #define TOTAL_NUM_CLASSES (TOTAL_BRIT_CLASSES + TOTAL_AMER_CLASSES) //used to build the list of classes and model lists
 
+//in case the year setting changes while we're in the classmenu, we'll have to force
+//it to update whenever it changes
+#ifndef CLIENT_DLL
+ConVar mp_year("mp_year", "1779", CVAR_FLAGS, "Year setting controls which weapons are available, for historical accuracy. Used only if mp_year_accuracy = 1", true, 0.f, true, 1850.f);
+ConVar mp_year_accuracy("mp_year_accuracy", "0", CVAR_FLAGS, "Controls whether or not to use year-by-year historical weapon accuracy.");
+#else
+void OnYearSettingChanged(IConVar* pVar, const char* pszOldValue, float flOldValue);
+ConVar mp_year("mp_year", "1779", CVAR_FLAGS, "Year setting controls which weapons are available, for historical accuracy. Used only if mp_year_accuracy = 1", true, 0.f, true, 1850.f, OnYearSettingChanged);
+ConVar mp_year_accuracy("mp_year_accuracy", "0", CVAR_FLAGS, "Controls whether or not to use year-by-year historical weapon accuracy.", OnYearSettingChanged);
+#endif
+
+#ifdef CLIENT_DLL
+bool CGunKit::AvailableForCurrentYear() const {
+	//return true;
+	if (mp_year_accuracy.GetBool() && mp_year.GetBool()) {
+		int year = mp_year.GetInt();
+		return (year >= m_iMinYear && year <= m_iMaxYear);
+	}
+	else {
+		return !m_bDisabledOnHistoricityDisabled || mp_year.GetInt() == 0;
+	}
+}
+#endif
 
 CPlayerClass::CPlayerClass(const char* abrv) {
 		m_pszAbbreviation = abrv;
 		m_pPopCounter = new NClassQuota::SPopulationCounter;
+		memset(m_aUniformControllingBits, 0, sizeof(m_aUniformControllingBits));
+		memset(m_aUniformControllingBitsActive, 0, sizeof(m_aUniformControllingBitsActive));
+		memset(m_pszUniformModelOverrides, 0, sizeof(m_pszUniformModelOverrides));
+		for (int i = 0; i < NUM_POSSIBLE_UNIFORMS; i++) {
+			m_aUniformSleeveOverrides[i] = m_aUniformArmModelOverrides[i] = -1;
+		}
 }
 
 uint8 CPlayerClass::numChooseableUniformsForPlayer(CBasePlayer* pPlayer) const {
 	uint8 result;
-	if (m_bForceRandomUniform)
-		result = 1;
-	else if (m_bLastUniformRestricted && !ToHL2MPPlayer(pPlayer)->IsBetaTester())
+#ifdef CLIENT_DLL
+	if (m_bLastUniformRestricted && !NVersioning::HadDoneBetaTestParticipation())
 		result = m_iNumUniforms - 1;
 	else
+#endif
 		result = m_iNumUniforms;
 	return result;
 }
@@ -374,14 +405,14 @@ void CPlayerClass::RemoveClassLimits() {
 #define SLEEVE_BJAEGER			4
 #define SLEEVE_BNATIVE			0
 #define SLEEVE_BLINF			6		
-#define SLEEVE_BGRENADIER		8
+#define SLEEVE_BGRENADIER		9
 
 #define SLEEVE_AINFANTRY		16
-#define SLEEVE_AOFFICER			16
+#define SLEEVE_AOFFICER			17
 #define SLEEVE_AFRONTIERSMAN	20
 #define SLEEVE_AMILITIA			23
 #define SLEEVE_ASTATEMILITIA	26
-#define SLEEVE_AFRENCH			0
+#define SLEEVE_AFRENCH			27
 
 
 
@@ -426,12 +457,7 @@ DEC_BG3_PLAYER_CLASS(BInfantry, inf, b) {
 	m_iSkinDepth = 8;
 	m_iSleeveBase = SLEEVE_BINFANTRY;
 	m_iNumUniforms = 3;
-	m_bLastUniformRestricted = true;
-
-	m_pszUniformModelOverrides[0] = NULL;
-	m_pszUniformModelOverrides[1] = NULL;
-	m_pszUniformModelOverrides[2] = NULL;
-	m_pszUniformModelOverrides[3] = NULL;
+	//m_bLastUniformRestricted = true;
 
 	m_pszDroppedHat = "models/player/british/infantry/british_hat.mdl";
 
@@ -440,9 +466,15 @@ DEC_BG3_PLAYER_CLASS(BInfantry, inf, b) {
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess";
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_longpattern";
 	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_sea_service";
-	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_oldpattern";
 	m_aWeapons[2].m_iMovementSpeedModifier = 3;
-
+	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_serjeant_fusil";
+	m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_smallsword";
+	//m_aWeapons[3].m_iMovementSpeedModifier = -5;
+	m_aWeapons[4].m_pszWeaponPrimaryName = "weapon_oldpattern";
+	m_aWeapons[4].m_iControllingBit = ULK_3_WEP_OLD_PATTERN;
+	m_aWeapons[5].m_pszWeaponPrimaryName = "weapon_artillery_common_carbine";
+	m_aWeapons[5].m_iMovementSpeedModifier = 3;
+	
 
 	postClassConstruct(this);
 }
@@ -462,11 +494,7 @@ DEC_BG3_PLAYER_CLASS(BOfficer, off, b) {
 	m_iSkinDepth = 1;
 	m_iSleeveBase = SLEEVE_BOFFICER;
 	m_iNumUniforms = 3;
-
-	m_pszUniformModelOverrides[0] = NULL;
-	m_pszUniformModelOverrides[1] = NULL;
-	m_pszUniformModelOverrides[2] = NULL;
-	m_pszUniformModelOverrides[3] = NULL;
+	m_iSleeveInnerModel = SLEEVE_INNER_LACE;
 
 	//m_bAllowUniformSelection = true;
 	m_bCanDoVcommBuffs = true;
@@ -476,6 +504,9 @@ DEC_BG3_PLAYER_CLASS(BOfficer, off, b) {
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_brownbess_carbine_nobayo";
 	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_sabre";
 	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_spontoon";
+	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_serjeant_fusil";
+	m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_smallsword";
+	m_aWeapons[3].m_iMovementSpeedModifier = -10;
 
 	postClassConstruct(this);
 }
@@ -523,14 +554,11 @@ DEC_BG3_PLAYER_CLASS(BNative, ski, b) {
 	m_iSkinDepth = 2;
 	m_iSleeveBase = SLEEVE_BNATIVE;
 	m_iNumUniforms = 1;
-
-	m_pszUniformModelOverrides[0] = NULL;
-	m_pszUniformModelOverrides[1] = NULL;
-	m_pszUniformModelOverrides[2] = NULL;
-	m_pszUniformModelOverrides[3] = NULL;
+	m_iArmModel = ARMS_NATIVE;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess_nobayo";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_tomahawk";
+	m_aWeapons[0].m_iMinYear = 1776;
 
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_longpattern_nobayo";
 	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_tomahawk";
@@ -540,7 +568,12 @@ DEC_BG3_PLAYER_CLASS(BNative, ski, b) {
 
 	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_trade_musket";
 	m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_dagger";
-	m_aWeapons[3].m_iMovementSpeedModifier = -15;
+	//m_aWeapons[3].m_iMovementSpeedModifier = -5;
+	m_aWeapons[3].m_iControllingBit = ULK_3_WEP_TRADE;
+
+	m_aWeapons[4].m_pszWeaponPrimaryName = "weapon_gunstock";
+	m_aWeapons[4].m_iMovementSpeedModifier = -10;
+	m_aWeapons[4].m_iMinYear = 2000;
 
 
 	postClassConstruct(this);
@@ -563,10 +596,13 @@ DEC_BG3_PLAYER_CLASS(BLinf, linf, b) {
 	m_iSleeveBase = SLEEVE_BLINF;
 	m_iNumUniforms = 3;
 
-	m_pszUniformModelOverrides[0] = NULL;
-	m_pszUniformModelOverrides[1] = NULL;
-	m_pszUniformModelOverrides[2] = NULL;
-	m_pszUniformModelOverrides[3] = NULL;
+	m_aUniformControllingBits[1] = ULK_1_UNI_BRIT_LINF_1;
+	m_aUniformControllingBits[2] = ULK_1_UNI_BRIT_LINF_2; 
+	//HACK HACK for all other unlockable bits, we can just use the bits themselves,
+	//but bit offset for the first light infantry is 0 , so we have to use something
+	//else for whether or not the uniform should be locked
+	m_aUniformControllingBitsActive[1] = true;
+	m_pszUniformModelOverrides[2] = MODEL_BNEWFOUNDLAND_INFANTRY;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess_carbine";
 	m_aWeapons[0].m_bAllowBuckshot = true;
@@ -574,6 +610,10 @@ DEC_BG3_PLAYER_CLASS(BLinf, linf, b) {
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_pattern1776";
 	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_smallsword";
 	m_aWeapons[1].m_iMovementSpeedModifier = 5;
+	m_aWeapons[1].m_iMinYear = 1776;
+
+	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_artillery_common_carbine";
+	m_aWeapons[2].m_iMovementSpeedModifier = -3;
 
 	postClassConstruct(this);
 }
@@ -597,11 +637,11 @@ DEC_BG3_PLAYER_CLASS(BGrenadier, gre, b) {
 	m_iSkinDepth = 8;
 	m_iSleeveBase = SLEEVE_BGRENADIER;
 	m_iNumUniforms = 2;
+	m_iArmModel = ARMS_BRIT_GRE;
+	m_iSleeveInnerModel = SLEEVE_INNER_PLAIN;
 
-	m_pszUniformModelOverrides[0] = NULL;
 	m_pszUniformModelOverrides[1] = MODEL_BGRENADIER_ALT;
-	m_pszUniformModelOverrides[2] = NULL;
-	m_pszUniformModelOverrides[3] = NULL;
+	m_aUniformControllingBits[1] = ULK_1_UNI_BRIT_GRE;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_brownbess_nobayo";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_frag";
@@ -642,24 +682,32 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 
 	m_iSkinDepth = 8;
 	m_iSleeveBase = SLEEVE_AINFANTRY;
-	m_iNumUniforms = 3;
+	m_iNumUniforms = 4;
 	m_pszDroppedHat = "models/player/american/infantry/american_hat.mdl";
 	m_bLastUniformRestricted = true;
-
-	m_pszUniformModelOverrides[0] = NULL;
-	m_pszUniformModelOverrides[1] = NULL;
-	m_pszUniformModelOverrides[2] = NULL;
-	m_pszUniformModelOverrides[3] = NULL;
 
 	//m_bAllowUniformSelection = true;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_miquelet";
+	m_aWeapons[0].m_iMinYear = 1777;
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_longpattern";
 	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_charleville";
+	m_aWeapons[2].m_iMinYear = 1777;
 	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_old_model_charleville";
+	m_aWeapons[3].m_iMinYear = 1775;
 	m_aWeapons[4].m_pszWeaponPrimaryName = "weapon_dutch";
+	m_aWeapons[4].m_iMinYear = 1778;
 	m_aWeapons[5].m_pszWeaponPrimaryName = "weapon_american_brownbess";
 	m_aWeapons[6].m_pszWeaponPrimaryName = "weapon_light_model_charleville";
+	m_aWeapons[6].m_iMinYear = 1779;
+	m_aWeapons[6].m_iControllingBit = ULK_3_WEP_LMC;
+	m_aWeapons[7].m_pszWeaponPrimaryName = "weapon_spontoon";
+	m_aWeapons[7].m_iMaxYear = 1775;
+	m_aWeapons[7].m_iMovementSpeedModifier = 5;
+	m_aWeapons[8].m_pszWeaponPrimaryName = "weapon_oldpattern";
+	m_aWeapons[8].m_iMaxYear = 1777;
+	m_aWeapons[8].m_iControllingBit = ULK_3_WEP_OLD_PATTERN;
+	m_aWeapons[7].m_bDisabledOnHistoricityDisabled = m_aWeapons[8].m_bDisabledOnHistoricityDisabled = true;
 
 	postClassConstruct(this);
 }
@@ -678,21 +726,24 @@ DEC_BG3_PLAYER_CLASS(AOfficer, off, a) {
 
 	m_iSkinDepth = 1;
 	m_iSleeveBase = SLEEVE_AOFFICER;
-	m_iNumUniforms = 3;
-	//m_bAllowUniformSelection = true;
+	m_iSleeveInnerModel = SLEEVE_INNER_LACE;
+	m_iNumUniforms = 4;
 	m_bCanDoVcommBuffs = true;
 
-	m_pszUniformModelOverrides[0] = NULL;
-	m_pszUniformModelOverrides[1] = NULL;
-	m_pszUniformModelOverrides[2] = NULL;
-	m_pszUniformModelOverrides[3] = NULL;
+	//french officer variation
+	m_aUniformSleeveOverrides[3] = SLEEVE_AFRENCH + 2;
+	m_aUniformArmModelOverrides[3] = ARMS_FRE;
+	m_pszUniformModelOverrides[3] = MODEL_AFRENCHOFFICER;
+	m_aUniformControllingBits[3] = ULK_1_UNI_AMER_OFF;
+
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_pistol_a";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_sabre";
 	
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_french_carbine";
-	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_sabre";
-	m_aWeapons[1].m_pszPlayerModelOverrideName = MODEL_AFRENCHOFFICER;
+	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_rapier";
+	m_aWeapons[1].m_iControllingBit = ULK_3_WEP_FRE_CARB;
+	m_aWeapons[1].m_iMinYear = 1778;
 
 	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_brownbess_carbine_nobayo";
 	m_aWeapons[2].m_pszWeaponSecondaryName = "weapon_sabre";
@@ -715,15 +766,11 @@ DEC_BG3_PLAYER_CLASS(AFrontiersman, rif, a) {
 
 	m_iDefaultPrimaryAmmoCount = AMMO_SNIPER;
 
-	m_iSkinDepth = 24;
+	m_iSkinDepth = 8;
 	m_iSleeveBase = SLEEVE_AFRONTIERSMAN;
 	m_iNumUniforms = 3;
-	m_bForceRandomUniform = true;
-
-	m_pszUniformModelOverrides[0] = NULL;
-	m_pszUniformModelOverrides[1] = NULL;
-	m_pszUniformModelOverrides[2] = NULL;
-	m_pszUniformModelOverrides[3] = NULL;
+	m_bDefaultRandomUniform = true;
+	m_iDerandomizerControllingBit = ULK_2_UNC_AMER_RIF;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_pennsylvania";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_knife";
@@ -745,15 +792,11 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 
 	m_iDefaultPrimaryAmmoCount = AMMO_SKIRMISHER;
 
-	m_iSkinDepth = 24;
+	m_iSkinDepth = 8;
 	m_iSleeveBase = SLEEVE_AMILITIA;
 	m_iNumUniforms = 3;
-	m_bForceRandomUniform = true;
-
-	m_pszUniformModelOverrides[0] = NULL;
-	m_pszUniformModelOverrides[1] = NULL;
-	m_pszUniformModelOverrides[2] = NULL;
-	m_pszUniformModelOverrides[3] = NULL;
+	m_bDefaultRandomUniform = true;
+	m_iDerandomizerControllingBit = ULK_2_UNC_AMER_SKI;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_fowler";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_beltaxe";
@@ -769,6 +812,7 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 
 	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_blunderbuss";
 	m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_dagger";
+	m_aWeapons[3].m_iControllingBit = ULK_3_WEP_BLUNDER;
 
 #ifdef CLIENT_DLL
 	m_aWeapons[2].SetLocalizedName("weapon_longpattern_state");
@@ -826,11 +870,10 @@ DEC_BG3_PLAYER_CLASS(AFrenchGre, gre, a) {
 	m_iSkinDepth = 4;
 	m_iSleeveBase = SLEEVE_AFRENCH;
 	m_iNumUniforms = 2;
+	m_iArmModel = ARMS_FRE;
 
-	m_pszUniformModelOverrides[0] = NULL;
 	m_pszUniformModelOverrides[1] = MODEL_AFRENCH_ALT;
-	m_pszUniformModelOverrides[2] = NULL;
-	m_pszUniformModelOverrides[3] = NULL;
+	m_aUniformControllingBits[1] = ULK_1_UNI_AMER_GRE;
 
 	m_aWeapons[0].m_pszWeaponPrimaryName = "weapon_revolutionnaire_nobayo";
 	m_aWeapons[0].m_pszWeaponSecondaryName = "weapon_frag";

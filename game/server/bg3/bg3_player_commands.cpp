@@ -41,7 +41,7 @@ commented on the following form:
 #include "../shared/bg3/bg3_map_model.h"
 
 void CSay(const char* pszFormat, ...);
-void Host_Say(edict_t *pEdict, const CCommand &args, bool teamonly);
+void Host_Say(edict_t *pEdict, const CCommand &args, bool teamonly, std::vector<CBasePlayer*>* recipients = NULL);
 
 //Static map of from player-issued to command strings to their functions
 CUtlDict<PlayerCommandFunc> CHL2MP_Player::s_mPlayerCommands;
@@ -204,7 +204,10 @@ PLAYER_COMMAND(slay) {
 
 	if (args.ArgC() == 2) {
 		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			pPlayer->DontRemoveTicketOnNextRespawn();
 			pPlayer->CommitSuicide();
+			AdminSay("Slayed %s", pPlayer->GetPlayerName());
+			MSayPlayer(pPlayer, "You were slain by admin");
 		});
 	}
 }
@@ -216,7 +219,7 @@ PLAYER_COMMAND(mute) {
 	if (args.ArgC() == 2) {
 		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
 			pPlayer->m_bMuted = true;
-			Msg("Muted %s\n", pPlayer->GetPlayerName());
+			AdminSay("Muted %s", pPlayer->GetPlayerName());
 		});
 	}
 }
@@ -227,11 +230,45 @@ PLAYER_COMMAND(unmute) {
 	if (args.ArgC() == 2) {
 		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
 			pPlayer->m_bMuted = false;
-			Msg("Unmuted %s\n", pPlayer->GetPlayerName());
+			AdminSay("Unmuted %s", pPlayer->GetPlayerName());
 		});
 	}
 }
 PLAYER_COMMAND_ALIAS(unmute, um);
+
+PLAYER_COMMAND(oppress) {
+	if (!pPlayer->GetPermissions()->m_bPlayerManage || mp_competitive.GetBool())
+		return;
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			pPlayer->m_bOppressed = true;
+			pPlayer->m_bMuted = true;
+			AdminSay("Oppressed %s", pPlayer->GetPlayerName());
+		});
+	}
+}
+PLAYER_COMMAND_ALIAS(oppress, o);
+
+PLAYER_COMMAND(unoppress) {
+	if (!pPlayer->GetPermissions()->m_bPlayerManage)
+		return;
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			pPlayer->m_bOppressed = false;
+			pPlayer->m_bMuted = false;
+			AdminSay("Unoppressed %s", pPlayer->GetPlayerName());
+		});
+	}
+}
+PLAYER_COMMAND_ALIAS(unoppress, uo);
+
+PLAYER_COMMAND(oppressme) {
+	pPlayer->m_bOppressed = true;
+	pPlayer->m_bMuted = true;
+}
+PLAYER_COMMAND(muteme) {
+	pPlayer->m_bMuted = true;
+}
 
 PLAYER_COMMAND(setname) {
 	if (args.ArgC() > 1)
@@ -250,14 +287,21 @@ PLAYER_COMMAND(setname) {
 	}
 }*/
 
+//--------------------------------------------------------------------------
+// LB Officer commands
+//--------------------------------------------------------------------------
+PLAYER_COMMAND(off) {
+	if (!pPlayer->GetPermissions()->m_bPlayerManage && !(pPlayer->GetFlags() & FL_LBOFFICER))
+		return;
 
 
+}
 
 
 //--------------------------------------------------------------------------
 // Individual buff commands
 //--------------------------------------------------------------------------
-PLAYER_COMMAND(vcomm_advance) {
+PLAYER_COMMAND(vcomm_advance) {	
 	uint8 comm = VCOMM2_ADVANCE;
 	pPlayer->HandleVoicecomm(comm);
 	BG3Buffs::RallyRequest(comm, pPlayer);
@@ -291,6 +335,36 @@ PLAYER_COMMAND(vcomm_halt) {
 	uint8 comm = VCOMM2_HALT;
 	pPlayer->HandleVoicecomm(comm);
 	//BG3Buffs::RallyRequest(comm, pPlayer);
+}
+
+//Progression system setting changes
+PLAYER_COMMAND(ps_checksum) {
+	if (args.ArgC() == 2) {
+		uint64 checksum = strtoull(args[1], NULL, 10);
+		pPlayer->m_unlockableProfile.m_iUniqueIdChecksum = checksum;
+		//Msg("Received checksum %llu\n", checksum);
+	}
+}
+
+PLAYER_COMMAND(ps_settings) {
+	if (args.ArgC() == 4) {
+		uint64 checksum = strtoull(args[1], NULL, 10);
+
+		if (checksum != pPlayer->m_unlockableProfile.m_iUniqueIdChecksum) {
+			Warning("Invalid checksum from player %s. Are they trying to hack the progression system?", pPlayer->GetPlayerName());
+			return;
+		}
+
+		uint64 key = NIntegrity::getEncryptKeyForPlayer(pPlayer);
+
+		uint64 unlocked = key ^ strtoull(args[2], NULL, 10);
+		uint64 activated = key ^ strtoull(args[3], NULL, 10);
+
+		//Msg("Player setting bits %llu %llu, checksum %llu, key %llu\n", unlocked, activated, checksum, key);
+
+		pPlayer->m_unlockableProfile.m_iUnlockedBits = unlocked;
+		pPlayer->m_unlockableProfile.m_iActivatedBits = activated;
+	}
 }
 
 

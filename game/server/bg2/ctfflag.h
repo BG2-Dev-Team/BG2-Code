@@ -24,7 +24,7 @@ class CtfFlag : public CBaseAnimating
 	void InputDisable( inputdata_t &inputData );
 	void InputToggle( inputdata_t &inputData );
 
-	int		//m_iForTeam,
+	int		m_iFlagMode = 0,
 			m_iTeamBonus,
 			iTeam,
 			m_iPlayerBonus,
@@ -41,7 +41,7 @@ class CtfFlag : public CBaseAnimating
 
 public:
 
-	bool m_bFlagIsDropped, m_bActive;   
+	bool m_bFlagIsDropped, m_bActivated;   
 	char *cFlagName;
 	int m_iFlagWeight;
 
@@ -55,5 +55,6 @@ public:
 	void PlaySound( int iSound );
 	void DropFlag( void );
 	void Think( void );
+	bool SetActiveState(bool bActive);
 };
 //END CTF FLAG

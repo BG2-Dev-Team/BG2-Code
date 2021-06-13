@@ -51,11 +51,13 @@ commented on the following form:
 
 #include <game/client/iviewport.h>
 #include "vgui/bg3_unlockable_menu.h"
+#include "vgui/bg3_damage_over_range_menu.h"
+#include "utlvector.h"
 
 #include "hl2mp_gamerules.h" // BG2 - VisualMelon - moved from classmenu.cpp so we can get the ammo counts
 
 class CClassButton;
-class CWeaponButton;
+class CKitButton;
 class CAmmoButton;
 class CUniformButton;
 class CTeamToggleButton;
@@ -63,13 +65,18 @@ class GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons;
 
 extern CClassButton*	g_pDisplayedClassButton;	//which class is currently displayed?
 extern CClassButton*	g_pSelectedClassButton;		//what was the last class clicked on?
-extern CWeaponButton*	g_pWeaponButton;		//we only have one weapon button, which cycles through the possible weapons
+extern CKitButton*	g_pKitButton;		//we only have one weapon button, which cycles through the possible weapons
 extern CAmmoButton*		g_pCurrentAmmoButton;
 extern CUniformButton*	g_pCurrentUniformButton;
 
 extern ::vgui::IImage*			g_pSelectionIcon; //these are overlays
 extern ::vgui::IImage*			g_pDarkIcon;
 extern ::vgui::IImage*			g_pNoneIcon;
+
+extern ::vgui::IImage* g_pDarkenTexture;
+extern ::vgui::IImage* g_pLockIcon;
+
+extern char g_hudBuffer[512];
 
 //image file paths
 #define MENU_GO_ICON			"classmenu/go"
@@ -91,6 +98,14 @@ extern ::vgui::IImage*			g_pNoneIcon;
 #define MENU_TEAM_SWITCH_ICON	"classmenu/team_switch"
 #define MENU_UNLOCK_MENU_ICON	"classmenu/unlock_menu"
 #define MENU_CLOSE_ICON			"classmenu/close"
+#define MENU_EMPTY_ICON			"classmenu/close"
+
+enum class EClassmenuTab {
+	MAIN = 0,
+	DAMAGE_OVER_RANGE,
+	UNLOCKABLES,
+	NUM_TABS
+};
 
 //-----------------------------------------------------------------------------
 // Purpose: These buttons store and link all of the class-related menu data,
@@ -151,11 +166,13 @@ void JoinRequest(int iGun, int iAmmo, int iSkin, int iTeam, int iClass);
 // Purpose: This single weapon button displays the currently selected weapon
 //			for the class. Pressing it cycles through the possible weapons.
 //-----------------------------------------------------------------------------
-class CWeaponButton : public vgui::Button {
+class CKitSelectionButton;
+class CKitButton : public vgui::Button {
 public:
-	DECLARE_CLASS_SIMPLE(CWeaponButton, Button);
+	friend class CClassMenu;
+	DECLARE_CLASS_SIMPLE(CKitButton, Button);
 
-	CWeaponButton(Panel *parent, const char *panelName, const char *text) : Button(parent, panelName, text) { }
+	CKitButton(Panel *parent, const char *panelName, const char *text) : Button(parent, panelName, text) { }
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 
 	inline void SimulateMousePressed() { OnMousePressed(MOUSE_LEFT); }
@@ -165,24 +182,48 @@ public:
 
 	void	ManualPaint();
 	void UpdateToMatchPlayerClass(const CPlayerClass* pClass);
-	void SetCurrentGunKit(int iKit);
-	uint8  GetCurrentGunKit() const { return m_iCurrentWeapon; }
-	uint8  GetNumWeapons() const { return m_iWeaponCount; }
+	void SetCurrentGunKit(int iKit, bool bReverseCycle = false);
+	static void SetDisplayedGunKit(int iKit);
+	uint8  GetCurrentGunKit() const { return m_iCurrentKit; }
+	uint8  GetNumKits() const { return m_iKitCount; }
+	void			UpdateImage(const CGunKit* pKit);
+	int8	KitIndexToButtonIndex(uint8 iKit) const; //-1 if kit not available
+	CKitSelectionButton* GetKitSelectionButton(uint8 iButtonIndex) const { return m_ppKitSelectionButtons[iButtonIndex]; }
 
 private:
 	bool m_bMouseOver = false;
-	uint8 m_iWeaponCount; //how many weapons do we cycle through?
-	uint8 m_iCurrentWeapon; //which weapon are we currently displaying?
+	uint8 m_iKitCount; //how many weapons do we cycle through?
+	uint8 m_iCurrentKit; //which weapon are we currently displaying?
 	vgui::IImage*			m_pCurrentImage;
 
-	void			UpdateImage(const CGunKit* pKit);
+	CKitSelectionButton* m_ppKitSelectionButtons[NUM_POSSIBLE_WEAPON_KITS];
+};
+
+class CKitSelectionButton : public vgui::Button {
+	DECLARE_CLASS_SIMPLE(CKitSelectionButton, Button);
+	CKitSelectionButton(uint8 iKit, Panel* parent, const char* panelName, const char* text) : Button(parent, panelName, text), m_iKitIndex(iKit) {}
+	inline void SimulateMousePressed() { OnMousePressed(MOUSE_LEFT); };
+	void OnMousePressed(vgui::MouseCode code);
+	void OnCursorEntered(void);
+	void OnCursorExited(void);
+
+	void ManualPaint();
+	void Update(const CGunKit* pKit, uint8 iKit);
+	uint8  GetKitIndex() const { return m_iKitIndex; }
+
+	inline bool IsLocked() const { return m_bLocked; }
+private:
+	uint8 m_iKitIndex; //which weapon are we currently displaying?
+	vgui::IImage*			m_pCurrentImage;
+	float	m_flLastClickTime = -FLT_MAX;
+	bool m_bLocked = false;
 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Arrow that glows and pulses to let players know they can switch
 // weapon kits
 //-----------------------------------------------------------------------------
-class GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons {
+/*class GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons {
 public:
 
 	GlowyArrowForPlayersWhoDontRealizeYouCanSwitchWeapons();
@@ -202,7 +243,7 @@ private:
 	uint16	m_iWH;
 	uint8	m_iPulseSize;
 	bool	m_bVisible;
-};
+};*/
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays Stats for the currently selected class, weapon, and ammo
@@ -213,7 +254,7 @@ namespace NClassWeaponStats {
 	void UpdateWeaponStatsAllCurrent();
 	void UpdateToMatchWeapon(const CWeaponDef* pWeapon);
 
-	void Create(vgui::Panel* pParent);
+	void Create(vgui::Panel* pParent, EClassmenuTab tab);
 	void CreateLayout();
 	void SetVisible(bool bVisible);
 
@@ -270,6 +311,7 @@ public:
 	int		GetAmmoIndex() const { return m_iIndex; } //gets this ammo's number
 
 private:
+	float	m_flLastClickTime = -FLT_MAX;
 	bool m_bMouseOver = false;
 	static const CGunKit* s_pGunKit;
 	int m_iIndex;
@@ -294,12 +336,14 @@ public:
 	void	ManualPaint(); //we'll paint directly from class menu
 
 	void	SetAsCurrent();
-	static void	UpdateToMatchClass(const CPlayerClass* pClass);
+	static void	UpdateToMatchClassKit(const CPlayerClass* pClass, int iKit);
 	int		GetUniformIndex() const { return m_iIndex; } //gets this ammo's number
 
 private:
+	float	m_flLastClickTime = -FLT_MAX;
 	int m_iIndex;
 	vgui::IImage* m_pCurrentImage;
+	bool m_bLocked;
 };
 
 //-----------------------------------------------------------------------------
@@ -321,7 +365,7 @@ private:
 //-----------------------------------------------------------------------------
 // Purpose: Opens/closes the unlock menu
 //-----------------------------------------------------------------------------
-class CUnlockMenuButton : public vgui::Button {
+/*class CUnlockMenuButton : public vgui::Button {
 public:
 	CUnlockMenuButton(const char* pszImgName);
 
@@ -332,6 +376,28 @@ public:
 private:
 	vgui::IImage* m_pImage;
 	bool m_bMouseOver;
+};*/
+
+//-----------------------------------------------------------------------------
+// Purpose: Shows specified tab
+//-----------------------------------------------------------------------------
+class CTabButton : public vgui::Button {
+	DECLARE_CLASS_SIMPLE(CTabButton, vgui::Button)
+public:
+	CTabButton(vgui::Panel* pParent, EClassmenuTab tab);
+
+	void OnMousePressed(vgui::MouseCode code) override;
+	void OnCursorEntered() override;
+	void OnCursorExited() override { m_bMouseOver = false; }
+	void ManualPaint();
+private:
+	EClassmenuTab m_tab;
+	bool m_bMouseOver;
+};
+
+struct STabPanelState {
+	vgui::Panel* m_pPanel;
+	bool m_bVisible;
 };
 
 //-----------------------------------------------------------------------------
@@ -355,6 +421,10 @@ public:
 	virtual void ShowPanel(bool bShow) override;
 	virtual void Paint(void);
 
+	void ShowTab(EClassmenuTab tab);
+	void StoreTabState(EClassmenuTab tab);
+	void RestoreTabState(EClassmenuTab tab);
+
 
 	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
 	vgui::VPANEL GetVPanel(void) { return BaseClass::GetVPanel(); }
@@ -365,14 +435,18 @@ public:
 	void SetVisible(bool bVisible) override;
 	bool IsVisible() override { return BaseClass::IsVisible(); }
 
+	void			AddChildToTab(vgui::Panel* pPanel, EClassmenuTab tab);
+	EClassmenuTab	GetCurrentTab() { return m_currentTab; }
+
 private:
 	// VGUI2 overrides
 	virtual void	OnKeyCodePressed(vgui::KeyCode code);
 	virtual void	OnKeyCodeTyped(vgui::KeyCode code); //for ESCAPE key
 	virtual void	ApplySchemeSettings(vgui::IScheme *pScheme);
 	virtual void	PerformLayout();
-	void			UpdateToMatchTeam(int iTeam);
+	void			UpdateToMatchTeam(int iTeam, bool bForce = false);
 	void			SetBackground(const char* pszBackground);
+	
 
 	//used so that all the buttons don't have to be updated if they don't have to be
 public:
@@ -383,9 +457,13 @@ private:
 
 	vgui::IImage*		m_pBackground;
 
-	vgui::CCloseButton*	m_pCloseButton;
-	CTeamToggleButton*	m_pTeamToggleButton;
-	CUnlockMenuButton*	m_pUnlockMenuButton;
+	vgui::CCloseButton*		m_pCloseButton;
+	CTeamToggleButton*		m_pTeamToggleButton;
+	CDamageOverRangeMenu*	m_pDamageOverRangeMenu;
+	//CUnlockMenuButton*		m_pUnlockMenuButton;
+	CTabButton*				m_aTabButtons[(unsigned int)EClassmenuTab::NUM_TABS];
+	CUtlVector<STabPanelState> m_tabs[(unsigned int)EClassmenuTab::NUM_TABS];
+	EClassmenuTab			m_currentTab;
 };
 
 extern CClassMenu* g_pClassMenu;

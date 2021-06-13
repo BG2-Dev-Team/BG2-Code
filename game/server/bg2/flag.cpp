@@ -131,19 +131,22 @@ A model that is used to display the status of the point and show players where i
 //input functions
 bool CFlag::IsActive( void )
 {
-	return m_bActive;
+	return m_bActivated;
 }
 
 void CFlag::InputEnable( inputdata_t &inputData )
 {
-	if( m_bActive )
+	if( m_bActivated )
 		return;
 
 	//char msg[512];
 	//Q_snprintf( msg, 512, "flag(%s) has been enabled", STRING( GetEntityName() ) );
 	//ClientPrintAll( msg, true, true ); // saying whether it is enabled or not is important, so force
 
-	m_bActive = true;
+	//attempt to set it to active, if it fails, return early...
+	if (!SetActiveState(true))
+		return;
+
 	ChangeTeam( TEAM_UNASSIGNED );
 	m_iLastTeam = TEAM_UNASSIGNED;
 	m_nSkin = GetNeutralSkin();
@@ -152,14 +155,16 @@ void CFlag::InputEnable( inputdata_t &inputData )
 }
 void CFlag::InputDisable( inputdata_t &inputData )
 {
-	if( !m_bActive )
+	if( !m_bActivated )
 		return;
 
 	//char msg[512];
 	//Q_snprintf( msg, 512, "flag(%s) has been disabled", STRING( GetEntityName() ) );
 	//ClientPrintAll( msg, true, true ); // saying whether it is enabled or not is important, so force
 
-	m_bActive = false;
+	//attempt to set it to inactive, if it fails, return early...
+	if (SetActiveState(false))
+		return;
 
 	HandleLoseOutputs();
 
@@ -167,7 +172,7 @@ void CFlag::InputDisable( inputdata_t &inputData )
 }
 void CFlag::InputToggle( inputdata_t &inputData )
 {
-	if (m_bActive)
+	if (m_bActivated)
 		InputDisable( inputData );
 	else
 		InputEnable( inputData );
@@ -243,15 +248,9 @@ void CFlag::Spawn( void )
 
 	m_iSavedHUDSlot = m_iHUDSlot;
 
-	if (HasSpawnFlags( CFlag_START_DISABLED ))
+	SetActiveState(!HasSpawnFlags(CFlag_START_DISABLED));
+	if (m_bActivated)
 	{
-		m_bActive = false;
-		//m_nSkin = GetDisabledSkin(); Disabled flags are invisible anyway.
-	}
-	else
-	{
-		m_bActive = true;
-		//ChangeTeam( TEAM_UNASSIGNED );	//ChangeTeam handles everything..
 		switch( m_iStartingTeam ) //The team that gets the flag at the start of the map.
 		{
 			case 1:
@@ -299,7 +298,7 @@ void CFlag::Think( void )
 	*/
 
 	extern ConVar mp_respawnstyle;
-	if ( !m_bActive || IsLMS() )
+	if ( !m_bActivated || IsLMS() )
 	{
 		ChangeTeam( TEAM_UNASSIGNED );
 		m_iLastTeam = TEAM_UNASSIGNED;
@@ -607,6 +606,9 @@ void CFlag::Capture( int iTeam )
 				//BG2 - Tjoppen - rewards put on hold
 				//pPlayer->IncreaseReward(1);
 				m_vOverloadingPlayers.AddToHead( pHL2Player );
+
+				//Send flag cap event
+				pHL2Player->m_unlockableProfile.createExperienceEvent(pHL2Player, EExperienceEventType::FLAG_CAPTURE);
 			}
 		}
 	}
@@ -624,6 +626,7 @@ void CFlag::Capture( int iTeam )
 
 					pHL2Player->IncrementFragCount(m_iPlayerBonus);
 					m_vOverloadingPlayers.AddToHead( pHL2Player );
+					pHL2Player->m_unlockableProfile.createExperienceEvent(pHL2Player, EExperienceEventType::FLAG_CAPTURE);
 				}
 
 				break;
@@ -637,6 +640,7 @@ void CFlag::Capture( int iTeam )
 
 					pHL2Player->IncrementFragCount(m_iPlayerBonus);
 					m_vOverloadingPlayers.AddToHead( pHL2Player );
+					pHL2Player->m_unlockableProfile.createExperienceEvent(pHL2Player, EExperienceEventType::FLAG_CAPTURE);
 				}
 				break;
 		}
@@ -832,10 +836,8 @@ void CFlag::ResetFlag( void )
 	m_flNextTeamBonus = gpGlobals->curtime + m_iTeamBonusInterval;
 	m_iNearbyPlayers = 0;
 
-	if ( HasSpawnFlags( CFlag_START_DISABLED ) )
-		m_bActive = false;
-	else
-		m_bActive = true;
+	//Set initial activated state
+	SetActiveState(!HasSpawnFlags(CFlag_START_DISABLED));
 }
 
 void CFlag::ChangeTeam( int iTeamNum )
@@ -882,6 +884,18 @@ void CFlag::ChangeTeam( int iTeamNum )
 		int buff = buffs[buffIndex];
 		BG3Buffs::RallyRequest(buff, this, m_flCaptureRadius);
 	}
+}
+
+bool CFlag::SetActiveState(bool bActive) {
+	
+	//assume state given, then check otherwise
+	bool bResult = bActive;
+	if (m_iFlagMode != -1
+		&& mp_flagmode.GetInt() != -1
+		&& m_iFlagMode != mp_flagmode.GetInt())
+		bResult = false;
+	m_bActivated = bResult;
+	return bResult;
 }
 
 int CFlag::UpdateTransmitState()
@@ -987,6 +1001,8 @@ BEGIN_DATADESC( CFlag )
 
 	DEFINE_KEYFIELD( m_iAmericanBuff, FIELD_INTEGER, "CaptureBuffAmer"),
 	DEFINE_KEYFIELD( m_iBritishBuff, FIELD_INTEGER, "CaptureBuffBrit"),
+
+	DEFINE_KEYFIELD( m_iFlagMode, FIELD_INTEGER, "FlagMode"),
 #ifndef CLIENT_DLL
 	DEFINE_THINKFUNC( Think ),
 #endif

@@ -93,7 +93,7 @@ CON_COMMAND_F(bot_debug_switch, "Tells the currently controlled bot to switch it
 		g_pDebugBot->m_pPlayer->Weapon_Switch(next);
 }
 
-CON_COMMAND_F(bot_debug_say, "Tells the selected bot to say the given text to chat.", FCVAR_CHEAT | FCVAR_GAMEDLL) {
+/*CON_COMMAND_F(bot_debug_say, "Tells the selected bot to say the given text to chat.", FCVAR_CHEAT | FCVAR_GAMEDLL) {
 	if (!g_pDebugBot || args.ArgC() != 2)
 		return;
 
@@ -105,7 +105,7 @@ CON_COMMAND_F(bot_debug_say, "Tells the selected bot to say the given text to ch
 	Host_Say(g_pDebugBot->m_pPlayer->edict(), sayCommand, false);
 	
 	
-}
+}*/
 
 void BotDebugThink() {
 	if (g_pDebugBot && g_pDebugBot->m_pPlayer->IsAlive()) {

@@ -11,7 +11,7 @@
 #include <KeyValues.h>
 #include "ammodef.h"
 
-#include "../../shared/bg3/bg3_class.h"
+#include "../../shared/bg3/bg3_class.h"                                 
 
 #ifdef CLIENT_DLL
 	#include "c_hl2mp_player.h"
@@ -135,14 +135,21 @@ ConVar mp_respawntime("mp_respawntime", "14", CVAR_FLAGS, "Time between waves, o
 ConVar mp_punish_bad_officer("mp_punish_bad_officer", "1", CVAR_FLAGS, "Whether or not to auto-switch officers who use the buff ability with none of their teammates around off of the officer class. They can switch back after spending one life as a non-officer.");
 ConVar mp_punish_bad_officer_nextclass("mp_bad_officer_nextclass", "1", CVAR_FLAGS, "What class to auto-switch bad officers to. 1-6 is inf, off, sniper, skirm, linf, grenadier.");
 
+ConVar mp_competitive("mp_competitive", "0", CVAR_FLAGS, "Controls many options, disabling features for the sake of competitive consistency.");
+
 //ticket system
 ConVar mp_rounds("mp_rounds", "0", CVAR_FLAGS, "Maximum number of rounds - rounds are restarted until this. A value of 0 deactivates the round system");
 ConVar mp_roundtime("mp_roundtime", "300", CVAR_FLAGS, "Maximum length of round");
 ConVar mp_tickets_a("mp_tickets_a", "100", CVAR_FLAGS, "Tickets given to americans on round start");
 ConVar mp_tickets_b("mp_tickets_b", "100", CVAR_FLAGS, "Tickets given to british on round start");
+ConVar mp_tickets_timelimit("mp_tickets_timelimit", "0", CVAR_FLAGS, "Whether or not to set remaining round time to 1 minute after a team loses all its tickets");
 ConVar mp_tickets_drain_a("mp_tickets_drain_a", "12.5", CVAR_FLAGS, "Number of tickets drained every interval when the americans have more than half of their cappable flags. Can have decimals");
 ConVar mp_tickets_drain_b("mp_tickets_drain_b", "12.5", CVAR_FLAGS, "Number of tickets drained every interval when the british have more than half of their cappable flags. Can have decimals");
 ConVar mp_tickets_drain_interval("mp_tickets_drain_interval", "10", CVAR_FLAGS, "How often tickets will be drained in mp_respawnstyle = 3");
+
+//interchangable flag system
+ConVar mp_flagmode("mp_flagmode", "0", CVAR_FLAGS, "Controls which set of flags is enabled for the map. -1 = all flags, 0 = default, 1 = CTF, 2 = custom. Not every mode will be available on every map.");
+ConVar mp_flagmode_randomize("mp_flagmode_randomize", "1", CVAR_FLAGS, "Whether or not to randomize flag mode on map start.");
 
 //BG3 - Awesome - linebattle cvars
 ConVar lb_enforce_weapon_amer("lb_enforce_weapon_amer", "0", CVAR_FLAGS_HIDDEN, "How to enforce continental soldier's weapon in linebattle mode. 0 is disabled, 1 is enforce first weapon, 2 is enforce second weapon");
@@ -153,31 +160,45 @@ ConVar lb_enforce_no_buckshot("lb_enforce_no_buckshot", "0", CVAR_FLAGS, "Whethe
 
 ConVar lb_officer_protect("lb_officer_protect", "2", CVAR_FLAGS, "Whether or not to protect officers during early-round long-range linebattle shooting. 0 is off, 1 is first officer only, 2 is both officers.");
 ConVar lb_officer_autodetect("lb_officer_autodetect", "1", CVAR_FLAGS, "Whether or not to auto-detect officers who are the same class as their teammates, based on their position in the line. 0 is off, 1 is on.");
-ConVar lb_officer_classoverride_a("lb_officer_classoverride_a", "0", CVAR_FLAGS_HIDDEN, "Override for which American class is used as officer during linebattle mode. Includes officer's rallying abilities. 0 is disabled, 1-6 is inf, off, sniper, skirm, linf, grenadier");
-ConVar lb_officer_classoverride_b("lb_officer_classoverride_b", "0", CVAR_FLAGS_HIDDEN, "Override for which British class is used as officer during linebattle mode. Includes officer's rallying abilities. 0 is disabled, 1-6 is inf, off, sniper, skirm, linf, grenadier");
+
+void OnOfficerClassOverrideChange(IConVar* cvar, const char* pszOldValue, float oldValue);
+#ifdef CLIENT_DLL
+void OnOfficerClassOverrideChange(IConVar* cvar, const char* pszOldValue, float oldValue) {}
+#endif
+
+ConVar lb_officer_classoverride_a("lb_officer_classoverride_a", "1", CVAR_FLAGS, "Override for which American class is used as officer during linebattle mode. Includes officer's rallying abilities. 0 is disabled, 1-6 is inf, off, sniper, skirm, grenadier", OnOfficerClassOverrideChange);
+ConVar lb_officer_classoverride_b("lb_officer_classoverride_b", "1", CVAR_FLAGS, "Override for which British class is used as officer during linebattle mode. Includes officer's rallying abilities. 0 is disabled, 1-6 is inf, off, sniper, skirm, linf, grenadier", OnOfficerClassOverrideChange);
 
 ConVar lb_enforce_volley_fire("lb_enforce_volley_fire", "1", CVAR_FLAGS, "Whether or not to enforce volley fire on non-officers. 0 is off, 1 is on. When on, players can only fire if their officer has ironsighted or for a short time after the officer fires");
 ConVar lb_enforce_volley_fire_tolerance("lb_enforce_volley_fire_tolerance", "2", CVAR_FLAGS, "If volley fire is enforced, players are given this amount of time to fire after their officer shoots.");
 ConVar lb_enforce_no_troll("lb_enforce_no_troll", "1", CVAR_FLAGS, "If on, prevents rambos from shooting or stabbing, and prevents trolls from stabbing teammates in non-melee situations. 0 is off, 1 is on.");
 
 ConVar sv_alltalk("sv_alltalk", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Players can hear all other players, no team restrictions");
-
-// BG3 - Ricochet - Swap teams in ticket mode intermission to 20 seconds (or user set time) instead of default 5 seconds
-ConVar mp_swap_teams_intermission("mp_swap_team_intermission", "0", CVAR_FLAGS, "Longer intermission when swapping teams. 0 is off, 1 is on.");
-ConVar mp_swap_teams_intermission_time("mp_swap_team_intermission_time", "20", CVAR_FLAGS, "Set a longer intermission time when swapping teams.", true, 1.f, true, 120.f);
-
-// BG3 - Ricochet - Change level intermission time for skirmish mode
-//ConVar mp_change_level_intermission("mp_change_level_intermission", "0", CVAR_FLAGS, "Longer intermission when changing map. 0 is off, 1 is on.");
-ConVar mp_change_level_intermission_time("mp_change_level_intermission_time", "14", CVAR_FLAGS, "Set a longer intermission time when changing map.", true, 5.f, true, 180.f);
-
-// Example of a ConVar with a min and max value
-//ConVar(const char *pName, const char *pDefaultValue, int flags,
-	//const char *pHelpString, bool bMin, float fMin, bool bMax, float fMax);
+ConVar sv_password_exists("sv_password_exists", "0", FCVAR_HIDDEN | FCVAR_REPLICATED);
 
 // BG2 - VisualMelon - Can't find a better place to put this
 int hitVerificationHairs = 0;
 int hitVerificationLatency = 1.5;
 #define TEAM_NONE -1
+
+ConVar sv_maxcmdrate_auto("sv_maxcmdrate_auto", "1", CVAR_FLAGS, "Whether or not to automatically adjust sv_maxcmdrate based on player count.");
+
+#ifndef CLIENT_DLL
+void SetMaxCmdRateAuto() {
+	if (sv_maxcmdrate_auto.GetBool()) {
+		int numPlayers = g_pPlayerResource->GetNumAmericans() + g_pPlayerResource->GetNumBritish();
+		int idealRate = 100;
+		if (numPlayers > 46) {
+			idealRate = 30;
+		}
+		else if (numPlayers > 16) {
+			idealRate = 66;
+		}
+		ConVarRef ref("sv_maxcmdrate");
+		ref.SetValue(idealRate);
+	}
+}
+#endif
 //
 
 
@@ -188,14 +209,12 @@ BEGIN_NETWORK_TABLE_NOBASE( CHL2MPRules, DT_HL2MPRules )
 
 	#ifdef CLIENT_DLL
 		RecvPropFloat( RECVINFO(m_flGameStartTime)),
-		RecvPropFloat( RECVINFO(m_flIntermissionStartTime)), // BG3 - Ricochet
 		RecvPropBool( RECVINFO( m_bTeamPlayEnabled ) ),
 		RecvPropFloat( RECVINFO( m_fLastRespawnWave ) ), //BG2 This needs to be here for the timer to work. -HairyPotter
 		RecvPropFloat(RECVINFO(m_fLastRoundRestart)),
 		RecvPropInt(RECVINFO(m_iCurrentRound)),
 	#else
 		SendPropFloat( SENDINFO(m_flGameStartTime)),
-		SendPropFloat(SENDINFO(m_flIntermissionStartTime)), // BG3 - Ricochet
 		SendPropBool( SENDINFO( m_bTeamPlayEnabled ) ),
 		SendPropFloat(SENDINFO(m_fLastRespawnWave)), //BG2 This needs to be here for the timer to work. -HairyPotter
 		SendPropFloat(SENDINFO(m_fLastRoundRestart)),
@@ -329,6 +348,7 @@ char *sTeamNames[] =
 
 CHL2MPRules::CHL2MPRules()
 {
+
 #ifndef CLIENT_DLL
 	// Create the team managers
 	for ( int i = 0; i < ARRAYSIZE( sTeamNames ); i++ )
@@ -345,7 +365,6 @@ CHL2MPRules::CHL2MPRules()
 	m_bTeamPlayEnabled = teamplay.GetBool();
 	m_flIntermissionEndTime = 0.0f;
 	m_flGameStartTime = 0;
-	m_flIntermissionStartTime = 0; // BG3 - Ricochet
 
 	m_hRespawnableItemsAndWeapons.RemoveAll();
 	m_tmNextPeriodicThink = 0;
@@ -541,6 +560,15 @@ void CHL2MPRules::HandleScores(int iTeam, int iScore, int msg_type, bool bRestar
 		}
 	}
 
+	//dole out experience, except at end of round-based match
+	if (bRestart || !mp_rounds.GetBool()) {
+		EExperienceEventType event = bRestart ? EExperienceEventType::TEAM_ROUND_WIN : EExperienceEventType::MATCH_WIN;
+		for (int i = 0; i < gpGlobals->maxClients; i++) {
+			CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+			if (pPlayer && pPlayer->GetTeamNumber() == iTeam) pPlayer->m_unlockableProfile.createExperienceEvent(pPlayer, event);
+		}
+	}
+
 	if (iScore > 0 && iTeam != TEAM_NONE)
 		g_Teams[iTeam]->AddScore(iScore);
 
@@ -555,9 +583,22 @@ void CHL2MPRules::HandleScores(int iTeam, int iScore, int msg_type, bool bRestar
 			m_iCurrentRound++;
 		}
 
-		
+		//swap teams if using tickets
+		// BG2 - VisualMelon - decide whether to swap teams or not
+		int iSwapTeam = mp_swapteams.GetInt();
+		bool bSwapTeam = false;
+		if (bCycleRound
+			&& (
+				iSwapTeam == 1
+				|| (iSwapTeam == 0
+					&& maxRounds
+					//&& (UsingTickets() || IsLMS())
+					&& m_iCurrentRound == maxRounds / 2 + 1
+					)
+				)
+			)
+			bSwapTeam = true;
 		//
-		bool bSwapTeam = ShouldSwapTeams(bCycleRound);
 		RestartRound(bSwapTeam, bCycleRound);
 
 		//if we're swapping teams, make a long delay
@@ -696,7 +737,6 @@ void CHL2MPRules::Think( void )
 		if ( m_flIntermissionEndTime < gpGlobals->curtime )
 		{
 			m_bHasDoneWinSong = false;
-
 			ChangeLevel(); // intermission is over
 		}
 
@@ -791,8 +831,8 @@ void CHL2MPRules::Think( void )
 	//Round systems
 	//=========================
 	//don't bother if we have no players
-	if (pAmericans->GetNumPlayers() == 0 && pBritish->GetNumPlayers() == 0)
-		return;
+	//if (pAmericans->GetNumPlayers() == 0 && pBritish->GetNumPlayers() == 0)
+		//return;
 
 	int aliveamericans = -1;
 	int alivebritish = -1;
@@ -811,21 +851,7 @@ void CHL2MPRules::Think( void )
 		if (!m_bIsRestartingRound)
 		{
 			//this block of code only happens once, at the end of the round
-
-			float restartDelay = 5.f;
-			bool bSwapTeam = ShouldSwapTeams(true, true);
-			
-			// BG3 - Ricochet - Decide whether the intermission time for swapping teams is the default 20 seconds or custom user set time
-
-			if (mp_swap_teams_intermission.GetBool() && bSwapTeam)
-			{
-				restartDelay = mp_swap_teams_intermission_time.GetFloat();
-
-				CSay("INTERMISSION: Swapping teams in %i minutes and %02i seconds!", (int)mp_swap_teams_intermission_time.GetFloat() / 60, (int)mp_swap_teams_intermission_time.GetFloat() % 60);
-				IntermissionSay(INTERMISSION_SWAPTEAMS, (int)mp_swap_teams_intermission_time.GetFloat(), "");
-			}
-			//Msg("restarting in %f seconds \n", restartDelay);
-			m_flNextRoundRestart = gpGlobals->curtime + restartDelay;
+			m_flNextRoundRestart = gpGlobals->curtime + 5;
 			m_bIsRestartingRound = true;
 
 			//calculate the winning team
@@ -880,7 +906,10 @@ void CHL2MPRules::Think( void )
 	if ( gpGlobals->curtime > m_tmNextPeriodicThink )
 	{		
 		NScorePreserve::Think();
-		m_tmNextPeriodicThink = gpGlobals->curtime + 10.0f;
+		m_tmNextPeriodicThink = gpGlobals->curtime + 30.0f;
+		SetMaxCmdRateAuto();
+
+
 	}
 
 	ManageObjectRelocation();
@@ -896,15 +925,7 @@ void CHL2MPRules::GoToIntermission( void )
 
 	g_fGameOver = true;
 
-	//m_flIntermissionEndTime = gpGlobals->curtime + mp_chattime.GetInt();
-
-	m_flIntermissionStartTime = gpGlobals->curtime; // BG3 - Ricochet - snapshot of time when intermission begins
-
-	// BG3 - Ricochet - Default map end time of 14 seconds or custom user set time
-	m_flIntermissionEndTime = gpGlobals->curtime + (int)mp_change_level_intermission_time.GetFloat();
-	CSay("INTERMISSION: Changing map in %i minutes and %02i seconds!", (int)mp_change_level_intermission_time.GetFloat() / 60, (int)mp_change_level_intermission_time.GetFloat() % 60);
-	extern ConVar nextlevel;
-	IntermissionSay(INTERMISSION_MAPCHANGE, (int)mp_change_level_intermission_time.GetFloat(), nextlevel.GetString());
+	m_flIntermissionEndTime = gpGlobals->curtime + mp_chattime.GetInt();
 
 	for ( int i = 0; i < MAX_PLAYERS; i++ )
 	{
@@ -1261,19 +1282,25 @@ void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info
 					//BG3 - changed this to the damage info's weapon, less dereferencing and catches rare cases
 					//where player dies after shooting
 					//also helps us detect swivel gun hits
-					if (info.GetWeapon() && pScorer->GetActiveWeapon())
+					if (info.GetWeapon())
 					{
 #ifdef HL1MP_DLL
 						killer_weapon_name = pScorer->GetActiveWeapon()->GetClassname();
 #else
 						CBaseCombatWeapon* pWeapon = dynamic_cast<CBaseCombatWeapon*>(info.GetWeapon());
 						if (pWeapon)
-							killer_weapon_name = pScorer->GetActiveWeapon()->GetDeathNoticeName();
+							killer_weapon_name = pWeapon->GetDeathNoticeName();
+						//else if (pScorer->GetActiveWeapon())
+							//killer_weapon_name = pScorer->GetActiveWeapon()->GetDeathNoticeName();
 #endif
 					}
+					//Swivel guns and grenades at some points don't have proper weapon entities, check them specially
 					else if (info.GetDamageType() & DMG_SWIVEL_GUN) {
 						killer_weapon_name = "swivel_gun";
 					}
+					/*else if (info.GetDamageType() & DMG_TYPE_GRENADE) {
+						killer_weapon_name = "weapon_frag";
+					}*/
 				}
 				else
 				{
@@ -1426,22 +1453,7 @@ bool CHL2MPRules::IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer )
 {
 	return true;
 }
-
-// BG3 - Ricochet - Get function for the intermission time amount to be called in bg2_hud_main.cpp
-float CHL2MPRules::GetIntermissionTimeAmount()
-{
-	m_flTimeAmount = mp_change_level_intermission_time.GetFloat();
-	//Msg("m_flTimeAmount is %f", m_flTimeAmount);
-	return m_flTimeAmount;
-}
-
-// BG3 - Ricochet - Get function for the swap time amount to be called in bg2_hud_main.cpp
-float CHL2MPRules::GetSwapIntermissionTimeAmount()
-{
-	m_flSwapTimeAmount = mp_swap_teams_intermission_time.GetFloat();
-	return m_flSwapTimeAmount;
-}
-
+ 
 float CHL2MPRules::GetMapRemainingTime()
 {
 	// if timelimit is disabled, return 0
@@ -1813,30 +1825,6 @@ const char *CHL2MPRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 
 #ifndef CLIENT_DLL
 
-//-----------------------------------------------------------------------------
-// Purpose: BG3 - Moved this code into it's own function here to be called in several places
-//-----------------------------------------------------------------------------
-bool CHL2MPRules::ShouldSwapTeams(bool bCycleRound, bool bBeforeCycleRound)
-{
-	//swap teams if using tickets
-	// BG2 - VisualMelon - decide whether to swap teams or not
-	int iSwapTeam = mp_swapteams.GetInt();
-	bool bSwapTeam = false;
-	if (bCycleRound
-		&& (
-			iSwapTeam == 1
-			|| (iSwapTeam == 0
-			&& mp_rounds.GetBool()
-				//&& (UsingTickets() || IsLMS())
-				&& (m_iCurrentRound + bBeforeCycleRound) == mp_rounds.GetInt() / 2 + 1
-				)
-			)
-		)
-		bSwapTeam = true;
-
-	return bSwapTeam;
-}
-
 void CHL2MPRules::RestartRound(bool swapTeams, bool bSetLastRoundTime)
 {
 	//restart current round. immediately.
@@ -1844,8 +1832,15 @@ void CHL2MPRules::RestartRound(bool swapTeams, bool bSetLastRoundTime)
 	ResetFlags();
 	CSDKBot::ResetAllBots();
 
+	Msg("\n\n\n\nRESTARTING ROUND\n");
+
 	if (swapTeams)
 		SwapTeams();
+
+	//as good a place as any to set this
+	//used by players' classmenu to determine whether or not to show all weapons
+	ConVarRef password("sv_password");
+	sv_password_exists.SetValue(password.GetString() && password.GetString()[0] != '\0');
 
 	RespawnAll();
 
@@ -2197,6 +2192,11 @@ void CHL2MPRules::CheckTicketDrain(void)
 
 	if (british_flags > forbritish / 2)
 		pAmericans->RemoveTickets(mp_tickets_drain_a.GetFloat());
+}
+
+void CHL2MPRules::SetRemainingRoundTime(float flSeconds) {
+	//modify m_fLastRoundRestart 
+	m_fLastRoundRestart = gpGlobals->curtime - mp_roundtime.GetFloat() + flSeconds;
 }
 #endif
 

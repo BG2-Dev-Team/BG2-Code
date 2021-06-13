@@ -29,6 +29,7 @@
 #include "hl2mp_gamerules.h"
 #include "../game/server/bg2/vcomm.h"
 #include "bg2/bg2_hud_main.h"
+#include "bg3/persistent/versioning.h"
 //
 
 
@@ -516,7 +517,7 @@ void CHudChatFilterPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
 
 	BaseClass::ApplySchemeSettings( pScheme );
 
-	Color cColor = pScheme->GetColor( "DullWhite", GetBgColor() );
+	Color cColor = pScheme->GetColor( "Red", GetBgColor() );
 	SetBgColor( Color ( cColor.r(), cColor.g(), cColor.b(), CHAT_HISTORY_ALPHA ) );
 
 	SetFgColor( pScheme->GetColor( "Blank", GetFgColor() ) );
@@ -718,10 +719,17 @@ void CBaseHudChat::ApplySchemeSettings( vgui::IScheme *pScheme )
 	SetFgColor( Color( 0, 0, 0, 0 ) );
 #endif
 
-	Color cColor = pScheme->GetColor( "DullWhite", GetBgColor() );
+	Color cColor = pScheme->GetColor( "Red", GetBgColor() );
 	SetBgColor( Color ( cColor.r(), cColor.g(), cColor.b(), CHAT_HISTORY_ALPHA ) );
 
 	GetChatHistory()->SetVerticalScrollbar( false );
+
+	//BG3 - base its position from the bottom of the screen, not the top
+	int newypos = ScreenHeight() - 60 - 25 - 110 - GetTall();
+	int chatlineyoffset = m_pChatInput->GetYPos() - GetYPos();
+	SetPos(GetXPos(), newypos);
+	m_pChatInput->SetPos(m_pChatInput->GetXPos(), newypos + chatlineyoffset);
+	m_pChatInput->SetBgColor(Color(0, 0, 0, 128));
 }
 
 void CBaseHudChat::Reset( void )
@@ -1003,6 +1011,7 @@ void CBaseHudChat::MsgFunc_BG2Events(bf_read &msg)
 		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_Round_Draw"));
 		break;
 	case MAP_DRAW:
+		//NVersioning::MarkBetaTestParticipation();
 		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_Map_Draw"));
 		break;
 	case DEFAULT_DRAW:
@@ -1015,9 +1024,11 @@ void CBaseHudChat::MsgFunc_BG2Events(bf_read &msg)
 		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_American_Round_Win"));
 		break;
 	case BRITISH_MAP_WIN:
+		//NVersioning::MarkBetaTestParticipation();
 		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_British_Map_Win"));
 		break;
 	case AMERICAN_MAP_WIN:
+		//NVersioning::MarkBetaTestParticipation();
 		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_American_Map_Win"));
 		break;
 	case BRITISH_DEFAULT_WIN:
@@ -1419,6 +1430,7 @@ void CBaseHudChat::FadeChatHistory( void )
 			{
 				SetAlpha( 255 );
 				GetChatHistory()->SetBgColor( Color( 0, 0, 0, CHAT_HISTORY_ALPHA - alpha ) );
+				m_pChatInput->SetBgColor(Color(0, 0, 0, CHAT_HISTORY_ALPHA - alpha));
 				m_pChatInput->GetPrompt()->SetAlpha( (CHAT_HISTORY_ALPHA*2) - alpha );
 				m_pChatInput->GetInputPanel()->SetAlpha( (CHAT_HISTORY_ALPHA*2) - alpha );
 				SetBgColor( Color( GetBgColor().r(), GetBgColor().g(), GetBgColor().b(), CHAT_HISTORY_ALPHA - alpha ) );
@@ -1427,6 +1439,7 @@ void CBaseHudChat::FadeChatHistory( void )
 			else
 			{
 				GetChatHistory()->SetBgColor( Color( 0, 0, 0, alpha ) );
+				m_pChatInput->SetBgColor(Color(0, 0, 0, alpha));
 				SetBgColor( Color( GetBgColor().r(), GetBgColor().g(), GetBgColor().b(), alpha ) );
 			
 				m_pChatInput->GetPrompt()->SetAlpha( alpha );

@@ -45,6 +45,8 @@
 extern ConVar mp_respawnstyle, mp_respawntime, mp_rounds, mp_roundtime, mp_tickets_a, mp_tickets_b;
 extern ConVar mp_punish_bad_officer, mp_punish_bad_officer_nextclass;
 
+extern ConVar mp_competitive;
+
 extern ConVar lb_enforce_weapon_amer, lb_enforce_weapon_brit; // , lb_enforce_class_amer, lb_enforce_class_brit;
 extern ConVar lb_enforce_no_buckshot;
 extern ConVar lb_officer_protect, lb_officer_autodetect, lb_officer_classoverride_a, lb_officer_classoverride_b;
@@ -198,7 +200,6 @@ public:
 	const HL2MPViewVectors* GetHL2MPViewVectors() const;
 
 	float	GetMapRemainingTime();
-	float	GetIntermissionTimeAmount(); // BG3 - Ricochet - get function for the intermission time
 	float	GetSwapIntermissionTimeAmount(); // BG3 - Ricochet - get function for the swap intermission time
 	void	CleanUpMap();
 #ifndef CLIENT_DLL
@@ -253,7 +254,7 @@ public:
 	//BG2 - Tjoppen - restart rounds a few seconds after the last person is killed. and other stuff
 	float	m_flNextRoundRestart = FLT_MAX;
 	bool	m_bIsRestartingRound = false;
-	float	m_flTimeAmount; // BG3 - Ricochet - comes from GetIntermissionTimeAmount function for timer
+	inline bool IsRestartingRound() const { return m_bIsRestartingRound; }
 	float   m_flSwapTimeAmount; // BG3 - Ricochet - comes from GetSwapIntermissionTimeAmount function for timer
 	int		m_iTDMTeamThatWon, m_iAmericanDmg, m_iBritishDmg; //BG2 - HairyPotter
 	bool	m_bHasDoneWinSong, m_bHasLoggedScores;
@@ -264,7 +265,6 @@ public:
 	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );
 	
 	CNetworkVar( float, m_flGameStartTime );
-	CNetworkVar(float, m_flIntermissionStartTime); // BG3 - Ricochet - gets us a "snapshot" of the time when intermission begins
 private:
 	
 	CNetworkVar( bool, m_bTeamPlayEnabled );
@@ -298,7 +298,7 @@ public:
 	* Note that no players are killed.
 	*/
 	void SwapTeams(void);
-	bool ShouldSwapTeams(bool bCycleRound, bool bBeforeCycleRound = false); // BG3 - Added this function to help implement intermission system for all gamemodes
+
 	void RestartRound(bool swapTeams, bool bSetLastRoundTime = true); //bSetLastRoundTime set to false is for fullcaps, so that fullcaps don't reset round clock
 	void RespawnAll();
 	void WinSong(int team, bool m_bWonMap = false);
@@ -307,6 +307,8 @@ public:
 	void CountHeldFlags(int &american_flags, int &british_flags, int &neutral_flags, int &foramericans, int &forbritish);
 	void CheckFullcap();
 	void CheckTicketDrain();
+	void SetRemainingRoundTime(float flSeconds);
+	inline float GetRemainingRoundTime() const { return (m_fLastRoundRestart + mp_roundtime.GetFloat()) - gpGlobals->curtime; }
 
 	//Call this for fullcap to be checked next frame
 	void MarkFullcapCheckNextFrame() { m_fNextFlagUpdate = -FLT_MAX; }

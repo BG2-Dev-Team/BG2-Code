@@ -127,7 +127,7 @@ namespace BG3Hint {
 		static int hintTextLength = wcslen(pHintText);
 		wchar_t* hintTextToLoad;
 
-		RndSeed(gpGlobals->curtime);
+		RndSeed((int)gpGlobals->curtime);
 		if (RndBool(0.5f))
 			hintTextToLoad = GetHint();
 		else

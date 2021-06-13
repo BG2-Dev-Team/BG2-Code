@@ -17,6 +17,7 @@ class CBaseBG2Weapon;
 #include "hl2_player.h"
 #include "../shared/bg3/bg3_player_shared.h"
 #include "../shared/bg3/bg3_class.h"
+#include "../shared/bg3/bg3_unlockable.h"
 #include "bg3/bg3_player_commands.h"
 #include "simtimer.h"
 #include "soundenvelope.h"
@@ -142,7 +143,7 @@ public:
 
 	void CheckChatText( char *p, int bufsize );
 
-	bool IsBetaTester() const;
+	//bool IsBetaTester() const;
 
 	void State_Transition( HL2MPPlayerState newState );
 	void State_Enter( HL2MPPlayerState newState );
@@ -202,11 +203,14 @@ public:
 	void		HandleVoicecomm(int comm);
 
 	int GetCurrentAmmoKit(void) const { return m_iCurrentAmmoKit; }
+	const CGunKit* GetCurrentGunKit(void) const { return &GetPlayerClass()->m_aWeapons[m_iGunKit]; }
 
 	void VerifyKitAmmoUniform();
 	int m_iGunKit,
 		m_iAmmoKit,
 		m_iClassSkin;
+
+	UnlockableProfile m_unlockableProfile;
 
 	void DrainStamina(int iAmount);
 	//BG2 - Tjoppen - made m_iStamina a network cvar
@@ -253,6 +257,8 @@ public:
 	void	OnRallyEffectEnable(); //visual effects, not functionality. Exact behavior depends on m_iCurrentRallies
 	void	OnRallyEffectDisable();
 
+	void	DontRemoveTicketOnNextRespawn() { m_bDontRemoveTicket = true; }
+
 	//used for temporary speed modifiers (carrying flags and such)
 	//void	SetSpeedModifier(int iSpeedModifier);
 	//BG3 - Awesome - added more robust speed mod manager
@@ -291,6 +297,7 @@ public:
 	const Permissions* GetPermissions() const { return m_pPermissions ? m_pPermissions : Permissions::NullPermission(); }
 	//BG3 - rudimentary mute system
 	bool m_bMuted;
+	bool m_bOppressed;
 
 	//void HUD_StatusMessage(const char* pszText, EHANDLE hPlayerName);
 	//void HUD_GameMessage(const char* pszText, EHANDLE hPlayerName);

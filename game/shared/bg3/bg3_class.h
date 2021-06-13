@@ -35,6 +35,7 @@ commented on the following form:
 #define BG3_PLAYER_CLASS
 
 #include "../../shared/bg3/bg3_player_shared.h"
+#include "../shared/bg3/bg3_unlockable.h"
 
 /*
 PLAYER-MODELS LIST
@@ -44,6 +45,9 @@ A forward declaration here exposes it to rest of program
 extern const char* g_ppszBritishPlayerModels[];
 extern const char* g_ppszAmericanPlayerModels[];
 
+extern ConVar mp_year_accuracy;
+extern ConVar mp_year;
+
 //forward declaration
 namespace NClassQuota {
 	struct SPopulationCounter;
@@ -51,7 +55,8 @@ namespace NClassQuota {
 
 class CGunKit {
 	friend class CPlayerClass;
-	friend class CWeaponButton;
+	friend class CKitButton;
+	friend class CKitSelectionButton;
 public:
 	char*	m_pszWeaponPrimaryName		= nullptr;
 	char*	m_pszWeaponSecondaryName	= nullptr;
@@ -62,13 +67,24 @@ public:
 	uint8	m_iAmmoOverrideCount = 0;
 	int8	m_iMovementSpeedModifier = 0;
 	int8	m_iSleeveSkinOverride = -1;
+	//int8	m_iArmModelOverride = -1;
+	//int8	m_iSleeveInnerModelOverride = -1;
 	//bool	m_bAlwaysGive = false;
 	char*	m_pszAmmoOverrideName			= nullptr;
 	char*	m_pszPlayerModelOverrideName	= nullptr;
 
+	uint16	m_iMinYear = 0;
+	uint16	m_iMaxYear = 1860;
+	bool	m_bDisabledOnHistoricityDisabled = false;
+	UnlockableBit m_iControllingBit = (UnlockableBit)0;
+
+	inline bool ProgressionLocked() const { return m_iControllingBit != 0; }
+
 #ifdef CLIENT_DLL
 	wchar*	GetLocalizedName() const { return m_pLocalizedName; }
 	wchar*	GetLocalizedDesc() const { return m_pLocalizedDesc; }
+
+	bool	AvailableForCurrentYear() const;
 
 public:
 	void	SetLocalizedName(const char* pszToken) { m_pszLocalizedNameOverride = pszToken; }
@@ -115,7 +131,7 @@ public:
 	const char* m_pszPlayerModel;
 	const char* m_pszJoinName = nullptr;
 
-#define NUM_POSSIBLE_WEAPON_KITS 7
+#define NUM_POSSIBLE_WEAPON_KITS 9
 	CGunKit		m_aWeapons[NUM_POSSIBLE_WEAPON_KITS];
 private:
 	mutable uint8		m_iChooseableKits;
@@ -126,11 +142,21 @@ protected:
 	uint8			m_iNumUniforms = 1; //how many uniforms?
 public:
 	uint8			m_iSleeveBase = 0; //chosen sleeve skin is m_iSleeveBase + pOwner->m_iClassSkin - 1
-	bool			m_bForceRandomUniform = false;
-	bool			m_bLastUniformRestricted = false;
+	uint8			m_iArmModel = 0;
+	int8			m_iSleeveInnerModel = 0;
+	
+	bool			m_bLastUniformRestricted = false; //beta tester only uniforms
 	const char*		m_pszDroppedHat = 0;
-	const char*		m_pszUniformModelOverrides[4]; //per-uniform model overrides
-	//bool			m_bAllowUniformSelection = false; //allow uniform selection in the menu?
+#define NUM_POSSIBLE_UNIFORMS 4
+	const char*		m_pszUniformModelOverrides[NUM_POSSIBLE_UNIFORMS]; //per-uniform model overrides
+	int8			m_aUniformSleeveOverrides[NUM_POSSIBLE_UNIFORMS]; //per-uniform sleeve base overrides
+	int8			m_aUniformArmModelOverrides[NUM_POSSIBLE_UNIFORMS]; //per-uniform sleeve model overrides
+
+	//progression system uniform stuff
+	bool			m_bDefaultRandomUniform = false;
+	UnlockableBit	m_iDerandomizerControllingBit = (UnlockableBit)0; //if unlockable profile has this bit, let us choose
+	UnlockableBit	m_aUniformControllingBits[NUM_POSSIBLE_UNIFORMS]; //tells whether or not each uniform is locked
+	bool			m_aUniformControllingBitsActive[NUM_POSSIBLE_UNIFORMS]; //whether or not use the locking uniform bits
 
 	bool			m_bCanDoVcommBuffs = false; //this will be true for officer
 	bool			m_bHasImplicitDamageResistance = false;
@@ -230,10 +256,12 @@ PLAYER MODEL PATHS AND NAMES - these are used repeatedly for precacheing the mod
 */
 
 #define MODEL_BINFANTRY			"models/player/british/infantry/br_infantry.mdl"
-#define MODEL_BOFFICER			"models/player/british/light_b/light_b.mdl"
+#define MODEL_BOFFICER			"models/player/british/officer/br_officer.mdl"
+//#define MODEL_BOFFICER			"models/player/british/light_b/light_b.mdl"
 #define MODEL_BJAEGER			"models/player/british/jager/jager.mdl"
 #define MODEL_BNATIVE			"models/player/british/mohawk/mohawk.mdl"
 #define MODEL_BLINF				"models/player/british/loyalist/loyalist.mdl"
+#define MODEL_BNEWFOUNDLAND_INFANTRY				"models/player/british/newfoundland_infantry/newfoundland_infantry.mdl"
 #define MODEL_BGRENADIER		"models/player/british/grenadier/br_grenadier.mdl"
 #define MODEL_BGRENADIER_ALT		"models/player/british/grenadier/br_grenadier_alt.mdl"
 
@@ -245,5 +273,14 @@ PLAYER MODEL PATHS AND NAMES - these are used repeatedly for precacheing the mod
 #define MODEL_AFRENCH			"models/player/american/french_gre/french_gre.mdl"
 #define MODEL_AFRENCH_ALT		"models/player/american/french_gre/french_gre_alt.mdl"
 #define MODEL_AFRENCHOFFICER	"models/player/american/french_officer/french_officer.mdl"
+
+#define ARMS_REGULAR 0
+#define ARMS_NATIVE 1
+#define ARMS_BRIT_GRE 2
+#define ARMS_FRE 3
+
+#define SLEEVE_INNER_BLANK 0
+#define SLEEVE_INNER_PLAIN 1
+#define SLEEVE_INNER_LACE 2
 
 #endif //BG3_PLAYER_CLASS

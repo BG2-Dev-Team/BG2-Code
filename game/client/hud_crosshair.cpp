@@ -51,6 +51,7 @@ ConVar cl_crosshair_a("cl_crosshair_a", "167", FCVAR_ARCHIVE, "Crosshair opacity
 
 ConVar cl_hitverifhairstyle("cl_hitverifhairstyle", "0", FCVAR_ARCHIVE); // BG2 - VisualMelon - Style of hit verification hairs
 ConVar cl_hitverifhairlen("cl_hitverifhairlen", "1", FCVAR_ARCHIVE); // BG2 - VisualMelon - Length of hit verification hairs
+ConVar cl_crosshair_texture_index("cl_crosshair_texture_index", "0", FCVAR_ARCHIVE, "Which crosshair texture to use", true, 0.0f, true, 9.0f);
 
 using namespace vgui;
 
@@ -91,7 +92,8 @@ void CHudCrosshair::ApplySchemeSettings( IScheme *scheme )
 	BaseClass::ApplySchemeSettings( scheme );
 
 	//BG2 - Commented -HairyPotter
-	m_pCrosshair = gHUD.GetIcon("hud_crosshair");
+	//m_pCrosshair = gHUD.GetIcon("hud_crosshair");
+	SetCrosshairTextureIndex(cl_crosshair_texture_index.GetInt());
 	//m_pDefaultCrosshair = gHUD.GetIcon("crosshair_default");
 	//	
 	SetPaintBackgroundEnabled( false );
@@ -483,11 +485,33 @@ void CHudCrosshair::RegisterMeleeSwing(CBaseBG2Weapon* pWeapon, int iAttack) {
 	m_flMeleeScanEndTime = m_flMeleeScanStartTime + pWeapon->GetRetraceDuration(iAttack);
 }
 
+static const char* g_aCrosshairTexturePaths[] = {
+	"hud_crosshair0",
+	"hud_crosshair1",
+	"hud_crosshair2",
+	"hud_crosshair3",
+	"hud_crosshair4",
+	"hud_crosshair5",
+	"hud_crosshair6",
+	"hud_crosshair7",
+	"hud_crosshair8",
+	"hud_crosshair9"
+};
+
+void CHudCrosshair::SetCrosshairTextureIndex(int i) {
+	m_iCrosshairTextureIndex = i;
+
+	if (i < 0) i = 0;
+	if (i > 9) i = 9;
+	m_pCrosshair = gHUD.GetIcon(g_aCrosshairTexturePaths[i]);
+}
+
 ConVar cl_dynamic_crosshair("cl_dynamic_crosshair", "1", FCVAR_ARCHIVE);
 
 static bool g_bPreviousFrameIronsighted = false;
 static float g_flEndCrosshairTime = -FLT_MAX;
 ConVar cl_persistent_crosshair("cl_persistent_crosshair", "0", FCVAR_CHEAT);
+extern ConVar r_drawviewmodel;
 void CHudCrosshair::Paint( void )
 {
 	//BG2 - found this stuff while porting to 2016 - Awesome
@@ -499,7 +523,10 @@ void CHudCrosshair::Paint( void )
 	if (!pWeapon)
 		return;
 
-	if (pWeapon->m_bIsIronsighted && !cl_persistent_crosshair.GetBool()) //No crosshair in Iron Sights. -HairyPotter
+	bool bViewModel = r_drawviewmodel.GetBool();
+	bool bWorseCrosshair = !bViewModel && pWeapon->m_bIsIronsighted && gpGlobals->curtime > g_flEndCrosshairTime;
+
+	if (pWeapon->m_bIsIronsighted && !cl_persistent_crosshair.GetBool() && bViewModel) //No crosshair in Iron Sights. -HairyPotter
 	{
 		IronPaint();
 		if (g_bPreviousFrameIronsighted && (gpGlobals->curtime > g_flEndCrosshairTime)) {
@@ -555,6 +582,8 @@ void CHudCrosshair::Paint( void )
 		static float lastr = 0;
 		static float circlealpha = 1;
 
+		float crosshairScale = max((int)bWorseCrosshair, cl_crosshair_scale.GetFloat());
+
 	
 		if (weapon->GetAttackType(C_BaseBG2Weapon::ATTACK_PRIMARY) == ATTACKTYPE_FIREARM)
 		{
@@ -578,6 +607,10 @@ void CHudCrosshair::Paint( void )
 		//lerp circle alpha up or down
 		circlealpha += (drawCircle ? 6 : -6) * gpGlobals->frametime;
 
+		//bigger, obstructive circles more transparent
+		//Msg("%f ", r);
+		circlealpha /= (r / 100);
+
 		if (circlealpha < 0) circlealpha = 0;
 		if (circlealpha > 1) circlealpha = 1;
 
@@ -591,8 +624,8 @@ void CHudCrosshair::Paint( void )
 		//center dot
 		if (cl_crosshair.GetInt() & 4 || bDrawHitScan)
 		{
-			float scale = cl_crosshair_scale.GetFloat() * min(w, h) / 300;
-			if (bDrawHitScan) scale *= 3;
+			float scale = crosshairScale * min(w, h) / 300;
+			if (bDrawHitScan || bWorseCrosshair) scale *= 3;
 
 			surface()->DrawSetColor(Color(cl_crosshair_r.GetInt(), cl_crosshair_g.GetInt(),
 				cl_crosshair_b.GetInt(), cl_crosshair_a.GetInt()));
@@ -604,9 +637,9 @@ void CHudCrosshair::Paint( void )
 		}
 
 		//three lines
-		if (cl_crosshair.GetInt() & 2)
+		if ((cl_crosshair.GetInt() & 2) && !bWorseCrosshair )
 		{
-			float	scale = cl_crosshair_scale.GetFloat() * min(w, h) / 300.f;/*,
+			float	scale = crosshairScale * min(w, h) / 300.f;/*,
 																			  expand = r * 0.25f;*/
 
 			surface()->DrawSetColor(Color(cl_crosshair_r.GetInt(), cl_crosshair_g.GetInt(),
@@ -631,9 +664,10 @@ void CHudCrosshair::Paint( void )
 		}
 
 		//circle
-		if (circlealpha > 0 && cl_crosshair.GetInt() & 1)
+		if (!bWorseCrosshair &&  circlealpha > 0 && cl_crosshair.GetInt() & 1)
 		{
 			int step = 10;
+			float r2 = r * 0.95f;
 
 			surface()->DrawSetColor(Color((cl_crosshair_r.GetInt() * 2) / 3, (cl_crosshair_g.GetInt() * 2) / 3,
 				(cl_crosshair_b.GetInt() * 2) / 3, cl_crosshair_a.GetInt() / 3 * circlealpha));
@@ -646,15 +680,15 @@ void CHudCrosshair::Paint( void )
 					int cx2 = cx + dx,
 						cy2 = cy + dy;
 
-					int lastx = (int)(cx2 + r*cosf((float)-step * M_PI / 180.f)),
-						lasty = (int)(cy2 + r*sinf((float)-step * M_PI / 180.f));
+					int lastx = (int)(cx2 + r2*cosf((float)-step * M_PI / 180.f)),
+						lasty = (int)(cy2 + r2*sinf((float)-step * M_PI / 180.f));
 
 					for (int i = 0, j = 0; i < 360; i += step, j++)
 					{
 						float	a = (float)i * M_PI / 180.f;
 
-						int x = (int)(cx2 + r*cosf(a)),
-							y = (int)(cy2 + r*sinf(a));
+						int x = (int)(cx2 + r2*cosf(a)),
+							y = (int)(cy2 + r2*sinf(a));
 
 						//surface()->DrawSetColor( Color( (j&1)*255, (j&1)*255, (j&1)*255, 255 ) );
 
@@ -665,8 +699,8 @@ void CHudCrosshair::Paint( void )
 					}
 				}
 
-			int lastx = (int)(cx + r*cosf((float)-step * M_PI / 180.f)),
-				lasty = (int)(cy + r*sinf((float)-step * M_PI / 180.f));
+			int lastx = (int)(cx + r2*cosf((float)-step * M_PI / 180.f)),
+				lasty = (int)(cy + r2*sinf((float)-step * M_PI / 180.f));
 
 			surface()->DrawSetColor(Color(cl_crosshair_r.GetInt(), cl_crosshair_g.GetInt(),
 				cl_crosshair_b.GetInt(), cl_crosshair_a.GetInt()*circlealpha));
@@ -675,8 +709,8 @@ void CHudCrosshair::Paint( void )
 			{
 				float	a = (float)i * M_PI / 180.f;
 
-				int x = (int)(cx + r*cosf(a)),
-					y = (int)(cy + r*sinf(a));
+				int x = (int)(cx + r2*cosf(a)),
+					y = (int)(cy + r2*sinf(a));
 
 				surface()->DrawLine(lastx, lasty, x, y);
 
@@ -686,11 +720,14 @@ void CHudCrosshair::Paint( void )
 		}
 
 		//texture
-		if (drawCircle && cl_crosshair.GetInt() & 8)
+		if (drawCircle && cl_crosshair.GetInt() & 8 && !bWorseCrosshair)
 		{
+			if (m_iCrosshairTextureIndex != cl_crosshair_texture_index.GetInt()) {
+				SetCrosshairTextureIndex(cl_crosshair_texture_index.GetInt());
+			}
 			Color iconColor(255, 80, 0, 255);
 
-			r *= cl_crosshair_scale.GetFloat();
+			r *= crosshairScale;
 
 			int x = ScreenWidth() / 2 - r,
 				y = ScreenHeight() / 2 - r;
@@ -724,6 +761,4 @@ void CHudCrosshair::SetCrosshair( CHudTexture *texture, const Color& clr )
 void CHudCrosshair::ResetCrosshair()
 {
 	SetCrosshair( m_pDefaultCrosshair, Color(255, 255, 255, 255) );
-
-	
 }

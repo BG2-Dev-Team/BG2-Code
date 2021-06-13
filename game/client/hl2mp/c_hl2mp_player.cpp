@@ -84,6 +84,8 @@ C_HL2MP_Player::C_HL2MP_Player() : m_PlayerAnimState( this ), m_iv_angEyeAngles(
 	}
 	//
 
+	NIntegrity::notifyMapChange(GameRules()->MapName()); //couldn't find a better place to do this
+
 	//BG2 - Reset death cam time. -HairyPotter
 	m_DeathTime = gpGlobals->curtime;
 	//
@@ -1075,9 +1077,16 @@ void C_HL2MPRagdoll::CreateHL2MPRagdoll( void )
 	}
 
 	//set easter egg bodygroup so they don't just disappear
-	int easterEgg = pPlayer->FindBodygroupByName("easter_egg");
-	if (easterEgg >= 0) {
-		SetBodygroup(easterEgg, pPlayer->GetBodygroup(easterEgg));
+	if (pPlayer) {
+		//copy all bodygroups from player's model
+		for (int i = 0; i < GetNumBodyGroups(); i++) {
+			SetBodygroup(i, pPlayer->GetBodygroup(i));
+		}
+
+		/*int easterEgg = pPlayer->FindBodygroupByName("easter_egg");
+		if (easterEgg >= 0) {
+			SetBodygroup(easterEgg, pPlayer->GetBodygroup(easterEgg));
+		}*/
 	}
 
 	if (m_bDropHat) {

@@ -2069,8 +2069,15 @@ void CBasePlayer::SetPlayerUnderwater( bool state )
 		m_bPlayerUnderwater = state;
 
 		//BG2 - Tjoppen - getting under water means screwing up your shot, forcing you to reload later
-		if (GetActiveWeapon())
-			GetActiveWeapon()->m_iClip1 = 0;	//simply empty the "clip"
+		//BG3 - empty all weapons, not just the one held out
+		for (int i = 0; i < MAX_WEAPONS; i++) {
+			CBaseCombatWeapon* pWeapon = GetWeapon(i);
+			if (pWeapon && pWeapon->Def()->m_Attackinfos[0].m_iAttacktype == ATTACKTYPE_FIREARM) {
+				pWeapon->m_iClip1 = 0;
+			}
+		}
+		//if (GetActiveWeapon())
+			//GetActiveWeapon()->m_iClip1 = 0;	//simply empty the "clip"
 		//
 
 #ifdef CLIENT_DLL

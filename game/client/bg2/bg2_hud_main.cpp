@@ -34,6 +34,7 @@
 #include "bg3/bg3_soft_info.h"
 #include "bg3/vgui/bg3_fonts.h"
 #include "bg3/bg3_hud_compass.h"
+#include "bg3/bg3_unlockable.h"
 //
 
 // hintbox header
@@ -51,9 +52,9 @@ DECLARE_HUD_MESSAGE( CHudBG2, WinMusic );
 DECLARE_HUD_MESSAGE( CHudBG2, CaptureSounds ); //HairyPotter
 DECLARE_HUD_MESSAGE( CHudBG2, VCommSounds );
 DECLARE_HUD_MESSAGE( CHudBG2, GameMsg );
-DECLARE_HUD_MESSAGE(CHudBG2, IntermissionMsg);
+DECLARE_HUD_MESSAGE(CHudBG2, ExpEvent);
 
-static char g_hudBuffer[512];
+char g_hudBuffer[512];
 
 static const int g_iFlagOffset = 100; //how far should top-center HUD flags be from center?
 static const int g_iClassCountY = 150;
@@ -106,11 +107,17 @@ CHudBG2::CHudBG2( const char *pElementName ) :
 	createLabel(&m_pLabelAmmo);
 	createLabel(&m_pLabelDeathMessage);
 	createLabel(&m_pLabelRoundTime);
-	createLabel(&m_pLabelIntermissionTime); // BG3 - Ricochet - skirmish intermission time label create
 	createLabel(&m_pLabelDamageTaken);
 	createLabel(&m_pLabelDamageGiven);
 	createLabel(&m_pLabelLMS);
 	createLabel(&m_pLabelHealth);
+	createLabel(&m_pLabelSpectatedPlayerName);
+
+	createLabel(&m_pExpEventLabel);
+	createLabel(&m_pExpWarningLabel);
+	m_pExpEventLabel->SetContentAlignment(Label::Alignment::a_center);
+	m_pExpWarningLabel->SetContentAlignment(Label::Alignment::a_center);
+	
 	for (int i = 0; i < 6; i++) {
 		createLabel(m_pClassCountLabels + i);
 	}
@@ -118,8 +125,7 @@ CHudBG2::CHudBG2( const char *pElementName ) :
 
 	CBaseEntity::PrecacheScriptSound( "Americans.win" );
 	CBaseEntity::PrecacheScriptSound( "British.win" );
-
-	m_pIntermissionMessageLabelText = NULL;
+	CBaseEntity::PrecacheScriptSound("Exp.LevelUp");
 
 	Reset();
 }
@@ -168,11 +174,6 @@ void CHudBG2::ApplySettings(KeyValues *inResourceData)
 	m_pLabelRoundTime->SetPos(halfx - 25, secondRowOffset);
 	m_pLabelRoundTime->SetContentAlignment(Label::Alignment::a_center);
 
-	// BG3 - Ricochet - position skirmish, tickets, lms/linebattle, and swap intermission timers
-	int atBottom = ScreenHeight() - 60;
-	m_pLabelIntermissionTime->SetPos(halfx - 65, atBottom);
-	m_pLabelIntermissionTime->SetContentAlignment(Label::Alignment::a_center);
-	
 	//round counter
 	m_pLabelCurrentRound->SetPos(halfx - 50, m_pLabelRoundTime->GetYPos() + m_pLabelRoundTime->GetTall());
 
@@ -187,10 +188,17 @@ void CHudBG2::ApplySettings(KeyValues *inResourceData)
 	m_pLabelAmmo->SetContentAlignment(Label::Alignment::a_center);
 	m_pLabelAmmo->SetPos(300, marginBottom);
 	m_pLabelAmmo->SetSize(70, 50);
-	m_pLabelAmmo->SetText("Hello world");
+	m_pLabelAmmo->SetText("0");
+
+	//spectated player name
+	m_pLabelSpectatedPlayerName->SetPos(10, marginBottom - 25);
+	m_pLabelSpectatedPlayerName->SetSize(400, 25);
+	m_pLabelSpectatedPlayerName->SetText("Hello world!");
 
 	//death message
-	m_pLabelDeathMessage->SetPos(10, ScreenHeight() * 0.8f);
+	m_pLabelDeathMessage->SetPos(10, marginBottom - 25 - 110);
+	m_pLabelDeathMessage->SetSize(700, 110);
+	m_pLabelDeathMessage->SetContentAlignment(Label::Alignment::a_northwest);
 
 	//class count labels
 	for (int i = 0; i < 6; i++) {
@@ -203,8 +211,21 @@ void CHudBG2::ApplySettings(KeyValues *inResourceData)
 	//grab and scale coordinates and dimensions
 	m_pLabelLMS         ->SetPos(GET_COORD(lmsx),      GET_COORD(lmsy));
 
-	m_pAdminMenu->SetPos(100, 200);
+	m_pAdminMenu->SetPos(100, 180);
 	//m_pAdminMenu->SetSize(640, 480);
+
+	//exp bottle positioning
+	int expWarningW = 310;
+	m_pExpWarningLabel->SetPos(ScreenWidth() - 64 - expWarningW, ScreenHeight() - 35);
+	m_pExpWarningLabel->SetSize(expWarningW, 35);
+	int expEventW = 150;
+	m_pExpEventLabel->SetPos(ScreenWidth() - 64 - expEventW, ScreenHeight() - 35);
+	m_pExpEventLabel->SetSize(expEventW, 35);
+
+
+	m_pLabelLMS->SetText(g_pVGuiLocalize->Find("#LMS"));
+	m_pLabelLMS->SizeToContents();
+	m_pLabelLMS->SetFgColor(COLOR_WHITE);
 
 	BaseClass::ApplySettings(inResourceData);
 }
@@ -224,15 +245,17 @@ void CHudBG2::ApplySchemeSettings( IScheme *scheme )
 	m_pLabelLMS->SetFont(font);
 	m_pLabelCurrentRound->SetFont(font);
 	m_pLabelRoundTime->SetFont(font);
-	m_pLabelIntermissionTime->SetFont(font); // BG3 - Ricochet - skirmish intermission timer font
-	m_pLabelDeathMessage->SetFont(largeFont);
 	m_pLabelAmmo->SetFont(largeFont);
 	m_pLabelHealth->SetFont(font);
+	m_pLabelSpectatedPlayerName->SetFont(font);
 	m_pLabelGameMessage->SetFont(font);
+
+	m_pExpEventLabel->SetFont(scheme->GetFont("BG3Default30"));
 
 	font = scheme->GetFont("BG3Default35");
 	largeFont = scheme->GetFont("BG3Default50");
 	m_pAdminMenu->SetFontsAllLabels(font, largeFont);
+	m_pLabelDeathMessage->SetFont(largeFont);
 
 	BaseClass::ApplySchemeSettings( scheme );
 	SetPaintBackgroundEnabled( false );
@@ -250,7 +273,7 @@ void CHudBG2::Init( void )
 	HOOK_HUD_MESSAGE( CHudBG2, CaptureSounds );
 	HOOK_HUD_MESSAGE( CHudBG2, VCommSounds );
 	HOOK_HUD_MESSAGE( CHudBG2, GameMsg);
-	HOOK_HUD_MESSAGE(CHudBG2, IntermissionMsg);
+	HOOK_HUD_MESSAGE(CHudBG2, ExpEvent);
 	//BG2 - Tjoppen - serverside blood, a place to hook as good as any
 	extern void  __MsgFunc_ServerBlood( bf_read &msg );
 	HOOK_MESSAGE( ServerBlood );
@@ -293,6 +316,10 @@ void CHudBG2::VidInit( void )
 		Q_snprintf(buffer, ARRAYSIZE(buffer), "classmenu/classes/b/%s", pClass->m_pszAbbreviation);
 		m_pBritishClassIcons[i] = scheme()->GetImage(buffer, false);
 	}
+
+	m_pExpBottleBlue = gHUD.GetIcon("exp_bottle_opaque_blue");
+	m_pExpBottleRed = gHUD.GetIcon("exp_bottle_opaque_red");
+	m_pExpBottleOverlay = gHUD.GetIcon("exp_bottle_overlay");
 	
 }
 
@@ -338,6 +365,7 @@ bool CHudBG2::ShouldDrawPlayer(C_HL2MP_Player** ppPlayer, C_BaseCombatWeapon** p
 		int n = GetSpectatorTarget();
 
 		if (n <= 0) {
+			*ppPlayer = NULL;
 			HideShowAllPlayer(false);
 			return false;
 		}
@@ -346,6 +374,7 @@ bool CHudBG2::ShouldDrawPlayer(C_HL2MP_Player** ppPlayer, C_BaseCombatWeapon** p
 
 		if (!pHL2Player || !pHL2Player->IsAlive())
 		{
+			*ppPlayer = NULL;
 			HideShowAllPlayer(false);
 			return false;
 		}
@@ -355,6 +384,7 @@ bool CHudBG2::ShouldDrawPlayer(C_HL2MP_Player** ppPlayer, C_BaseCombatWeapon** p
 	if (wpn && wpn->m_bIsIronsighted)
 		// Don't draw hud if we're using Iron Sights. -HairyPotter
 	{
+		*ppPlayer = NULL;
 		HideShowAllPlayer(false);
 		return false;
 	}
@@ -545,6 +575,24 @@ void CHudBG2::PaintTopCenterHUD(/*C_HL2MP_Player* pPlayer*/) {
 }
 
 void CHudBG2::PaintBottomLeftHUD(C_HL2MP_Player* pPlayer, C_BaseCombatWeapon* pWeapon) {
+	//SPECTATED PLAYER LABEL -- SHOW WHEN THE PLAYER IS NOT US
+	IGameResources *gr = GameResources();
+	if (pPlayer != C_HL2MP_Player::GetLocalPlayer()) {
+		
+		wchar_t* playerName = reinterpret_cast<wchar*>(g_hudBuffer);
+		memset(playerName, 0x0, sizeof(g_hudBuffer));
+
+		g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetPlayerName(pPlayer->entindex()), playerName, sizeof(g_hudBuffer));
+
+		m_pLabelSpectatedPlayerName->SetText(playerName);
+		m_pLabelSpectatedPlayerName->SetVisible(true);
+		Color c = gr->GetTeamColor(pPlayer->GetTeamNumber()); // Player's team color
+		m_pLabelSpectatedPlayerName->SetFgColor(c);
+	}
+	else {
+		m_pLabelSpectatedPlayerName->SetVisible(false);
+	}
+
 	//BACKGROUND
 	m_pBottomLeftBackground->SetPos(0, ScreenHeight() - 60);
 	m_pBottomLeftBackground->SetSize(600, 60);
@@ -652,97 +700,77 @@ void CHudBG2::PaintBottomLeftHUD(C_HL2MP_Player* pPlayer, C_BaseCombatWeapon* pW
 		else
 			m_pLabelAmmo->SetVisible(false);
 	}
+}
 
-	// BG3 - Ricochet - paint black background onto skirmish, tickets, lms/linebattle, and swap intermission timers
-	if (m_pLabelIntermissionTime->IsVisible())
-		PaintBackgroundOnto(m_pLabelIntermissionTime);
+ConVar cl_hide_expbottle("cl_hide_expbottle", "0", FCVAR_ARCHIVE, "Controls whether or not to hide the on-screen EXP bottle.");
+void CHudBG2::PaintBottomRightHUD(C_HL2MP_Player* pPlayer) {
+	//extern ConVar sv_password_exists;
 
-	if (m_flIntermissionMessageExpireTime < gpGlobals->curtime)
-	{
-		m_pLabelIntermissionTime->SetVisible(false);
-		if (m_pIntermissionMessageLabelText != NULL)
-		{
-			delete[] m_pIntermissionMessageLabelText;
-			m_pIntermissionMessageLabelText = NULL;
-		}
+	if (cl_hide_expbottle.GetBool() /*|| sv_password_exists.GetBool()*/) {
+		m_pExpWarningLabel->SetVisible(false);
+		m_pExpEventLabel->SetVisible(false);
+		return;
 	}
-	else if (m_pIntermissionMessageLabelText != NULL)
-	{
-		wchar* buffer2 = reinterpret_cast<wchar*>(g_hudBuffer);
-		int seconds = gpGlobals->curtime - m_flIntermissionMessageExpireTime;
-		V_snwprintf(buffer2, 512 / 4, m_pIntermissionMessageLabelText, seconds);
+		
 
-		m_pLabelIntermissionTime->SetText(buffer2);
-		m_pLabelIntermissionTime->SizeToContents();
-		m_pLabelIntermissionTime->SetPos((ScreenWidth() - m_pLabelIntermissionTime->GetWide()) / 2, m_pLabelIntermissionTime->GetYPos());
+	C_HL2MP_Player* pLocalPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
+
+	//don't paint if we're spectating someone else
+	if ((pPlayer && pPlayer != pLocalPlayer) || !pLocalPlayer || pLocalPlayer->GetTeamNumber() < TEAM_AMERICANS)
+		return;
+
+	int xbase = ScreenWidth() - 64;
+	int ybase = ScreenHeight() - 256;
+
+	//get base texture
+	CHudTexture* pOpaque = pLocalPlayer->GetTeamNumber() == TEAM_AMERICANS ? m_pExpBottleBlue : m_pExpBottleRed;
+
+	//calculate proportion to show
+	UnlockableProfile* profile = UnlockableProfile::get();
+	float fill = ((float)profile->m_iExperience) / profile->getExperienceForNextLevel();
+	pOpaque->DrawSelfCropped(xbase, ybase + 256 * (1.f - fill), 0, 256 * (1.f - fill), 64, 256 * fill, COLOR_WHITE);
+
+	//draw overlay
+	m_pExpBottleOverlay->DrawSelf(xbase, ybase, 64, 256, COLOR_WHITE);
+
+	//Exp warning label content
+	bool bWarningLabelVisible = false;
+	if (!NIntegrity::progressionAllowedOnCurrentMap()) {
+		bWarningLabelVisible = true;
+		m_pExpWarningLabel->SetText("#BG3_ExpWarning_Map");
+		SetDefaultBG3FontScaled(g_pVGuiSchemeManager->GetIScheme(GetScheme()), m_pExpWarningLabel);
+	}
+	else if ((g_PR->GetNumBritish() < 3 || g_PR->GetNumAmericans() < 3) && HL2MPRules()->m_flGameStartTime + 60 < gpGlobals->curtime) {
+		bWarningLabelVisible = true;
+		m_pExpWarningLabel->SetText("#BG3_ExpWarning_Players");
+		SetDefaultBG3FontScaled(g_pVGuiSchemeManager->GetIScheme(GetScheme()), m_pExpWarningLabel);
 	}
 
-	// BG3 - Ricochet - TICKETS INTERMISSION TIMER
-	/*m_pLabelIntermissionTime->SetVisible(false);
-	if (IsTicketMode() && HL2MPRules()->m_iCurrentRound == mp_rounds.GetInt() && roundtime == 0)
-	{
-		m_pLabelIntermissionTime->SetVisible(true);
-		int ticketsIntermissionTime = HL2MPRules()->m_flIntermissionStartTime + HL2MPRules()->GetIntermissionTimeAmount() - gpGlobals->curtime;
-		roundtime = ticketsIntermissionTime;
-		Q_snprintf(g_hudBuffer, 32, "INTERMISSION: %i:%02i ", roundtime / 60, roundtime % 60);
-		m_pLabelIntermissionTime->SetText(g_hudBuffer);
-	}
-	else {
-		m_pLabelIntermissionTime->SetText(" ");
-	}
-	m_pLabelIntermissionTime->SizeToContents();
-	m_pLabelIntermissionTime->SetFgColor(COLOR_WHITE);*/
+	m_pExpWarningLabel->SetVisible(bWarningLabelVisible);
+	PaintBackgroundOnto(m_pExpWarningLabel);
 
-	// BG3 - Ricochet - SKIRMISH INTERMISSION TIMER
-	//m_pLabelIntermissionTime->SetVisible(false);
-	//if (HL2MPRules()->GetMapRemainingTime() <= 0.f && IsSkirmish())
-	//{
-	//	m_pLabelIntermissionTime->SetVisible(true);
-	//	int skirmishIntermissionTime = HL2MPRules()->m_flIntermissionStartTime + HL2MPRules()->GetIntermissionTimeAmount() - gpGlobals->curtime;
-	//	roundtime = skirmishIntermissionTime;
-	//	Q_snprintf(g_hudBuffer, 32, "INTERMISSION: %i:%02i ", roundtime / 60, roundtime % 60);
-	//	m_pLabelIntermissionTime->SetText(g_hudBuffer);
-	//	//Msg("This code just ran!");
-	//}
-	//else {
-	//	m_pLabelIntermissionTime->SetText(" ");
-	//}
-	//m_pLabelIntermissionTime->SizeToContents();
-	//m_pLabelIntermissionTime->SetFgColor(COLOR_WHITE);
 
-	// BG3 - Ricochet - SWAP TEAMS INTERMISSION TIMER
-	/*m_pLabelIntermissionTime->SetVisible(false);
-	if (HL2MPRules()->SwapTeams())
-	{
-		m_pLabelIntermissionTime->SetVisible(true);
-		int swapIntermissionTime = HL2MPRules()->m_flIntermissionStartTime + HL2MPRules()->GetSwapIntermissionTimeAmount() - gpGlobals->curtime;
-		roundtime = swapIntermissionTime;
-		Q_snprintf(g_hudBuffer, 32, "SWAPPING TEAMS IN: %i:%02i ", roundtime / 60, roundtime % 60);
-		m_pLabelIntermissionTime->SetText(g_hudBuffer);
+	m_pExpEventLabel->SetVisible(m_flLastExpEventTime > gpGlobals->curtime);
+	if (m_pExpEventLabel->IsVisible()) {
+		m_pExpEventLabel->SetFgColor(GameResources()->GetTeamColor(pLocalPlayer->GetTeamNumber()));
+		PaintBackgroundOnto(m_pExpEventLabel);
 	}
-	else {
-		m_pLabelIntermissionTime->SetText(" ");
-	}
-	m_pLabelIntermissionTime->SizeToContents();
-	m_pLabelIntermissionTime->SetFgColor(COLOR_WHITE);*/
+}
 
-	/*
-	// BG3 - Ricochet - LMS/LINEBATTLE INTERMISSION TIMER
-	m_pLabelLMSIntermissionTime->SetVisible(false);
-	if (IsLMS() && HL2MPRules()->m_iCurrentRound == mp_rounds.GetInt() && HL2MPRules()->IsIntermission() && pAmer->GetNumPlayersAlive() == 0 || pBrit->GetNumPlayersAlive() == 0)
-	{
-	m_pLabelLMSIntermissionTime->SetVisible(true);
-	int lmsIntermissionTime = HL2MPRules()->m_flIntermissionStartTime + HL2MPRules()->GetIntermissionTimeAmount() - gpGlobals->curtime;
-	roundtime = lmsIntermissionTime;
-	Q_snprintf(g_hudBuffer, 32, "INTERMISSION: %i:%02i ", roundtime / 60, roundtime % 60);
-	m_pLabelLMSIntermissionTime->SetText(g_hudBuffer);
-	}
-	else {
-	m_pLabelLMSIntermissionTime->SetText(" ");
-	}
-	m_pLabelLMSIntermissionTime->SizeToContents();
-	m_pLabelLMSIntermissionTime->SetFgColor(COLOR_WHITE);
-	*/
+void CHudBG2::MsgFunc_ExpEvent(bf_read& bf) {
+	int checksum = bf.ReadLong();
+
+	if (checksum != (int)UnlockableProfile::get()->m_iUniqueIdChecksum)
+		return;
+
+	EExperienceEventType event = (EExperienceEventType)bf.ReadLong();
+	wchar buffer[64];
+	V_snwprintf(buffer, 64, g_pVGuiLocalize->Find(MapExpEventToText(event)), (int) event);
+	m_pExpEventLabel->SetText(buffer);
+	SetDefaultBG3FontScaled(g_pVGuiSchemeManager->GetIScheme(GetScheme()), m_pExpEventLabel);
+	m_flLastExpEventTime = gpGlobals->curtime + 2 + (((int)(event) > 30)) * 5;
+	UnlockableProfile::get()->addExperience(event);
+
 }
 
 void CHudBG2::PaintDeathMessage() {
@@ -754,6 +782,7 @@ void CHudBG2::PaintDeathMessage() {
 		//Four modes - skirmish, tickets, tickets with no tickets remaining, LMS/Linebattle
 		if (IsLMS()) {
 			m_pLabelDeathMessage->SetText(g_pVGuiLocalize->Find("#BG3_Spawn_Next_Round"));
+
 		}
 		else {
 			//Construct message
@@ -782,7 +811,9 @@ void CHudBG2::PaintDeathMessage() {
 
 			m_pLabelDeathMessage->SetText(buffer);
 		}
-		m_pLabelDeathMessage->SizeToContents();
+		m_pLabelDeathMessage->SizeToContents(); //increase its size?
+		m_pLabelDeathMessage->SetSize(m_pLabelDeathMessage->GetWide() + 5, m_pLabelDeathMessage->GetTall() + 5);
+
 		PaintBackgroundOnto(m_pLabelDeathMessage);
 	}
 	else {
@@ -880,17 +911,12 @@ void CHudBG2::Paint()
 	
 	PaintClassCounts();
 
+
 	C_HL2MP_Player* pHL2Player = NULL;
 	C_BaseCombatWeapon* wpn = NULL;
-	if (!ShouldDrawPlayer(&pHL2Player, &wpn))
-		return;
-
-	PaintBottomLeftHUD(pHL2Player, wpn);
-
-	m_pLabelLMS->SetText( g_pVGuiLocalize->Find("#LMS") );
-	m_pLabelLMS->SizeToContents();
-	m_pLabelLMS->SetFgColor( COLOR_WHITE );
-
+	bool shouldDrawBottomLeft = ShouldDrawPlayer(&pHL2Player, &wpn);
+	if (shouldDrawBottomLeft) PaintBottomLeftHUD(pHL2Player, wpn);
+	PaintBottomRightHUD(pHL2Player);
 }
 
 //==============================================
@@ -906,7 +932,6 @@ void CHudBG2::Reset( void )
 {
 	//mapchange, clear indicators. and stuff.
 	m_flGameMessageExpireTime = -FLT_MAX;
-	m_flIntermissionMessageExpireTime = -FLT_MAX;
 	m_flGivenExpireTime = 0;
 	m_flTakenExpireTime = 0;
 	m_flLastSwing = 0.5f;
@@ -916,17 +941,12 @@ void CHudBG2::Reset( void )
 	m_flEndPulseTime = -FLT_MAX;
 	m_bLocalPlayerAlive = false;
 	m_flEndClassIconDrawTime = -FLT_MAX;
+	m_flLastExpEventTime = -FLT_MAX;
 	NSoftInfo::Reset();
 	HideShowAllPlayer( false );
 	HideShowAllTeam(false);
 	m_pLabelDeathMessage->SetVisible(false);
-
-	m_pLabelIntermissionTime->SetVisible(false);
-	if (m_pIntermissionMessageLabelText != NULL)
-	{
-		delete[] m_pIntermissionMessageLabelText;
-		m_pIntermissionMessageLabelText = NULL;
-	}
+	m_pLabelSpectatedPlayerName->SetVisible(false);
 }
 
 void CHudBG2::HideShowAllTeam( bool visible )
@@ -1036,47 +1056,6 @@ void CHudBG2::MsgFunc_GameMsg(bf_read& msg) {
 	}
 	
 	SetGameMsgText(buffer2);
-}
-
-void CHudBG2::MsgFunc_IntermissionMsg(bf_read& msg)
-{
-	int type, seconds, msgLength;
-	type = msg.ReadShort();
-	seconds = msg.ReadShort();
-	msgLength = msg.ReadShort();
-
-	msg.ReadBytes(g_hudBuffer, msgLength);
-	g_hudBuffer[msgLength] = 0;
-
-	const char* pszLabelToken;
-
-	switch (type)
-	{
-	default:
-	case INTERMISSION_MAPCHANGE:
-		pszLabelToken = "#BG3_INTERMISSION_MAPCHANGE";
-		break;
-
-	case INTERMISSION_SWAPTEAMS:
-		pszLabelToken = "#BG3_INTERMISSION_SWAPTEAMS";
-		break;
-
-	case INTERMISSION_TIMEOUT:
-		pszLabelToken = "#BG3_INTERMISSION_TIMEOUT";
-		break;
-	}
-
-	m_pLabelIntermissionTime->SetVisible(true);
-	m_flIntermissionMessageExpireTime = gpGlobals->curtime + seconds;
-
-	Msg(pszLabelToken);
-
-	if (m_pIntermissionMessageLabelText == NULL)
-	{
-		m_pIntermissionMessageLabelText = new wchar[INTERMISSION_BUFFER_SIZE];
-	}
-
-	V_snwprintf(m_pIntermissionMessageLabelText, INTERMISSION_BUFFER_SIZE, g_pVGuiLocalize->Find(pszLabelToken), g_hudBuffer);
 }
 
 void CHudBG2::MsgFunc_HitVerif( bf_read &msg )
@@ -1259,6 +1238,11 @@ void CHudBG2::PlayVCommSound( char snd[512], int playerindex )
 
 	if ( pPlayer ) //Just make sure.
 		pPlayer->EmitSound( snd );
+}
+
+void CHudBG2::PlayLevelUpSound() {
+	CLocalPlayerFilter filter;
+	C_BaseEntity::EmitSound(filter, SOUND_FROM_LOCAL_PLAYER, "Exp.LevelUp");
 }
 //
 

@@ -23,6 +23,12 @@ enum {
 	CLASS_TAKEN_FULL,		//the requesting player already is the class in question, and it's full
 };
 
+
+//Custom BG3 Player flags
+#if 1
+
+#endif
+
 //BG2 - Tjoppen - class system - don't change these
 #if 1
 #define	CLASS_INFANTRY			0
@@ -317,6 +323,9 @@ Using this flag to use it as a special case for kill feed icons
 */
 #if 1
 #define DMG_SWIVEL_GUN (DMG_LASTGENERICFLAG<<1)
+#define DMG_TYPE_GRENADE (DMG_LASTGENERICFLAG<<2)
+#define DMG_BUFF "oppressme"
+#define DMG_BUFF2 "oppressme"
 #endif
 
 //Creates a ConVar which is bound to a normal global variable, instead of being

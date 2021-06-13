@@ -177,7 +177,8 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 	Vector vecReported = m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
 	
 	//BG3 - Awesome - HACK HACK I tried to set the damage from inside the constructor but for some reason it woulnd't change! Oh well, we'll only have one grenade type anyway
-	CTakeDamageInfo info( m_hThrower, m_hThrower, this, GetBlastForce(), GetAbsOrigin(), /*m_flDamage*/ CBaseBG2Weapon::GetGrenadeDamage(), bitsDamageType, 0, &vecReported );
+	CBasePlayer *pPlayer = ToBasePlayer(m_hThrower.Get());
+	CTakeDamageInfo info( this, m_hThrower, this, GetBlastForce(), GetAbsOrigin(), /*m_flDamage*/ CBaseBG2Weapon::GetGrenadeDamage(), bitsDamageType, 0, &vecReported );
 
 	RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
 
@@ -196,7 +197,7 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 	SetNextThink( gpGlobals->curtime );
 
 #if defined( HL2_DLL )
-	CBasePlayer *pPlayer = ToBasePlayer( m_hThrower.Get() );
+	
 	if ( pPlayer )
 	{
 		gamestats->Event_WeaponHit( pPlayer, true, "weapon_frag", info );
@@ -297,7 +298,7 @@ void CBaseGrenade::Detonate( void )
 		UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + Vector( 0, 0, -32), MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr );
 	}
 
-	Explode( &tr, DMG_BLAST );
+	Explode( &tr, DMG_BLAST | DMG_TYPE_GRENADE );
 
 	if ( GetShakeAmplitude() )
 	{
@@ -372,7 +373,7 @@ void CBaseGrenade::BounceTouch( CBaseEntity *pOther )
 			ClearMultiDamage( );
 			Vector forward;
 			AngleVectors( GetLocalAngles(), &forward, NULL, NULL );
-			CTakeDamageInfo info( this, m_hThrower, 1, DMG_CLUB );
+			CTakeDamageInfo info( this, m_hThrower, 10, DMG_CLUB | DMG_TYPE_GRENADE);
 			CalculateMeleeDamageForce( &info, GetAbsVelocity(), GetAbsOrigin() );
 			pOther->DispatchTraceAttack( info, forward, &tr ); 
 			ApplyMultiDamage();

@@ -104,6 +104,8 @@
 #endif
 #endif
 #include "team.h"
+#include "bg2/ctfflag.h"
+#include "bg2/flag.h"
 
 
 
@@ -942,10 +944,66 @@ bool CServerGameDLL::IsRestoring()
 	return g_InRestore;
 }
 
+int g_iNumFlagsOnMap = 0;
+void FlagModeRandomize() {
+	extern ConVar mp_flagmode_randomize;
+	CBaseEntity* pEntity = NULL;
+	g_iNumFlagsOnMap = 0;
+	
+	if (mp_flagmode_randomize.GetBool()) {
+		//go through all flags, ctf flags, and ctf flag triggers to count the number of flag modes
+		int maxFlagMode = 0;
+		
+		//CTF Flags
+		while ((pEntity = gEntList.FindEntityByClassname(pEntity, "ctf_flag")) != NULL)
+		{
+			CtfFlag *pFlag = static_cast<CtfFlag*>(pEntity);
+			if (!pFlag)
+				continue;
+
+			if (pFlag->m_iFlagMode > maxFlagMode) maxFlagMode = pFlag->m_iFlagMode;
+		}
+
+		//Skirm Flags
+		while ((pEntity = gEntList.FindEntityByClassname(pEntity, "flag")) != NULL)
+		{
+			CFlag *pFlag = static_cast<CFlag*>(pEntity);
+			if (!pFlag)
+				continue;
+
+			if (pFlag->m_iFlagMode > maxFlagMode) maxFlagMode = pFlag->m_iFlagMode;
+		}
+		//TODO check flag triggers!
+		mp_flagmode.SetValue(RndInt(0, maxFlagMode));
+		Msg("Randomized flag mode to %i of %i\n", mp_flagmode.GetInt(), maxFlagMode);
+	}
+	else {
+		mp_flagmode.SetValue(0);
+	}
+	//force all flags to acknowledge the new setting by respawning them
+	//CTF Flags
+	while ((pEntity = gEntList.FindEntityByClassname(pEntity, "ctf_flag")) != NULL)
+	{
+		pEntity->Spawn();
+		g_iNumFlagsOnMap++;
+	}
+
+	//Skirm Flags
+	while ((pEntity = gEntList.FindEntityByClassname(pEntity, "flag")) != NULL)
+	{
+		pEntity->Spawn();
+		g_iNumFlagsOnMap++;
+	}
+	//CTF capture points check when players touch, nothing to do here...
+}
+
 // Called any time a new level is started (after GameInit() also on level transitions within a game)
 bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, char const *pOldLevel, char const *pLandmarkName, bool loadGame, bool background )
 {
 	VPROF("CServerGameDLL::LevelInit");
+
+	//BG3 - inform progression system integrity
+	NIntegrity::notifyMapChange(pMapName);
 
 #ifdef USES_ECON_ITEMS
 	GameItemSchema_t *pItemSchema = ItemSystem()->GetItemSchema();
@@ -1092,6 +1150,7 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	extern ConVar mp_rounds, mp_roundtime, mp_tickets_a, mp_tickets_b;
 	extern ConVar mp_tickets_drain_a, mp_tickets_drain_b;
 	extern ConVar mp_limit_mapsize_low, mp_limit_mapsize_high;
+	extern ConVar mp_disable_firearms, mp_disable_melee;
 	mp_winbonus.Revert();
 	mp_respawnstyle.Revert();
 	mp_respawntime.Revert();
@@ -1105,7 +1164,14 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	mp_limit_mapsize_high.Revert();
 	lb_enforce_weapon_amer.Revert();
 	lb_enforce_weapon_brit.Revert();
+	lb_officer_classoverride_a.Revert();
+	lb_officer_classoverride_b.Revert();
+	mp_disable_firearms.Revert();
+	mp_disable_melee.Revert();
+	
 	bot_minplayers_map.Revert();
+
+	FlagModeRandomize();
 
 	//done. we can now exec the map config
 	char	szExec[256];

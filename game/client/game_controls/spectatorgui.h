@@ -91,7 +91,7 @@ protected:
 	//vgui::Panel *m_pBottomBarBlank;
 
 	vgui::ImagePanel *m_pBannerImage;
-	vgui::Label *m_pPlayerLabel;
+	//vgui::Label *m_pPlayerLabel;
 
 	IViewPort *m_pViewPort;
 

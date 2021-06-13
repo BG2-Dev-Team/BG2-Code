@@ -34,6 +34,7 @@ commented on the following form:
 #include "cbase.h"
 #include "bg3_weapon_def.h"
 #include "../../shared/bg2/weapon_bg2base.h"
+#include "../../shared/bg3/math/bg3_rand.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -54,14 +55,17 @@ CWeaponDef::CWeaponDef(const char* pszWeaponName) {
 	m_bCantAbortReload = true;
 	m_flReloadMovementSpeedModifier = 1.0f;
 	m_flDamageDropoffMultiplier = 1.0f;
-	//m_iOwnerSpeedModOnKill = m_iAerialDamageMod = 0;
+	m_bPenetrateFlesh = false;
+	m_iOwnerSpeedModOnKill = m_iAerialDamageMod = 0;
 	m_flVerticalAccuracyScale = 0.5;
+	m_bDemoteNonHeadhitsToSecondaryDamage = false;
 
 	m_eWeaponType = GENERIC;
 	m_flLockTime = 0.135f;
 
 	m_flIronsightFOVOffset = 0.0f;
 	m_bWeaponHasSights = false;
+	m_bBreakable = false;
 
 	m_Attackinfos[0].m_flRetraceDelay = m_Attackinfos[1].m_flRetraceDelay = 0;
 
@@ -72,6 +76,21 @@ CWeaponDef::CWeaponDef(const char* pszWeaponName) {
 	m_pszWeaponDefName = pszWeaponName;
 
 	m_bShotOnly = false;
+
+#ifdef CLIENT_DLL
+	//generate unique color based on weapon name
+	int nameSum = 0;
+	int len = strlen(pszWeaponName);
+	for (int i = 6; i < len; i++) {
+		nameSum += ~pszWeaponName[i];
+	}
+	RndSeed(nameSum);
+	int mainColor = RndInt(0, 2);
+	int rmin = mainColor == 0 ? 200 : 0;
+	int gmin = mainColor == 1 ? 200 : 0;
+	int bmin = mainColor == 2 ? 200 : 0;
+	m_graphColor = Color(RndInt(rmin, 255), RndInt(gmin, 255), RndInt(bmin, 255), 255);
+#endif
 }
 
 //Default weapon def used by non-BG3 weapons

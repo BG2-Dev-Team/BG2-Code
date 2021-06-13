@@ -938,7 +938,11 @@ void CBaseCombatWeapon::UpdateBodyGroups() {
 	if (!pViewModel || pOwner->GetActiveWeapon() != this)
 		return;
 
-	//Msg("Updating weapon bodygroups\n");
+	//reset all bodygroups to defaults
+	int numGroups = pViewModel->GetNumBodyGroups();
+	for (int i = 0; i < numGroups; i++) {
+		pViewModel->SetBodygroup(i, 0);
+	}
 
 	//hide bayonet if we don't have a secondary attack
 	if ((group = pViewModel->FindBodygroupByName("musket_bayonet")) >= 0)
@@ -949,17 +953,23 @@ void CBaseCombatWeapon::UpdateBodyGroups() {
 		pViewModel->SetBodygroup(group, pOwner->GetTeamNumber() == TEAM_BRITISH);
 
 	//use the correct arms (natives don't have sleeves)
+	int iUniform = pOwner->m_iClassSkin;
+	const CPlayerClass* pClass = pOwner->GetPlayerClass();
 	int handmodel = 0;
+	int armsModel = 0;
+	int sleeveModel = 0;
 	if ((group = pViewModel->FindBodygroupByName("arms")) >= 0) {
-		int armModel = 0;
-		if (pOwner->GetPlayerClass() == PlayerClasses::g_pBNative) {
-			handmodel = 2; //hands built into arms, show blank
-			armModel = 1;
-		}
-		else if (pOwner->GetPlayerClass() == PlayerClasses::g_pBGrenadier)
-			armModel = 2;
-		pViewModel->SetBodygroup(group, armModel);
+		armsModel = pOwner->GetPlayerClass()->m_iArmModel;
+		if (pClass->m_aUniformArmModelOverrides[iUniform] != -1)
+			armsModel = pClass->m_aUniformArmModelOverrides[iUniform];
+		pViewModel->SetBodygroup(group, armsModel);
 	}
+	if ((group = pViewModel->FindBodygroupByName("sleeve_inner")) >= 0) {
+		sleeveModel = pOwner->GetPlayerClass()->m_iSleeveInnerModel;
+		pViewModel->SetBodygroup(group, sleeveModel);
+	}
+
+	if (armsModel == ARMS_NATIVE) handmodel = 2;//hands built into arms, show blank
 
 	if ((group = pViewModel->FindBodygroupByName("hands")) >= 0) {
 		if (PlayerHasDarkSkin(pOwner)) {
@@ -968,31 +978,41 @@ void CBaseCombatWeapon::UpdateBodyGroups() {
 		pViewModel->SetBodygroup(group, handmodel);
 	}
 
+	//broken bottle model change
+	if (m_bBroken && (group = pViewModel->FindBodygroupByName("broken")) >= 0) {
+		pViewModel->SetBodygroup(group, 1);
 
-	//show sleeve on grenadier
-	if ((group = pViewModel->FindBodygroupByName("sleeve_inner")) >= 0)
-		pViewModel->SetBodygroup(group, pOwner->GetPlayerClass() == PlayerClasses::g_pBGrenadier);
+		//world model too
+		SetBodygroup(FindBodygroupByName("broken"), 1);
+	}
+
+	
 #endif
 }
 
 void CBaseCombatWeapon::UpdateSkinToMatchOwner(CBaseCombatCharacter* pOwner) {
-
 	//pick correct sleeve texture based on our class
 	//Msg("Setting sleeve skin to ");
 #ifndef CLIENT_DLL
+
 	CHL2MP_Player *player = ToHL2MPPlayer(pOwner);
 	int8 skinOverride = player->GetPlayerClass()->m_aWeapons[player->m_iGunKit].m_iSleeveSkinOverride;
+
+	//let per-uniform override override over the per-weapon one
+	if (player->GetPlayerClass()->m_aUniformSleeveOverrides[player->m_iClassSkin] != -1)
+		skinOverride = player->GetPlayerClass()->m_aUniformSleeveOverrides[player->m_iClassSkin];
+
 	if (skinOverride != -1)
 		m_nSkin = skinOverride;
 	else {
 		int iClassSkin;
-		if (player->GetPlayerClass()->m_bForceRandomUniform) {
+		//if (player->GetPlayerClass()->m_bForceRandomUniform) {
 			//HACKHACK - assuming 3 random uniform options
-			iClassSkin = player->m_nSkin / (player->GetPlayerClass()->m_iSkinDepth / player->GetPlayerClass()->numUniforms());
-		}
-		else {
+			//iClassSkin = player->m_nSkin / (player->GetPlayerClass()->m_iSkinDepth / player->GetPlayerClass()->numUniforms());
+		//}
+		//else {
 			iClassSkin = player->m_iClassSkin;
-		}
+		//}
 
 		m_nSkin = player->GetPlayerClass()->m_iSleeveBase + iClassSkin;
 	}

@@ -172,6 +172,8 @@ void CHudCTFFlags::Paint()
 
 	for( i = 0; i < m_iFlagCount; i++ )
 	{
+		if (!g_CtfFlags[i]->ShouldDraw())
+			continue;
 
 		x_offset += 68;
 

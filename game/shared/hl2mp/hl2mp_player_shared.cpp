@@ -27,6 +27,8 @@
 
 extern ConVar sv_footsteps;
 
+ConVar mp_friendlyfire_swivel("mp_friendlyfire_swivel", "0", FCVAR_GAMEDLL | FCVAR_REPLICATED | FCVAR_NOTIFY);
+
 /*const char *g_ppszPlayerSoundPrefixNames[PLAYER_SOUNDS_MAX] =
 {
 	"NPC_Citizen",
@@ -64,9 +66,9 @@ void CHL2MP_Player::PrecacheFootStepSounds( void )
 	//PrecacheScriptSound( BG2_PLAYER_SOUND_PREFIX ".RunFootstepRight" );
 }
 
-bool CHL2MP_Player::IsBetaTester() const {
+/*bool CHL2MP_Player::IsBetaTester() const {
 	return !IsFakeClient(); //TODO implement this!
-}
+}*/
 
 //-----------------------------------------------------------------------------
 // Consider the weapon's built-in accuracy, this character's proficiency with

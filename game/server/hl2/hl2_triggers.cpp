@@ -936,7 +936,7 @@ void CFlagTriggerBG2::StartTouch(CBaseEntity *pOther)
 	//Defines.
 	CBasePlayer *pPlayer = static_cast< CBasePlayer* >(pOther->MyCombatCharacterPointer());
 
-	if (!pPlayer || !FlagEnt || !FlagEnt->m_bActive) //Flag is inactive?
+	if (!pPlayer || !FlagEnt || !FlagEnt->m_bActivated) //Flag is inactive?
 		return;				   //Die here.
 
 	//BaseClass::StartTouch( pOther );
@@ -973,7 +973,7 @@ void CFlagTriggerBG2::EndTouch(CBaseEntity *pOther)
 	//Defines
 	CBasePlayer *pPlayer = static_cast< CBasePlayer* >(pOther->MyCombatCharacterPointer());
 
-	if (!pPlayer || !FlagEnt || !FlagEnt->m_bActive) //Flag is inactive?
+	if (!pPlayer || !FlagEnt || !FlagEnt->m_bActivated) //Flag is inactive?
 		return;				   //Die here.
 
 	//BaseClass::EndTouch( pOther );
@@ -1002,6 +1002,8 @@ class CTriggerCTFCapture : public CTriggerMultiple
 	DECLARE_CLASS(CTriggerCTFCapture, CTriggerMultiple);
 	DECLARE_DATADESC();
 
+	int m_iFlagMode = 0;
+
 public:
 	void StartTouch(CBaseEntity *pOther);
 	void EndTouch(CBaseEntity *pOther);
@@ -1019,6 +1021,7 @@ private:
 LINK_ENTITY_TO_CLASS(trigger_ctf_capturepoint, CTriggerCTFCapture);
 
 BEGIN_DATADESC(CTriggerCTFCapture)
+DEFINE_KEYFIELD(m_iFlagMode, FIELD_INTEGER, "FlagMode"),
 DEFINE_KEYFIELD(m_iAffectedTeam, FIELD_INTEGER, "TeamCapture"),
 DEFINE_KEYFIELD(m_iTeamBonus, FIELD_INTEGER, "TeamBonus"),
 DEFINE_KEYFIELD(m_iPlayerBonus, FIELD_INTEGER, "PlayerBonus"),
@@ -1034,6 +1037,12 @@ END_DATADESC()
 void CTriggerCTFCapture::StartTouch(CBaseEntity *pOther)
 {
 	if (!pOther->IsPlayer()) //Nothing else should trigger this.
+		return;
+
+	//ignore touches if our flag mode is wrong
+	if (m_iFlagMode != -1
+		&& mp_flagmode.GetInt() != -1
+		&& m_iFlagMode != mp_flagmode.GetInt())
 		return;
 
 	//Defines
@@ -1100,6 +1109,9 @@ void CTriggerCTFCapture::StartTouch(CBaseEntity *pOther)
 			pPlayer->RemoveSpeedModifier(ESpeedModID::Flag); //BG3 - Awesome - removed to more robust speed modifier system
 
 			pFlag->PrintAlert(CTF_CAPTURE, pPlayer->GetPlayerName(), pFlag->cFlagName);
+
+			//give the capturer XP
+			pPlayer->m_unlockableProfile.createExperienceEvent(pPlayer, EExperienceEventType::CTF_FLAG_CAPTURE);
 
 			//Do the log stuff.
 			CTeam *team = pPlayer->GetTeam();

@@ -32,6 +32,7 @@ commented on the following form:
 */
 
 #include "cbase.h"
+#include "client.h"
 #include "hl2mp/hl2mp_gamerules.h"
 #include "../shared/bg3/bg3_map_model.h"
 #include "../shared/bg3/Math/bg3_rand.h"
@@ -57,6 +58,20 @@ void CSay(const char* pszFormat, ...) {
 	engine->ServerCommand(buffer2);
 }
 
+void AdminSay(const char* pszFormat, ...) {
+	va_list vl;
+	va_start(vl, pszFormat);
+	char buffer[128];
+	V_vsnprintf(buffer, sizeof(buffer), pszFormat, vl);
+	va_end(vl);
+	CCommand args;
+	args.Tokenize(buffer);
+
+	std::vector<CBasePlayer*> admins;
+	Permissions::GetAdminList(admins);
+	Host_Say(NULL, args, false, &admins);
+}
+
 //Prints on screen below scoreboard
 void MSay(const char* pszFormat, ...) {
 	va_list vl;
@@ -75,28 +90,22 @@ void MSay(const char* pszFormat, ...) {
 	MessageEnd();
 }
 
-//Prints a time based on current situation (swap teams, changing map, etc.) on screen below scoreboard
-void IntermissionSay(IntermissionType type, int seconds, const char* pszFormat, ...) {
+//Prints on screen below scoreboard
+void MSayPlayer(CHL2MP_Player* pRecipient, const char* pszFormat, ...) {
 	va_list vl;
 	va_start(vl, pszFormat);
 	char buffer[256];
 	V_vsnprintf(buffer, sizeof(buffer), pszFormat, vl);
 
 	const char* pszMessage = buffer;
-	if (strlen(pszMessage) > 236) return; //avoid out-of-bounds strings
+	if (strlen(pszMessage) > 244) return; //avoid out-of-bounds strings
 
-	CReliableBroadcastRecipientFilter recpfilter;
-	UserMessageBegin(recpfilter, "IntermissionMsg");
-	WRITE_SHORT(type);
-	WRITE_SHORT(seconds);
+	CSingleUserRecipientFilter recpfilter(pRecipient);
+	UserMessageBegin(recpfilter, "GameMsg");
 	WRITE_SHORT(strlen(pszMessage)); //length of message
+	WRITE_SHORT(260); //no player injected into localized string, out-of-bounds player index will work
 	WRITE_STRING(pszMessage);
 	MessageEnd();
-}
-
-CON_COMMAND(intermissionTest, "")
-{
-	IntermissionSay(INTERMISSION_SWAPTEAMS, 20, "");
 }
 
 /*
@@ -225,22 +234,32 @@ CON_COMMAND(solo, "Gives solo permission to player who sent the command, or togg
 	if (!verifyPlayerPermissions(__FUNCTION__))
 		return;
 	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
-	if (pPlayer && !pPlayer->GetPermissions()->m_bPlayerManage)
+	if (!pPlayer || !pPlayer->GetPermissions()->m_bPlayerManage)
 		return;
-	if (pPlayer == g_pMicSoloPlayer)
+	if (pPlayer == g_pMicSoloPlayer) {
 		g_pMicSoloPlayer = NULL;
+		CSay("Solo power taken away - everyone can speak.");
+	}
+		
 	else
+	{
 		g_pMicSoloPlayer = pPlayer;
+		CSay("Giving Solo power to %s", pPlayer->GetPlayerName());
+	}
+		
+
+	
 }
 
 CON_COMMAND(unsolo, "Turns off all solo permissions.") {
 	if (!verifyPlayerPermissions(__FUNCTION__))
 		return;
 	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
-	if (pPlayer && !pPlayer->GetPermissions()->m_bPlayerManage)
+	if (!pPlayer || !pPlayer->GetPermissions()->m_bPlayerManage)
 		return;
 
 	g_pMicSoloPlayer = NULL;
+	CSay("Solo power taken away - everyone can speak.");
 }
 
 
@@ -255,6 +274,91 @@ CON_COMMAND(spawn, "Spawns specified player(s)") {
 		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
 			if (mp_comp_notifications.GetBool()) CSay("Spawning %s via console command", pPlayer->GetPlayerName());
 			pPlayer->Spawn();
+		});
+	}
+}
+
+CON_COMMAND(heal, "Heals specified player(s)") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			if (mp_comp_notifications.GetBool()) CSay("Healing %s via console command", pPlayer->GetPlayerName());
+			if (pPlayer->IsAlive() && pPlayer->GetHealth() != 100) {
+				pPlayer->SetHealth(100);
+				pPlayer->EmitSound("AmmoCrate.Give");
+			}
+		});
+	}
+}
+
+static int g_iHealHealth = 0;
+CON_COMMAND(health, "Adds HP to specified player(s)") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+	if (args.ArgC() == 3) {
+		g_iHealHealth = atoi(args[1]);
+		PerPlayerCommand(pPlayer, args[2], [](CHL2MP_Player* pPlayer) {
+			if (mp_comp_notifications.GetBool()) MSay("Giving %s extra health", pPlayer->GetPlayerName());
+			if (pPlayer->IsAlive()) {
+				pPlayer->SetHealth(pPlayer->GetHealth() + g_iHealHealth);
+				pPlayer->EmitSound("AmmoCrate.Give");
+			}
+		});
+	}
+}
+
+CON_COMMAND(shrooms, "Speeds up a player's movement") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			if (mp_comp_notifications.GetBool()) CSay("Speeding up %s", pPlayer->GetPlayerName());
+			if (pPlayer->IsAlive()) {
+				pPlayer->AddSpeedModifier(127, ESpeedModID::Weapon);
+				pPlayer->EmitSound("AmmoCrate.Give");
+			}
+		});
+	}
+}
+
+CON_COMMAND(freeze, "Freezes player") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			if (mp_comp_notifications.GetBool()) CSay("Freezing %s", pPlayer->GetPlayerName());
+			pPlayer->AddFlag(FL_FROZEN);
+		});
+	}
+}
+CON_COMMAND(unfreeze, "Unfreezes player") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	CHL2MP_Player* pPlayer = (CHL2MP_Player*)(UTIL_GetCommandClient());
+	//Player MIGHT BE NULL
+
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			if (mp_comp_notifications.GetBool()) CSay("Freezing %s", pPlayer->GetPlayerName());
+			pPlayer->RemoveFlag(FL_FROZEN);
 		});
 	}
 }
@@ -308,6 +412,69 @@ CON_COMMAND(brit, "Switches specified player(s) to British team") {
 	}
 }
 
+static void ScrambleTeams() {
+	const int SIZE = gpGlobals->maxClients;
+
+	//create list, then randomly swap them around
+	CHL2MP_Player** pPlayerList = new CHL2MP_Player*[SIZE];
+	memset(pPlayerList, 0, SIZE * sizeof(CHL2MP_Player*));
+
+	for (int i = 0; i < SIZE; i++) {
+		CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+		if (pPlayer && pPlayer->GetTeamNumber() >= TEAM_AMERICANS) {
+			pPlayerList[i] = pPlayer;
+		}
+		
+	}
+
+	auto swap = [&](int i1, int i2) {
+		CHL2MP_Player* temp = pPlayerList[i1];
+		pPlayerList[i1] = pPlayerList[i2];
+		pPlayerList[i2] = temp;
+	};
+
+	//randomly move things around in the list
+	for (int i = 0; i < SIZE; i++) {
+		swap(RndInt(0, SIZE - 1), RndInt(0, SIZE - 1));
+	}
+
+	auto swapPlayerToTeam = [](int* counter, int iTeam, CHL2MP_Player* pPlayer) {
+		(*counter)++;
+		if (pPlayer->GetTeamNumber() != iTeam) {
+			const CPlayerClass* pClass = NClassQuota::FindInfiniteClassForTeam(iTeam);
+			pPlayer->ForceJoin(pClass, iTeam, pClass->m_iClassNumber);
+		}
+	};
+
+	int numAmer, numBrit;
+	numAmer = numBrit = 0;
+	for (int i = 0; i < SIZE; i++) {
+		CHL2MP_Player* pPlayer = pPlayerList[i];
+
+		if (!pPlayer)
+			continue;
+
+		if (numAmer < numBrit) {
+			swapPlayerToTeam(&numAmer, TEAM_AMERICANS, pPlayer);
+		}
+		else {
+			swapPlayerToTeam(&numBrit, TEAM_BRITISH, pPlayer);
+		}
+	}
+
+	//free memory
+	delete[] pPlayerList;
+
+	MSay("#BG3_Adm_TeamsScrambled");
+}
+
+CON_COMMAND(scramble_teams, "Scrambles the teams") {
+	if (!verifyPlayerPermissions(__FUNCTION__))
+		return;
+
+	ScrambleTeams();
+}
+
 static const CPlayerClass* g_pNextLinebattleClass = NULL;
 static void LinebattleSetClass(int iTeam, const char* pszAbbreviation, bool instant = true) {
 	if (!IsLinebattle())
@@ -323,8 +490,8 @@ static void LinebattleSetClass(int iTeam, const char* pszAbbreviation, bool inst
 			const char* pszSelector = iTeam == TEAM_AMERICANS ? "@amer" : "@brit";
 			//set all players of correct team to that class
 			PerPlayerCommand(NULL, pszSelector, [](CHL2MP_Player* pPlayer){
-				//don't change players who are officers
-				if (BG3Buffs::PlayersClassHasRallyAbility(pPlayer))
+				//don't change players who are on unique classes
+				if (pPlayer->GetPlayerClass()->GetLimitSml() >= 0)
 					return;
 
 				pPlayer->ForceJoin(g_pNextLinebattleClass, g_pNextLinebattleClass->m_iDefaultTeam, g_pNextLinebattleClass->m_iClassNumber);
@@ -335,12 +502,21 @@ static void LinebattleSetClass(int iTeam, const char* pszAbbreviation, bool inst
 		pc.m_pcvLimit_lrg->SetValue("-1");
 		pc.m_pcvLimit_med->SetValue("-1");
 		pc.m_pcvLimit_sml->SetValue("-1");
+		ConVar * officerClass = iTeam == TEAM_AMERICANS ? &lb_officer_classoverride_a : &lb_officer_classoverride_b;
+		int iOfficerClass = officerClass->GetInt();
 		for (int i = 0; i < CPlayerClass::numClassesForTeam(iTeam); i++) {
 			const CPlayerClass* pOtherClass = CPlayerClass::fromNums(iTeam, i);
 			if (pOtherClass != &pc) {
-				pOtherClass->m_pcvLimit_lrg->SetValue(0);
-				pOtherClass->m_pcvLimit_med->SetValue(0);
-				pOtherClass->m_pcvLimit_sml->SetValue(0);
+				if (pOtherClass->m_iClassNumber == iOfficerClass) {
+					pOtherClass->m_pcvLimit_lrg->SetValue(1);
+					pOtherClass->m_pcvLimit_med->SetValue(1);
+					pOtherClass->m_pcvLimit_sml->SetValue(1);
+				}
+				else {
+					pOtherClass->m_pcvLimit_lrg->SetValue(0);
+					pOtherClass->m_pcvLimit_med->SetValue(0);
+					pOtherClass->m_pcvLimit_sml->SetValue(0);
+				}
 			}
 		}
 	}
@@ -384,7 +560,8 @@ static void LinebattleSetKit(int iTeam, int iWeapon, int iUniform, int iAmmo) {
 	//tell all players on team to change and spawn with new kit
 	for (int i = 1; i <= gpGlobals->maxClients; i++) {
 		CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-		if (pPlayer && pPlayer->GetTeamNumber() == iTeam && !BG3Buffs::PlayersClassHasRallyAbility(pPlayer)) {
+		if (pPlayer && pPlayer->GetTeamNumber() == iTeam && 
+			pPlayer->GetPlayerClass()->GetLimitSml() < 0) {
 			pPlayer->m_iClassSkin = iUniform;
 			pPlayer->m_iGunKit = iWeapon;
 			pPlayer->m_iAmmoKit = iAmmo;
@@ -395,6 +572,25 @@ static void LinebattleSetKit(int iTeam, int iWeapon, int iUniform, int iAmmo) {
 			//set the weapon forcer to force joining players to a specific kit
 			ConVar* pWeaponKitEnforcer = pPlayer->GetTeamNumber() == TEAM_AMERICANS ? &lb_enforce_weapon_amer : &lb_enforce_weapon_brit;
 			pWeaponKitEnforcer->SetValue(iWeapon + 1);
+		}
+	}
+}
+
+void OnOfficerClassOverrideChange(IConVar* cvar, const char* pszOldValue, float flOldValue) {
+	//Only do special stuff in linebattle mode
+	if (!IsLinebattle())
+		return;
+
+	int iTeam = (cvar == (IConVar*)&lb_officer_classoverride_a) ? TEAM_AMERICANS : TEAM_BRITISH;
+	int iOldClass = atoi(pszOldValue);
+	int iNewClass = ((ConVar*)cvar)->GetInt();
+	const CPlayerClass* pNewClass = CPlayerClass::fromNums(iTeam, iNewClass);
+
+	//switch any officers from old class to new class
+	for (int i = 0; i <= gpGlobals->maxClients; i++) {
+		CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+		if (pPlayer && pPlayer->GetTeamNumber() == iTeam && pPlayer->GetNextClass() == iOldClass) {
+			pPlayer->ForceJoin(pNewClass, iTeam, iNewClass);
 		}
 	}
 }
@@ -532,8 +728,11 @@ CON_COMMAND(msay, "") {
 CON_COMMAND(mp_tickets_a_adjust, "Adjusts American ticket amount by given amout, positive or negative") {
 	if (args.ArgC() < 2 || !verifyMapModePermissions(__FUNCTION__))
 		return;
+	int amount = atoi(args[1]);
 
 	if (mp_comp_notifications.GetBool()) CSay("Changing American team ticket amount.");
+	if (amount > 0) MSay("Americans receive reinforcements!");
+	if (amount < 0) MSay("American morale depleted!");
 	CTeam *pAmericans = g_Teams[TEAM_AMERICANS];
 	pAmericans->ChangeTickets(atoi(args[1]));
 }
@@ -541,8 +740,11 @@ CON_COMMAND(mp_tickets_a_adjust, "Adjusts American ticket amount by given amout,
 CON_COMMAND(mp_tickets_b_adjust, "Adjusts British ticket amount by given amout, positive or negative") {
 	if (args.ArgC() < 2 || !verifyMapModePermissions(__FUNCTION__))
 		return;
+	int amount = atoi(args[1]);
 
 	if (mp_comp_notifications.GetBool()) CSay("Changing British team ticket amount.");
+	if (amount > 0) MSay("British receive reinforcements!");
+	if (amount < 0) MSay("British morale depleted!");
 	CTeam *pBritish = g_Teams[TEAM_BRITISH];
-	pBritish->ChangeTickets(atoi(args[1]));
+	pBritish->ChangeTickets(amount);
 }

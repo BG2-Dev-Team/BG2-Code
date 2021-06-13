@@ -516,8 +516,20 @@ int CTeam::GetTicketsLeft(void)
 
 void CTeam::RemoveTicket(void)
 {
-	if (m_iTicketsLeft > 0)
+	if (m_iTicketsLeft > 0) {
 		m_iTicketsLeft--;
+
+		extern ConVar mp_tickets_timelimit;
+		if (m_iTicketsLeft == 0) {
+			const char* pszMessage = m_iTeamNum == TEAM_AMERICANS ? "#BG3_Amer_Out_Of_Tickets" : "#BG3_Brit_Out_Of_Tickets";
+			MSay(pszMessage);
+
+			if (mp_tickets_timelimit.GetBool() && HL2MPRules()->GetRemainingRoundTime() > 60) {
+				HL2MPRules()->SetRemainingRoundTime(60.f);
+				CSay("Remaining round time set to one minute");
+			}
+		}
+	}
 }
 
 void CTeam::RemoveTickets(float number)

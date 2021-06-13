@@ -61,6 +61,7 @@ public : // IGameResources intreface
 	int GetNumAmericans() const { return (m_iPlayerCounts >> 16) & 0xFF; };
 	int GetNumAliveBritish() const { return (m_iPlayerCounts >> 8) & 0xFF; };
 	int GetNumAliveAmericans() const { return m_iPlayerCounts & 0xFF; }
+	int GetNumNonSpectatingPlayers() const { return GetNumBritish() + GetNumAmericans(); }
 	unsigned int		m_iPlayerCounts;
 protected:
 	void	UpdatePlayerName( int slot );

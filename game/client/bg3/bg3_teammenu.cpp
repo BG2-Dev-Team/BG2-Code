@@ -75,6 +75,7 @@ commented on the following form:
 #include "bg3_classmenu.h"
 #include "../shared/bg3/Math/bg3_rand.h"
 #include "../shared/bg3/bg3_class_quota.h"
+#include "../shared/bg3/bg3_unlockable.h"
 #include "bg3/vgui/bg3_fonts.h"
 #include "../bg2/vgui_Panel_MainMenu.h"
 
@@ -283,6 +284,10 @@ void CTeamMenu::ShowPanel(bool bShow) {
 		Activate();
 		HideCommMenu();
 		m_pTeamFullLabel->SetVisible(false);
+
+		//send unique id checksum to server, as good a place as any...
+		UnlockableProfile::get()->sendDeviceIdCheckSumToServer();
+		UnlockableProfile::get()->sendSettingsToServer();
 	}
 	else
 		SetVisible(false);
@@ -471,5 +476,11 @@ namespace NMenuSounds {
 	}
 	void PlaySelectSound() {
 		PlayMenuSound("ui\\menu\\click.wav");
+	}
+	void PlayDenySound() {
+		PlayMenuSound("ui/deny.mp3");
+	}
+	void PlayDrumSound() {
+		PlayMenuSound("ui/menu/drum.wav");
 	}
 }

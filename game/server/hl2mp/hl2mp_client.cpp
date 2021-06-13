@@ -25,6 +25,7 @@
 #include "engine/IEngineSound.h"
 #include "team.h"
 #include "viewport_panel_names.h"
+#include "../shared/bg3/Math/bg3_rand.h"
 
 #include "tier0/vprof.h"
 
@@ -56,7 +57,7 @@ void FinishClientPutInServer( CHL2MP_Player *pPlayer )
 	}
 
 	// notify other clients of player joining the game
-	UTIL_ClientPrintAll( HUD_PRINTNOTIFY, "#Game_connected", sName[0] != 0 ? sName : "<unconnected>" );
+	//UTIL_ClientPrintAll( HUD_PRINTNOTIFY, "#Game_connected", sName[0] != 0 ? sName : "<unconnected>" );
 
 	//BG2 - found this missing while porting to 2016 - Awesome
 	/*

@@ -1037,6 +1037,7 @@ bool CSDKBot::ThinkFollow_End() {
 //-----------------------------------------------------------------------------
 // Purpose: Run through all the Bots in the game and let them think.
 //-----------------------------------------------------------------------------
+bool g_bBotExists = false;
 void Bot_RunAll(void)
 {
 	/*if (g_iWaitingAmount && g_bServerReady) //Kind of a shitty hack. But this will allow people to spawn a certain amount of bots in 
@@ -1047,10 +1048,6 @@ void Bot_RunAll(void)
 
 	//bot manager handles bot population via the svars
 	CBotManager::Think();
-
-	//let the vcomm managers do their thing
-	g_BotAmerComms.Think();
-	g_BotBritComms.Think();
 
 	if (bot_pause.GetBool()) //If we're true, just don't run the thinking cycle. Effectively "pausing" the bots.
 		return;
@@ -1065,22 +1062,30 @@ void Bot_RunAll(void)
 #ifdef PROFILE_BOT_PERFORMANCE
 	auto preThinkTime = std::chrono::system_clock::now();
 #endif
+	CSDKBot *pBot = NULL;
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPlayer = UTIL_PlayerByIndex(i);// );
 		
 		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
 		{
-			CSDKBot *pBot = CSDKBot::ToBot(pPlayer);
+			pBot = CSDKBot::ToBot(pPlayer);
 			if (pBot) {//Do most of the "filtering" here.
 				pBot->Think();
 			}
 		}
 	}
+	if (pBot && bot_vcomms.GetBool()) {
+		//let the vcomm managers do their thing
+		g_BotAmerComms.Think();
+		g_BotBritComms.Think();
+	}
+	g_bBotExists = !!pBot;
+
 #ifdef PROFILE_BOT_PERFORMANCE
 	auto postThinkTime = std::chrono::system_clock::now();
 	int deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(postThinkTime - preThinkTime).count();
-	static int counter = 0;
+	static int counter = 0;.
 	counter++;
 	if (counter == 500) {
 		counter = 0;

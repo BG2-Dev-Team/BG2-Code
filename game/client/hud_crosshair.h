@@ -51,6 +51,8 @@ public:
 	//This is called when a melee attack starts on the client side
 	void			RegisterMeleeSwing(C_BaseBG2Weapon* pWeapon, int iAttack);
 
+	void			SetCrosshairTextureIndex(int i);
+
 protected:
 	static CHudCrosshair* g_pCrosshair;
 
@@ -60,6 +62,7 @@ protected:
 	
 	// Crosshair sprite and colors
 	CHudTexture		*m_pCrosshair;
+	int				m_iCrosshairTextureIndex;
 	CHudTexture		*m_pDefaultCrosshair;
 	Color			m_clrCrosshair;
 	QAngle			m_vecCrossHairOffsetAngle;

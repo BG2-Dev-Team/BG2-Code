@@ -48,6 +48,8 @@ void ClientPrintAll( char *str, bool printfordeadplayers = false, bool forcenext
 void ClientPrintAll( int msg_type, int msg_dest = HUD_PRINTCENTER, const char * param1 = 0, const char * param2 = 0 );
 void ClientPrint( CBasePlayer *pPlayer, int msg_type, int msg_dest = HUD_PRINTCENTER, const char * param1 = 0, const char * param2 = 0 );
 
+extern ConVar mp_flagmode;
+
 class CFlag : public CBaseAnimating
 {
 	DECLARE_CLASS( CFlag, CBaseAnimating );
@@ -57,7 +59,7 @@ class CFlag : public CBaseAnimating
 
 	//BG2 - Used with the flag triggers. -HairyPotter
 	bool m_bIsParent,										//Helps the flag remember it's place... as a parent.
-		 m_bActive,											//Is it active? And yes, this replaces the networked version.
+		 m_bActivated,										//Is it active? And yes, this replaces the networked version.
 		 m_bInvisible;										//Is the flag model "invisible"?
 
 	CUtlVector<CBasePlayer*>	m_vTriggerBritishPlayers,	//British players who have stepped into the trigger
@@ -133,6 +135,8 @@ class CFlag : public CBaseAnimating
 				m_sBritishFlagModelName,
 				m_sAmericanFlagModelName; //
 
+	int m_iFlagMode = 0; //flags can be disabled/enabled based on mp_flagmode. flagmode -1 = always on
+
 	int GetNeutralSkin()
 	{
 		//for backward compatibility without this name defined
@@ -193,5 +197,6 @@ public:
 	void HandleLoseOutputs( void );	//let iTeam have this flag now..
 	void ChangeTeam( int iTeamNum );
 	void ResetFlag( void );
+	bool SetActiveState(bool bActive);
 	virtual int UpdateTransmitState();
 };

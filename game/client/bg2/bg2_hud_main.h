@@ -21,8 +21,6 @@ void LocalGameMsg(const char* pszToken);
 void LocalGameMsg(const wchar* pszText);
 
 
-#define INTERMISSION_BUFFER_SIZE 256
-
 //==============================================
 // CHudBG2
 // Displays flag status
@@ -44,6 +42,7 @@ public:
 	void PaintBackgroundOnto(Label* pLabel);
 	void PaintTopCenterHUD(/*C_HL2MP_Player* */); //time, new swingomemeter, flags, backgrounds, round scores
 	void PaintBottomLeftHUD(C_HL2MP_Player*, C_BaseCombatWeapon*); //health, ammo
+	void PaintBottomRightHUD(C_HL2MP_Player* pPlayer);
 	void PaintDeathMessage();
 	void PaintClassCounts();
 
@@ -56,14 +55,15 @@ public:
 
 	void SetGameMsgText(const wchar* pszText);
 	void MsgFunc_GameMsg(bf_read& msg);
-	void MsgFunc_IntermissionMsg(bf_read& msg);
 	void MsgFunc_HitVerif( bf_read &msg );
 	void MsgFunc_WinMusic( bf_read &msg );
 	//HairyPotter
 	void MsgFunc_CaptureSounds( bf_read &msg );
 	void PlayCaptureSound ( const Vector &origin, char sound[255] );
 	void MsgFunc_VCommSounds( bf_read &msg );
+	void MsgFunc_ExpEvent(bf_read &msg);
 	void PlayVCommSound ( char snd[512], int playerindex );
+	void PlayLevelUpSound();
 	//
 	
 	void HideShowAllTeam( bool visible );
@@ -84,19 +84,26 @@ private:
 	vgui::Label * m_pLabelAmmo; 
 	vgui::Label * m_pLabelDeathMessage; 
 	vgui::Label * m_pLabelRoundTime;
-	vgui::Label * m_pLabelIntermissionTime; // BG3 - Ricochet - intermission timer
 	vgui::Label * m_pLabelDamageTaken;
 	vgui::Label * m_pLabelDamageGiven;
 	vgui::Label * m_pLabelLMS;		//BG2 - Tjoppen - TODO: remove this when hintbox works correctly
 	vgui::Label * m_pLabelHealth;
+	vgui::Label * m_pLabelSpectatedPlayerName;
 
 	vgui::Label * m_pLabelGameMessage;
 
 	CAdminMenu  * m_pAdminMenu;
 
+
+	//exp system and notifications
+	CHudTexture* m_pExpBottleBlue;
+	CHudTexture* m_pExpBottleRed;
+	CHudTexture* m_pExpBottleOverlay;
+	vgui::Label* m_pExpEventLabel;
+	vgui::Label* m_pExpWarningLabel;
+	float m_flLastExpEventTime;
+
 	float m_flGameMessageExpireTime;
-	float m_flIntermissionMessageExpireTime;
-	wchar* m_pIntermissionMessageLabelText; // Dynamic memory
 	float m_flTakenExpireTime;
 	float m_flGivenExpireTime;
 	float m_flLastSwing;	//last frame's swingometer value

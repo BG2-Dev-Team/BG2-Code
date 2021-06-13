@@ -8,6 +8,7 @@ I'm tired of valve's functions not being random enough, so I'm making my own
 */
 //TODO find an entry point to seed this!
 void RndSeed(int seed);
+void RndSeed(uint64 seed);
 
 int RndInt();
 

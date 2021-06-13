@@ -217,6 +217,8 @@ namespace NMenuSounds {
 
 	void PlayHoverSound();
 	void PlaySelectSound();
+	void PlayDenySound();
+	void PlayDrumSound();
 }
 
 #endif //BG3_TEAMMENU_H

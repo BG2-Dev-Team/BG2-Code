@@ -165,7 +165,7 @@ void CWeaponFrag::CheckForFuseEnd()
 			case GRENADE_PAUSED_SECONDARY:
 				RollGrenade(pOwner);	
 		}
-
+		m_flFuseEndTime = FLT_MAX;
 		DecrementAmmo(pOwner);
 		StopSound(this->entindex(), GRENADE_FUSE_SOUND);
 	}

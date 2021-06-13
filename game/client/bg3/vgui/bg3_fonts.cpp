@@ -43,6 +43,8 @@ commented on the following form:
 
 namespace vgui {
 	Color				g_cBG3TextColor(229, 228, 178, 255);
+	Color				g_cBG3TextTransparentColor(229, 228, 178, 64);
+	Color				g_cBG3GraphKeylineColor(229, 228, 178, 16);
 	Color				g_cBG3TextHighlightColor(253, 252, 201, 255);
 
 	HFont GetDefaultBG3Font(IScheme* pScheme) {

@@ -71,8 +71,8 @@ const int CHARLE_FIRE_DAMAGE = 107; //Formally equivelent to REVOL_FIRE_DAMAGE -
 const int CHARLE_BAYONET_DAMAGE = REVOL_BAYONET_DAMAGE;
 const int CHARLE_BAYONET_RANGE = 80;
 
-const int MIQUELET_FIRE_DAMAGE = 104; //Formally equivelent to REVOL_FIRE_DAMAGE - Awesome
-const int MIQUELET_BAYONET_DAMAGE = 60;
+const int MIQUELET_FIRE_DAMAGE = 102; //Formally equivelent to REVOL_FIRE_DAMAGE - Awesome
+const int MIQUELET_BAYONET_DAMAGE = 59;
 const int MIQUELET_BAYONET_RANGE = 81;
 
 const int DUTCH_FIRE_DAMAGE = 109;
@@ -84,14 +84,20 @@ const int OLDMODEL_CHARLE_BAYONET_DAMAGE = 63;
 const int OLDMODEL_CHARLE_BAYONET_RANGE = 83;
 
 const int LMODEL_CHARLE_FIRE_DAMAGE = 100; 
-const int LMODEL_CHARLE_BAYONET_DAMAGE = 57;
-const int LMODEL_CHARLE_BAYONET_RANGE = 81;
+const int LMODEL_CHARLE_BAYONET_DAMAGE = 55;
+const int LMODEL_CHARLE_BAYONET_RANGE = 79;
 
-const int SEASERVICE_FIRE_DAMAGE = 108;			//60 * 1.85
-const int SEASERVICE_BAYONET_DAMAGE = 63;			//43 * 0.8 * 1.85
+const int SEASERVICE_FIRE_DAMAGE = 109;			//60 * 1.85
+const int SEASERVICE_BAYONET_DAMAGE = 62;			//43 * 0.8 * 1.85
 const int SEASERVICE_BAYONET_RANGE = 78;
 
 const int PENNY_FIRE_DAMAGE = BESS_FIRE_DAMAGE;
+
+const int SERJEANT_FUSIL_FIRE_DAMAGE = 100;
+
+const int ARTILLERY_COMMON_CARBINE_FIRE_DAMAGE = 105;			//60 * 1.85
+const int ARTILLERY_COMMON_CARBINE_BAYONET_DAMAGE = 62;			//43 * 0.8 * 1.85
+const int ARTILLERY_COMMON_CARBINE_BAYONET_RANGE = 76;
 
 const int LONGPATTERN_FIRE_DAMAGE = 114;	//62 * 1.85
 const int LONGPATTERN_BAYONET_DAMAGE = 66;	//45 * 0.8 * 1.85
@@ -133,8 +139,11 @@ const int KNIFE_DAMAGE_ALT = 45;
 const int SABRE_DAMAGE = 74;				//40 * 1.85
 const int TOMAHAWK_DAMAGE = 79;				//43 * 1.85
 const int CLUB_DAMAGE		= 82;
+const int GUNSTOCK_DAMAGE = 90;
 const int HIRSCHFAENGER_DAMAGE = 55;		//used to be knife's damage, but then knife was changed from 55 to 45
 const int HANGER_DAMAGE = 74;			//this ought to be a good number
+const int SMALLSWORD_DAMAGE = 70;		//this ought to be a good number
+const int RAPIER_DAMAGE = 55;
 
 //BG2 - Tjoppen - own constants, interpreted from various places in the BG source
 const float SABRE_RANGE = 57.0;
@@ -144,6 +153,7 @@ const float HANGER_RANGE = 61.0;
 const float KNIFE_RANGE = 52.0;
 const float TOMAHAWK_RANGE = 55.0;
 const float CLUB_RANGE = 57.0f;
+const float RAPIER_RANGE = 67.f;
 
 const float BAYONET_COS_TOLERANCE = 0.9961946980917;		//+-5 degrees
 const float BAYONET_RETRACE_DURATION = 0.1;
@@ -155,6 +165,9 @@ const float KNIFE_RETRACE_DURATION			= 0.15f;
 
 const float HANGER_COS_TOLERANCE		= 0.966;		//+-15 degrees
 const float HANGER_RETRACE_DURATION		= 0.18f;
+
+const float RAPIER_COS_TOLERANCE = 0.9848;		//+-10 degrees
+const float RAPIER_RETRACE_DURATION = 0.15f;
 
 const float TOMAHAWK_COS_TOLERANCE			= 0.906f;		//+-25 degrees
 const float TOMAHAWK_RETRACE_DURATION		= 0.2f;
@@ -178,7 +191,7 @@ const float ZERO_RANGE_MUSKET = 50 * 36;	//fifty yards
 const float ZERO_RANGE_RIFLE = 130 * 36;	//two hundred yards
 
 const float IRONSIGHTS_TIME_FAST = 0.2f; //lightweight carbines and muskets
-const float IRONSIGHTS_TIME_SLOW = 0.5f; //heavyweight muskets
+const float IRONSIGHTS_TIME_SLOW = 0.45f; //heavyweight muskets
 const float IRONSIGHTS_TIME_DEFAULT = 0.3f; //already assigned in default constructor
 
 #ifdef CLIENT_DLL
@@ -263,7 +276,7 @@ DECLARE_BG2_WEAPON(sea_service)
 	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_FIREARM;
 	m_Attackinfos[0].m_iDamage = SEASERVICE_FIRE_DAMAGE;//75;
 	m_Attackinfos[0].m_flAttackrate = 1.0;
-	m_Attackinfos[0].m_flRecoil = 0.6;
+	m_Attackinfos[0].m_flRecoil = 0.7;
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 12.0f;
 	m_Attackinfos[0].m_flCrouchStill = 3.7f; //2.4
@@ -294,7 +307,8 @@ DECLARE_BG2_WEAPON(sea_service)
 
 	m_pBayonetDeathNotice = "brownbess_bayonet";
 
-	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
+	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE * 0.9f;
+	m_flDamageDropoffMultiplier = 1.05f;
 	m_flZeroRange = ZERO_RANGE_MUSKET;
 	m_iNumShot = 0;
 }
@@ -374,7 +388,7 @@ DECLARE_BG2_WEAPON(light_model_charleville)
 
 	m_fHolsterTime = 0.75f;
 	m_flApproximateReloadTime = 7.6f;
-	m_flIronsightsTime = IRONSIGHTS_TIME_FAST;
+	m_flIronsightsTime = 0.25f;
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset = -2.5;
@@ -386,7 +400,7 @@ DECLARE_BG2_WEAPON(light_model_charleville)
 	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_FIREARM;
 	m_Attackinfos[0].m_iDamage = LMODEL_CHARLE_FIRE_DAMAGE;//75;
 	m_Attackinfos[0].m_flAttackrate = 1.0;
-	m_Attackinfos[0].m_flRecoil = 0.3;
+	m_Attackinfos[0].m_flRecoil = 0.5;
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 7.5f;
 	m_Attackinfos[0].m_flCrouchStill = 3.1f;
@@ -413,13 +427,13 @@ DECLARE_BG2_WEAPON(light_model_charleville)
 	m_Attackinfos[1].m_iAttackActivityEmpty = ACT_VM_SECONDARYATTACK_EMPTY;
 	m_Attackinfos[1].m_flCosAngleTolerance = BAYONET_COS_TOLERANCE;
 	m_Attackinfos[1].m_flRetraceDuration = BAYONET_RETRACE_DURATION;
-	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 2;
+	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 1.8f;
 
 	m_pBayonetDeathNotice = "light_model_charleville_bayonet";
 
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flZeroRange = ZERO_RANGE_MUSKET;
-	m_flDamageDropoffMultiplier = 1.24f;
+	m_flDamageDropoffMultiplier = 1.4f;
 	m_iNumShot = 0;
 }
 
@@ -470,7 +484,7 @@ DECLARE_BG2_WEAPON(old_model_charleville)
 	//secondary
 	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_STAB;
 	m_Attackinfos[1].m_iDamage = OLDMODEL_CHARLE_BAYONET_DAMAGE;//60;
-	m_Attackinfos[1].m_flAttackrate = 1.05f;//-0.7f;
+	m_Attackinfos[1].m_flAttackrate = 1.1f;//-0.7f;
 	m_Attackinfos[1].m_flRange = OLDMODEL_CHARLE_BAYONET_RANGE;
 	//m_Attackinfos[1].m_flCosAngleTolerance	= 0.95f;
 	m_Attackinfos[1].m_iAttackActivity = ACT_VM_SECONDARYATTACK;
@@ -607,6 +621,7 @@ DECLARE_BG2_WEAPON(miquelet)
 
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flZeroRange = ZERO_RANGE_MUSKET;
+	m_flDamageDropoffMultiplier = 1.05f;
 	m_iNumShot = 0;
 }
 #ifndef CLIENT_DLL
@@ -736,9 +751,13 @@ DECLARE_BG2_WEAPON( pistol_a )
 	m_Attackinfos[0].m_flRecoil				= 0.7;
 	m_Attackinfos[0].m_flRange				= PISTOL_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving		= 7.5f;
-	m_Attackinfos[0].m_flCrouchStill		= 6.0f;
+	m_Attackinfos[0].m_flCrouchStill		= 6.5f;
 	m_Attackinfos[0].m_flStandMoving		= 9.0f;
-	m_Attackinfos[0].m_flStandStill			= 6.0f; 
+	m_Attackinfos[0].m_flStandStill			= 6.5f; 
+	m_Attackinfos[0].m_flStandAimStill		= 5.0f;
+	m_Attackinfos[0].m_flStandAimMoving		= 5.0f;
+	m_Attackinfos[0].m_flCrouchAimStill		= 5.0f;
+	m_Attackinfos[0].m_flCrouchAimMoving	= 5.0f;
 	m_Attackinfos[0].m_flConstantDamageRange= PISTOL_CONSTANT_DAMAGE_RANGE;
 	m_Attackinfos[0].m_flRelativeDrag		= 1.25;			//pistol
 	m_Attackinfos[0].m_iAttackActivity		= ACT_VM_PRIMARYATTACK;
@@ -746,6 +765,9 @@ DECLARE_BG2_WEAPON( pistol_a )
 
 	//secondary
 	m_Attackinfos[1].m_iAttacktype			= ATTACKTYPE_NONE;
+
+	m_flIronsightFOVOffset = 0;
+	m_flIronsightsTime = IRONSIGHTS_TIME_FAST;
 
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_PISTOL;
 	m_flZeroRange = ZERO_RANGE_PISTOL;
@@ -874,7 +896,7 @@ DECLARE_BG2_WEAPON(dagger)
 	//primary
 	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
 	m_Attackinfos[0].m_iDamage = KNIFE_DAMAGE_ALT;//60;
-	m_Attackinfos[0].m_flAttackrate = 0.7f;//1.1f;
+	m_Attackinfos[0].m_flAttackrate = 0.5f;//1.1f;
 	m_Attackinfos[0].m_flRange = KNIFE_RANGE;
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_flCosAngleTolerance = KNIFE_COS_TOLERANCE;
@@ -888,6 +910,35 @@ DECLARE_BG2_WEAPON(dagger)
 
 #ifndef CLIENT_DLL
 MELEE_ACTTABLE(dagger)
+#endif
+
+#ifdef CLIENT_DLL
+#define CWeaponbottle C_Weaponbottle
+#endif
+DECLARE_BG2_WEAPON(bottle)
+{
+	m_fHolsterTime = 0.75f;
+
+	m_bWeaponHasSights = false;
+	m_bBreakable = true;
+
+	//primary
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
+	m_Attackinfos[0].m_iDamage = KNIFE_DAMAGE_ALT / 2;//60;
+	m_Attackinfos[0].m_flAttackrate = 0.7f;//1.1f;
+	m_Attackinfos[0].m_flRange = KNIFE_RANGE;
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
+	m_Attackinfos[0].m_flCosAngleTolerance = KNIFE_COS_TOLERANCE;
+	m_Attackinfos[0].m_flRetraceDuration = KNIFE_RETRACE_DURATION;
+	m_Attackinfos[0].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 1.4f;
+
+	//secondary
+	m_Attackinfos[1] = m_Attackinfos[0];
+
+}
+
+#ifndef CLIENT_DLL
+MELEE_ACTTABLE(bottle)
 #endif
 
 #ifdef CLIENT_DLL
@@ -953,6 +1004,42 @@ MELEE_ACTTABLE(hanger)
 #endif
 
 #ifdef CLIENT_DLL
+#define CWeaponrapier C_Weaponrapier
+#endif
+DECLARE_BG2_WEAPON(rapier)
+{
+	m_fHolsterTime = 0.75f;
+
+	m_bWeaponHasSights = false;
+	m_bDemoteNonHeadhitsToSecondaryDamage = true;
+
+	//primary
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
+	m_Attackinfos[0].m_iDamage = RAPIER_DAMAGE;//60;
+	m_Attackinfos[0].m_flAttackrate = 1.2;//-0.7f;
+	m_Attackinfos[0].m_flRange = RAPIER_RANGE;
+	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
+	m_Attackinfos[0].m_flCosAngleTolerance = RAPIER_COS_TOLERANCE;
+	m_Attackinfos[0].m_flRetraceDuration = RAPIER_RETRACE_DURATION;
+	m_Attackinfos[0].m_iStaminaDrain = MELEE_STAMINA_DRAIN;
+
+	//secondary
+	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_SLASH;
+	m_Attackinfos[1].m_iDamage = RAPIER_DAMAGE / 1.2;//60;
+	m_Attackinfos[1].m_flAttackrate = 0.8;//-0.7f;
+	m_Attackinfos[1].m_flRange = RAPIER_RANGE;
+	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
+	m_Attackinfos[1].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
+	m_Attackinfos[1].m_flCosAngleTolerance = RAPIER_COS_TOLERANCE;
+	m_Attackinfos[1].m_flRetraceDuration = RAPIER_RETRACE_DURATION;
+	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 1.2;
+}
+#ifndef CLIENT_DLL
+MELEE_ACTTABLE(rapier)
+#endif
+
+#ifdef CLIENT_DLL
 #define CWeaponsmallsword C_Weaponsmallsword
 #endif
 DECLARE_BG2_WEAPON(smallsword)
@@ -963,7 +1050,7 @@ DECLARE_BG2_WEAPON(smallsword)
 
 	//primary
 	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
-	m_Attackinfos[0].m_iDamage = HANGER_DAMAGE;//60;
+	m_Attackinfos[0].m_iDamage = SMALLSWORD_DAMAGE;//60;
 	m_Attackinfos[0].m_flAttackrate = 1.2;//-0.7f;
 	m_Attackinfos[0].m_flRange = SMALLSWORD_RANGE;
 	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
@@ -974,7 +1061,7 @@ DECLARE_BG2_WEAPON(smallsword)
 
 	//secondary
 	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_SLASH;
-	m_Attackinfos[1].m_iDamage = HANGER_DAMAGE / 1.5;//60;
+	m_Attackinfos[1].m_iDamage = SMALLSWORD_DAMAGE / 1.5;//60;
 	m_Attackinfos[1].m_flAttackrate = 1.2 / 1.5;//-0.7f;
 	m_Attackinfos[1].m_flRange = SMALLSWORD_RANGE;
 	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
@@ -1054,6 +1141,48 @@ DECLARE_BG2_WEAPON(club)
 
 #ifndef CLIENT_DLL
 MELEE_ACTTABLE(club)
+#endif
+
+#ifdef CLIENT_DLL
+#define CWeapongunstock C_Weapongunstock
+#endif
+DECLARE_BG2_WEAPON(gunstock)
+{
+	m_fHolsterTime = 0.75f;
+
+	m_bWeaponHasSights = false;
+
+	m_iOwnerSpeedModOnKill = 3;
+	m_iAerialDamageMod = 13;
+
+	//primary
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
+	m_Attackinfos[0].m_iDamage = GUNSTOCK_DAMAGE;//60;
+	m_Attackinfos[0].m_flAttackrate = 1.4f;//-0.7f;
+	m_Attackinfos[0].m_flRange = CLUB_RANGE;
+	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_ATTACK;
+	m_Attackinfos[0].m_flCosAngleTolerance = TOMAHAWK_COS_TOLERANCE;
+	m_Attackinfos[0].m_flRetraceDuration = TOMAHAWK_RETRACE_DURATION;
+	m_Attackinfos[0].m_iStaminaDrain = MELEE_STAMINA_DRAIN;
+
+	//secondary
+	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_SLASH;
+	m_Attackinfos[1].m_iDamage = CLUB_DAMAGE * 0.64f;//60;
+	m_Attackinfos[1].m_flAttackrate = 1.4f * 0.64f;//-0.7f;
+	m_Attackinfos[1].m_flRange = CLUB_RANGE;
+	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
+	m_Attackinfos[1].m_iAttackActivity = ACT_VM_ATTACK;
+	m_Attackinfos[1].m_flCosAngleTolerance = TOMAHAWK_COS_TOLERANCE;
+	m_Attackinfos[1].m_flRetraceDuration = TOMAHAWK_RETRACE_DURATION;
+	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN * 0.64f;
+
+	//secondary
+	//m_Attackinfos[1] = m_Attackinfos[0];
+}
+
+#ifndef CLIENT_DLL
+MELEE_ACTTABLE(gunstock)
 #endif
 
 #ifdef CLIENT_DLL
@@ -1232,6 +1361,121 @@ DECLARE_BG2_WEAPON( brownbess_nobayo )
 #ifndef CLIENT_DLL
 MUSKET_ACTTABLE( brownbess_nobayo )
 #endif
+
+#ifdef CLIENT_DLL 
+#define CWeaponserjeant_fusil C_Weaponserjeant_fusil
+#endif
+DECLARE_BG2_WEAPON(serjeant_fusil)
+{
+	m_bCantAbortReload = true;
+
+	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.6f;
+	m_flLockTime = 0.06f;
+
+	//Iron sights viewmodel settings.
+	m_flIronsightFOVOffset = -4.5;
+
+	m_bWeaponHasSights = true;
+	//
+
+	//primary
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_FIREARM;
+	m_Attackinfos[0].m_iDamage = SERJEANT_FUSIL_FIRE_DAMAGE;//75;
+	m_Attackinfos[0].m_flAttackrate = 1.0;
+	m_Attackinfos[0].m_flRecoil = 0.5;
+	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
+	m_Attackinfos[0].m_flCrouchMoving = 7.5f;
+	m_Attackinfos[0].m_flCrouchStill = 3.1f;
+	m_Attackinfos[0].m_flStandMoving = 7.7f * MOVING_ACCURACY_MULTIPLIER; //11.5f;
+	m_Attackinfos[0].m_flStandStill = 3.1f;
+	//Iron Sights. These values will probably be changed.
+	m_Attackinfos[0].m_flStandAimStill = 2.1f;
+	m_Attackinfos[0].m_flStandAimMoving = 8.5f;
+	m_Attackinfos[0].m_flCrouchAimStill = 2.1f;
+	m_Attackinfos[0].m_flCrouchAimMoving = 7.7f;
+	//
+	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
+	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
+	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
+
+	m_flDamageDropoffMultiplier = 1.25f;
+
+	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE * 1.2f;
+	m_flZeroRange = ZERO_RANGE_MUSKET;
+	m_flIronsightsTime = IRONSIGHTS_TIME_FAST;
+
+	m_iNumShot = 0;
+}
+
+#ifndef CLIENT_DLL
+MUSKET_ACTTABLE(serjeant_fusil)
+#endif
+
+#ifdef CLIENT_DLL
+#define CWeaponartillery_common_carbine C_Weaponartillery_common_carbine
+#endif
+DECLARE_BG2_WEAPON(artillery_common_carbine)
+{
+	m_bCantAbortReload = true;
+
+	m_fHolsterTime = 0.75f;
+	m_flApproximateReloadTime = 7.2f;
+	m_flLockTime = 0.12f;
+
+	//Iron sights viewmodel settings.
+	m_flIronsightFOVOffset = -2.5;
+
+	m_bWeaponHasSights = true;
+	m_flIronsightsTime = IRONSIGHTS_TIME_FAST;
+	//
+
+	//primary
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_FIREARM;
+	m_Attackinfos[0].m_iDamage = ARTILLERY_COMMON_CARBINE_FIRE_DAMAGE;//75;
+	m_Attackinfos[0].m_flAttackrate = 1.0;
+	m_Attackinfos[0].m_flRecoil = 0.7;
+	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
+	m_Attackinfos[0].m_flCrouchMoving = 12.0f;
+	m_Attackinfos[0].m_flCrouchStill = 3.7f; //2.4
+	m_Attackinfos[0].m_flStandMoving = 13.2f * MOVING_ACCURACY_MULTIPLIER; //12.0f
+	m_Attackinfos[0].m_flStandStill = 3.7f; //2.4
+	//Iron Sights. These values will probably be changed.
+	m_Attackinfos[0].m_flStandAimStill = 2.25f;
+	m_Attackinfos[0].m_flStandAimMoving = 8.8f;
+	m_Attackinfos[0].m_flCrouchAimStill = 2.25f;
+	m_Attackinfos[0].m_flCrouchAimMoving = 8.0f;
+	//
+	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
+	m_Attackinfos[0].m_flRelativeDrag = 1.1;			//musket
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
+	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
+
+	//secondary
+	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_STAB;
+	m_Attackinfos[1].m_iDamage = ARTILLERY_COMMON_CARBINE_BAYONET_DAMAGE;//60;
+	m_Attackinfos[1].m_flAttackrate = 0.95f;//-0.7f;
+	m_Attackinfos[1].m_flRange = ARTILLERY_COMMON_CARBINE_BAYONET_RANGE;
+	//m_Attackinfos[1].m_flCosAngleTolerance	= 0.95f;
+	m_Attackinfos[1].m_iAttackActivity = ACT_VM_SECONDARYATTACK;
+	m_Attackinfos[1].m_iAttackActivityEmpty = ACT_VM_SECONDARYATTACK_EMPTY;
+	m_Attackinfos[1].m_flCosAngleTolerance = BAYONET_COS_TOLERANCE;
+	m_Attackinfos[1].m_flRetraceDuration = BAYONET_RETRACE_DURATION;
+	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 2;
+
+	m_pBayonetDeathNotice = "artillery_common_carbine_bayonet";
+
+	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE * 0.88f;
+	m_flDamageDropoffMultiplier = 1.25f;
+	m_flZeroRange = ZERO_RANGE_MUSKET;
+	m_iNumShot = 0;
+}
+
+#ifndef CLIENT_DLL
+MUSKET_ACTTABLE(artillery_common_carbine)
+#endif
+
 
 #ifdef CLIENT_DLL
 #define CWeaponbeltaxe C_Weaponbeltaxe
@@ -1492,8 +1736,9 @@ DECLARE_BG2_WEAPON(trade_musket)
 
 	//Iron sights viewmodel settings.
 	m_flIronsightFOVOffset = -5;
-	m_flIronsightsTime = IRONSIGHTS_TIME_SLOW;
-	m_flLockTime = 0.2f;
+	m_flIronsightsTime = 0.4f;
+	m_flLockTime = 0.15f;
+	m_bPenetrateFlesh = true;
 
 	m_bWeaponHasSights = true;
 	//
@@ -1505,17 +1750,18 @@ DECLARE_BG2_WEAPON(trade_musket)
 	m_Attackinfos[0].m_flRecoil = 0.9;
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 11.0f;
-	m_Attackinfos[0].m_flCrouchStill = 5.5f; //2.4
+	m_Attackinfos[0].m_flCrouchStill = 3.0f; //2.4
 	m_Attackinfos[0].m_flStandMoving = 12.2f * MOVING_ACCURACY_MULTIPLIER; //12.0f
-	m_Attackinfos[0].m_flStandStill = 6.f; //2.4
+	m_Attackinfos[0].m_flStandStill = 3.0f; //2.4
 	//Iron Sights. These values will probably be changed.
-	m_Attackinfos[0].m_flStandAimStill = 2.2f;
+	m_Attackinfos[0].m_flStandAimStill = 1.7f;
 	m_Attackinfos[0].m_flStandAimMoving = 8.1f;
-	m_Attackinfos[0].m_flCrouchAimStill = 2.2f;
+	m_Attackinfos[0].m_flCrouchAimStill = 1.7f;
 	m_Attackinfos[0].m_flCrouchAimMoving = 7.3f;
 	//
-	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
-	m_Attackinfos[0].m_flRelativeDrag = 1.0;			//musket
+	m_Attackinfos[0].m_flConstantDamageRange = 38 * 36; //32 yards
+	m_flDamageDropoffMultiplier = 1.0f;
+	m_Attackinfos[0].m_flRelativeDrag = 1.8;			//musket
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
 
@@ -1739,8 +1985,8 @@ DECLARE_BG2_WEAPON( brownbess_carbine )
 
 #ifndef CLIENT_DLL
 //roob - should be carbibe but someone borked the player anims!
-//CARBINE_ACTTABLE( brownbess_carbine )
-MUSKET_ACTTABLE( brownbess_carbine )
+CARBINE_ACTTABLE( brownbess_carbine )
+//MUSKET_ACTTABLE( brownbess_carbine )
 #endif
 
 #ifdef CLIENT_DLL 
@@ -1764,18 +2010,18 @@ DECLARE_BG2_WEAPON(blunderbuss)
 
 	//primary
 	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_FIREARM;
-	m_Attackinfos[0].m_iDamage = CARBINE_FIRE_DAMAGE;
+	m_Attackinfos[0].m_iDamage = BLUNDERBUSS_SHOT_DAMAGE;
 	m_Attackinfos[0].m_flAttackrate = 1.0;
 	m_Attackinfos[0].m_flRecoil = 1.4;
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
-	m_Attackinfos[0].m_flCrouchMoving = 25.0f;
-	m_Attackinfos[0].m_flCrouchStill = 22.0f;
-	m_Attackinfos[0].m_flStandMoving = 25.0f * MOVING_ACCURACY_MULTIPLIER;
-	m_Attackinfos[0].m_flStandStill = 22.0f;
+	m_Attackinfos[0].m_flCrouchMoving = 15.0f;
+	m_Attackinfos[0].m_flCrouchStill = 5.0f;
+	m_Attackinfos[0].m_flStandMoving = 15.0f * MOVING_ACCURACY_MULTIPLIER;
+	m_Attackinfos[0].m_flStandStill = 5.0f;
 	//Iron Sights.
-	m_Attackinfos[0].m_flStandAimStill = 4.0f;
+	m_Attackinfos[0].m_flStandAimStill = 2.4f;
 	m_Attackinfos[0].m_flStandAimMoving = 8.1f;
-	m_Attackinfos[0].m_flCrouchAimStill = 4.0f;
+	m_Attackinfos[0].m_flCrouchAimStill = 2.4f;
 	m_Attackinfos[0].m_flCrouchAimMoving = 7.3f;
 	//
 	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
@@ -1784,18 +2030,18 @@ DECLARE_BG2_WEAPON(blunderbuss)
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
 
 	m_flShotAimModifier = 0.0f;
-	m_flShotSpread = 4.0f; //tight spread
+	m_flShotSpread = 5.5f; //tight spread
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flShotMuzzleVelocity = MUZZLE_VELOCITY_BUCKSHOT;
-	m_flZeroRange = ZERO_RANGE_MUSKET;
-	m_iNumShot = CARBINE_NUM_SHOT;
+	m_flZeroRange = ZERO_RANGE_PISTOL;
+	m_iNumShot = CARBINE_NUM_SHOT + 1;
 	m_iDamagePerShot = BLUNDERBUSS_SHOT_DAMAGE;
 }
 
 #ifndef CLIENT_DLL
 //roob - should be carbibe but someone borked the player anims!
-//CARBINE_ACTTABLE( brownbess_carbine )
-MUSKET_ACTTABLE(blunderbuss)
+CARBINE_ACTTABLE( blunderbuss )
+//MUSKET_ACTTABLE(blunderbuss)
 #endif
 
 #ifdef CLIENT_DLL 
@@ -1846,9 +2092,8 @@ DECLARE_BG2_WEAPON(brownbess_carbine_nobayo)
 }
 
 #ifndef CLIENT_DLL
-//roob - should be carbibe but someone borked the player anims!
-//CARBINE_ACTTABLE( brownbess_carbine )
-MUSKET_ACTTABLE(brownbess_carbine_nobayo)
+CARBINE_ACTTABLE( brownbess_carbine_nobayo )
+//MUSKET_ACTTABLE(brownbess_carbine_nobayo)
 #endif
 
 #ifdef CLIENT_DLL 
@@ -1901,8 +2146,7 @@ DECLARE_BG2_WEAPON(french_carbine)
 
 #ifndef CLIENT_DLL
 //roob - should be carbibe but someone borked the player anims!
-//CARBINE_ACTTABLE( brownbess_carbine )
-MUSKET_ACTTABLE(french_carbine)
+CARBINE_ACTTABLE(french_carbine)
 #endif
 
 //jäger rifle, but spelled jaeger to avoid any charset problems
@@ -1955,5 +2199,5 @@ DECLARE_BG2_WEAPON(pattern1776)
 }
 
 #ifndef CLIENT_DLL
-RIFLE_ACTTABLE(pattern1776)
+MUSKET_ACTTABLE(pattern1776)
 #endif

@@ -64,7 +64,8 @@ void CPlayerSearch::Init(CBasePlayer* pOwner) {
 	m_iOwnerTeam = pOwner->GetTeamNumber();
 	m_iEnemyTeam = m_iOwnerTeam == TEAM_AMERICANS ? TEAM_BRITISH : TEAM_AMERICANS;
 	UpdatePlayers();
-	UpdateFlags();
+	m_pCloseEnemyFlag = m_pCloseEnemyFlagVisible = m_pCloseFriendFlag = NULL;
+	if (!IsLMS()) UpdateFlags();
 	//UpdateWaypointFirst();
 }
 
@@ -100,7 +101,7 @@ CFlag* CPlayerSearch::FindClosestFlagToSpot(CBasePlayer* pPlayer, bool insight, 
 	{
 		CFlag *pFlag = dynamic_cast<CFlag*>(pEntity);
 
-		if (!pFlag || (checkTeam && pFlag->GetTeamNumber() == team))
+		if (!pFlag || (checkTeam && pFlag->GetTeamNumber() == team) || !pFlag->IsActive())
 			continue;
 
 		if (insight)
@@ -226,6 +227,7 @@ void CPlayerSearch::UpdatePlayers() {
 }
 
 void CPlayerSearch::UpdateFlags() {
+	m_pCloseEnemyFlag = m_pCloseEnemyFlagVisible = m_pCloseFriendFlag = NULL;
 	CFlag* pClosestFriend = nullptr; vec_t flClosestFriend = FLT_MAX;
 	CFlag* pClosestEnemy = nullptr; vec_t flClosestEnemy = FLT_MAX;
 	CFlag* pClosestEnemyVisible = nullptr; vec_t flClosestEnemyVisible = FLT_MAX;
@@ -233,7 +235,7 @@ void CPlayerSearch::UpdateFlags() {
 
 	while ((pEntity = gEntList.FindEntityByClassname(pEntity, "flag")) != nullptr) {
 		CFlag *curFlag = dynamic_cast<CFlag*>(pEntity);
-		if (curFlag) {
+		if (curFlag && curFlag->IsActive()) {
 			vec_t curDist = (m_vOwnerLocation - curFlag->GetAbsOrigin()).Length();
 			if (curFlag->GetTeamNumber() == m_iOwnerTeam) {
 				if (curDist < flClosestFriend) {

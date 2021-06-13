@@ -44,6 +44,8 @@ Weapon stats will now be stored in this comprehensive struct for two reason:
 #include "cbase.h"
 #include "bg3_player_shared.h"
 
+#define DAMAGE_OVER_RANGE_GRAPH_RANGE_MAX 401
+
 //This was ported from BG2
 //-----------------------------------------------------------------------------
 // Purpose: Outlines stats for a left or right mouse button attack.
@@ -99,6 +101,8 @@ enum WeaponType {
 	GENERIC,
 };
 
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Stores all weapon stats into a single definition, rather than including
 //		copies in every instance of a weapon.
@@ -115,14 +119,15 @@ public:
 	float	m_flMuzzleVelocity;
 	float	m_flShotMuzzleVelocity;	//muzzle velocity when firing buckshot
 	float	m_flDamageDropoffMultiplier;
+	bool	m_bPenetrateFlesh;
 	float	m_flVerticalAccuracyScale;
 	float	m_flZeroRange;		//range to zero the gun in at
 	uint8	m_iNumShot;
 	float	m_iDamagePerShot;
 	bool	m_bShotOnly;
 
-	//uint8	m_iOwnerSpeedModOnKill; //BG3 - was for Native war club, removed for now
-	//uint8	m_iAerialDamageMod; //damage modifier for hits in the air
+	uint8	m_iOwnerSpeedModOnKill; //BG3 - was for Native war club, removed for now
+	uint8	m_iAerialDamageMod; //damage modifier for hits in the air
 
 	bool	m_bDontAutoreload;
 	bool	m_bCantAbortReload;
@@ -132,9 +137,11 @@ public:
 
 	float	m_flIronsightFOVOffset;
 	bool	m_bWeaponHasSights;
+	bool	m_bDemoteNonHeadhitsToSecondaryDamage;
 	//bool	m_bQuickdraw;
 	//bool	m_bSlowDraw;
 	float	m_flIronsightsTime;
+	bool	m_bBreakable;
 
 	bool	m_bFiresUnderwater,
 			m_bAltFiresUnderwater;
@@ -150,6 +157,17 @@ public:
 	static const CWeaponDef* GetDefForWeapon(const char* pszWeaponName);
 	static const CWeaponDef* GetDefault(); //for non-standard weapons, to avoid crashing
 	inline bool HasMelee() const { return m_Attackinfos[0].HasMelee() || m_Attackinfos[1].HasMelee(); }
+
+#ifdef CLIENT_DLL
+	friend class CDamageOverRangeMenu;
+	Color GetGraphColor() const { return m_graphColor; }
+
+private:
+	Color	m_graphColor;
+	mutable int16 m_aSimulatedDamageData[DAMAGE_OVER_RANGE_GRAPH_RANGE_MAX];
+	mutable float m_aSimulatedDropData[DAMAGE_OVER_RANGE_GRAPH_RANGE_MAX];
+	mutable bool m_bDataSimulated = false;
+#endif
 };
 
 //Don't use this macro by itself - combine it with DEC_BG3_WEAPON_ENT, unless you know what you're doing

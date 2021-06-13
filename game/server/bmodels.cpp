@@ -313,8 +313,8 @@ void CFuncConveyor::Spawn( void )
 
 	BaseClass::Spawn();
 
-	if ( !HasSpawnFlags(SF_CONVEYOR_VISUAL) )
-		AddFlag( FL_CONVEYOR );
+	//if ( !HasSpawnFlags(SF_CONVEYOR_VISUAL) )
+		//AddFlag( FL_CONVEYOR );
 
 	// HACKHACK - This is to allow for some special effects
 	if ( HasSpawnFlags( SF_CONVEYOR_NOTSOLID ) )

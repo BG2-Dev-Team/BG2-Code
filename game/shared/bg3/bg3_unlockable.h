@@ -38,10 +38,14 @@ commented on the following form:
 
 #ifdef CLIENT_DLL
 #define CHL2MP_Player C_HL2MP_Player
+
+uint64 getEncryptKey();
+
 #endif
 class CHL2MP_Player;
 
 #define UNLOCKABLE_PROFILE_VERSION_CURRENT 1
+#define DEVICE_ID_MAX_LENGTH 200
 
 enum class EUnlockableType {
 	Weapon,
@@ -68,8 +72,8 @@ enum UnlockableBit : unsigned long long {
 	ULK_2_BDY_FEATHER,
 	ULK_2_UNC_AMER_SKI,
 	ULK_2_UNC_AMER_RIF,
-	ULK_2_FUN_BUTTER, //spawn with butterknife
-	ULK_2_FUN_BUFF_INC, //buff increment
+	ULK_2_FUN_BOTTLE, //spawn with butterknife
+	ULK_2_FUN_EASTER_EGG,
 
 	//Unlockable tier 3
 	ULK_3_WEP_LMC,
@@ -107,10 +111,10 @@ public:
 		//Uniforms handled by existing uniform code with bitfield checks
 
 		//Bodygroup data
-		union {
+		struct {
 			const char* m_pszBodygroupName;
 			uint8 m_iBodygroupIndex;
-		};
+		} m_bodyGroupData;
 
 		//Uniform choice handled by existing uniform code with bitfield checks
 
@@ -118,6 +122,8 @@ public:
 		void(*m_pfSpawnFunc)(CHL2MP_Player*);
 	};
 #endif
+
+	bool isDisabled() { return false; }
 
 	uint8 getCost(); //how many points does this unlockable cost?
 
@@ -146,8 +152,12 @@ enum class EExperienceEventType {
 	GRENADE_KILL = 17,
 	SWIVEL_KILL = 20,
 	TEAM_ROUND_WIN = 50,
-	MATCH_WIN = 100,
+	MATCH_WIN = 300,
 };
+
+#ifdef CLIENT_DLL
+const char* MapExpEventToText(EExperienceEventType type);
+#endif
 
 //Each player has their own profile, stored on their local system
 #define MAX_UNLOCKABLE_LEVEL 45
@@ -155,20 +165,26 @@ class UnlockableProfile {
 public:
 	uint8 m_iVersionNumber = 1; //version number in case format changes later
 
+	uint64 m_iUniqueIdChecksum;
+
 	uint64 m_iUnlockedBits; //What the user has unlocked, but not necessarily activated
 	uint64 m_iActivatedBits; //Which unlockables are actually enabled, as user may turn some off
 
+#ifdef CLIENT_DLL
 	uint64 m_iExperience; //resets to 0 on each level gain
 	uint32 m_iLevel; //current level
 	uint32 m_iPointsSpent; //points available = level - pointsSpent
+#endif
 
-	inline bool isUnlockableUnlocked(Unlockable* pUnlockable) { return !!(m_iUnlockedBits & (1ULL >> pUnlockable->m_iBit)); }
+	inline bool isUnlockableUnlocked(Unlockable* pUnlockable) { return !!(m_iUnlockedBits & (1ULL << pUnlockable->m_iBit)); }
 	inline bool isUnlockableActivated(Unlockable* pUnlockable) { return isUnlockableUnlocked(pUnlockable) && !!(m_iActivatedBits & (1ULL << pUnlockable->m_iBit)); }
+	inline bool isUnlockableUnlocked(UnlockableBit bit) { return !!(m_iUnlockedBits & (1ULL << bit)); }
+	inline bool isUnlockableActivated(UnlockableBit bit) { return isUnlockableUnlocked(bit) && !!(m_iActivatedBits & (1ULL << bit)); }
 
 #ifdef CLIENT_DLL
 	~UnlockableProfile() { saveToFile(); }
 
-	inline int	 getPointsAvailable() { return m_iPointsSpent - m_iLevel; }
+	inline int	 getPointsAvailable() { return m_iLevel - m_iPointsSpent; }
 
 	void unlockItem(Unlockable* pUnlockable);
 	bool toggleItemActivation(Unlockable* pUnlockable);
@@ -177,23 +193,42 @@ public:
 
 	static UnlockableProfile* get();
 #else
-	void createExperienceEvent(CHL2MP_Player* pRecipient, EExperienceEventType type, float pointScale = 1.0f);
+	void createExperienceEvent(CHL2MP_Player* pRecipient, EExperienceEventType type);
 
 #endif
 //private:
 
 #ifdef CLIENT_DLL
-	uint32 getExperienceForNextLevel();
+	void calcExperienceForNextLevel();
+	uint64 getExperienceForNextLevel() { return m_iExperienceForNextLevel; }
 	void reset(); //sets everything back to 0. Does NOT save to file.
 	void saveToFile();
 	void readFromFile();
-	void encryptForServer(char* buffer, uint32 bufferlen);
+	void sendSettingsToServer();
+	void sendDeviceIdCheckSumToServer();
+private:
+	uint64 m_iExperienceForNextLevel;
 #else
-	void decryptFromClient(char* buffer, uint32 bufferlen, CHL2MP_Player* pPlayer);
+	bool decryptSettingsFromClient(CHL2MP_Player* pPlayer, uint64 arg1, uint64 arg2, uint64 arg3);
 #endif
+
+
 };
 
-//Global function for deciding whether or not experience should be added/counted
-bool shouldUnlockableExperienceBeCounted(CHL2MP_Player* pPlayer = NULL, bool bForceUpdate = false);
+namespace NIntegrity {
+
+	//Global function for deciding whether or not experience should be added/counted
+	bool shouldUnlockableExperienceBeCounted(CHL2MP_Player* pPlayer = NULL, bool bForceUpdate = false);
+
+	bool verifyGameIntergrity();
+
+	bool progressionAllowedOnCurrentMap();
+
+	void notifyMapChange(const char* pszMapName);
+
+#ifndef CLIENT_DLL
+	uint64 getEncryptKeyForPlayer(CHL2MP_Player* pPlayer);
+#endif
+}
 
 #endif //BG3_UNLOCKABLE_H

@@ -234,6 +234,9 @@ public:
 	CNetworkVar(float, m_flIronsightedTime);
 	//
 
+	//BG3 - Broken bottle bodygroup change
+	bool m_bBroken = false;
+
 	// Weapon Pickup For Player
 	virtual void			SetPickupTouch( void );
 	virtual void 			DefaultTouch( CBaseEntity *pOther );	// default weapon touch

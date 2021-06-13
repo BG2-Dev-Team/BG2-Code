@@ -15,18 +15,17 @@
 //ConVar sv_ctf_flagweight ("sv_ctf_flagweight", "0", FCVAR_NOTIFY | FCVAR_GAMEDLL, "How much speed does carrying this flag drain?");
 ConVar sv_ctf_returnstyle ("sv_ctf_returnstyle", "1", FCVAR_NOTIFY | FCVAR_GAMEDLL, "Which way is a flag returned? Setting this to '2' will allow teams to return their own flags when they touch them.");
 ConVar sv_ctf_capturestyle ("sv_ctf_capturestyle", "1", FCVAR_NOTIFY | FCVAR_GAMEDLL, "Which way is a flag captured Setting this to '2' will not allow you to pick up a flag if your own is not at home.");
-ConVar sv_ctf_flagalerts ("sv_ctf_flagalerts", "0", FCVAR_NOTIFY | FCVAR_GAMEDLL, "Print out flag notifications to hud?");
+ConVar sv_ctf_flagalerts ("sv_ctf_flagalerts", "1", FCVAR_NOTIFY | FCVAR_GAMEDLL, "Print out flag notifications to hud?");
 
 void CtfFlag::Spawn( void )
 {
 	Precache( );
 	SetModel( "models/other/flag.mdl" ); //Always first.
 
-	m_bActive = true;
+	SetActiveState(!HasSpawnFlags(CtfFlag_START_DISABLED));
 
-	if (HasSpawnFlags( CtfFlag_START_DISABLED ))
+	if (!m_bActivated)
 	{
-		m_bActive = false;
 		AddEffects( EF_NODRAW );
 	}
 
@@ -101,7 +100,7 @@ void CtfFlag::Precache( void )
 }
 void CtfFlag::Think( void )
 {
-	if ( !m_bActive ) //If it isn't active...
+	if ( !m_bActivated ) //If it isn't active...
 	{
 		SetNextThink( gpGlobals->curtime + 1.0f ); //Think Less
 		return; //Die here.
@@ -233,6 +232,8 @@ void CtfFlag::ResetFlag( void )
 	SetModel( "models/other/flag.mdl" );
 	SetAbsOrigin( FlagOrigin );
 	SetAbsAngles( FlagAngle );
+	//double-check state
+	SetActiveState(!HasSpawnFlags(CtfFlag_START_DISABLED));
 }
 void CtfFlag::PlaySound( Vector origin, int sound )
 {
@@ -250,6 +251,23 @@ void CtfFlag::PlaySound( Vector origin, int sound )
 	MessageEnd();
 }
 
+bool CtfFlag::SetActiveState(bool bActive) {
+
+	//assume state given, then check otherwise
+	bool bResult = bActive;
+	if (m_iFlagMode != -1
+		&& mp_flagmode.GetInt() != -1
+		&& m_iFlagMode != mp_flagmode.GetInt())
+		bResult = false;
+
+	m_bActivated = bResult;
+	if (m_bActivated)
+		RemoveEffects(EF_NODRAW);
+	else
+		AddEffects(EF_NODRAW);
+	return bResult;
+}
+
 //Inputs Below ------------------------------------------------------------
 void CtfFlag::InputReset( inputdata_t &inputData )
 {
@@ -260,23 +278,28 @@ void CtfFlag::InputReset( inputdata_t &inputData )
 }
 void CtfFlag::InputEnable( inputdata_t &inputData )
 {
-	RemoveEffects( EF_NODRAW );
-	m_bActive = true;
+	//attempt to set state, return early if it fails
+	SetActiveState(true);
+	if (!m_bActivated)
+		return;
 	m_OnEnable.FireOutput( inputData.pActivator, this );
 
 	ReturnFlag();
 }
 void CtfFlag::InputDisable( inputdata_t &inputData )
 {
-	AddEffects( EF_NODRAW );
-	m_bActive = false;
+	//attempt to set state, return early if it fails
+	SetActiveState(false);
+	if (m_bActivated)
+		return;
+
 	m_OnDisable.FireOutput( inputData.pActivator, this );
 
 	ReturnFlag();
 }
 void CtfFlag::InputToggle( inputdata_t &inputData )
 {
-	if (m_bActive)
+	if (m_bActivated)
 		InputDisable( inputData );
 	else
 		InputEnable( inputData );
@@ -295,6 +318,7 @@ END_PREDICTION_DATA()
 
 BEGIN_DATADESC( CtfFlag )
 
+	DEFINE_KEYFIELD(m_iFlagMode, FIELD_INTEGER, "FlagMode"),
 	DEFINE_KEYFIELD( m_flPickupRadius, FIELD_FLOAT, "PickupRadius" ),
 	DEFINE_KEYFIELD( m_iForTeam, FIELD_INTEGER, "ForTeam" ),
 	DEFINE_KEYFIELD( m_iFlagWeight, FIELD_INTEGER, "FlagWeight" ),

@@ -52,6 +52,10 @@ class CSpawnPoint : public CPointEntity
 #define SPAWNPOINT_CLASS_3 (1 << 5)
 #define SPAWNPOINT_CLASS_4 (1 << 6)
 #define SPAWNPOINT_CLASS_5 (1 << 7)
+#define SPAWNPOINT_CLASS_ALL (SPAWNPOINT_CLASS_0 | SPAWNPOINT_CLASS_1 | SPAWNPOINT_CLASS_2 | SPAWNPOINT_CLASS_3 | SPAWNPOINT_CLASS_4 | SPAWNPOINT_CLASS_5 )
+#define SPAWNPOINT_COMPETITIVE (1 << 8)
+#define SPAWNPOINT_CASUAL (1 << 9)
+#define SPAWNPOINT_BOT (1 << 10)
 
 
 public:
@@ -86,8 +90,14 @@ public:
 		}
 
 		//HACK HACK - on old maps without class settings set, default to allow all
-		if ((GetSpawnFlags() & 0xFFFFFFFC) == 0) {
-			AddSpawnFlags(0xFFFFFFFC);
+		if ((GetSpawnFlags() & SPAWNPOINT_CLASS_ALL) == 0) {
+			AddSpawnFlags(SPAWNPOINT_CLASS_ALL);
+			AddSpawnFlags(SPAWNPOINT_BOT);
+		}
+		//on old maps without casual/competitive setting, turn both on
+		if (!IsCompetitive() && !IsCasual()) {
+			AddSpawnFlags(SPAWNPOINT_CASUAL | SPAWNPOINT_COMPETITIVE);
+			AddSpawnFlags(SPAWNPOINT_BOT);
 		}
 
 		extern CUtlVector<CBaseEntity *> g_MultiSpawns, g_AmericanSpawns, g_BritishSpawns, g_MultiPrioritySpawns, g_AmericanPrioritySpawns, g_BritishPrioritySpawns;
@@ -131,6 +141,18 @@ public:
 	//Segregate by classes when picking spawns
 	bool CanSpawnClass(int iClass) {
 		return HasSpawnFlags(1 << (iClass + 2)); //HACK HACK this mapping lets us avoid switch statement
+	}
+
+	bool IsCompetitive() {
+		return HasSpawnFlags(SPAWNPOINT_COMPETITIVE);
+	}
+
+	bool IsCasual() {
+		return HasSpawnFlags(SPAWNPOINT_CASUAL);
+	}
+
+	bool SupportsBots() {
+		return HasSpawnFlags(SPAWNPOINT_BOT);
 	}
 
 	void InputEnable( inputdata_t &inputData ) { /*Msg( "enablind spawn\n" );*/ SetEnabled( true ); }

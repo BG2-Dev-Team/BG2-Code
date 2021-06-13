@@ -70,7 +70,7 @@ extern ConVar sv_simulatedbullets_show_trajectories;
 extern ConVar sv_simulatedbullets_show_trajectories_timeout;
 
 ConVar sv_muzzlevelocity_scale("sv_muzzlevelocity_scale", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY);
-ConVar sv_simulatedbullets_gravity("sv_simulatedbullets_gravity", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY);
+extern ConVar sv_simulatedbullets_gravity;
 
 class Bullet {
 	Vector m_vTrajStart, m_vPosition, m_vLastPosition, m_vVelocity;
@@ -81,6 +81,7 @@ class Bullet {
 	CBaseCombatWeapon* m_pWeapon;
 	int m_iBounces;
 	float m_flHitDropProbability;
+	bool m_bPenetrateFlesh;
 
 public:
 	// BG2 - VisualMelon - RayWaitCounter
@@ -94,7 +95,7 @@ public:
 			rwc = BULLET_SIMULATION_RWC;
 	}
 
-	Bullet(const Vector& position, const QAngle& angle, int iDamage, float flConstantDamageRange, float flRelativeDrag, float flMuzzleVelocity, float flDamageDropoffMultiplier, CBasePlayer *pOwner)
+	Bullet(const Vector& position, const QAngle& angle, int iDamage, float flConstantDamageRange, float flRelativeDrag, float flMuzzleVelocity, float flDamageDropoffMultiplier, CBasePlayer *pOwner, bool bPenetrateFlesh)
 	{
 		Vector vecDir;
 		AngleVectors( angle, &vecDir );
@@ -112,6 +113,7 @@ public:
 		m_pWeapon = m_pOwner->GetActiveWeapon();
 		m_flHitDropProbability = ((CBaseBG2Weapon*) m_pWeapon)->GetHitDropProbability();
 		m_iBounces = 0;
+		m_bPenetrateFlesh = bPenetrateFlesh;
 
 		resetRwc(sv_simulatedbullets_flex.GetBool());
 	}
@@ -302,8 +304,8 @@ private:
 				return true;
 
 			//pass random hit drop
-			if ((tr.endpos - m_vTrajStart).Length() > 2200.f && RndBool(m_flHitDropProbability))
-				return false; //pretend we didn't hit anything and pass through, this will reward situations where an LB line outflannks another
+			//if ((tr.endpos - m_vTrajStart).Length() > 2200.f && RndBool(m_flHitDropProbability))
+				//return false; //pretend we didn't hit anything and pass through, this will reward situations where an LB line outflannks another
 
 			//we hit something that can be damaged
 			//trace through arms
@@ -319,7 +321,6 @@ private:
 				dmg = (int)(m_iDamage * speed * speed / (m_flMuzzleVelocity*m_flMuzzleVelocity));
 				dmg = m_iDamage - (m_iDamage - dmg) * m_flDamageDropoffMultiplier; //scale damage dropof\f
 			}
-				
 
 			//no force!
 			CTakeDamageInfo	dmgInfo( m_pOwner, m_pOwner, m_pWeapon, dmg, DMG_BULLET | /*DMG_PREVENT_PHYSICS_FORCE |*/DMG_CRUSH | DMG_NEVERGIB ); //Changed to avoid asserts. -HairyPotter
@@ -331,6 +332,18 @@ private:
 			//Adrian: keep going through the glass.
 			if ( tr.m_pEnt->GetCollisionGroup() == COLLISION_GROUP_BREAKABLE_GLASS )
 				 return false;
+
+			//keep going if our bullet penetrates flesh
+			if (m_bPenetrateFlesh) {
+				//ignore constant damage range for future hits
+				m_flConstantDamageRange = 0.f;
+
+				//cut velocity by half or so
+				m_vVelocity = m_vVelocity * 0.9f;
+
+				return false;
+			}
+				
 		}
 
 		return true;
@@ -375,7 +388,7 @@ private:
 static vector<Bullet> activeBullets;
 static const float step = 1.f / BULLET_SIMULATION_FREQUENCY;
 
-void SpawnServerBullet(const Vector& position, const QAngle& angle, int iDamage, float flConstantDamageRange, float flRelativeDrag, float flMuzzleVelocity, float flDamageDropoffMultiplier, CBasePlayer *pOwner)
+void SpawnServerBullet(const Vector& position, const QAngle& angle, int iDamage, float flConstantDamageRange, float flRelativeDrag, float flMuzzleVelocity, float flDamageDropoffMultiplier, CBasePlayer *pOwner, bool bPenetrateFlesh)
 {
 	bool flex = sv_simulatedbullets_flex.GetBool(); // BG2 - VisualMelon - store this, I'm not sure what lookup times are like
 
@@ -385,7 +398,7 @@ void SpawnServerBullet(const Vector& position, const QAngle& angle, int iDamage,
 
 	//BG2 - Tjoppen - bullet lag compensation
 	//simulate the bullet from when the client fired it up to the server's current time
-	Bullet bullet(position, angle, iDamage, flConstantDamageRange, flRelativeDrag, flMuzzleVelocity, flDamageDropoffMultiplier, pOwner);
+	Bullet bullet(position, angle, iDamage, flConstantDamageRange, flRelativeDrag, flMuzzleVelocity, flDamageDropoffMultiplier, pOwner, bPenetrateFlesh);
 
 	//when Bullet::Think() is "run by an entity" the impact effects it does get filtered out for some reason
 	//this does not happen in UpdateBullets() since that gets called globally (not in the context of some entity)

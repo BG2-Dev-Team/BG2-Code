@@ -34,3 +34,6 @@ commented on the following form:
 class CHL2MP_Player;
 class CCommand;
 typedef void(*PlayerCommandFunc)(CHL2MP_Player*, const CCommand&);
+
+void AdminSay(const char* pszFormat, ...);
+void MSayPlayer(CHL2MP_Player* pRecipient, const char* pszFormat, ...);

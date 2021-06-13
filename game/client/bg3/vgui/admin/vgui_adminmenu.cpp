@@ -41,7 +41,7 @@ using namespace vgui;
 CAdminMenu* g_pAdminMenu = NULL;
 CAdminMenu::CAdminMenu(vgui::Panel* parent) : Panel(parent, PANEL_ADMIN)
 {
-	SetSize(640, 380);
+	SetSize(640, 320);
 	g_pAdminMenu = this;
 
 	m_pTitleLabel = new Label(this, "adminmenutitle", "Admin Menu Title");

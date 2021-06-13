@@ -75,6 +75,7 @@ public:
 	void OnCursorExited() override;
 	void OnMousePressed(vgui::MouseCode code) override;
 	void ManualPaint();
+	void OverlayPaint();
 
 	void UpdateUnlockableState();
 
@@ -94,6 +95,34 @@ private:
 
 extern CUnlockableButton* g_pHoveredUnlockable;
 extern CUnlockableButton* g_pSelectedUnlockable;
+
+//-----------------------------------------------------------------------------
+// Unlock button unlocks the selected unlockable
+//-----------------------------------------------------------------------------
+class CUnlockActionButton : public vgui::Button {
+public:
+	CUnlockActionButton(vgui::Panel* pParent, const char* buttonName);
+
+	void OnCursorEntered() override;
+	void OnCursorExited() override;
+	void OnMousePressed(vgui::MouseCode code) override;
+	void ManualPaint();
+
+	void UpdateData();
+	void CalculateRationPos();
+
+private:
+	vgui::IImage* m_pBackground;
+	bool m_bEnabled;
+	bool m_bComingSoon;
+	bool m_bHover;
+
+	//Our unlockable profile
+	UnlockableProfile* m_pProfile;
+	
+	int rationx, rationy;
+};
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Unlockable menu displays progression information and unlocked item buttons
@@ -118,6 +147,9 @@ private:
 	//Array of pointers to our unlockable buttons
 	CUnlockableButton* m_aButtons[NUM_UNLOCKABLES];
 
+	//this button actually does the unlocking
+	CUnlockActionButton* m_pUnlockActionButton;
+
 	//Labels
 	vgui::Label* m_pUnlockableTitle;
 	vgui::Label* m_pUnlockableDesc;
@@ -132,6 +164,7 @@ private:
 
 	//Assets
 	vgui::IImage* m_pBackground;
+	vgui::IImage* m_pBackgroundOverlay;
 };
 
 #endif //BG3_UNLOCKABLE_MENU_h

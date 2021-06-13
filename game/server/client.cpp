@@ -153,7 +153,7 @@ char * CheckChatText( CBasePlayer *pPlayer, char *text )
 // or as
 // blah blah blah
 //
-void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
+void Host_Say(edict_t *pEdict, const CCommand &args, bool teamonly, std::vector<CBasePlayer*>* recipients)
 {
 	CBasePlayer *client;
 	int		j;
@@ -210,7 +210,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 
 	if ( pEdict )
 	{
-		if ( !pPlayer->CanSpeak() )
+		if ( !pPlayer->CanSpeak() || pPlayer->GetTeamNumber() < TEAM_SPECTATOR)
 			return;
 
 		// See if the player wants to modify of check the text
@@ -236,7 +236,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		pszLocation = g_pGameRules->GetChatLocation( teamonly, pPlayer );
 	}
 
-	const char *pszPlayerName = pPlayer ? pPlayer->GetPlayerName():"Console";
+	const char *pszPlayerName = pPlayer ? pPlayer->GetPlayerName():"Game";
 
 	if ( pszPrefix && strlen( pszPrefix ) > 0 )
 	{
@@ -266,39 +266,51 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 	// This may return the world in single player if the client types something between levels or during spawn
 	// so check it, or it will infinite loop
 
+	std::vector<CBasePlayer*> clients;
+	
+
 	client = NULL;
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-	{
-		client = ToBaseMultiplayerPlayer( UTIL_PlayerByIndex( i ) );
-		if ( !client || !client->edict() )
-			continue;
-		
-		if ( client->edict() == pEdict )
-			continue;
+	if (!recipients && (!pPlayer || !ToHL2MPPlayer(pPlayer)->m_bMuted)) {
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			client = UTIL_PlayerByIndex(i);
+			if (!client || !client->edict())
+				continue;
 
-		if ( !(client->IsNetClient()) )	// Not a client ? (should never be true)
-			continue;
+			if (client->edict() == pEdict)
+				continue;
 
-		bool differentTeams = pPlayer && pPlayer->GetTeamNumber() != client->GetTeamNumber();
-		if ( teamonly && differentTeams )
-			continue;
+			if (!(client->IsNetClient()))	// Not a client ? (should never be true)
+				continue;
 
-		if ( pPlayer && !client->CanHearAndReadChatFrom( pPlayer ) )
-			continue;
+			bool differentTeams = pPlayer && pPlayer->GetTeamNumber() != client->GetTeamNumber();
+			if (teamonly && differentTeams)
+				continue;
 
-		if ( pPlayer && GetVoiceGameMgr() && GetVoiceGameMgr()->IsPlayerIgnoringPlayer( pPlayer->entindex(), i ) )
-			continue;
+			if (pPlayer && !client->CanHearAndReadChatFrom(pPlayer))
+				continue;
 
-		CSingleUserRecipientFilter user( client );
+			if (pPlayer && GetVoiceGameMgr() && GetVoiceGameMgr()->IsPlayerIgnoringPlayer(pPlayer->entindex(), i))
+				continue;
+
+			clients.push_back(client);
+		}
+	}
+
+	std::vector<CBasePlayer*>* pClients = recipients ? recipients : &clients;
+	for (size_t i = 0; i < pClients->size(); i++) {
+		client = (*pClients)[i];
+
+		CSingleUserRecipientFilter user(client);
 		user.MakeReliable();
 
-		if ( pszFormat )
+		if (pszFormat)
 		{
-			UTIL_SayText2Filter( user, pPlayer, true, pszFormat, pszPlayerName, p, pszLocation );
+			UTIL_SayText2Filter(user, pPlayer, true, pszFormat, pszPlayerName, p, pszLocation);
 		}
 		else
 		{
-			UTIL_SayTextFilter( user, text, pPlayer, true );
+			UTIL_SayTextFilter(user, text, pPlayer, true);
 		}
 	}
 
