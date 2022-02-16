@@ -190,3 +190,6 @@ FakesAssemblies/
 *.vcxproj
 *.filters
 *.dmp
+*.sln
+*.vpc_crc
+*.vpc_crc
