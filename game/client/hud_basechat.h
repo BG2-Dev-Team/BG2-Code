@@ -93,6 +93,10 @@ wchar_t* ReadLocalizedString( bf_read &msg, OUT_Z_BYTECAP(outSizeInBytes) wchar_
 wchar_t* ReadChatTextString( bf_read &msg, OUT_Z_BYTECAP(outSizeInBytes) wchar_t *pOut, int outSizeInBytes );
 char* RemoveColorMarkup( char *str );
 
+//BG3 - chat command declarations
+void InitChatCommandList();
+void ChatStringShortCommand(char* command, int bufLen);
+
 //--------------------------------------------------------------------------------------------------------
 /**
  * Simple utility function to allocate memory and duplicate a wide string
@@ -338,6 +342,7 @@ public:
 		SetAllowNonAsciiCharacters( true );
 		SetDrawLanguageIDAtLeft( true );
 		m_pHudChat = pChat;
+		InitChatCommandList();
 	}
 
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme )
@@ -365,13 +370,8 @@ public:
 						|| buffer[0] == '!') {
 						engine->ServerCmd(buffer + 1);
 					}
-					if (strcmp(buffer, "currentmap") == 0
-						|| strcmp(buffer, "ff") == 0
-						|| strcmp(buffer, "nextmap") == 0) {
-						//Msg("Sending %s as command\n", buffer);
-						engine->ServerCmd(buffer);
-					}
-						
+					
+					ChatStringShortCommand(buffer, 128);
 				}
 			}
 		

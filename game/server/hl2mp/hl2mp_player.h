@@ -113,7 +113,7 @@ public:
 	Vector GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL );
 
 	void CheatImpulseCommands( int iImpulse );
-	void CreateRagdollEntity( void );
+	void CreateRagdollEntity( const CTakeDamageInfo& killingInfo );
 	void GiveAllItems( void );
 	void GiveDefaultItems( void );
 	void SetDefaultAmmoFull(bool bPlaySound = true);
@@ -247,6 +247,10 @@ private:
 	//BG3 - spawn room allows for instantaneous spawn
 	bool	m_bInSpawnRoom;
 
+public:
+	bool	m_bMonsterBot; //burning man, bigfoot mechanics
+private:
+
 	//return the player's speed based on whether which class we are, which weapon kit we're using etc.
 	int		GetCurrentSpeed(void) const;
 
@@ -297,6 +301,7 @@ public:
 	const Permissions* GetPermissions() const { return m_pPermissions ? m_pPermissions : Permissions::NullPermission(); }
 	//BG3 - rudimentary mute system
 	bool m_bMuted;
+	bool m_bGagged;
 	bool m_bOppressed;
 
 	//void HUD_StatusMessage(const char* pszText, EHANDLE hPlayerName);

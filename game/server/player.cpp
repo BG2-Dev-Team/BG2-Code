@@ -2305,6 +2305,9 @@ void CBasePlayer::StopObserverMode()
 
 bool CBasePlayer::StartObserverMode(int mode)
 {
+	//no observing players on fire
+	Extinguish();
+
 	if ( !IsObserver() )
 	{
 		// set position to last view offset

@@ -197,7 +197,17 @@ static void RagdollAddSolid( IPhysicsEnvironment *pPhysEnv, ragdoll_t &ragdoll, 
 				surfaceData = physprops->GetSurfaceIndex( "default" );
 
 			solid.params.pName = params.pStudioHdr->pszName();
-			ragdoll.list[ragdoll.listCount].pObject = pPhysEnv->CreatePolyObject( params.pCollide->solids[solid.index], surfaceData, vec3_origin, vec3_angle, &solid.params );
+			ragdoll
+				.list[
+					ragdoll.listCount
+				].pObject = 
+				pPhysEnv->CreatePolyObject( 
+					params.pCollide->solids
+						[solid.index], 
+					surfaceData, 
+					vec3_origin, 
+					vec3_angle, 
+					&solid.params );
 			ragdoll.list[ragdoll.listCount].pObject->SetPositionMatrix( params.pCurrentBones[boneIndex], true );
 			ragdoll.list[ragdoll.listCount].parentIndex = -1;
 			ragdoll.list[ragdoll.listCount].pObject->SetGameIndex( ragdoll.listCount );

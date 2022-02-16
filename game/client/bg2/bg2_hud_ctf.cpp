@@ -119,15 +119,16 @@ void CHudCTFFlags::VidInit( void )
 	m_pIconRed		= gHUD.GetIcon( "hud_flagicon_red" );
 	m_pIconBlue		= gHUD.GetIcon( "hud_flagicon_blue" );
 }
-int m_iFlagCount = g_CtfFlags.Count();
+
 //==============================================
 // CHudFlags's ShouldDraw
 // whether the panel should be drawing
 //==============================================
+ConVar cl_disable_ctf_hud("cl_disable_ctf_hud", "0", FCVAR_ARCHIVE);
 bool CHudCTFFlags::ShouldDraw( void )
 {
 
-	if ( !g_CtfFlags.Count() ) //No flags? Die here. -HairyPotter
+	if ( !g_CtfFlags.Count() || cl_disable_ctf_hud.GetBool()) //No flags? Die here. -HairyPotter
 		return false;
 
 	C_HL2MP_Player *pHL2Player = dynamic_cast<C_HL2MP_Player*>(C_HL2MP_Player::GetLocalPlayer());
@@ -167,12 +168,17 @@ void CHudCTFFlags::Paint()
 		i++;
 	}
 	
+	
+
 	//x_offset = ( (ScreenWidth() / 2) - (m_iFlagCount * 74) ); //Always lean to the left from the center. -HairyPotter
 	x_offset = 0;
 
+	extern ConVar mp_flagmode;
 	for( i = 0; i < m_iFlagCount; i++ )
 	{
-		if (!g_CtfFlags[i]->ShouldDraw())
+		if (g_CtfFlags[i]->m_iFlagMode != -1
+			&& mp_flagmode.GetInt() != -1
+			&& g_CtfFlags[i]->m_iFlagMode != mp_flagmode.GetInt())
 			continue;
 
 		x_offset += 68;
@@ -244,5 +250,12 @@ void CHudCTFFlags::Paint()
 		}
 		else 
 			m_pLabelCarrier->SetVisible( false );
+	}
+}
+
+void OnFlagModeChange(IConVar* pVar, const char* pszOldValue, float flOldValue) {
+	Msg("Flagmode changed on client!\n");
+	for (int i = 0; i < g_CtfFlags.Count(); i++) {
+		Msg("%i %i\n", g_CtfFlags[i]->GetClientNetworkable()->IsDormant(), g_CtfFlags[i]->GetRenderMode());
 	}
 }

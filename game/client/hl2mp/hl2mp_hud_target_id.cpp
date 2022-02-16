@@ -23,6 +23,7 @@
 static ConVar hud_centerid( "hud_centerid", "1" );
 ConVar hud_showtargetid("hud_showtargetid", "1"); //BG2 - found this while porting to 2016 - Valve had this ConVar as static? - Awesome
 extern ConVar sv_show_enemy_names; //BG2 - Commented - Hairypotter
+extern ConVar sv_show_friend_names;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -163,8 +164,11 @@ void CTargetID::Paint()
 			{
 				if (pPlayer->InSameTeam(pLocalPlayer))
 				{
-					printFormatString = "#Playerid_sameteam";
-					bShowHealth = true;
+					if (sv_show_friend_names.GetBool()) {
+						printFormatString = "#Playerid_sameteam";
+						bShowHealth = true;
+					}
+					else return;
 				}
 				else
 				{

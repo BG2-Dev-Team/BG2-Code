@@ -128,6 +128,7 @@ public:
 
 	uint8	m_iOwnerSpeedModOnKill; //BG3 - was for Native war club, removed for now
 	uint8	m_iAerialDamageMod; //damage modifier for hits in the air
+	int		m_iExtraDamageTypes; //ex. DMG_BURN from burning man weapon
 
 	bool	m_bDontAutoreload;
 	bool	m_bCantAbortReload;

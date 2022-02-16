@@ -270,7 +270,7 @@ void Host_Say(edict_t *pEdict, const CCommand &args, bool teamonly, std::vector<
 	
 
 	client = NULL;
-	if (!recipients && (!pPlayer || !ToHL2MPPlayer(pPlayer)->m_bMuted)) {
+	if (!recipients && (!pPlayer || !ToHL2MPPlayer(pPlayer)->m_bGagged)) {
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
 			client = UTIL_PlayerByIndex(i);

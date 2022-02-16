@@ -39,8 +39,14 @@ commented on the following form:
 #include "bg2/vcomm.h"
 #include "gameinterface.h"
 #include "../shared/bg3/bg3_map_model.h"
+#include "controls/bg3_rtv.h"
+#include "controls/bg3_voting_system.h"
+#include "controls/bg3_map_nomination.h"
+#include "player_resource.h"
+
 
 void CSay(const char* pszFormat, ...);
+void MSayPlayer(CHL2MP_Player* pRecipient, const char* pszFormat, ...);
 void Host_Say(edict_t *pEdict, const CCommand &args, bool teamonly, std::vector<CBasePlayer*>* recipients = NULL);
 
 //Static map of from player-issued to command strings to their functions
@@ -236,6 +242,55 @@ PLAYER_COMMAND(unmute) {
 }
 PLAYER_COMMAND_ALIAS(unmute, um);
 
+PLAYER_COMMAND(gag) {
+	if (!pPlayer->GetPermissions()->m_bPlayerManage)
+		return;
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			pPlayer->m_bGagged = true;
+			AdminSay("Gagged %s", pPlayer->GetPlayerName());
+		});
+	}
+}
+PLAYER_COMMAND_ALIAS(gag, g);
+PLAYER_COMMAND(ungag) {
+	if (!pPlayer->GetPermissions()->m_bPlayerManage)
+		return;
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			pPlayer->m_bGagged = false;
+			AdminSay("Ungagged %s", pPlayer->GetPlayerName());
+		});
+	}
+}
+PLAYER_COMMAND_ALIAS(ungag, ug);
+
+PLAYER_COMMAND(silence) {
+	if (!pPlayer->GetPermissions()->m_bPlayerManage)
+		return;
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			pPlayer->m_bGagged = true;
+			pPlayer->m_bMuted = true;
+			AdminSay("Silenced %s", pPlayer->GetPlayerName());
+		});
+	}
+}
+PLAYER_COMMAND_ALIAS(silence, sl);
+PLAYER_COMMAND(unsilence) {
+	if (!pPlayer->GetPermissions()->m_bPlayerManage)
+		return;
+	if (args.ArgC() == 2) {
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			pPlayer->m_bGagged = false;
+			pPlayer->m_bMuted = false;
+			AdminSay("Unsilenced %s", pPlayer->GetPlayerName());
+		});
+	}
+}
+PLAYER_COMMAND_ALIAS(unsilence, usl);
+
+
 PLAYER_COMMAND(oppress) {
 	if (!pPlayer->GetPermissions()->m_bPlayerManage || mp_competitive.GetBool())
 		return;
@@ -243,6 +298,7 @@ PLAYER_COMMAND(oppress) {
 		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
 			pPlayer->m_bOppressed = true;
 			pPlayer->m_bMuted = true;
+			pPlayer->m_bGagged = true;
 			AdminSay("Oppressed %s", pPlayer->GetPlayerName());
 		});
 	}
@@ -256,11 +312,27 @@ PLAYER_COMMAND(unoppress) {
 		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
 			pPlayer->m_bOppressed = false;
 			pPlayer->m_bMuted = false;
+			pPlayer->m_bGagged = false;
 			AdminSay("Unoppressed %s", pPlayer->GetPlayerName());
 		});
 	}
 }
 PLAYER_COMMAND_ALIAS(unoppress, uo);
+
+PLAYER_COMMAND(ignite) {
+	if (!pPlayer->GetPermissions()->m_bPlayerManage)
+		return;
+	if (args.ArgC() == 2) {
+		engine->ClientCommand(pPlayer->edict(), "say \"Setting a player aflame\"");
+		PerPlayerCommand(pPlayer, args[1], [](CHL2MP_Player* pPlayer) {
+			if (pPlayer->IsAlive() && pPlayer->GetTeamNumber() > TEAM_SPECTATOR) {
+				pPlayer->Ignite(999.f, false);
+			}
+		});
+	}
+	
+
+}
 
 PLAYER_COMMAND(oppressme) {
 	pPlayer->m_bOppressed = true;
@@ -367,31 +439,263 @@ PLAYER_COMMAND(ps_settings) {
 	}
 }
 
+PLAYER_COMMAND(rtv) {
+	extern ConVar sv_rtv_enabled;
+	//extern ConVar sv_rtv_nomination;
+	//if (sv_rtv_enabled.GetBool()) {
+		/*if (args.ArgC() == 2 && sv_rtv_nomination.GetBool()) {
+			if (!CMapInfo::MapExists(args[1])) {
+				MSayPlayer(pPlayer, "The map %s does not exist", args[1]);
+				return;
+			}
+			RtvSystem::SetRtvMap(pPlayer, args[1]);
+		}*/
 
-/* GAME INFO COMMANDS */
-//float g_flNextServerChatMessage = -FLT_MAX;
-/*PLAYER_COMMAND(ff) {
-	engine->ServerExecute();
-	if (friendlyfire.GetBool())
-		engine->ServerCommand("say Friendly Fire is ON\n");
-	else
-		engine->ServerCommand("say Friendly Fire is OFF\n");
-	engine->ServerExecute();
-}*/
-/*
-PLAYER_COMMAND(currentmap) {
-	CSay(g_pGameRules->MapName());
+		RtvSystem::ReceiveRtvFromPlayer(pPlayer);
+	//}
 }
-*/
-CON_COMMAND(nextmap, "Changes the server to the specified map") {
-	if (!verifyMapModePermissions(__FUNCTION__) || args.ArgC() < 2)
+
+//this command can do two things -- echo the current next map in chat, or set the next map
+PLAYER_COMMAND(nextmap) {
+	if (args.ArgC() == 1) {
+		const char* next = nextlevel.GetString();
+		if (next && next[0]) {
+			CSay(nextlevel.GetString());
+		}
+		else {
+			CSay("Next map not yet determined.");
+		}
+	}
+	else {
+		if (!verifyMapModePermissions(__FUNCTION__) || args.ArgC() < 2)
+			return;
+
+		if (!CMapInfo::MapExists(args[1])) {
+			CSay("The map %s does not exist", args[1]);
+			return;
+		}
+
+		//nextlevel is already built for this purpose
+		nextlevel.SetValue(args[1]);
+	}
+}
+
+PLAYER_COMMAND(vote) {
+	if (pPlayer->GetTeamNumber() < TEAM_AMERICANS)
 		return;
 
-	if (!CMapInfo::MapExists(args[1])) {
-		CSay("The map %s does not exist", args[1]);
+	//two possibilities - either we're submitting a vote, or we're creating a customized multi-choice election
+	if (args.ArgC() == 2) {
+		//absolutely ensure bounds
+		int slot = atoi(args[1]) - 1;
+		if (slot == -1) slot = 9; //0 serves as the tenth slot at index 9
+		if (slot < 0 || slot > 9) return;
+
+		CElectionSystem::GetActiveElectionSystemForTeam(pPlayer->GetTeamNumber())
+			->SubmitPlayerVote(pPlayer, slot);
+	}
+	else if (pPlayer->GetPermissions()->m_bMapMode && args.ArgC() >= 4 && args.ArgC() <= 12) {
+		//max is 12, because it's "vote" + "topic" + [<ten options>]
+		CElectionSystem::GetElectionSystemForPlayer(pPlayer)
+			->CreateActionlessMultichoiceElection(pPlayer, args);
+	}
+	else {
+		MSayPlayer(pPlayer, "Invalid vote parameters");
+	}
+}
+
+PLAYER_COMMAND(votekick) {
+	if (pPlayer->GetTeamNumber() < TEAM_AMERICANS)
 		return;
+
+	if (args.ArgC() != 2)
+		return;
+
+	CElectionSystem::GetElectionSystemForPlayer(pPlayer)
+		->CreateKickElection(pPlayer, args[1]);
+}
+
+PLAYER_COMMAND(votemute) {
+	if (pPlayer->GetTeamNumber() < TEAM_AMERICANS)
+		return;
+
+	if (args.ArgC() != 2)
+		return;
+
+	CElectionSystem::GetElectionSystemForPlayer(pPlayer)
+		->CreateMuteElection(pPlayer, args[1]);
+}
+
+PLAYER_COMMAND(votescramble) {
+	if (pPlayer->GetTeamNumber() < TEAM_AMERICANS)
+		return;
+
+	CElectionSystem::GetElectionSystemForPlayer(pPlayer)
+		->CreateScrambleTeamsElection(pPlayer);
+}
+
+PLAYER_COMMAND(votemap) {
+	if (pPlayer->GetTeamNumber() < TEAM_AMERICANS)
+		return;
+
+	//two possibilities -- we're voting whether or not to vote for a specific map, or we're creating a multi-map choice vote
+	CElectionSystem* system = CElectionSystem::GetElectionSystemForPlayer(pPlayer);
+
+	
+	if (args.ArgC() == 2) {
+
+		if (Q_strcmp(args[1], "lb") == 0 && verifyMapModePermissions(__FUNCTION__)) {
+			std::vector<std::string> options;
+			NMapNomination::GetRandomLbMapList(options);
+			system->CreateMultichoiceMapElection(pPlayer, options);
+		}
+		else if (Q_strcmp(args[1], "sg") == 0 && verifyMapModePermissions(__FUNCTION__)) {
+			std::vector<std::string> options;
+			NMapNomination::GetRandomSgMapList(options);
+			system->CreateMultichoiceMapElection(pPlayer, options);
+		}
+		else if (Q_strcmp(args[1], "bg") == 0 && verifyMapModePermissions(__FUNCTION__)) {
+			std::vector<std::string> options;
+			NMapNomination::GetRandomBgMapList(options);
+			system->CreateMultichoiceMapElection(pPlayer, options);
+		}
+		else if (Q_strcmp(args[1], "ctf") == 0 && verifyMapModePermissions(__FUNCTION__)) {
+			std::vector<std::string> options;
+			NMapNomination::GetRandomCtfMapList(options);
+			system->CreateMultichoiceMapElection(pPlayer, options);
+		}
+		else {
+			system->CreateMapChangeElection(pPlayer, args[1]);
+		}
+	}
+	else if (args.ArgC() > 2 && verifyMapModePermissions(__FUNCTION__)) {
+		system->CreateMultichoiceMapElection(pPlayer, args);
+	}
+}
+
+
+CON_COMMAND(ff, "Reports friendly fire cvar statuses to chat") {
+	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+	if (!pPlayer) 
+		return;
+
+	AdminSay("%s requesting FF status...", pPlayer->GetPlayerName());
+
+	extern ConVar friendlyfire;
+	extern ConVar mp_friendlyfire_grenades;
+	extern ConVar mp_friendlyfire_swivel;
+	std::string msg;
+	if (friendlyfire.GetBool()) {
+		msg = "Friendly fire is ON. ";
+	}
+	else {
+		msg = "Friendly fire is OFF. ";
+		if (mp_friendlyfire_grenades.GetBool()) {
+			msg += "Grenade friendly fire is ON. ";
+		}
+		else {
+			msg += "Grenade friendly fire is OFF. ";
+		}
+		if (mp_friendlyfire_swivel.GetBool()) {
+			msg += "Swivel gun friendly fire is ON. ";
+		}
+		else {
+			msg += "Swivel gun friendly fire is OFF. ";
+		}
+	}
+	
+	CSay(msg.c_str());
+}
+
+CON_COMMAND(currentmap, "Echoes in the chat the name of the current map.") {
+	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+	if (!pPlayer)
+		return;
+
+	AdminSay("%s requesting map name...", pPlayer->GetPlayerName());
+	CSay(HL2MPRules()->MapName());
+}
+
+CON_COMMAND(respawn, "Echoes the current respawn time to chat.") {
+	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+	if (!pPlayer)
+		return;
+
+	AdminSay("%s requesting respawn time...", pPlayer->GetPlayerName());
+	CSay("%i seconds between respawns", mp_respawntime.GetInt());
+}
+
+CON_COMMAND(pings, "Echoes into chat the average ping of each team.") {
+	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+	if (!pPlayer)
+		return;
+
+	AdminSay("%s requesting average pings...", pPlayer->GetPlayerName());
+
+	int amerTotalPing = 0;
+	int britTotalPing = 0;
+	int iNumBrit = 0;
+	int iNumAmer = 0;
+	for (int i = 1; i <= gpGlobals->maxClients; i++) {
+
+		CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(i);
+		if (pPlayer && pPlayer->IsConnected() && !pPlayer->IsFakeClient())
+		{
+			int ping = g_pPlayerResource->GetPing(i);
+			if (pPlayer->GetTeamNumber() == TEAM_BRITISH) {
+				britTotalPing += ping;
+				iNumBrit++;
+			}
+			else if (pPlayer->GetTeamNumber() == TEAM_AMERICANS) {
+				amerTotalPing += ping;
+				iNumAmer++;
+			}
+		}
+	}
+	//calc averages
+	//no division by zero
+	if (iNumAmer) amerTotalPing /= iNumAmer;
+	if (iNumBrit) britTotalPing /= iNumBrit;
+
+	CSay("Ave. American ping: %ims Ave. British ping: %ims", amerTotalPing, britTotalPing);
+}
+
+CON_COMMAND(nominate, "Lets player nominate map for map election") {
+	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+	if (!pPlayer || args.ArgC() != 2)
+		return;
+
+	NMapNomination::NominateMap(args[1], (CHL2MP_Player*)pPlayer);
+}
+
+CON_COMMAND(admins, "Reports list of admins to chat") {
+	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+	if (!pPlayer)
+		return;
+
+	AdminSay("%s requesting list of admins...", pPlayer->GetPlayerName());
+
+	std::vector<CBasePlayer*> list;
+	Permissions::GetAdminList(list);
+	
+
+	if (list.size() > 0) {
+		string str;
+		//assemble a string then spit it out
+		str.get_allocator().allocate((list.size() + 1) * 32);
+		str.append("Admins online: ");
+		str.append(list[0]->GetPlayerName());
+		
+		for (size_t i = 1; i < list.size(); i++) {
+			str.append(", ");
+			str.append(list[i]->GetPlayerName());
+		}
+		CSay(str.c_str());
+	}
+	else {
+		CSayPlayer((CHL2MP_Player*)pPlayer, "There are no admins online");
 	}
 
-	//nextlevel is already built for this purpose
-	nextlevel.SetValue(args[1]);
+	
+	
 }

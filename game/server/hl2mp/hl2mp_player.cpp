@@ -49,6 +49,7 @@
 #include "../shared/viewport_panel_names.h"
 #include "bg3/bg3_scorepreserve.h"
 #include "bg3/Bots/bg3_bot_influencer.h"
+#include "EntityFlame.h"
 //
 
 extern ConVar mp_autobalanceteams;
@@ -142,6 +143,7 @@ BEGIN_DATADESC(CHL2MP_Player)
 END_DATADESC()
 
 #define NUM_DEATH_SOUNDS 25
+#define NUM_DEATH_SOUNDS_FIRE 3
 #define MAX_COMBINE_MODELS 6 // BG2 - VisualMelon - Looks like this should be 6 (formerly 4)
 #define MODEL_CHANGE_INTERVAL 5.0f
 #define TEAM_CHANGE_INTERVAL 5.0f
@@ -161,6 +163,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 	m_bEnterObserver = false;
 	m_bReady = false;
 	m_bMuted = false;
+	m_bGagged = false;
 	m_bOppressed = false;
 
 	//BG2 - Default weapon kits. -Hairypotter
@@ -186,7 +189,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 	//BG2 - Tjoppen - tickets
 	m_bDontRemoveTicket = true;
 
-	m_bInSpawnRoom = false;
+	m_bInSpawnRoom = m_bMonsterBot = false;
 	m_flNextAmmoRefill = -FLT_MAX;
 }
 
@@ -208,6 +211,7 @@ void CHL2MP_Player::Precache(void)
 	BaseClass::Precache();
 
 	PrecacheModel("sprites/glow01.vmt");
+	PrecacheModel("models/player/other/burning_man.mdl");
 
 	//Precache models from classes
 	int i;
@@ -281,6 +285,9 @@ void CHL2MP_Player::Precache(void)
 		PrecacheScriptSound(name);
 	}
 	PrecacheScriptSound("Weapon_All.Bullet_Skullcrack");
+	PrecacheScriptSound("BG3Player.DieFire01");
+	PrecacheScriptSound("BG3Player.DieFire02");
+	PrecacheScriptSound("BG3Player.DieFire03");
 }
 
 void CHL2MP_Player::GiveAllItems(void)
@@ -2028,7 +2035,10 @@ CON_COMMAND(destroy_ragdolls, "") {
 	}
 }
 
-void CHL2MP_Player::CreateRagdollEntity(void)
+ConVar sv_grenade_flame_probabiity_casual = ConVar("sv_grenade_flame_probabiity_casual", "0.2f", FCVAR_GAMEDLL | FCVAR_NOTIFY);
+ConVar sv_grenade_flame_probabiity_comp = ConVar("sv_grenade_flame_probabiity_comp", "0.016f", FCVAR_GAMEDLL | FCVAR_NOTIFY);
+
+void CHL2MP_Player::CreateRagdollEntity(const CTakeDamageInfo& killingInfo)
 {
 	RemoveRagdolls();
 
@@ -2060,7 +2070,22 @@ void CHL2MP_Player::CreateRagdollEntity(void)
 		pRagdoll->m_vecForce = m_vecTotalBulletForce;
 		pRagdoll->SetAbsOrigin(GetAbsOrigin());
 
-		//set destruction time
+		//if we're on fire or killed by fire, set our ragdoll on fire
+		bool bIgnite = false;
+		if ((GetFlags() & FL_ONFIRE) || (killingInfo.GetDamageType() & DMG_BURN)) {
+			bIgnite = true;
+		}
+		else if (killingInfo.GetDamageType() & DMG_BLAST) {
+			if (mp_competitive.GetBool() && RndBool(sv_grenade_flame_probabiity_comp.GetFloat())) {
+				bIgnite = true;
+			}
+			else {
+				bIgnite = !mp_competitive.GetBool() && RndBool(sv_grenade_flame_probabiity_casual.GetFloat());
+			}
+		}
+		if (bIgnite) {
+			pRagdoll->Ignite(RndFloat(3.f, 5.f), false, 0.5f);
+		}
 		
 
 		//have a chance of having hat fall off
@@ -2120,7 +2145,7 @@ g_EventQueue.AddEvent( pSatchel, "Explode", 0.20, this, this );
 // Play sound for pressing the detonator
 EmitSound( "Weapon_SLAM.SatchelDetonate" );
 }*/
-
+void SignalMonsterKilled();
 void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 {
 	//Take away Rallying effects
@@ -2148,7 +2173,7 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 	// because we still want to transmit to the clients in our PVS.
 	//BG2 - Tjoppen - reenable spectators - no dead bodies raining from the sky
 	if (GetTeamNumber() > TEAM_SPECTATOR && sv_ragdoll_staytime.GetFloat() > 1) {
-		CreateRagdollEntity();
+		CreateRagdollEntity(info);
 		extern ConVar sv_ragdoll_staytime;
 		m_flNextRagdollRemoval = gpGlobals->curtime + sv_ragdoll_staytime.GetFloat();
 	}
@@ -2170,10 +2195,10 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 	{
 		CHL2MP_Player* pPlayer = static_cast<CHL2MP_Player*>(pAttacker);
 		pWeapon = pPlayer->GetActiveWeapon();
-		if (pWeapon) {
+		if (pWeapon && pWeapon->Def()->m_iOwnerSpeedModOnKill) {
 			pPlayer->m_iSpeedModifier += pWeapon->Def()->m_iOwnerSpeedModOnKill;
-		if (pPlayer->m_iSpeedModifier > 10)
-				pPlayer->m_iSpeedModifier = 10;
+			if (pPlayer->m_iSpeedModifier > 20)
+					pPlayer->m_iSpeedModifier = 20;
 		}
 	}
 
@@ -2181,6 +2206,36 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 
 	RemoveEffects(EF_NODRAW);	// still draw player body
 	//StopZooming();
+
+	//If we're a monster bot, announce our death then leave the server
+	if (m_bMonsterBot) {
+		CHL2MP_Player* pAttackingPlayer = ToHL2MPPlayer(pAttacker);
+		if (pAttackingPlayer) {
+			MSay("%s killed %s!", pAttackingPlayer->GetPlayerName(), GetPlayerName());
+		}
+		else {
+			MSay("%s has been vanquished!", GetPlayerName());
+		}
+
+		char buffer[6 + MAX_PLAYER_NAME_LENGTH];
+		Q_snprintf(buffer, 6 + MAX_PLAYER_NAME_LENGTH, "kick \"%s\"\n", GetPlayerName());
+		engine->ServerCommand(buffer);
+
+		Warning("Monster killed, calling Signal!\n");
+		SignalMonsterKilled();
+	}
+	else {
+		//If we have a fire entity attatched to us, extinguish it as otherwise there will be ghost fire
+		CBaseEntity* pEffect = GetEffectEntity();
+		if (pEffect) {
+			CEntityFlame* pFlame = dynamic_cast<CEntityFlame*>(pEffect);
+			if (pFlame) {
+				pFlame->SetLifetime(-FLT_MAX);
+			}
+		}
+	}
+	//no matter what make sure we're not on fire after dying
+	Extinguish();
 }
 
 //BG2 - Tjoppen - GetHitgroupPainSound
@@ -2223,6 +2278,23 @@ const char* CHL2MP_Player::GetHitgroupPainSound(int hitgroup, int team)
 ConVar mp_teamdamage_score_multiplier("mp_teamdamage_score_multiplier", "-2", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 {
+	bool bFatal = inputInfo.GetDamage() >= GetHealth();
+
+	//special cases with burn damage
+	if (!bFatal && (inputInfo.GetDamageType() & DMG_BURN)) {
+		//set us aflame if we aren't already
+		if (!(GetFlags() & FL_ONFIRE)) {
+			Ignite(4.f, false);
+		}
+
+		//monster bots don't take burn damage
+		if (m_bMonsterBot) {
+			return 0;
+		}
+	}
+
+	
+
 	//BG2 - Draco
 	//CBaseEntity * pInflictor = inputInfo.GetInflictor();
 	CBaseEntity * pAttacker = inputInfo.GetAttacker();
@@ -2337,15 +2409,22 @@ void CHL2MP_Player::DeathSound(const CTakeDamageInfo &info)
 	// because "rndwave" has a cap on number of sounds
 	// and because valve's RNG functions are crap
 	char szStepSound[32];
-	int iSound = RndInt(1, NUM_DEATH_SOUNDS);
-	Q_snprintf(szStepSound, sizeof(szStepSound), "BG3Player.Die%02i" /*, GetPlayerModelSoundPrefix()*/, iSound);
-
-	//BG2 - Tjoppen - don't care about gender
-	//const char *pModelName = STRING( GetModelName() );
+	if (info.GetDamageType() & DMG_BURN) {
+		int iSound = RndInt(1, NUM_DEATH_SOUNDS_FIRE);
+		Q_snprintf(szStepSound, sizeof(szStepSound), "BG3Player.DieFire%02i" /*, GetPlayerModelSoundPrefix()*/, iSound);
+	}
+	else {
+		int iSound = RndInt(1, NUM_DEATH_SOUNDS);
+		Q_snprintf(szStepSound, sizeof(szStepSound), "BG3Player.Die%02i" /*, GetPlayerModelSoundPrefix()*/, iSound);
+	}
+	
 
 	CSoundParameters params;
-	if (GetParametersForSound(szStepSound, params, NULL/*pModelName*/) == false)
+	if (GetParametersForSound(szStepSound, params, NULL/*pModelName*/) == false) {
+		//Warning("Could not find death sound %s\n", szStepSound);
 		return;
+	}
+		
 
 	Vector vecOrigin = GetAbsOrigin();
 
@@ -2401,11 +2480,14 @@ CBaseEntity* CHL2MP_Player::HandleSpawnList(const CUtlVector<CBaseEntity *>* spa
 				&& pSpawn->CanSpawnClass(m_iNextClass)
 				&& pSpawn->IsEnabled()
 				&& (!IsFakeClient() || pSpawn->SupportsBots())
+				&& (!pSpawn->BotsOnly() || IsFakeClient())
 				&& ((competitive && pSpawn->IsCompetitive())
 					|| (!competitive && pSpawn->IsCasual())
 					)
 				)
 			{
+				//Msg("Found potential spawnpoint for player %s\n", GetPlayerName());
+
 				CBaseEntity *ent = NULL;
 				bool IsTaken = false;
 				//32 world units seems... safe.. -HairyPotter
@@ -2415,6 +2497,7 @@ CBaseEntity* CHL2MP_Player::HandleSpawnList(const CUtlVector<CBaseEntity *>* spa
 					if (ent->IsPlayer() && ent->IsAlive())
 					{
 						IsTaken = true;
+						//Warning("\tSpawnpoint blocked by %s\n", ((CBasePlayer*)(ent))->GetPlayerName());
 					}
 				}
 				if (IsTaken) //Retry?
@@ -2625,6 +2708,8 @@ CHL2MPPlayerStateInfo *CHL2MP_Player::State_LookupInfo(HL2MPPlayerState state)
 
 bool CHL2MP_Player::StartObserverMode(int mode)
 {
+	Extinguish(); //no on-fire observors
+
 	//we only want to go into observer mode if the player asked to, not on a death timeout
 	/*if ( m_bEnterObserver == true )
 	{

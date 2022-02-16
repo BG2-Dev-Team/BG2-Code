@@ -32,6 +32,8 @@ public:
 
 	DECLARE_DATADESC();
 
+	void SignalMonsterKilled() { m_OnMonsterKilled.FireOutput(NULL, this); }
+
 private:
 
 	// fired no matter why the map loaded
@@ -44,6 +46,11 @@ private:
 	COutputEvent m_OnBackgroundMap;
 	COutputEvent m_OnMultiNewMap;
 	COutputEvent m_OnMultiNewRound;
+
+	COutputEvent m_OnMapSpawnCompetitive;
+	COutputEvent m_OnMapSpawnCasual;
+
+	COutputEvent m_OnMonsterKilled;
 
 	string_t m_globalstate;
 };
@@ -63,6 +70,11 @@ BEGIN_DATADESC( CLogicAuto )
 	DEFINE_OUTPUT(m_OnBackgroundMap, "OnBackgroundMap"),
 	DEFINE_OUTPUT(m_OnMultiNewMap, "OnMultiNewMap" ),
 	DEFINE_OUTPUT(m_OnMultiNewRound, "OnMultiNewRound" ),
+
+	DEFINE_OUTPUT(m_OnMapSpawnCompetitive, "OnMapSpawnCompetitive"),
+	DEFINE_OUTPUT(m_OnMapSpawnCasual, "OnMapSpawnCasual"),
+
+	DEFINE_OUTPUT(m_OnMonsterKilled, "OnMonsterKilled"),
 
 END_DATADESC()
 
@@ -105,6 +117,14 @@ void CLogicAuto::Think(void)
 
 		m_OnMapSpawn.FireOutput(NULL, this);
 
+		extern ConVar mp_competitive;
+		if (mp_competitive.GetBool()) {
+			m_OnMapSpawnCompetitive.FireOutput(NULL, this);
+		}
+		else {
+			m_OnMapSpawnCasual.FireOutput(NULL, this);
+		}
+
 		if ( g_pGameRules->IsMultiplayer() )
 		{
 			// In multiplayer, fire the new map / round events.
@@ -125,3 +145,12 @@ void CLogicAuto::Think(void)
 	}
 }
 
+void SignalMonsterKilled() {
+	Msg("Monster killed!\n");
+	CBaseEntity* pLogicAuto = gEntList.FindEntityByClassname(NULL, "logic_auto");
+	if (pLogicAuto) {
+		Msg("Found logic_auto, signaling...\n");
+		CLogicAuto* pLogic = (CLogicAuto*)pLogicAuto;
+		pLogic->SignalMonsterKilled();
+	}
+}

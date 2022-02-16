@@ -241,12 +241,11 @@ void CEntityFlame::FlameThink( void )
 			return;
 		}
 	
-		CAI_BaseNPC *pNPC = m_hEntAttached->MyNPCPointer();
-		if ( pNPC && !pNPC->IsAlive() )
+		if ( m_hEntAttached->IsPlayer() && !m_hEntAttached->IsAlive() )
 		{
 			UTIL_Remove( this );
-			// Notify the NPC that it's no longer burning!
-			pNPC->Extinguish();
+			// Notify the player that it's no longer burning!
+			((CBasePlayer*)m_hEntAttached.Get())->Extinguish();
 			return;
 		}
 

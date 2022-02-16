@@ -56,6 +56,7 @@ ConVar bot_minplayers("bot_minplayers", "8", FCVAR_GAMEDLL, "");
 ConVar bot_maxplayers("bot_maxplayers", "0", FCVAR_GAMEDLL, "Kicks bots to ensure that bot population will not inflate player count beyond this number");
 ConVar bot_maxplayers_cap("bot_maxplayers_cap", "1", FCVAR_GAMEDLL, "If non-zero, ensures that bots will never be added to the point of filling up the server.");
 ConVar bot_minplayers_map("bot_minplayers_map", "0", FCVAR_GAMEDLL, "Map-defined minimum bot players. Whether or not this is used depends on bot_minplayers_mode");
+ConVar bot_minplayers_delay("bot_minplayers_delay", "40", FCVAR_GAMEDLL, "How long after map change the player population should be checked to decide whether or not to add bots.");
 
 
 extern bool g_bServerReady;
@@ -128,7 +129,7 @@ int CBotManager::CountBotsOfTeam(int iTeam) {
 
 
 //Adds bot of team to server. Requires that the server be ready.
-void CBotManager::AddBotOfTeam(int iTeam, int count) {
+CBasePlayer* CBotManager::AddBotOfTeam(int iTeam, int count) {
 	//check if we don't have enough slots
 	int currentPlayerCount = HL2MPRules()->NumConnectedClients();
 	int numSlots = gpGlobals->maxClients - bot_maxplayers_cap.GetBool();
@@ -140,7 +141,7 @@ void CBotManager::AddBotOfTeam(int iTeam, int count) {
 	extern int g_iNextBotTeam;
 	extern CBasePlayer* BotPutInServer(int iAmount, bool bFrozen);
 	g_iNextBotTeam = iTeam;
-	BotPutInServer(count, false);
+	CBasePlayer* pResult = BotPutInServer(count, false);
 
 	//reset the bot's vcomm manager
 	CBotComManager* pComms;
@@ -149,6 +150,8 @@ void CBotManager::AddBotOfTeam(int iTeam, int count) {
 	else
 		pComms = &g_BotAmerComms;
 	pComms->ResetThinkTime(bot_randfloat(4.0, 8.0));
+
+	return pResult;
 }
 
 //Adds bot of team to server. Requires that the server be ready.
@@ -285,4 +288,9 @@ CON_COMMAND_F(bot_debug_report, "Gives status information on all bots, useful fo
 			Msg("%i. %20s : %s\n", i, pPlayer->GetPlayerName(), gBots[i].m_pCurThinker->m_ppszThinkerName);
 		}
 	}
+}
+
+bool g_bBotFFA = false;
+CON_COMMAND_F(bot_ffa, "Toggles bot free-for-all", FCVAR_GAMEDLL) {
+	g_bBotFFA = !g_bBotFFA;
 }

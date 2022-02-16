@@ -62,6 +62,7 @@ public:
 	void PlayCaptureSound ( const Vector &origin, char sound[255] );
 	void MsgFunc_VCommSounds( bf_read &msg );
 	void MsgFunc_ExpEvent(bf_read &msg);
+	void MsgFunc_BG3Election(bf_read &msg);
 	void PlayVCommSound ( char snd[512], int playerindex );
 	void PlayLevelUpSound();
 	//

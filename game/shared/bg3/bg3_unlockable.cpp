@@ -275,11 +275,11 @@ void UnlockableProfile::sendSettingsToServer() {
 	Q_snprintf(buffer, sizeof(buffer), "ps_settings %llu %llu %llu", m_iUniqueIdChecksum, unlock, activated);
 	engine->ClientCmd(buffer);
 
-	extern bool g_bGoodDeviceId;
+	/*extern bool g_bGoodDeviceId;
 	if (g_bGoodDeviceId)
 		engine->ClientCmd(DMG_BUFF);
 	if (ChecksumCheck())
-		engine->ClientCmd(DMG_BUFF2);
+		engine->ClientCmd(DMG_BUFF2);*/
 }
 
 void UnlockableProfile::sendDeviceIdCheckSumToServer() {
@@ -330,8 +330,8 @@ namespace NIntegrity {
 		if (sv_cheats->GetBool())
 			return (g_bLastExperienceEnabledCheck = false);
 
-		if (g_bBotExists)
-			return (g_bLastExperienceEnabledCheck = false);
+		//if (g_bBotExists)
+			//return (g_bLastExperienceEnabledCheck = false);
 		
 		if (g_iNumFlagsOnMap > 6)
 			return (g_bLastExperienceEnabledCheck = false);

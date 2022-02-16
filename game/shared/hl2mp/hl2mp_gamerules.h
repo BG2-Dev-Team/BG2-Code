@@ -62,6 +62,7 @@ inline bool IsSkirmish()	{ return mp_respawnstyle.GetInt() == 1; }
 inline bool UseLineSpawn()	{ return IsLinebattle(); }
 
 void CSay(const char* pszFormat, ...);
+void CSayPlayer(CHL2MP_Player* pRecipient, const char* pszFormat, ...);
 void MSay(const char* pszFormat, ...);
 enum IntermissionType
 {
@@ -200,6 +201,8 @@ public:
 	const HL2MPViewVectors* GetHL2MPViewVectors() const;
 
 	float	GetMapRemainingTime();
+	//void	GetMapNameSanitized(std::string& currentMapName);
+	float	GetMapElapsedTime();
 	float	GetSwapIntermissionTimeAmount(); // BG3 - Ricochet - get function for the swap intermission time
 	void	CleanUpMap();
 #ifndef CLIENT_DLL
@@ -210,6 +213,7 @@ public:
 	virtual QAngle VecItemRespawnAngles( CItem *pItem );
 	virtual float	FlItemRespawnTime( CItem *pItem );
 	virtual bool	CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pItem );
+	//bool	AllowDamage(CBaseEntity* pEntity, const CTakeDamageInfo& info) override;
 	virtual bool FShouldSwitchWeapon( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon );
 
 	void	AddLevelDesignerPlacedObject( CBaseEntity *pEntity );
@@ -271,6 +275,7 @@ private:
 	
 	CUtlVector<EHANDLE> m_hRespawnableItemsAndWeapons;
 	float m_tmNextPeriodicThink;
+	float m_tmDelayedMapChangeTime;
 	float m_flRestartGameTime;
 	bool m_bCompleteReset;
 	bool m_bAwaitingReadyRestart;
@@ -309,6 +314,7 @@ public:
 	void CheckTicketDrain();
 	void SetRemainingRoundTime(float flSeconds);
 	inline float GetRemainingRoundTime() const { return (m_fLastRoundRestart + mp_roundtime.GetFloat()) - gpGlobals->curtime; }
+	void ChangeMapDelayed(float flDelay);
 
 	//Call this for fullcap to be checked next frame
 	void MarkFullcapCheckNextFrame() { m_fNextFlagUpdate = -FLT_MAX; }

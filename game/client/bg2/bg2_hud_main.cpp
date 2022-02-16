@@ -53,6 +53,7 @@ DECLARE_HUD_MESSAGE( CHudBG2, CaptureSounds ); //HairyPotter
 DECLARE_HUD_MESSAGE( CHudBG2, VCommSounds );
 DECLARE_HUD_MESSAGE( CHudBG2, GameMsg );
 DECLARE_HUD_MESSAGE(CHudBG2, ExpEvent);
+DECLARE_HUD_MESSAGE(CHudBG2, BG3Election);
 
 char g_hudBuffer[512];
 
@@ -196,6 +197,7 @@ void CHudBG2::ApplySettings(KeyValues *inResourceData)
 	m_pLabelSpectatedPlayerName->SetText("Hello world!");
 
 	//death message
+	//if you change the position/size of this, you'll have to change the marginbottom in vgui_adminmenu for map image voting too
 	m_pLabelDeathMessage->SetPos(10, marginBottom - 25 - 110);
 	m_pLabelDeathMessage->SetSize(700, 110);
 	m_pLabelDeathMessage->SetContentAlignment(Label::Alignment::a_northwest);
@@ -211,7 +213,6 @@ void CHudBG2::ApplySettings(KeyValues *inResourceData)
 	//grab and scale coordinates and dimensions
 	m_pLabelLMS         ->SetPos(GET_COORD(lmsx),      GET_COORD(lmsy));
 
-	m_pAdminMenu->SetPos(100, 180);
 	//m_pAdminMenu->SetSize(640, 480);
 
 	//exp bottle positioning
@@ -274,6 +275,7 @@ void CHudBG2::Init( void )
 	HOOK_HUD_MESSAGE( CHudBG2, VCommSounds );
 	HOOK_HUD_MESSAGE( CHudBG2, GameMsg);
 	HOOK_HUD_MESSAGE(CHudBG2, ExpEvent);
+	HOOK_HUD_MESSAGE(CHudBG2, BG3Election);
 	//BG2 - Tjoppen - serverside blood, a place to hook as good as any
 	extern void  __MsgFunc_ServerBlood( bf_read &msg );
 	HOOK_MESSAGE( ServerBlood );
@@ -773,6 +775,10 @@ void CHudBG2::MsgFunc_ExpEvent(bf_read& bf) {
 
 }
 
+void CHudBG2::MsgFunc_BG3Election(bf_read& bf) {
+	g_pAdminMenu->ReceiveElectionMsg(bf);
+}
+
 void CHudBG2::PaintDeathMessage() {
 	C_BasePlayer* pLocalPlayer = C_BasePlayer::GetLocalPlayer();
 	if (pLocalPlayer && pLocalPlayer->IsPlayerDead() && pLocalPlayer->GetTeamNumber() >= TEAM_AMERICANS) {
@@ -947,6 +953,7 @@ void CHudBG2::Reset( void )
 	HideShowAllTeam(false);
 	m_pLabelDeathMessage->SetVisible(false);
 	m_pLabelSpectatedPlayerName->SetVisible(false);
+	m_pAdminMenu->SetVisible(false);
 }
 
 void CHudBG2::HideShowAllTeam( bool visible )

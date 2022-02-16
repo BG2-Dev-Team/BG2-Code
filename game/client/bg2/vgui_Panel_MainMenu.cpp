@@ -488,6 +488,7 @@ void CMainMenu::OnCommand(const char *command)
 	else if ( !Q_stricmp( command, "OpenCreateMultiplayerGameDialog" ) )
 	{
 		BG3Hint::UpdateLoadingDialogueHintDisplay();
+		engine->ClientCmd("r_rootlod 0"); //lock game to high model quality
 		engine->ClientCmd("gamemenucommand OpenCreateMultiplayerGameDialog");
 	}
 	else if ( !Q_stricmp( command, "ResumeGame" ) )
@@ -497,6 +498,7 @@ void CMainMenu::OnCommand(const char *command)
 	else if ( !Q_stricmp( command, "OpenServerBrowser" ) )
 	{
 		BG3Hint::UpdateLoadingDialogueHintDisplay();
+		engine->ClientCmd("r_rootlod 0");
 		engine->ClientCmd("gamemenucommand OpenServerBrowser");
 	}
 	else if ( !Q_stricmp( command, "OpenBG2OptionsDialog" ) )

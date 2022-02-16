@@ -171,6 +171,7 @@ void CCommBase::Update()
 
 void CCommBase::ShowPanel( bool bShow )
 {
+	//Warning(__FUNCTION__);
 	if ( IsVisible() == bShow )
 		return;
 

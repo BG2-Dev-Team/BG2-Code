@@ -63,9 +63,16 @@ void CPlayerSearch::Init(CBasePlayer* pOwner) {
 	m_pOwner = pOwner;
 	m_iOwnerTeam = pOwner->GetTeamNumber();
 	m_iEnemyTeam = m_iOwnerTeam == TEAM_AMERICANS ? TEAM_BRITISH : TEAM_AMERICANS;
-	UpdatePlayers();
+	extern bool g_bBotFFA;
+	if (g_bBotFFA) {
+		UpdatePlayersFFA();
+	}
+	else {
+		UpdatePlayers();
+		if (!IsLMS()) UpdateFlags();
+	}
+	
 	m_pCloseEnemyFlag = m_pCloseEnemyFlagVisible = m_pCloseFriendFlag = NULL;
-	if (!IsLMS()) UpdateFlags();
 	//UpdateWaypointFirst();
 }
 
@@ -225,6 +232,53 @@ void CPlayerSearch::UpdatePlayers() {
 	} else
 		m_flOutnumbered = 0.5f;
 }
+
+void CPlayerSearch::UpdatePlayersFFA() {
+	CBasePlayer* curPlayer = nullptr;
+	float		 curDistance;
+	CBasePlayer* nearestEnemy = nullptr;
+	CBasePlayer* nearestEnemySecond = nullptr;
+	float nearestEnemyDist = FLT_MAX;
+	float nearestEnemySecondDist = FLT_MAX;
+
+	//simple maxes and mins here
+	for (int i = 1; i <= gpGlobals->maxClients; i++) {
+		curPlayer = UTIL_PlayerByIndex(i);
+		//check only valid alive players
+		if (curPlayer && curPlayer != m_pOwner && curPlayer->IsAlive()) {
+			curDistance = (m_vOwnerLocation - curPlayer->GetAbsOrigin()).Length();
+			bool bIsVisible = false;
+			if (curDistance < nearestEnemyDist) {
+				bIsVisible = IsInSight(m_pOwner, curPlayer);
+				if (bIsVisible) {
+					nearestEnemy = curPlayer;
+					nearestEnemyDist = curDistance;
+					if (!nearestEnemySecond) {
+						nearestEnemySecond = curPlayer;
+						nearestEnemySecondDist = curDistance;
+					}
+				}
+			}
+			//if we've already checked visibility, that must have failed, so don't bother testing again
+			else if (curDistance < nearestEnemySecondDist && IsInSight(m_pOwner, curPlayer)) {
+				nearestEnemySecond = curPlayer;
+				nearestEnemySecondDist = curDistance;
+			}
+			
+		}
+	}
+
+	//now remember the search data by storing it in the member variables
+	m_pCloseEnemy = nearestEnemy;
+	m_pCloseEnemySecond = nearestEnemySecond;
+	m_pCloseFriend = NULL;
+	m_flCloseEnemyDist = nearestEnemyDist;
+	m_flCloseEnemySecondDist = nearestEnemySecondDist;
+	m_flCloseFriendDist = FLT_MAX;
+
+	m_flOutnumbered = 0.f;
+}
+
 
 void CPlayerSearch::UpdateFlags() {
 	m_pCloseEnemyFlag = m_pCloseEnemyFlagVisible = m_pCloseFriendFlag = NULL;

@@ -49,6 +49,7 @@ extern ConVar bot_maxplayers; //Kicks bots to ensure that bots will not fill up 
 extern ConVar bot_maxplayers_cap;
 extern ConVar bot_minplayers_map; //potential override for bot_minplayers
 extern ConVar bot_minplayers_mode; //0 bots disabled, 1 use bot_minplayers, 2 let bot_minplayers_map override, 3 use only bot_minplayers_map
+extern ConVar bot_minplayers_delay;
 
 class CBotManager {
 private:
@@ -75,9 +76,9 @@ public:
 	/*
 	Public procedures for manipulating the bot population
 	*/
-	static void AddBotOfTeam(int iTeam, int count = 1);
+	static CBasePlayer* AddBotOfTeam(int iTeam, int count = 1);
 	static void AddBotOfTeamDelayed(int iTeam, int count = 1); //safe to call this when server isn't ready.
 	static void Think(); //wraps this class's functionality into one function
-	static void SetNextThink(float thinkTime) { s_flNextThink = thinkTime; }
+	static void SetNextBotManagerThink(float thinkTime) { s_flNextThink = thinkTime; }
 	static void KickAllBots(); //removes all bots from the server
 };

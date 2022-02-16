@@ -159,7 +159,7 @@ void CBotComManager::DispatchVCommToBot() {
 			}
 		}
 		//nearest bot might be null so check it again
-		if (pContextPlayer && m_pContextPlayer && m_pContextPlayer->IsFakeClient()) {
+		if (pContextPlayer && m_pContextPlayer && m_pContextPlayer->IsFakeClient() && !m_pContextPlayer->m_bMonsterBot) {
 			
 			//build a vcomm
 			static char vcommTemplate[64];

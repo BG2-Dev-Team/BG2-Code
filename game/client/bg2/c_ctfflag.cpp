@@ -19,6 +19,7 @@
 IMPLEMENT_CLIENTCLASS_DT( C_CtfFlag, DT_CtfFlag, CtfFlag )
 
 	RecvPropInt( RECVINFO( m_iForTeam ) ),	
+	RecvPropInt(RECVINFO(m_iFlagMode)),
 	RecvPropBool( RECVINFO( m_bIsCarried ) ),	
 	RecvPropString( RECVINFO( n_cFlagName ) ),	
 

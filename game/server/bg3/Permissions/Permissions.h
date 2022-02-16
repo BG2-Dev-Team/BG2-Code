@@ -25,6 +25,7 @@ public:
 	static void LoadPermissionsForPlayer(CHL2MP_Player*);
 	static void RefreshPermissionsFromFile();
 	static void GetAdminList(std::vector<CBasePlayer*>& pList);
+	static bool ServerHasAdmin();
 	//static void RefreshPermissionsToFile();
 	static Permissions* NullPermission() { return s_pFirstPermission; }
 	static Permissions* FindPermissionByName(const char* pszName);

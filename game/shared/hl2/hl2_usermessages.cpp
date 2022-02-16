@@ -55,6 +55,7 @@ void RegisterUserMessages( void )
 	usermessages->Register("GameMsg", -1); //player message string (varies)
 	usermessages->Register("HitVerif", 5);	//XXX hit YYY in ZZZ for WWW damage
 	usermessages->Register("ExpEvent", 8); //checksum and event type
+	usermessages->Register("BG3Election", -1); //info for BG3's custom election/vote system
 	usermessages->Register("ServerBlood", -1);	//pos(varies), normal(varies), amount(2)
 	usermessages->Register("WinMusic", 1);		//byte = team ID. let client decide how to interpret
 	usermessages->Register("CaptureSounds", -1);	//Position of flag (varies). -HairyPotter

@@ -77,6 +77,8 @@ CWeaponDef::CWeaponDef(const char* pszWeaponName) {
 
 	m_bShotOnly = false;
 
+	m_iExtraDamageTypes = 0;
+
 #ifdef CLIENT_DLL
 	//generate unique color based on weapon name
 	int nameSum = 0;

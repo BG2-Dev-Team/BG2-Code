@@ -97,6 +97,9 @@
 #include "bg3/Bots/bg3_bot.h"
 #include "bg3/Bots/bg3_bot_influencer.h"
 #include "bg3/bg3_scorepreserve.h"
+#include "bg3/controls/bg3_rtv.h"
+#include "bg3/controls//bg3_map_nomination.h"
+#include "bg3/controls//bg3_voting_system.h"
 #include "../shared/bg3/bg3_class_quota.h"
 #include "../shared/bg3/bg3_buffs.h"
 #ifndef USE_ENTITY_BULLET
@@ -652,6 +655,9 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 
 	// initialize the permissions list before any players join
 	Permissions::RefreshPermissionsFromFile();
+
+	// Load custom maps to nomination lists
+	NMapNomination::LoadCustomMapOptions();
 	
 	// Initialize the particle system
 	if ( !g_pParticleSystemMgr->Init( g_pParticleSystemQuery ) )
@@ -1171,7 +1177,10 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	
 	bot_minplayers_map.Revert();
 
-	FlagModeRandomize();
+	FlagModeRandomize(); //randomize flag mode
+
+	g_pBritishVotingSystem->FlagForRtvMapElection(false);//ensure the voting system doesn't activate an RTV election from the previous map
+	CElectionSystem::CancelAllElections(); //cancel any elections from the previously map, in case we switched to this map during an election
 
 	//done. we can now exec the map config
 	char	szExec[256];
@@ -1195,6 +1204,9 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 
 	//Remove existing scores
 	NScorePreserve::Flush();
+
+	//Reset RTV system
+	RtvSystem::ClearRtvs();
 
 	//BG2 - Tjoppen - tickets
 	//we need to call CTeam::ResetTickets() here rather than in CTeam::Init() since the teams get inited before the map config is loaded

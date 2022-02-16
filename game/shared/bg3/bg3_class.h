@@ -125,7 +125,8 @@ public:
 	const char* m_pszSecondaryAmmo = "Grenade";
 
 
-	float		m_flBaseSpeed = 190.f;
+	mutable float		m_flBaseSpeedCalculated = 190.f;
+	float		m_flBaseSpeedOriginal = 190.f;
 	float		m_flFlagWeightMultiplier = 1.0f;
 
 	const char* m_pszPlayerModel;
@@ -226,6 +227,7 @@ public:
 	static const CPlayerClass* const * asList(); //retrieves a list of pointers to the classes
 
 	static void RemoveClassLimits();
+	static void UpdateClassSpeeds(); //updates class base speeds based on server variables
 };
 
 /*

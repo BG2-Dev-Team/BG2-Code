@@ -38,6 +38,8 @@ commented on the following form:
 #include "../shared/bg3/Math/bg3_rand.h"
 #include "../shared/bg3/bg3_class_quota.h"
 #include "../shared/bg3/bg3_buffs.h"
+#include "controls/bg3_voting_system.h"
+#include "player_resource.h"
 #include "team.h"
 
 void PerPlayerCommand(CHL2MP_Player* pRequester, const char* pszPlayerSearchTerm, void(*pFunc)(CHL2MP_Player*));
@@ -56,6 +58,20 @@ void CSay(const char* pszFormat, ...) {
 	char buffer2[140];
 	Q_snprintf(buffer2, sizeof(buffer), "say %s\n", buffer);
 	engine->ServerCommand(buffer2);
+}
+
+void CSayPlayer(CHL2MP_Player* pRecipient, const char* pszFormat, ...) {
+	va_list vl;
+	va_start(vl, pszFormat);
+	char buffer[128];
+	V_vsnprintf(buffer, sizeof(buffer), pszFormat, vl);
+	va_end(vl);
+	CCommand args;
+	args.Tokenize(buffer);
+
+	std::vector<CBasePlayer*> recipients;
+	recipients.emplace_back(pRecipient);
+	Host_Say(NULL, args, false, &recipients);
 }
 
 void AdminSay(const char* pszFormat, ...) {
@@ -184,14 +200,17 @@ CON_COMMAND(changemap, "Changes the server to the specified map") {
 		return;
 	}
 
+
+	CElectionSystem::CancelAllElections();
 	//after we've verified, just do changelevel
 	nextlevel.SetValue(args[1]);
-	((CHL2MPRules*) g_pGameRules)->ChangeLevel();
+	((CHL2MPRules*) g_pGameRules)->ChangeMapDelayed(5.f);
 }
 
 CON_COMMAND(csay, "Says a message in chat") {
 	if (!verifyMapModePermissions(__FUNCTION__) || args.ArgC() < 2)
 		return;
+	//Msg("%s executing csay command", );
 	int len = 7 + strlen(args[1]);
 	char* buffer = new char[len];
 	Q_snprintf(buffer, len, "say %s\n", args[1]);
@@ -412,7 +431,7 @@ CON_COMMAND(brit, "Switches specified player(s) to British team") {
 	}
 }
 
-static void ScrambleTeams() {
+void ScrambleTeams() {
 	const int SIZE = gpGlobals->maxClients;
 
 	//create list, then randomly swap them around
@@ -748,3 +767,4 @@ CON_COMMAND(mp_tickets_b_adjust, "Adjusts British ticket amount by given amout, 
 	CTeam *pBritish = g_Teams[TEAM_BRITISH];
 	pBritish->ChangeTickets(amount);
 }
+

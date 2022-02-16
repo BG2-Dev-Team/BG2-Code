@@ -1016,24 +1016,24 @@ DECLARE_BG2_WEAPON(rapier)
 	//primary
 	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
 	m_Attackinfos[0].m_iDamage = RAPIER_DAMAGE;//60;
-	m_Attackinfos[0].m_flAttackrate = 1.2;//-0.7f;
+	m_Attackinfos[0].m_flAttackrate = 1.1;//-0.7f;
 	m_Attackinfos[0].m_flRange = RAPIER_RANGE;
 	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
 	m_Attackinfos[0].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[0].m_flCosAngleTolerance = RAPIER_COS_TOLERANCE;
 	m_Attackinfos[0].m_flRetraceDuration = RAPIER_RETRACE_DURATION;
-	m_Attackinfos[0].m_iStaminaDrain = MELEE_STAMINA_DRAIN;
+	m_Attackinfos[0].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 1.2;
 
 	//secondary
 	m_Attackinfos[1].m_iAttacktype = ATTACKTYPE_SLASH;
 	m_Attackinfos[1].m_iDamage = RAPIER_DAMAGE / 1.2;//60;
-	m_Attackinfos[1].m_flAttackrate = 0.8;//-0.7f;
+	m_Attackinfos[1].m_flAttackrate = 0.6;//-0.7f;
 	m_Attackinfos[1].m_flRange = RAPIER_RANGE;
 	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
 	m_Attackinfos[1].m_iAttackActivity = ACT_VM_PRIMARYATTACK;
 	m_Attackinfos[1].m_flCosAngleTolerance = RAPIER_COS_TOLERANCE;
 	m_Attackinfos[1].m_flRetraceDuration = RAPIER_RETRACE_DURATION;
-	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 1.2;
+	m_Attackinfos[1].m_iStaminaDrain = MELEE_STAMINA_DRAIN / 1.4;
 }
 #ifndef CLIENT_DLL
 MELEE_ACTTABLE(rapier)
@@ -1144,6 +1144,38 @@ MELEE_ACTTABLE(club)
 #endif
 
 #ifdef CLIENT_DLL
+#define CWeaponburning_man C_Weaponburning_man
+#endif
+DECLARE_BG2_WEAPON(burning_man)
+{
+	m_fHolsterTime = 0.75f;
+
+	m_bWeaponHasSights = false;
+
+	//m_iOwnerSpeedModOnKill = 3;
+
+	//primary
+	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_SLASH;
+	m_Attackinfos[0].m_iDamage = 120;//60;
+	m_Attackinfos[0].m_flAttackrate = 1.2f;//-0.7f;
+	m_Attackinfos[0].m_flRange = 190;
+	//m_Attackinfos[0].m_flCosAngleTolerance	= 0.95f;
+	m_Attackinfos[0].m_iAttackActivity = ACT_VM_ATTACK;
+	m_Attackinfos[0].m_flCosAngleTolerance = TOMAHAWK_COS_TOLERANCE;
+	m_Attackinfos[0].m_flRetraceDuration = TOMAHAWK_RETRACE_DURATION;
+	m_Attackinfos[0].m_iStaminaDrain = 0;
+
+	//secondary
+	m_Attackinfos[1] = m_Attackinfos[0];
+
+	m_iExtraDamageTypes = DMG_BURN;
+}
+
+#ifndef CLIENT_DLL
+MELEE_ACTTABLE(burning_man)
+#endif
+
+#ifdef CLIENT_DLL
 #define CWeapongunstock C_Weapongunstock
 #endif
 DECLARE_BG2_WEAPON(gunstock)
@@ -1152,7 +1184,7 @@ DECLARE_BG2_WEAPON(gunstock)
 
 	m_bWeaponHasSights = false;
 
-	m_iOwnerSpeedModOnKill = 3;
+	m_iOwnerSpeedModOnKill = 10;
 	m_iAerialDamageMod = 13;
 
 	//primary

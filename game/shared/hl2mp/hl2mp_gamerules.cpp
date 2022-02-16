@@ -50,7 +50,10 @@
 #include "../bg3/Bots/bg3_bot_manager.h"
 #include "../bg3/Bots/bg3_bot_vcomms.h"
 #include "../bg3/bg3_scorepreserve.h"
+#include "../bg3/controls/bg3_rtv.h"
+#include "../bg3/controls/bg3_voting_system.h"
 #include "../shared/bg3/bg3_class_quota.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 #ifdef DEBUG	
@@ -89,8 +92,10 @@ extern CBaseEntity	 *g_pLastRebelSpawn;*/
 
 #endif
 
-ConVar mp_autobalanceteams("mp_autobalanceteams", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_autobalancetolerance("mp_autobalancetolerance", "2", FCVAR_GAMEDLL | FCVAR_NOTIFY | FCVAR_REPLICATED, "When the teams differ in size by this number or greater, autobalance is active.", true, 2, false, 0);
+ConVar mp_autobalanceteams("mp_autobalanceteams", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_autobalancetolerance("mp_autobalancetolerance", "2", FCVAR_NOTIFY | FCVAR_REPLICATED, "When the teams differ in size by this number or greater, autobalance is active.", true, 2, false, 0);
+
+ConVar sv_chatcommands("sv_chatcommands", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Whether or not in-chat commands such as \"ff\" and \"currentmap\" are enabled.");
 
 
 #define LIMIT_DEFINES( size, sizename )\
@@ -147,8 +152,33 @@ ConVar mp_tickets_drain_a("mp_tickets_drain_a", "12.5", CVAR_FLAGS, "Number of t
 ConVar mp_tickets_drain_b("mp_tickets_drain_b", "12.5", CVAR_FLAGS, "Number of tickets drained every interval when the british have more than half of their cappable flags. Can have decimals");
 ConVar mp_tickets_drain_interval("mp_tickets_drain_interval", "10", CVAR_FLAGS, "How often tickets will be drained in mp_respawnstyle = 3");
 
+
+void OnBg2SpeedChange(IConVar* pVar, const char* pszOldValue, float flOldValue) {
+
+#ifndef CLIENT_DLL
+	CPlayerClass::UpdateClassSpeeds();
+	for (int i = 1; i < gpGlobals->maxClients; i++) {
+		CBasePlayer* pPlayer = UTIL_PlayerByIndex(i);
+		if (pPlayer) {
+			engine->ClientCommand(pPlayer->edict(), "update_playerclass_speeds");
+		}
+	}
+#endif
+}
+
+ConVar mp_bg2_speed("mp_bg2_speed", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "If set to 1, removes the 10% player speed increase that was added in BG3", OnBg2SpeedChange);
+ConVar sv_vote_duration("sv_vote_duration", "30", CVAR_FLAGS, "This time, in seconds, is how long a vote will last.", true, 5.f, false, 0.f);
+
+
 //interchangable flag system
+#ifdef CLIENT_DLL
 ConVar mp_flagmode("mp_flagmode", "0", CVAR_FLAGS, "Controls which set of flags is enabled for the map. -1 = all flags, 0 = default, 1 = CTF, 2 = custom. Not every mode will be available on every map.");
+#else
+void OnFlagModeChange(IConVar* pVar, const char* pszOldValue, float flOldValue) {
+	sv_restartmap.SetValue(3);
+}
+ConVar mp_flagmode("mp_flagmode", "0", CVAR_FLAGS, "Controls which set of flags is enabled for the map. -1 = all flags, 0 = default, 1 = CTF, 2 = custom. Not every mode will be available on every map.", OnFlagModeChange);
+#endif
 ConVar mp_flagmode_randomize("mp_flagmode_randomize", "1", CVAR_FLAGS, "Whether or not to randomize flag mode on map start.");
 
 //BG3 - Awesome - linebattle cvars
@@ -349,6 +379,9 @@ char *sTeamNames[] =
 CHL2MPRules::CHL2MPRules()
 {
 
+	//recalculate class movement speeds
+	CPlayerClass::UpdateClassSpeeds();
+
 #ifndef CLIENT_DLL
 	// Create the team managers
 	for ( int i = 0; i < ARRAYSIZE( sTeamNames ); i++ )
@@ -360,7 +393,7 @@ CHL2MPRules::CHL2MPRules()
 	}
 
 	//reset the bot manager's think time
-	CBotManager::SetNextThink(gpGlobals->curtime + 40);
+	CBotManager::SetNextBotManagerThink(gpGlobals->curtime + bot_minplayers_delay.GetFloat());
 
 	m_bTeamPlayEnabled = teamplay.GetBool();
 	m_flIntermissionEndTime = 0.0f;
@@ -368,6 +401,7 @@ CHL2MPRules::CHL2MPRules()
 
 	m_hRespawnableItemsAndWeapons.RemoveAll();
 	m_tmNextPeriodicThink = 0;
+	m_tmDelayedMapChangeTime = FLT_MAX;
 	m_flRestartGameTime = 0;
 	m_bCompleteReset = false;
 	m_bHeardAllPlayersReady = false;
@@ -907,10 +941,21 @@ void CHL2MPRules::Think( void )
 	{		
 		NScorePreserve::Think();
 		m_tmNextPeriodicThink = gpGlobals->curtime + 30.0f;
+
+		//we only need one of the two voting systems doing the automated map election
+		g_pBritishVotingSystem->AutoMapchoiceElectionThink();
+
 		SetMaxCmdRateAuto();
-
-
 	}
+
+	if (gpGlobals->curtime > m_tmDelayedMapChangeTime) {
+		CElectionSystem::CancelAllElections();
+		ChangeLevel();
+		m_tmDelayedMapChangeTime = FLT_MAX;
+	}
+
+	g_pAmericanVotingSystem->ElectionThink();
+	g_pBritishVotingSystem->ElectionThink();
 
 	ManageObjectRelocation();
 
@@ -1467,6 +1512,21 @@ float CHL2MPRules::GetMapRemainingTime()
 	return timeleft;
 }
 
+
+
+float CHL2MPRules::GetMapElapsedTime()
+{
+	// if timelimit is disabled, return 0
+	if (mp_timelimit.GetInt() <= 0)
+		return 0;
+
+	// timelimit is in minutes
+
+	float timepassed = gpGlobals->curtime - m_flGameStartTime;
+
+	return timepassed;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1584,6 +1644,7 @@ void CHL2MPRules::RestartGame()
 
 	//reset scores...
 	NScorePreserve::Flush();
+
 	g_Teams[TEAM_AMERICANS]->SetScore(0);//...for teams...
 	g_Teams[TEAM_BRITISH]->SetScore(0);
 	int x;
@@ -2197,6 +2258,18 @@ void CHL2MPRules::CheckTicketDrain(void)
 void CHL2MPRules::SetRemainingRoundTime(float flSeconds) {
 	//modify m_fLastRoundRestart 
 	m_fLastRoundRestart = gpGlobals->curtime - mp_roundtime.GetFloat() + flSeconds;
+}
+
+void CHL2MPRules::ChangeMapDelayed(float flDelay) {
+	const char* next = nextlevel.GetString();
+	if (next && next[0]) {
+		MSay("Changing map to %s", nextlevel.GetString());
+	}
+	else {
+		MSay("Changing map...");
+	}
+	
+	m_tmDelayedMapChangeTime = gpGlobals->curtime + flDelay;
 }
 #endif
 

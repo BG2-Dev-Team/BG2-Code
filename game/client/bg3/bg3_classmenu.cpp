@@ -83,6 +83,7 @@ commented on the following form:
 #include "../shared/bg3/bg3_math_shared.h"
 #include "../shared/bg3/bg3_class_quota.h"
 #include "../shared/bg3/bg3_unlockable.h"
+#include "persistent\versioning.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -380,6 +381,8 @@ CON_COMMAND(teamkitmenu, "(Linebattle Mode Only) Sets the class, weapon, uniform
 void JoinRequest(int iGun, int iAmmo, int iSkin, int iTeam, int iClass) {
 	//BG3 - we've merged the class and kit commands into a single command, classkit, to simplify
 	//ordering dependencies on server side
+
+	//NVersioning::MarkBetaTestParticipation();
 
 	if (g_bClassMenuOfficerMode) {
 		g_bClassMenuOfficerMode = false;
@@ -737,7 +740,7 @@ namespace NClassWeaponStats {
 	void UpdateWeaponStatsAllCurrent() {
 
 		//Update player movement speed also, because that can be weapon-dependent!
-		float speed = GetDisplayedClass()->m_flBaseSpeed;
+		float speed = GetDisplayedClass()->m_flBaseSpeedOriginal;
 		speed += GetDisplayedClass()->m_aWeapons[g_pDisplayedWeaponSelectionButton->GetKitIndex()].m_iMovementSpeedModifier;
 		float relativeSpeed = FLerp(0.4f, 1.0f, SPEED_GRENADIER, SPEED_SKIRMISHER + 5, speed);
 		g_iClassSpeedWidth = g_iBarWidth * relativeSpeed;
@@ -762,7 +765,7 @@ namespace NClassWeaponStats {
 
 		//if our primary weapon isn't a firearm, hide the firearm stats
 		//BG3 - contrib from darthmotta
-		if (pPrimary->m_Attackinfos[0].m_iAttacktype != ATTACKTYPE_FIREARM){
+		if (pPrimary && pPrimary->m_Attackinfos[0].m_iAttacktype != ATTACKTYPE_FIREARM){
 			g_iAccuracyWidth = 1;
 			g_iBulletDamageWidth = 1;
 			g_iReloadSpeedWidth = 1;

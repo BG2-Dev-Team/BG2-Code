@@ -52,6 +52,7 @@ in separate files for bot communication, map navigation, etc.
 #include "../bg2/flag.h"
 #include "../bg2/weapon_bg2base.h"
 #include "../shared/bg3/bg3_class_quota.h"
+#include "EntityFlame.h"
 
 //bot manager manages bot population
 #include "bg3_bot_manager.h"
@@ -133,13 +134,19 @@ static CUtlDict<char*> g_mUsedBotNames;
 
 ConVar bot_fun_names("bot_fun_names", "0", 0);
 
+static const char* g_pszBotForcedName = NULL;
+
 void GenerateNameForBot(char* buffer, uint8 bufferSize, const BotDifficulty* pForDifficulty) {
 
 //regenerate:
 	const char* pRank;
 	const char* pName;
 
-	if (bot_fun_names.GetBool()) {
+	if (g_pszBotForcedName) {
+		Q_snprintf(buffer, bufferSize, g_pszBotForcedName);
+		g_pszBotForcedName = NULL;
+	}
+	else if (bot_fun_names.GetBool()) {
 		pName = g_ppszFunBotNames[RandomInt(0, ARRAYSIZE(g_ppszFunBotNames) - 1)];
 		Q_snprintf(buffer, bufferSize, pName);
 	}
@@ -179,6 +186,7 @@ void GenerateNameForBot(char* buffer, uint8 bufferSize, const BotDifficulty* pFo
 //-----------------------------------------------------------------------------
 CBasePlayer *BotPutInServer(int iAmount, bool bFrozen)
 {
+	CBasePlayer* pResult = NULL;
 	int i = 1;
 	while (i <= iAmount)
 	{
@@ -215,9 +223,9 @@ CBasePlayer *BotPutInServer(int iAmount, bool bFrozen)
 		CSDKBot::Init(pPlayer, pDifficulty);
 
 		i++;
-		//return pPlayer;
+		pResult = pPlayer;
 	}
-	return NULL;
+	return pResult;
 }
 
 int  g_iWaitingAmount = 0; //This is just a temp int really.
@@ -281,6 +289,37 @@ CON_COMMAND(bot_add_b, "Creates bot(s)in the server. <Bot Count>")
 		}
 	}
 }
+
+CON_COMMAND(burning_man, "Adds a burning man")
+{
+	if (verifyBotPermissions(__FUNCTION__)) {
+		g_iNextBotTeam = TEAM_BRITISH;
+
+		if (g_bServerReady) { //Server is already loaded, just do it.	
+
+			g_pszBotForcedName = "BURNING MAN";
+			CBasePlayer* pBaseBot = CBotManager::AddBotOfTeam(g_iNextBotTeam, 1);
+			if (pBaseBot) {
+				CHL2MP_Player* pBot = (CHL2MP_Player*) pBaseBot;
+				pBot->AddSpeedModifier(127, ESpeedModID::MapTrigger);
+				pBot->SetHealth(2000);
+				pBot->SetModel("models/player/other/burning_man.mdl");
+				pBot->SetModelScale(2.f, 2.f);
+				pBot->RemoveAllWeapons();
+				CBaseEntity* pWep = pBot->GiveNamedItem("weapon_burning_man");
+				pWep->SetRenderMode(RenderMode_t::kRenderNone);
+				pBot->Ignite(99999.f, false);
+				if (pBot->GetEffectEntity()) {
+					//CEntityFlame *pFlame = (CEntityFlame*) pBot->GetEffectEntity();
+					pBot->m_bMonsterBot = true;
+				}
+
+				//pBot->IgniteNumHitboxFires
+			}
+		}
+	}
+}
+
 
 //called when game server is created
 CSDKBot::CSDKBot() {
@@ -350,8 +389,8 @@ void CSDKBot::Init(CHL2MP_Player* pPlayer, BotDifficulty* pDifficulty) {
 	
 
 	//only spawn if we're not in LMS
-	if (!IsLMS())
-		pPlayer->Spawn();
+	/*if (!IsLMS())
+		pPlayer->Spawn();*/
 
 	curBot.m_PlayerSearchInfo.Init(pPlayer);
 }

@@ -57,6 +57,8 @@ DECLARE_HUDELEMENT(CHudFloatingIcon);
 
 #define FLAG_HEIGHT 160
 
+#define sqr(a) (a*a)
+
 //==============================================
 // CHudFlags's CHudFlags
 // Constructor
@@ -83,7 +85,7 @@ CHudElement(pElementName), BaseClass(NULL, "HudFloatingIcon") //BG3 - Tingtom an
 		//m_pLabelFlag[i]->SetFont(font);
 	}
 
-	m_pIconBlank = m_pIconRed = m_pIconBlue;
+	//m_pIconBlank = m_pIconRed = m_pIconBlue;
 }
 
 //==============================================
@@ -117,9 +119,9 @@ void CHudFloatingIcon::Init(void)
 //==============================================
 void CHudFloatingIcon::VidInit(void)
 {
-	m_pIconBlank = gHUD.GetIcon("hud_flagicon_blank");
-	m_pIconRed = gHUD.GetIcon("hud_flagicon_red");
-	m_pIconBlue = gHUD.GetIcon("hud_flagicon_blue");
+	m_teamToIcon[0] = gHUD.GetIcon("hud_flagicon_blank");
+	m_teamToIcon[1] = gHUD.GetIcon("hud_flagicon_red");
+	m_teamToIcon[2] = gHUD.GetIcon("hud_flagicon_blue");
 }
 
 bool CHudFloatingIcon::ShouldDraw(void)
@@ -128,11 +130,11 @@ bool CHudFloatingIcon::ShouldDraw(void)
 	if (!g_Flags.Count()) //No flags? Die here. -HairyPotter
 		return false;
 
-	C_HL2MP_Player *pHL2Player = dynamic_cast<C_HL2MP_Player*>(C_HL2MP_Player::GetLocalPlayer());
+	/*C_HL2MP_Player *pHL2Player = dynamic_cast<C_HL2MP_Player*>(C_HL2MP_Player::GetLocalPlayer());
 	C_BaseCombatWeapon *wpn = pHL2Player->GetActiveWeapon();
 	// Don't draw hud if we're using Iron Sights. -HairyPotter
 	if (wpn && wpn->m_bIsIronsighted)
-		return false;
+		return false;*/
 
 	return CHudElement::ShouldDraw();
 }
@@ -176,6 +178,11 @@ void CHudFloatingIcon::Paint()
 
 	for (int i = 0; i < m_iFlagCount; i++)
 	{
+		//skip flags that aren't shown in the list of flags
+		if (g_Flags[i]->m_iHUDSlot < 0) {
+			continue;
+		}
+
 		//BG3 - Tingtom and Ricochet - For crosshair to show floating icon above flag entity
 		float x, y;
 		x = screenWidth / 2;
@@ -190,7 +197,7 @@ void CHudFloatingIcon::Paint()
 		y -= 0.5f * screen[1] * screenHeight + 0.5f;
 
 		//BG3 - Tingtom and Ricochet - Distance check to not draw icons if the length between player minus the length of the flag is greater than a value
-		if ((pPlayer->GetAbsOrigin() - g_Flags[i]->GetAbsOrigin()).Length() > 2048)
+		if ((pPlayer->GetAbsOrigin() - g_Flags[i]->GetAbsOrigin()).LengthSqr() > sqr(2048))
 		{
 			if (y > 0 && y < screenHeight)
 				minY = min(y, minY);
@@ -222,29 +229,22 @@ void CHudFloatingIcon::Paint()
 		//Set all y positions to the minimum value
 		pos.y = minY;
 
+		CHudTexture* iconToDraw;
 		switch (g_Flags[i]->GetTeamNumber())
 		{
-		case TEAM_UNASSIGNED:
-			switch (g_Flags[i]->m_iForTeam)
-			{
-			case 0:
-				m_pIconBlank->DrawSelf(pos.x - m_pIconBlank->Width() / 2, pos.y - m_pIconBlank->Height() / 2, ColourWhite); //BG3 - Tingtom and Ricochet - Width() and Height() to center icon on flag entity pole
-				break;
-			case 1:
-				m_pIconRed->DrawSelf(pos.x - m_pIconBlank->Width() / 2, pos.y - m_pIconBlank->Height() / 2, ColourWhite);
-				break;
-			case 2:
-				m_pIconBlue->DrawSelf(pos.x - m_pIconBlank->Width() / 2, pos.y - m_pIconBlank->Height() / 2, ColourWhite);
-				break;
-			}
-			break;
 		case TEAM_AMERICANS:
-			m_pIconBlue->DrawSelf(pos.x - m_pIconBlank->Width() / 2, pos.y - m_pIconBlank->Height() / 2, ColourWhite);
+			iconToDraw = m_teamToIcon[2];
 			break;
 		case TEAM_BRITISH:
-			m_pIconRed->DrawSelf(pos.x - m_pIconBlank->Width() / 2, pos.y - m_pIconBlank->Height() / 2, ColourWhite);
+			iconToDraw = m_teamToIcon[1];
+			break;
+		default:
+			iconToDraw = m_teamToIcon[g_Flags[i]->m_iForTeam];
 			break;
 		}
+		int iconWidth = iconToDraw->Width();
+		int iconHeight = iconToDraw->Width();
+		iconToDraw->DrawSelf(pos.x - iconWidth / 2, pos.y - iconHeight / 2, ColourWhite);
 
 		//BG3 - Tingtom and Ricochet - copied from bg2_hud_flags.cpp to get the player amount for capping, and flag name
 
@@ -266,21 +266,20 @@ void CHudFloatingIcon::Paint()
 			switch (g_Flags[i]->m_iLastTeam)
 			{
 			case TEAM_UNASSIGNED:
+				iconToDraw = m_teamToIcon[0];
 				//is this needed? unassigned can't capture flags..
-				//m_IconCover[i]->DrawSelfCropped(x_offset, 0, x_offset, 0, 32 - coverw, 32, ColourWhite);
-				m_pIconBlank->DrawSelfCropped(pos.x - m_pIconBlank->Width() / 2, pos.y - m_pIconBlank->Height() / 2, 0, 0, 128 - coverw, 64, ColourWhite);
 				break;
 			case TEAM_BRITISH:
-				//m_IconCover[i]->DrawSelfCropped(x_offset, 0, x_offset, 0, 32 - coverw, 32, ColourRed);
-				m_pIconRed->DrawSelfCropped(pos.x - m_pIconRed->Width() / 2, pos.y - m_pIconRed->Height() / 2, 0, 0, 128 - coverw, 64, ColourWhite);
+				iconToDraw = m_teamToIcon[1];
 				break;
 			case TEAM_AMERICANS:
-				//m_IconCover[i]->DrawSelfCropped(x_offset, 0, x_offset, 0, 32 - coverw, 32, ColourBlue);
-				m_pIconBlue->DrawSelfCropped(pos.x - m_pIconBlue->Width() / 2, pos.y - m_pIconBlue->Height() / 2, 0, 0, 128 - coverw, 64, ColourWhite);
+				iconToDraw = m_teamToIcon[2];
 				break;
 			}
+			iconToDraw->DrawSelfCropped(pos.x - iconWidth / 2, pos.y - iconHeight / 2, 0, 0, 128 - coverw, 64, ColourWhite);
 		}
 
+		//the below chucnk of code focuses on drawing the labels under the icons
 		int r = 0, g = 0, b = 0;
 		switch (g_Flags[i]->m_iLastTeam)
 		{

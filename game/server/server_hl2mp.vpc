@@ -207,6 +207,10 @@ $Project "Server (HL2MP)"
 			}
 			$Folder "Controls"
 			{
+				$File "bg3\controls\bg3_map_nomination.cpp"
+				$File "bg3\controls\bg3_map_nomination.h"
+				$File "bg3\controls\bg3_rtv.cpp"
+				$File "bg3\controls\bg3_rtv.h"
 				$File "bg3\controls\bg3_voting_system.cpp"
 				$File "bg3\controls\bg3_voting_system.h"
 				$File "$SRCDIR\game\shared\bg3\controls\bg3_voting_system_shared.h"
@@ -215,6 +219,7 @@ $Project "Server (HL2MP)"
 			$Folder "LinebattleControls"
 			{
 				$File "bg3\LinebattleControls\bg3_battle_line.h"
+				$File "bg3\LinebattleControls\lb_officer.h"
 			}
 			$Folder "Math"
 			{
@@ -226,6 +231,8 @@ $Project "Server (HL2MP)"
 			}
 			$Folder "Permissions"
 			{
+				$File "bg3\Permissions\banlist.cpp"
+				$File "bg3\Permissions\banlist.h"
 				$File "bg3\Permissions\bg3_player_locator.cpp"
 				$File "bg3\Permissions\bg3_player_locator.h"
 				$File "bg3\Permissions\Permissions.cpp"
@@ -264,6 +271,9 @@ $Project "Server (HL2MP)"
 			$File	"bg3\bg3_triggers.h"
 			$File	"bg3\bg3_turret.cpp"
 			$File	"bg3\bg3_turret.h"
+			$File 	"$SRCDIR\game\shared\bg3\bg3_unlockable.h"
+			$File 	"$SRCDIR\game\shared\bg3\bg3_unlockable.cpp"
+			$File 	"$SRCDIR\game\shared\bg3\bg3_unlockable_secret.cpp"
 			$File 	"$SRCDIR\game\shared\bg3\bg3_weapon_def.cpp"
 			$File 	"$SRCDIR\game\shared\bg3\bg3_weapon_def.h"
 			$File 	"$SRCDIR\game\shared\bg3\bg3_weapon_shared.h"

@@ -56,11 +56,13 @@ public:
 private:
 
 
-	CHudTexture		*m_pIconBlank,
+	/*CHudTexture		*m_pIconBlank,
 		*m_pIconRed,
-		*m_pIconBlue;
+		*m_pIconBlue;*/
 
 	vgui::Label * m_pLabelFlag[MAX_FLAGS];
+
+	CHudTexture* m_teamToIcon[3]; //0 is unassigned, 1 is brit, 2 is amer
 };
 
 using namespace vgui;

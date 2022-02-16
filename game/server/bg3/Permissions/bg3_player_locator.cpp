@@ -203,3 +203,31 @@ CON_COMMAND(psearch, "") {
 
 	delete[] pPlayerList;
 }
+
+
+//helper for getting just 1 player from a selector
+//returns NULL if not found or if multiple found
+CHL2MP_Player* GetSinglePlayerFromSelector(const char* pszSelector) {
+	//no @ selectors
+	if (pszSelector[0] == '@')
+		return NULL;
+
+	CHL2MP_Player** pPlayerList = new CHL2MP_Player*[gpGlobals->maxClients];
+	memset(pPlayerList, 0, gpGlobals->maxClients * sizeof(CHL2MP_Player*));
+
+	GetPlayersFromString(pPlayerList, pszSelector, NULL);
+	int count = 0;
+	while (pPlayerList[count]) {
+		count++;
+	}
+
+	CHL2MP_Player* pResult = NULL;
+
+	//no more than 1
+	if (count == 1) {
+		pResult = pPlayerList[0];
+	}
+
+	delete[] pPlayerList;
+	return pResult;
+}

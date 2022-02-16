@@ -1,6 +1,8 @@
 #include "cbase.h"
 #include "versioning.h"
 #include "../bg3_soft_info.h"
+#include "../shared/hl2mp/hl2mp_gamerules.h"
+#include <string>
 
 extern ConVar mp_timelimit;
 
@@ -34,10 +36,13 @@ namespace NVersioning {
 	}
 
 	void MarkBetaTestParticipation() {
+
+		//Warning("Check branch info...\n");
 		//do nothing if we're already a beta tester or if we're not on beta
 		if (g_bHadDoneBetaTestParticipation || !IsOnBetaBranch())
 			return;
 
+		//Warning("Marking participation...\n");
 		//check that we have enough players on the server and aren't just cheesing it
 		if (mp_timelimit.GetInt() < 10 || g_PR->GetNumNonSpectatingPlayers() < 10)
 			return;
@@ -53,6 +58,8 @@ namespace NVersioning {
 	}
 
 	bool IsOnBetaBranch() {
-		return false; //TODO - develop a system better than changing this between versions
+		//Warning("%s\n", HL2MPRules()->MapName());
+		return ((std::string)HL2MPRules()->MapName() == (std::string)"bg_canal_test");
+		//return false; //TODO - develop a system better than changing this between versions
 	}
 }

@@ -56,11 +56,12 @@ class CSpawnPoint : public CPointEntity
 #define SPAWNPOINT_COMPETITIVE (1 << 8)
 #define SPAWNPOINT_CASUAL (1 << 9)
 #define SPAWNPOINT_BOT (1 << 10)
+#define SPAWNPOINT_BOT_ONLY (1 << 11)
 
 
 public:
 
-	bool m_bReserved;
+	bool m_bReserved = false;
 	int m_iSpawnTeam;
 
 	void Spawn( void ) { Reset(); }
@@ -153,6 +154,9 @@ public:
 
 	bool SupportsBots() {
 		return HasSpawnFlags(SPAWNPOINT_BOT);
+	}
+	bool BotsOnly() {
+		return HasSpawnFlags(SPAWNPOINT_BOT_ONLY);
 	}
 
 	void InputEnable( inputdata_t &inputData ) { /*Msg( "enablind spawn\n" );*/ SetEnabled( true ); }

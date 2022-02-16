@@ -12,9 +12,9 @@ public:
 
 	bool	m_bIsCarried;
 	int		m_iForTeam;
+	int		m_iFlagMode;
 	
 	char	n_cFlagName[256];
-
 };
 
 extern CUtlVector< C_CtfFlag * > g_CtfFlags, g_AmericanFlags, g_BritishFlags;

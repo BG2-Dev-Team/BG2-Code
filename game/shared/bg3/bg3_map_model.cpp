@@ -34,6 +34,8 @@ commented on the following form:
 #include "cbase.h"
 #include "bg3_map_model.h"
 #include "filesystem.h"
+#include <vector>
+#include <string>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -75,6 +77,37 @@ void CMapInfo::RefreshMapInfoList() {
 		pszMapName = filesystem->FindNext(fileSearch);
 	}
 	filesystem->FindClose(fileSearch);
+
+	RefreshMapImageList();
+}
+
+using namespace std;
+static vector<string> g_aMapImageList;
+void CMapInfo::RefreshMapImageList() {
+	g_aMapImageList.clear();
+	
+	FileFindHandle_t fileSearch;
+	const char* pszMapName = filesystem->FindFirst("materials/VGUI/mapvote/*.vmt", &fileSearch);
+	pszMapName = filesystem->FindNext(fileSearch);
+
+	char buffer[MAX_MAP_NAME + 4];
+
+	while (pszMapName) {
+		strcpy_s(buffer, pszMapName);
+
+		//Find the . and set it to null, simplifies later searches
+		bool bFound = false;
+		for (int i = 0; i < MAX_MAP_NAME && !bFound; i++) {
+			if (buffer[i] == '.') {
+				buffer[i] = 0;
+				bFound = true;
+			}
+		}
+
+		g_aMapImageList.emplace_back(buffer);
+		pszMapName = filesystem->FindNext(fileSearch);
+	}
+	filesystem->FindClose(fileSearch);
 }
 
 CMapInfo* CMapInfo::GetFirstMapInfo() {
@@ -86,8 +119,13 @@ void CMapInfo::GetNextMapInfo(CMapInfo** ppMapInfo) {
 	*ppMapInfo = curInfo->m_pNextInfo;
 }
 
-bool CMapInfo::MapExists(const char* pszMapName) {
-	CMapInfo::RefreshMapInfoList();
+bool g_bHasGeneratedMapList = false;
+bool CMapInfo::MapExists(const char* pszMapName, bool bForceUpdate) {
+	if (!g_bHasGeneratedMapList || bForceUpdate) {
+		CMapInfo::RefreshMapInfoList();
+		g_bHasGeneratedMapList = true;
+	}
+	
 
 	CMapInfo* pMap = GetFirstMapInfo();
 	bool bFound = false;
@@ -96,6 +134,20 @@ bool CMapInfo::MapExists(const char* pszMapName) {
 		CMapInfo::GetNextMapInfo(&pMap);
 	}
 	return bFound;
+}
+
+bool CMapInfo::MapImageExists(const std::string& sMapName) {
+	if (!g_bHasGeneratedMapList) {
+		CMapInfo::RefreshMapInfoList();
+		g_bHasGeneratedMapList = true;
+	}
+
+	for (size_t i = 0; i < g_aMapImageList.size(); i++) {
+		if (g_aMapImageList[i] == sMapName) {
+			return true;
+		}
+	}
+	return false;
 }
 
 void CMapInfo::SetName(const char* pszName) {

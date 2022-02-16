@@ -525,6 +525,7 @@ typedef enum
 #define COLOR_GREEN		Color(153, 255, 153, 255)
 #define COLOR_GREY		Color(204, 204, 204, 255)
 #define COLOR_WHITE		Color(255, 255, 255, 255)
+#define COLOR_OFF_WHITE		Color(232, 233, 187, 255)
 #define COLOR_BLACK		Color(0, 0, 0, 255)
 
 // All NPCs need this data

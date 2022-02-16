@@ -38,6 +38,7 @@ public:
 	int GetNumAmericans() const { return (m_iPlayerCounts >> 16) & 0xFF; };
 	int GetNumAliveBritish() const { return (m_iPlayerCounts >> 8) & 0xFF; };
 	int GetNumAliveAmericans() const { return m_iPlayerCounts & 0xFF; }
+	int GetNumNonSpectators() const { return GetNumAmericans() + GetNumBritish(); }
 
 protected:
 	// Data for each player that's propagated to all clients

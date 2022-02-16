@@ -113,6 +113,7 @@ ConVar mp_disable_firearms( "mp_disable_firearms", "0", FCVAR_NOTIFY | FCVAR_REP
 
 ConVar sv_show_damages("sv_show_damages", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow people to view enemy damages in scoreboard?");
 ConVar sv_show_enemy_names("sv_show_enemy_names", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow people to view enemy names in crosshair?");
+ConVar sv_show_friend_names("sv_show_friend_names", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow people to view friendly names in crosshair?");
 
 ConVar sv_muzzle_velocity_override("sv_muzzle_velocity_override", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "If non-zero, overide muzzle velocities with this value (inch per seconds)");
 //ConVar sv_flintlock_delay("sv_flintlock_delay", "0.135", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "Delay in seconds of the flintlock mechanism (delay bullet firing by this amount)");
@@ -626,7 +627,7 @@ void CBaseBG2Weapon::Hit( trace_t &traceHit, int iAttack )
 		if (!(pPlayer->GetFlags() & FL_ONGROUND) && pPlayer->GetMoveType() != MOVETYPE_LADDER) damage += Def()->m_iAerialDamageMod;
 
 		//BG2 - Tjoppen - apply no force
-		CTakeDamageInfo info( GetOwner(), GetOwner(), this, damage, DMG_CLUB | DMG_PREVENT_PHYSICS_FORCE | DMG_NEVERGIB );
+		CTakeDamageInfo info( GetOwner(), GetOwner(), this, damage, DMG_CLUB | DMG_PREVENT_PHYSICS_FORCE | DMG_NEVERGIB | Def()->m_iExtraDamageTypes );
 		info.SetDamagePosition( traceHit.endpos );
 
 		pHitEntity->DispatchTraceAttack( info, hitDirection, &traceHit);	//negative dir for weird reasons

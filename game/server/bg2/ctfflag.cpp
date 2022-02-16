@@ -26,6 +26,7 @@ void CtfFlag::Spawn( void )
 
 	if (!m_bActivated)
 	{
+		//SetRenderMode(RenderMode_t::kRenderNone);
 		AddEffects( EF_NODRAW );
 	}
 
@@ -261,10 +262,15 @@ bool CtfFlag::SetActiveState(bool bActive) {
 		bResult = false;
 
 	m_bActivated = bResult;
-	if (m_bActivated)
+	if (m_bActivated) {
+		//SetRenderMode(RenderMode_t::kRenderNormal);
 		RemoveEffects(EF_NODRAW);
-	else
+	}
+	else {
+		//SetRenderMode(RenderMode_t::kRenderNone);
 		AddEffects(EF_NODRAW);
+	}
+		
 	return bResult;
 }
 
@@ -308,8 +314,9 @@ IMPLEMENT_NETWORKCLASS_ALIASED( tfFlag, DT_CtfFlag ) //Doesn't need the "C" in f
 //-------------------------------------------------------------------------
 
 BEGIN_NETWORK_TABLE( CtfFlag, DT_CtfFlag )
-	SendPropBool( SENDINFO( m_bIsCarried ) ),
 	SendPropInt( SENDINFO( m_iForTeam ), 2, SPROP_UNSIGNED ),
+	SendPropInt(SENDINFO(m_iFlagMode), 3),
+	SendPropBool(SENDINFO(m_bIsCarried)),
 	SendPropStringT( SENDINFO( n_cFlagName ) ),
 END_NETWORK_TABLE()
 

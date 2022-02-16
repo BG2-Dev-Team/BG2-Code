@@ -9,23 +9,27 @@ class CtfFlag : public CBaseAnimating
 	DECLARE_PREDICTABLE();
 	DECLARE_DATADESC();
 
+	CtfFlag() {
+		m_iFlagMode = 0; //support legaxy maps that don't specify this
+	}
+
 	COutputEvent m_OnPickedUp;
 	COutputEvent m_OnDropped;
 	COutputEvent m_OnReturned;
 	COutputEvent m_OnEnable;
 	COutputEvent m_OnDisable;
 
-	CNetworkVar( string_t, n_cFlagName );
-	CNetworkVar( bool, m_bIsCarried );
 	CNetworkVar( int, m_iForTeam );
+	CNetworkVar( int, m_iFlagMode );
+	CNetworkVar(bool, m_bIsCarried);
+	CNetworkVar(string_t, n_cFlagName);
 
 	void InputReset( inputdata_t &inputData );
 	void InputEnable( inputdata_t &inputData );
 	void InputDisable( inputdata_t &inputData );
 	void InputToggle( inputdata_t &inputData );
 
-	int		m_iFlagMode = 0,
-			m_iTeamBonus,
+	int		m_iTeamBonus,
 			iTeam,
 			m_iPlayerBonus,
 			m_iDropSound,

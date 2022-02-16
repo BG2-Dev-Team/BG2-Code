@@ -345,6 +345,7 @@ bool CSDKBot::ThinkCheckExitCombat() {
 //-------------------------------------------------------------------------------------------------
 // Purpose: Master think function - uses the current thinker to check for state changes or otherwise think
 //-------------------------------------------------------------------------------------------------
+extern bool g_bBotFFA;
 #if 0
 #define ThinkMsg(a) Msg(a)
 #define ThinkMsgF(a,b) Msg((a),(b))
@@ -359,17 +360,20 @@ void CSDKBot::Think() {
 		ThinkMsg(m_pPlayer->GetPlayerName());
 		//ThinkMsg(" Updating Players...");
 		m_PlayerSearchInfo.UpdateOwnerLocation();
-		m_PlayerSearchInfo.UpdatePlayers();
-
+		if (g_bBotFFA) {
+			m_PlayerSearchInfo.UpdatePlayersFFA();
+		}
+		else {
+			m_PlayerSearchInfo.UpdatePlayers();
+			if (m_bUpdateFlags)
+				m_PlayerSearchInfo.UpdateFlags();
+		}
 		
 		if (m_bLastThinkWasStateChange) {
 			m_bLastThinkWasStateChange = false;
 			PostStateChangeThink();
 		}
 
-		//ThinkMsg("Flags...");
-		if (m_bUpdateFlags)
-			m_PlayerSearchInfo.UpdateFlags();
 		ThinkMsgF("%s ", m_pCurThinker->m_ppszThinkerName);
 		ThinkMsg("Check...\n");
 		if ((this->*(m_pCurThinker->m_pThinkCheck))()) {

@@ -38,6 +38,7 @@ commented on the following form:
 #ifndef BG3_MAP_MODEL_H
 #define BG3_MAP_MODEL_H
 #include "cbase.h"
+#include <string>
 
 #ifdef CLIENT_DLL
 #include <vgui_controls/ImagePanel.h>
@@ -65,11 +66,15 @@ public:
 
 	static void RefreshMapInfoList();
 
+	static void RefreshMapImageList();
+
 	static CMapInfo* GetFirstMapInfo();
 
 	static void GetNextMapInfo(CMapInfo**);
 
-	static bool MapExists(const char* pszMapName);
+	static bool MapExists(const char* pszMapName, bool bForceUpdate = false);
+
+	static bool MapImageExists(const std::string& sMapName);
 private:
 	//For building our stack representation
 	CMapInfo* m_pNextInfo;

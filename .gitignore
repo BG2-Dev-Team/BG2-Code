@@ -186,3 +186,7 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+*.sentinel
+*.vcxproj
+*.filters
+*.dmp

@@ -196,8 +196,7 @@ const char* g_ppszAmericanPlayerModels[NUM_AMER_PLAYERMODELS];
 
 void CPlayerClass::postClassConstruct(CPlayerClass* pClass) {
 
-	//BG3 - Awesome - increase general class speed?
-	//pClass->m_flBaseSpeed *= 1.1f;
+	pClass->m_flBaseSpeedCalculated = pClass->m_flBaseSpeedOriginal;
 
 	//count number of chooseable weapons
 	const CGunKit* pKit = pClass->m_aWeapons;
@@ -223,6 +222,11 @@ void CPlayerClass::postClassConstruct(CPlayerClass* pClass) {
 	else
 		pModelList = g_ppszBritishPlayerModels;
 	pModelList[pClass->m_iClassNumber] = pClass->m_pszPlayerModel;
+
+	//once all classes are constructed
+	/*if (index == numClasses() - 1) {
+		
+	}*/
 }
 
 #ifdef CLIENT_DLL
@@ -398,6 +402,26 @@ void CPlayerClass::RemoveClassLimits() {
 	}
 }
 
+#ifdef CLIENT_DLL
+CON_COMMAND_F(update_playerclass_speeds, "", FCVAR_HIDDEN) {
+	CPlayerClass::UpdateClassSpeeds();
+}
+#endif
+void CPlayerClass::UpdateClassSpeeds() {
+
+	extern ConVar mp_bg2_speed;
+	for (int i = 0; i < numClasses(); i++) {
+		if (mp_bg2_speed.GetBool()) {
+			g_ppClasses[i]->m_flBaseSpeedCalculated = g_ppClasses[i]->m_flBaseSpeedOriginal;
+			//Warning("%f\n", g_ppClasses[i]->m_flBaseSpeedCalculated);
+		}
+		else {
+			g_ppClasses[i]->m_flBaseSpeedCalculated = g_ppClasses[i]->m_flBaseSpeedOriginal * 1.1f;
+			//Warning("%f\n", g_ppClasses[i]->m_flBaseSpeedCalculated);
+		}
+	}
+}
+
 
 
 #define SLEEVE_BINFANTRY		0
@@ -446,7 +470,7 @@ DEC_BG3_PLAYER_CLASS(BInfantry, inf, b) {
 	m_iDefaultTeam = TEAM_BRITISH;
 	m_iClassNumber = CLASS_INFANTRY;
 
-	m_flBaseSpeed = SPEED_INFANTRY;
+	m_flBaseSpeedOriginal = SPEED_INFANTRY;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_INFANTRY;
 
 	m_pszPlayerModel = MODEL_BINFANTRY;
@@ -483,7 +507,7 @@ DEC_BG3_PLAYER_CLASS(BOfficer, off, b) {
 	m_iDefaultTeam = TEAM_BRITISH;
 	m_iClassNumber = CLASS_OFFICER;
 
-	m_flBaseSpeed = SPEED_OFFICER;
+	m_flBaseSpeedOriginal = SPEED_OFFICER;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_OFFICER;
 
 	m_pszPlayerModel = MODEL_BOFFICER;
@@ -515,7 +539,7 @@ DEC_BG3_PLAYER_CLASS(BJaeger, rif, b) {
 	m_iDefaultTeam = TEAM_BRITISH;
 	m_iClassNumber = CLASS_SNIPER;
 
-	m_flBaseSpeed = SPEED_SNIPER;
+	m_flBaseSpeedOriginal = SPEED_SNIPER;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_SNIPER;
 
 	m_pszPlayerModel = MODEL_BJAEGER;
@@ -543,7 +567,7 @@ DEC_BG3_PLAYER_CLASS(BNative, ski, b) {
 	m_iClassNumber = CLASS_SKIRMISHER;
 	m_bHasImplicitDamageWeakness = true;
 
-	m_flBaseSpeed = SPEED_SKIRMISHER;
+	m_flBaseSpeedOriginal = SPEED_SKIRMISHER;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_SKIRMISHER;
 	
 	m_pszPlayerModel = MODEL_BNATIVE;
@@ -572,8 +596,8 @@ DEC_BG3_PLAYER_CLASS(BNative, ski, b) {
 	m_aWeapons[3].m_iControllingBit = ULK_3_WEP_TRADE;
 
 	m_aWeapons[4].m_pszWeaponPrimaryName = "weapon_gunstock";
-	m_aWeapons[4].m_iMovementSpeedModifier = -10;
-	m_aWeapons[4].m_iMinYear = 2000;
+	m_aWeapons[4].m_iMovementSpeedModifier = -20;
+	//m_aWeapons[4].m_iMinYear = 2000;
 
 
 	postClassConstruct(this);
@@ -583,7 +607,7 @@ DEC_BG3_PLAYER_CLASS(BLinf, linf, b) {
 	m_iDefaultTeam = TEAM_BRITISH;
 	m_iClassNumber = CLASS_LIGHT_INFANTRY;
 
-	m_flBaseSpeed = SPEED_LIGHT_INF;
+	m_flBaseSpeedOriginal = SPEED_LIGHT_INF;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_LIGHT_INFANTRY;
 	m_bNerfResistance = true;
 
@@ -595,6 +619,7 @@ DEC_BG3_PLAYER_CLASS(BLinf, linf, b) {
 	m_iSkinDepth = 1;
 	m_iSleeveBase = SLEEVE_BLINF;
 	m_iNumUniforms = 3;
+	m_iSleeveInnerModel = SLEEVE_INNER_PLAIN;
 
 	m_aUniformControllingBits[1] = ULK_1_UNI_BRIT_LINF_1;
 	m_aUniformControllingBits[2] = ULK_1_UNI_BRIT_LINF_2; 
@@ -623,7 +648,7 @@ DEC_BG3_PLAYER_CLASS(BGrenadier, gre, b) {
 	m_iClassNumber = CLASS_GRENADIER;
 	m_bHasImplicitDamageResistance = true;
 
-	m_flBaseSpeed = SPEED_GRENADIER;
+	m_flBaseSpeedOriginal = SPEED_GRENADIER;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_GRENADIER;
 
 	m_pszPlayerModel = MODEL_BGRENADIER;
@@ -672,7 +697,7 @@ DEC_BG3_PLAYER_CLASS(AInfantry, inf, a) {
 	m_iDefaultTeam = TEAM_AMERICANS;
 	m_iClassNumber = CLASS_INFANTRY;
 
-	m_flBaseSpeed = SPEED_INFANTRY;
+	m_flBaseSpeedOriginal = SPEED_INFANTRY;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_INFANTRY;
 
 	m_pszPlayerModel = MODEL_AINFANTRY;
@@ -716,7 +741,7 @@ DEC_BG3_PLAYER_CLASS(AOfficer, off, a) {
 	m_iDefaultTeam = TEAM_AMERICANS;
 	m_iClassNumber = CLASS_OFFICER;
 
-	m_flBaseSpeed = SPEED_OFFICER;
+	m_flBaseSpeedOriginal = SPEED_OFFICER;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_OFFICER;
 
 	m_pszPlayerModel = MODEL_AOFFICER;
@@ -758,7 +783,7 @@ DEC_BG3_PLAYER_CLASS(AFrontiersman, rif, a) {
 	m_iClassNumber = CLASS_SNIPER;
 	m_bHasImplicitDamageResistance = true;
 
-	m_flBaseSpeed = SPEED_SNIPER;
+	m_flBaseSpeedOriginal = SPEED_SNIPER;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_SNIPER;
 
 	m_pszPlayerModel = MODEL_AFRONTIERSMAN;
@@ -784,7 +809,7 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 	m_bHasImplicitDamageWeakness = true;
 	m_bNerfResistance = true;
 
-	m_flBaseSpeed = SPEED_SKIRMISHER;
+	m_flBaseSpeedOriginal = SPEED_SKIRMISHER;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_SKIRMISHER;
 
 	m_pszPlayerModel = MODEL_AMILITIA;
@@ -826,7 +851,7 @@ DEC_BG3_PLAYER_CLASS(AMilitia, ski, a) {
 	m_iDefaultTeam = TEAM_AMERICANS;
 	m_iClassNumber = CLASS_LIGHT_INFANTRY;
 
-	m_flBaseSpeed = SPEED_LIGHT_INF;
+	m_flBaseSpeedOriginal = SPEED_LIGHT_INF;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_LIGHT_INFANTRY;
 
 	m_pszPlayerModel = MODEL_ASTATEMILITIA;
@@ -856,7 +881,7 @@ DEC_BG3_PLAYER_CLASS(AFrenchGre, gre, a) {
 	m_iClassNumber = CLASS_LIGHT_INFANTRY;
 	m_bHasImplicitDamageResistance = true;
 
-	m_flBaseSpeed = SPEED_GRENADIER;
+	m_flBaseSpeedOriginal = SPEED_GRENADIER;
 	m_flFlagWeightMultiplier = SPEED_MOD_CARRY_GRENADIER;
 
 	m_pszPlayerModel = MODEL_AFRENCH;

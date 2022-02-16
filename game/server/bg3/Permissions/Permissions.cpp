@@ -70,10 +70,22 @@ void Permissions::GetAdminList(std::vector<CBasePlayer*>& pList) {
 	//add every non-default permissioned player to list
 	for (int i = 0; i <= gpGlobals->maxClients; i++) {
 		CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-		if (pPlayer && pPlayer->m_pPermissions != NullPermission()) {
+		if (pPlayer && !pPlayer->IsFakeClient() && pPlayer->m_pPermissions != NullPermission()) {
 			pList.push_back(pPlayer);
 		}
 	}
+}
+
+bool Permissions::ServerHasAdmin() {
+
+	//add every non-default permissioned player to list
+	for (int i = 0; i <= gpGlobals->maxClients; i++) {
+		CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+		if (pPlayer && pPlayer->m_pPermissions != NullPermission()) {
+			return true;
+		}
+	}
+	return false;
 }
 
 /*void Permissions::AssignPlayerPermission(CHL2MP_Player* pPlayer, Permissions* pPermissions) {
