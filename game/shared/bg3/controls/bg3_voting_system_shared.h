@@ -21,6 +21,7 @@ enum class EVoteMessageType {
 	"bg_ambush",\
 	"bg_blackswamp",\
 	"bg_canal",\
+	"bg_canal_test",\
 	"bg_fort_stmathieu",\
 	"bg_freemans_farm",\
 	"bg_horseshoe",\

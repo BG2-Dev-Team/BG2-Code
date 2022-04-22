@@ -26,7 +26,7 @@ void ClientPrecache( void );
 void ClientGamePrecache( void );
 const char *GetGameDescription( void );
 void Host_Say( edict_t *pEdict, bool teamonly );
-void Host_Say(edict_t *pEdict, const CCommand &args, bool teamonly, std::vector<CBasePlayer*>* recipients = NULL);
+void Host_Say(edict_t *pEdict, const CCommand &args, bool teamonly, std::vector<CBasePlayer*>* recipients = NULL, bool bAdminOnly = false);
 
 
 

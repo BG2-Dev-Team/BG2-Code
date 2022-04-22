@@ -153,7 +153,7 @@ char * CheckChatText( CBasePlayer *pPlayer, char *text )
 // or as
 // blah blah blah
 //
-void Host_Say(edict_t *pEdict, const CCommand &args, bool teamonly, std::vector<CBasePlayer*>* recipients)
+void Host_Say(edict_t *pEdict, const CCommand &args, bool teamonly, std::vector<CBasePlayer*>* recipients, bool bAdminOnly)
 {
 	CBasePlayer *client;
 	int		j;
@@ -232,7 +232,7 @@ void Host_Say(edict_t *pEdict, const CCommand &args, bool teamonly, std::vector<
 	if ( g_pGameRules )
 	{
 		pszFormat = g_pGameRules->GetChatFormat( teamonly, pPlayer );
-		pszPrefix = g_pGameRules->GetChatPrefix( teamonly, pPlayer );	
+		pszPrefix = g_pGameRules->GetChatPrefix( teamonly, pPlayer, bAdminOnly );	
 		pszLocation = g_pGameRules->GetChatLocation( teamonly, pPlayer );
 	}
 

@@ -34,6 +34,7 @@ Outside contributer - Tingtom - assisted Ricochet with floating flag icon hud
 
 */
 
+#ifdef INCLUDE_FLOATING_ICONS
 #include "cbase.h"
 #include "hudelement.h"
 #include <vgui_controls/Panel.h>
@@ -66,3 +67,4 @@ private:
 };
 
 using namespace vgui;
+#endif

@@ -47,7 +47,7 @@ commented on the following form:
 
 void CSay(const char* pszFormat, ...);
 void MSayPlayer(CHL2MP_Player* pRecipient, const char* pszFormat, ...);
-void Host_Say(edict_t *pEdict, const CCommand &args, bool teamonly, std::vector<CBasePlayer*>* recipients = NULL);
+void Host_Say(edict_t *pEdict, const CCommand &args, bool teamonly, std::vector<CBasePlayer*>* recipients = NULL, bool bAdminOnly = false);
 
 //Static map of from player-issued to command strings to their functions
 CUtlDict<PlayerCommandFunc> CHL2MP_Player::s_mPlayerCommands;
@@ -362,12 +362,12 @@ PLAYER_COMMAND(setname) {
 //--------------------------------------------------------------------------
 // LB Officer commands
 //--------------------------------------------------------------------------
-PLAYER_COMMAND(off) {
+/*PLAYER_COMMAND(off) {
 	if (!pPlayer->GetPermissions()->m_bPlayerManage && !(pPlayer->GetFlags() & FL_LBOFFICER))
 		return;
 
 
-}
+}*/
 
 
 //--------------------------------------------------------------------------

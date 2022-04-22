@@ -194,3 +194,4 @@ FakesAssemblies/
 *.vpc_crc
 *.vpc_crc
 game/client/bg3/bg3_unlockable_secret.cpp
+*.tlog

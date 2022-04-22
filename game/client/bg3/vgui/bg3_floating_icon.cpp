@@ -53,6 +53,8 @@ Outside contributer - Tingtom - assisted Ricochet with floating flag icon hud
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#ifdef INCLUDE_FLOATING_ICONS
+
 DECLARE_HUDELEMENT(CHudFloatingIcon);
 
 #define FLAG_HEIGHT 160
@@ -383,3 +385,5 @@ void CHudFloatingIcon::Paint()
 	}
 
 }
+
+#endif

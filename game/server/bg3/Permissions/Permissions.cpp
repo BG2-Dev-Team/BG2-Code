@@ -47,7 +47,7 @@ endloop:
 	Msg(" permission is %s\n", pPermission->m_name);
 
 	//Add admin flag, lets clients and other game funcs know who the admins are
-	if (pPermission != s_pFirstPermission) pPlayer->AddFlag(FL_ADMIN);
+	//if (pPermission != s_pFirstPermission) pPlayer->AddFlag(FL_ADMIN);
 }
 
 Permissions* Permissions::FindPermissionByName(const char* pszName) {
@@ -65,12 +65,13 @@ Permissions* Permissions::FindPermissionByName(const char* pszName) {
 	return result;
 }
 
-void Permissions::GetAdminList(std::vector<CBasePlayer*>& pList) {
+void Permissions::GetAdminList(std::vector<CBasePlayer*>& pList, CBasePlayer* pExcludedPlayer) {
 
 	//add every non-default permissioned player to list
 	for (int i = 0; i <= gpGlobals->maxClients; i++) {
 		CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-		if (pPlayer && !pPlayer->IsFakeClient() && pPlayer->m_pPermissions != NullPermission()) {
+		if (pPlayer && !pPlayer->IsFakeClient() && pPlayer->m_pPermissions != NullPermission()
+			&& ((CBasePlayer*)pPlayer) != pExcludedPlayer) {
 			pList.push_back(pPlayer);
 		}
 	}

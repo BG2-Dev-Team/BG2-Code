@@ -292,5 +292,7 @@ CON_COMMAND_F(bot_debug_report, "Gives status information on all bots, useful fo
 
 bool g_bBotFFA = false;
 CON_COMMAND_F(bot_ffa, "Toggles bot free-for-all", FCVAR_GAMEDLL) {
-	g_bBotFFA = !g_bBotFFA;
+	if (verifyBotPermissions(__FUNCTION__)) {
+		g_bBotFFA = !g_bBotFFA;
+	}
 }

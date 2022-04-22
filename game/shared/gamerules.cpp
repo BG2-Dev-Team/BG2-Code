@@ -850,7 +850,7 @@ float CGameRules::GetAmmoDamage( CBaseEntity *pAttacker, CBaseEntity *pVictim, i
 
 
 #ifndef CLIENT_DLL
-const char *CGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
+const char *CGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer, bool bAdminOnly )
 {
 	//BG2 - Change this up a bit. -HairyPotter
 	/*if ( pPlayer && pPlayer->IsAlive() == false )
@@ -860,7 +860,10 @@ const char *CGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 	else
 	return "*DEAD*";
 	}*/
-	if (pPlayer)
+	if (bAdminOnly) {
+		return "[ADMIN]";
+	}
+	else if (pPlayer)
 	{
 		if (pPlayer->IsAlive() == false)
 		{

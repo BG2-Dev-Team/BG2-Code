@@ -53,14 +53,19 @@ void InitChatCommandList() {
 	g_chatCommands.AddToTail("votescramble");
 	g_chatCommands.AddToTail("votecancel");
 	g_chatCommands.AddToTail("revote");
+	g_chatCommands.AddToTail("asay");
 }
 
 //Checks if given chat text is a command (ex. "ff") and executes it
 //if applicable. Does modify the given chat string.
-void ChatStringShortCommand(char* command, int bufLen) {
+bool ChatStringShortCommand(char* command, int bufLen, bool& bOutExecute) {
+	//assume false, then check otherwise
+	bOutExecute = false;
+	bool result = false;
+
 	extern ConVar sv_chatcommands;
 	if (sv_chatcommands.GetInt() == 0) {
-		return;
+		return result;
 	}
 
 	char* firstSpace = NULL;
@@ -78,12 +83,25 @@ void ChatStringShortCommand(char* command, int bufLen) {
 		firstSpace[0] = '\0';
 	}
 
+	
 	if (firstSpace || (i < bufLen && command[i] == '\0')) {
+		//Msg("passed null character check, searching for %s\n", command);
+
 		//we now have our clean string, check if it's in the list
 		if (g_chatCommands.HasElement(command)) {
-			if (firstSpace) firstSpace[0] = ' ';
+			if (Q_strcmp(command, "asay") == 0) {
+				result = true;
+			}
+			//Msg("Command found in list\n");
 
-			engine->ClientCmd(command);
+			bOutExecute = true;
+		}
+
+		if (firstSpace) {
+			//Msg("Putting the space back\n");
+			firstSpace[0] = ' ';
 		}
 	}
+
+	return result;
 }

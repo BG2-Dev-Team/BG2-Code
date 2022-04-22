@@ -670,12 +670,14 @@ void CElectionSystem::CreateMultichoiceMapElection(CHL2MP_Player* pRequester, st
 		m_bRtvComplete = false;
 		mapResultFunc = [](SResultCommandParameters* pResults) {
 			nextlevel.SetValue(pResults->m_options[pResults->m_iSlot].c_str());
+			engine->ServerCommand(((string) "sm_nextmap " + pResults->m_options[pResults->m_iSlot]).c_str());
 			HL2MPRules()->ChangeMapDelayed(5.f);
 		};
 	}
 	else {
 		mapResultFunc = [](SResultCommandParameters* pResults) {
 			nextlevel.SetValue(pResults->m_options[pResults->m_iSlot].c_str());
+			engine->ServerCommand(((string) "sm_nextmap " + pResults->m_options[pResults->m_iSlot]).c_str());
 		};
 	}
 

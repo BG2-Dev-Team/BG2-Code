@@ -78,6 +78,7 @@ commented on the following form:
 #include "../shared/bg3/bg3_unlockable.h"
 #include "bg3/vgui/bg3_fonts.h"
 #include "../bg2/vgui_Panel_MainMenu.h"
+#include "vgui/admin/vgui_adminmenu.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -241,6 +242,10 @@ CTeamMenu::~CTeamMenu() {
 }
 
 void CTeamMenu::SetVisible(bool bVisible) {
+	if (true) {
+		g_pAdminMenu->SetVisible(false);
+	}
+
 	BaseClass::SetVisible(bVisible);
 }
 

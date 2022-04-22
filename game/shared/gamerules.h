@@ -378,7 +378,7 @@ public:
 	virtual void CreateStandardEntities();
 
 	// Team name, etc shown in chat and dedicated server console
-	virtual const char *GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer );
+	virtual const char *GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer, bool bAdminOnly );
 
 	// Location name shown in chat
 	virtual const char *GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer ) { return NULL; }

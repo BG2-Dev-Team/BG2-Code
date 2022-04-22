@@ -744,6 +744,21 @@ CON_COMMAND(msay, "") {
 	MessageEnd();
 }
 
+CON_COMMAND(asay, "") {
+	if (args.ArgC() < 2 || !verifyPlayerPermissions(__FUNCTION__) || !UTIL_GetCommandClient())
+		return;
+
+	const char* pszMessage = args.GetCommandString() + 5;
+	if (strlen(pszMessage) > 244) return; //avoid out-of-bounds strings
+
+	CCommand args2;
+	args2.Tokenize(pszMessage);
+
+	std::vector<CBasePlayer*> admins;
+	Permissions::GetAdminList(admins, UTIL_GetCommandClient());
+	Host_Say(UTIL_GetCommandClient()->edict(), args2, false, &admins, true);
+}
+
 CON_COMMAND(mp_tickets_a_adjust, "Adjusts American ticket amount by given amout, positive or negative") {
 	if (args.ArgC() < 2 || !verifyMapModePermissions(__FUNCTION__))
 		return;

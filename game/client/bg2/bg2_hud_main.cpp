@@ -953,7 +953,7 @@ void CHudBG2::Reset( void )
 	HideShowAllTeam(false);
 	m_pLabelDeathMessage->SetVisible(false);
 	m_pLabelSpectatedPlayerName->SetVisible(false);
-	m_pAdminMenu->SetVisible(false);
+	//m_pAdminMenu->SetVisible(false);
 }
 
 void CHudBG2::HideShowAllTeam( bool visible )
