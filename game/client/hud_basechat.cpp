@@ -1011,7 +1011,6 @@ void CBaseHudChat::MsgFunc_BG2Events(bf_read &msg)
 		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_Round_Draw"));
 		break;
 	case MAP_DRAW:
-		NVersioning::MarkBetaTestParticipation();
 		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_Map_Draw"));
 		break;
 	case DEFAULT_DRAW:
@@ -1024,11 +1023,9 @@ void CBaseHudChat::MsgFunc_BG2Events(bf_read &msg)
 		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_American_Round_Win"));
 		break;
 	case BRITISH_MAP_WIN:
-		NVersioning::MarkBetaTestParticipation();
 		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_British_Map_Win"));
 		break;
 	case AMERICAN_MAP_WIN:
-		NVersioning::MarkBetaTestParticipation();
 		_snwprintf(outputBuf, sizeof(outputBuf), g_pVGuiLocalize->Find("#BG3_American_Map_Win"));
 		break;
 	case BRITISH_DEFAULT_WIN:

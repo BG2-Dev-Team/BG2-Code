@@ -57,6 +57,7 @@ class CSpawnPoint : public CPointEntity
 #define SPAWNPOINT_CASUAL (1 << 9)
 #define SPAWNPOINT_BOT (1 << 10)
 #define SPAWNPOINT_BOT_ONLY (1 << 11)
+//#define SPAWNPOINT_FFA (1 << 12)
 
 
 public:
@@ -158,6 +159,9 @@ public:
 	bool BotsOnly() {
 		return HasSpawnFlags(SPAWNPOINT_BOT_ONLY);
 	}
+	/*bool IsFFA() {
+		return HasSpawnFlags(SPAWNPOINT_FFA);
+	}*/
 
 	void InputEnable( inputdata_t &inputData ) { /*Msg( "enablind spawn\n" );*/ SetEnabled( true ); }
 	void InputDisable( inputdata_t &inputData ) { /*Msg( "disabling spawn\n" );*/ SetEnabled( false ); }

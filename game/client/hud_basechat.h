@@ -95,7 +95,7 @@ char* RemoveColorMarkup( char *str );
 
 //BG3 - chat command declarations
 void InitChatCommandList();
-void ChatStringShortCommand(char* command, int bufLen);
+bool ChatStringShortCommand(char* command, int bufLen, bool& bOutExecute);
 
 //--------------------------------------------------------------------------------------------------------
 /**
@@ -360,18 +360,30 @@ public:
 			{
 				if ( m_pHudChat )
 				{
+					bool bSayIt = true;
+					bool bExecuteIt = false;
+
 					//BG3 - if command begins with / character, send it to console instead
 					char buffer[128];
 					GetText(buffer, sizeof(buffer));
-					if (buffer[0] != '/') {
+					uint8 prefixed = buffer[0] == '!' || buffer[0] == '/';
+
+					//Msg("prefixed == %i\n", (int)prefixed);
+
+					bSayIt = !(buffer[0] == '/' || ChatStringShortCommand(buffer + prefixed, 128 - prefixed, bExecuteIt));
+					//bExecuteIt = bExecuteIt || buffer[0] == '/' || buffer[0] == '!';
+					
+					if (bSayIt) {
 						PostMessage(m_pHudChat, new KeyValues("ChatEntrySend"));
 					}
-					if (buffer[0] == '/' 
-						|| buffer[0] == '!') {
+					if (prefixed) {
+						//Msg("Executing command \"%s\" at %i\n", buffer + 1, __LINE__ );
 						engine->ServerCmd(buffer + 1);
 					}
-					
-					ChatStringShortCommand(buffer, 128);
+					else if (bExecuteIt) {
+						//Msg("Executing command \"%s\" at %i\n", buffer + 1, __LINE__);
+						engine->ServerCmd(buffer);
+					}
 				}
 			}
 		

@@ -100,6 +100,7 @@
 #include "bg3/controls/bg3_rtv.h"
 #include "bg3/controls//bg3_map_nomination.h"
 #include "bg3/controls//bg3_voting_system.h"
+#include "bg3_gungame.h"
 #include "../shared/bg3/bg3_class_quota.h"
 #include "../shared/bg3/bg3_buffs.h"
 #ifndef USE_ENTITY_BULLET
@@ -1011,6 +1012,8 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	//BG3 - inform progression system integrity
 	NIntegrity::notifyMapChange(pMapName);
 
+	NGunGame::ScrambleGunKits();
+
 #ifdef USES_ECON_ITEMS
 	GameItemSchema_t *pItemSchema = ItemSystem()->GetItemSchema();
 	if ( pItemSchema )
@@ -1101,6 +1104,7 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 		g_AmericanPrioritySpawns.Purge();
 		g_BritishPrioritySpawns.Purge();
 		g_MultiPrioritySpawns.Purge();
+		g_FFA_Spawns.Purge();
 		//
 		CMapLoadEntityFilter filter;
 		MapEntity_ParseAllEntities( pMapEntities, &filter );
@@ -1174,6 +1178,13 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	lb_officer_classoverride_b.Revert();
 	mp_disable_firearms.Revert();
 	mp_disable_melee.Revert();
+
+	if (!NGunGame::g_bGunGamePersistent) {
+		NGunGame::mp_gungame.SetValue(false);
+	}
+	else {
+		mp_flagmode.SetValue(-2); //this is a gungame server, hide flags this way
+	}
 	
 	bot_minplayers_map.Revert();
 
@@ -1192,6 +1203,10 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	//BG3 - reset bot voice comm managers
 	g_BotBritComms.Reset();
 	g_BotAmerComms.Reset();
+
+	//reset bot ffa
+	extern bool g_bBotFFA;
+	g_bBotFFA = false;
 
 	//BG3 - initialize class quotas so bots can start taking up new classes
 	NClassQuota::Init();

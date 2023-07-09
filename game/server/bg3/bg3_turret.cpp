@@ -143,7 +143,7 @@ void CTurretFire::Spawn() {
 	if (!GetParent())
 		Warning("Couldn't find parent for an instance of info_swivel_muzzle, tell the mapper!\n");
 	else {
-		Warning("info_swivel_muzzle parented to a %s\n", GetParent()->GetClassname());
+		//Warning("info_swivel_muzzle parented to a %s\n", GetParent()->GetClassname());
 		m_vOffsetFromParent = GetAbsOrigin() - GetParent()->GetAbsOrigin();
 
 		m_flMuzzleHeight = m_vOffsetFromParent.z;

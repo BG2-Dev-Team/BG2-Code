@@ -33,7 +33,7 @@ commented on the following form:
 Outside contributer - Tingtom - assisted Ricochet with floating flag icon hud
 
 */
-
+//#define INCLUDE_FLOATING_ICONS
 #ifdef INCLUDE_FLOATING_ICONS
 #include "cbase.h"
 #include "hudelement.h"

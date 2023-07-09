@@ -47,6 +47,7 @@ private:
 	COutputEvent m_OnMultiNewMap;
 	COutputEvent m_OnMultiNewRound;
 
+	COutputEvent m_OnMapSpawnCompetitiveMapBlock;
 	COutputEvent m_OnMapSpawnCompetitive;
 	COutputEvent m_OnMapSpawnCasual;
 
@@ -71,6 +72,7 @@ BEGIN_DATADESC( CLogicAuto )
 	DEFINE_OUTPUT(m_OnMultiNewMap, "OnMultiNewMap" ),
 	DEFINE_OUTPUT(m_OnMultiNewRound, "OnMultiNewRound" ),
 
+	DEFINE_OUTPUT(m_OnMapSpawnCompetitiveMapBlock, "OnMapSpawnCompetitiveMapBlock"),
 	DEFINE_OUTPUT(m_OnMapSpawnCompetitive, "OnMapSpawnCompetitive"),
 	DEFINE_OUTPUT(m_OnMapSpawnCasual, "OnMapSpawnCasual"),
 
@@ -118,6 +120,10 @@ void CLogicAuto::Think(void)
 		m_OnMapSpawn.FireOutput(NULL, this);
 
 		extern ConVar mp_competitive;
+		extern ConVar mp_competitive_mapblock;
+		if (mp_competitive_mapblock.GetBool()) {
+			m_OnMapSpawnCompetitiveMapBlock.FireOutput(NULL, this);
+		}
 		if (mp_competitive.GetBool()) {
 			m_OnMapSpawnCompetitive.FireOutput(NULL, this);
 		}
@@ -149,7 +155,6 @@ void SignalMonsterKilled() {
 	Msg("Monster killed!\n");
 	CBaseEntity* pLogicAuto = gEntList.FindEntityByClassname(NULL, "logic_auto");
 	if (pLogicAuto) {
-		Msg("Found logic_auto, signaling...\n");
 		CLogicAuto* pLogic = (CLogicAuto*)pLogicAuto;
 		pLogic->SignalMonsterKilled();
 	}

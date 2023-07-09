@@ -39,6 +39,7 @@ commented on the following form:
 #include "player_resource.h"
 #include "../Permissions/bg3_player_locator.h"
 #include "bg3_map_nomination.h"
+#include "bg3_gungame.h"
 
 CHL2MP_Player* GetSinglePlayerFromSelector(const char* pszSelector);
 
@@ -63,6 +64,8 @@ ConVar sv_vote_mute_enabled("sv_vote_mute_enabled", "1", FCVAR_GAMEDLL);
 ConVar sv_vote_mute_ratio("sv_vote_mute_ratio", "0.7", FCVAR_GAMEDLL);
 ConVar sv_vote_scramble_enabled("sv_vote_scramble_enabled", "1", FCVAR_GAMEDLL);
 ConVar sv_vote_scramble_ratio("sv_vote_scramble_ratio", "0.7", FCVAR_GAMEDLL);
+ConVar sv_vote_gungame_enabled("sv_vote_gungame_enabled", "1", FCVAR_GAMEDLL);
+ConVar sv_vote_gungame_ratio("sv_vote_gungame_ratio", "0.7", FCVAR_GAMEDLL);
 ConVar sv_vote_mapchange_enabled("sv_vote_mapchange_enabled", "1", FCVAR_GAMEDLL);
 ConVar sv_vote_mapchange_ratio("sv_vote_mapchange_ratio", "0.6", FCVAR_GAMEDLL);
 
@@ -464,7 +467,7 @@ void CElectionSystem::CreateKickElection(CHL2MP_Player* pRequester, const char* 
 
 				if (GetBinaryResultsRatio(pResults->m_optionCounts) >= sv_vote_kick_ratio.GetFloat()) {
 					char buffer[MAX_PLAYER_NAME_LENGTH + 8];
-					Q_snprintf(buffer, sizeof(buffer), "kick %s", pResults->m_target->GetPlayerName());
+					Q_snprintf(buffer, sizeof(buffer), "kick %s\n", pResults->m_target->GetPlayerName());
 					engine->ServerCommand(buffer);
 				}
 				else {
@@ -509,7 +512,7 @@ void CElectionSystem::CreateMuteElection(CHL2MP_Player* pRequester, const char* 
 
 				if (GetBinaryResultsRatio(pResults->m_optionCounts) >= sv_vote_mute_ratio.GetFloat()) {
 					char buffer[MAX_PLAYER_NAME_LENGTH + 8];
-					Q_snprintf(buffer, sizeof(buffer), "silence %s", pResults->m_target->GetPlayerName());
+					Q_snprintf(buffer, sizeof(buffer), "silence %s\n", pResults->m_target->GetPlayerName());
 					engine->ServerCommand(buffer);
 				}
 				else {
@@ -551,8 +554,40 @@ void CElectionSystem::CreateScrambleTeamsElection(CHL2MP_Player* pRequester) {
 	);
 }
 
+void CElectionSystem::CreateGunGameElection(CHL2MP_Player* pRequester) {
+	CSay("%s wants to turn on gungame mode", pRequester->GetPlayerName());
+
+	if (!sv_vote_gungame_enabled.GetBool()) {
+		CSay("Gungame disabled on server.");
+		return;
+	}
+
+	CreateElection(
+		true, //universal
+		pRequester, //who is requesting the vote
+		NULL, //targeted player
+		"", //map name, if applicable
+		"Launch gun game mode?", //header message sent to client
+		g_booleanElectionOptions, //options
+		EVoteMessageType::TOPIC_BINARY, //type of creation message to send to client
+		&sv_vote_gungame_ratio,
+		[](SResultCommandParameters* pResults) {
+
+			// 2/3 of yeses required
+			if (GetBinaryResultsRatio(pResults->m_optionCounts) >= sv_vote_gungame_ratio.GetFloat()) {
+				MSay("Gungame vote succeeded!");
+				engine->ServerCommand("gungame\n");
+				engine->ServerExecute();
+			}
+			else {
+				CSay("Gungame vote failed to pass");
+			}
+		}
+	);
+}
+
 void CElectionSystem::CreateMapChangeElection(CHL2MP_Player* pRequester, const char* pszMapName) {
-	CSay("%s wants to change the  map to %s", pRequester->GetPlayerName(), pszMapName);
+	CSay("%s wants to change the map to %s", pRequester->GetPlayerName(), pszMapName);
 	if (!sv_vote_mapchange_enabled.GetBool()) {
 		CSayPlayer(pRequester, "Votemap disabled on server.");
 		return;

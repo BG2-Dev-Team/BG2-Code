@@ -53,6 +53,7 @@
 #include "../bg3/controls/bg3_rtv.h"
 #include "../bg3/controls/bg3_voting_system.h"
 #include "../shared/bg3/bg3_class_quota.h"
+#include "bg3_gungame.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -141,6 +142,36 @@ ConVar mp_punish_bad_officer("mp_punish_bad_officer", "1", CVAR_FLAGS, "Whether 
 ConVar mp_punish_bad_officer_nextclass("mp_bad_officer_nextclass", "1", CVAR_FLAGS, "What class to auto-switch bad officers to. 1-6 is inf, off, sniper, skirm, linf, grenadier.");
 
 ConVar mp_competitive("mp_competitive", "0", CVAR_FLAGS, "Controls many options, disabling features for the sake of competitive consistency.");
+ConVar mp_competitive_mapblock("mp_competitive_mapblock", "0", CVAR_FLAGS, "Blocks or removes certain features on maps to make them more fair for competitive play, ex. the rooftops on townguard.");
+
+#ifdef CLIENT_DLL
+//this is defined in gun game file on server side
+namespace NGunGame {
+	GLOBAL_BOOL(g_bGunGameActive, mp_gungame, 0, false, FCVAR_GAMEDLL | FCVAR_NOTIFY, 0, 1);
+}
+#endif
+
+bool g_bFFA = false;
+static void onFFA_Change(IConVar* pVar, const char*, float) {
+#ifndef CLIENT_DLL
+	ConVar* ffa = (ConVar*)pVar;
+	bool bNewVal = ffa->GetBool();
+
+	extern CUtlVector<CBaseEntity*> g_FFA_Spawns;
+	//verify that there are spawns for us to use
+	extern bool g_bServerReady;
+	if (bNewVal && g_bServerReady && g_FFA_Spawns.Count() == 0) {
+		MSay("Map has no FFA spawns to support FFA mode.");
+	}
+	else {
+		friendlyfire.SetValue(bNewVal);
+		g_bFFA = bNewVal;
+		if (bNewVal) MSay("Free For All Mode!");
+	}
+#endif
+}
+ConVar mp_ffa("mp_ffa", "0", CVAR_FLAGS, "Toggles Free-For-All spawn mechanics and win conditions. Disables non-CTF flags.", &onFFA_Change);
+
 
 //ticket system
 ConVar mp_rounds("mp_rounds", "0", CVAR_FLAGS, "Maximum number of rounds - rounds are restarted until this. A value of 0 deactivates the round system");
@@ -355,8 +386,8 @@ static const char *s_PreserveEnts[] =
 		{
 			extern ConVar sv_alltalk;
 			extern CHL2MP_Player* g_pMicSoloPlayer;
-			return ( 
-				!ToHL2MPPlayer(pTalker)->m_bMuted 
+			return (
+				ToHL2MPPlayer(pTalker)->m_bMuted == ToHL2MPPlayer(pListener)->m_bMuted
 				&& (sv_alltalk.GetBool() || pListener->GetTeamNumber() == pTalker->GetTeamNumber()) 
 				&& (g_pMicSoloPlayer == NULL || pTalker == g_pMicSoloPlayer));
 		}
@@ -562,6 +593,48 @@ void CHL2MPRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 #ifndef CLIENT_DLL
 	if ( IsIntermission() )
 		return;
+
+	//if in gun game, increment player's gun game kit
+	if (NGunGame::g_bGunGameActive && info.GetAttacker() && info.GetAttacker()->IsPlayer() && info.GetAttacker() != (CBaseEntity*)pVictim) {
+		CHL2MP_Player* pAttacker = (CHL2MP_Player*)info.GetAttacker();
+		const int numKits = NGunGame::GetNumGunKits();
+		pAttacker->m_iGunGameKit++;
+		pAttacker->SetFragCount(pAttacker->m_iGunGameKit + 1);
+
+		if (numKits - pAttacker->m_iGunGameKit == 5) {
+			MSay("%s is only 5 guns away from winning!", pAttacker->GetPlayerName());
+		}
+		else if (pAttacker->m_iGunGameKit - 1 == numKits) {
+			MSay("%s needs only one more kill to win!", pAttacker->GetPlayerName());
+		}
+		else if (pAttacker->m_iGunGameKit >= numKits) {
+			pAttacker->m_iGunGameKit = numKits - 1; //clamp to max
+			//player got kill with last weapon, game is over!
+			GoToIntermission();
+			CSayPlayer(pAttacker, "You win!");
+			return;
+		}
+
+
+		CSayPlayer(pAttacker, "Gun rank-up! (%i/%i)", pAttacker->m_iGunGameKit + 1, numKits);
+
+		//decrement vicitim's gun game kit if weapon was a bottle
+		if (info.GetWeapon() && Q_strcmp(info.GetWeapon()->GetClassname(), "weapon_bottle") == 0) {
+			CHL2MP_Player* pHL2MPVictim = (CHL2MP_Player*)pVictim;
+			pHL2MPVictim->m_iGunGameKit--;
+			if (pHL2MPVictim->m_iGunGameKit < 0) {
+				pHL2MPVictim->m_iGunGameKit = 0; //clamp to min 0
+			}
+			//decrement victim's score too
+			pHL2MPVictim->SetFragCount(pHL2MPVictim->m_iGunGameKit + 1);
+			if (pHL2MPVictim->FragCount() < 1) {
+				pHL2MPVictim->SetFragCount(1);
+			}
+			CSayPlayer(pHL2MPVictim, "%s stole your gun rank! (%i/%i)", pAttacker->GetPlayerName(), pHL2MPVictim->m_iGunGameKit + 1, numKits);
+			CSayPlayer(pAttacker, "You stole %s's gun rank!", pHL2MPVictim->GetPlayerName());
+		}
+	}
+
 	BaseClass::PlayerKilled( pVictim, info );
 #endif
 }
@@ -725,20 +798,49 @@ void CHL2MPRules::Think( void )
 		if (!m_bHasDoneWinSong)
 		{
 			m_bHasDoneWinSong = true;
-			if (pAmericans->GetScore() < pBritish->GetScore())
-			{
+			//check for special gun game ending
+			if (NGunGame::g_bGunGameActive || IsFFA()) {
+				//find player with highest score
+				int maxScore = -1;
+				CHL2MP_Player* pWinner = NULL;
+				for (int i = 0; i <= gpGlobals->maxClients; i++) {
+					CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+					if (pPlayer && (!pWinner || pWinner->FragCount() > maxScore)) {
+						pWinner = pPlayer;
+						maxScore = pWinner->FragCount();
+					}
+				}
+				if (pWinner) {
+					if (IsFFA()) {
+						//if we're in free for all, there's a single winner
+						MSay("%s is the winner!", pWinner->GetPlayerName());
+						CSay("%s is the winner!", pWinner->GetPlayerName());
+						pWinner->m_unlockableProfile.createExperienceEvent(pWinner, EExperienceEventType::MATCH_WIN);
+					}
+					else {
+						//otherwise make it a team-based win
+						switch (pWinner->GetTeamNumber()) {
+						case TEAM_AMERICANS:
+							CSay("%s won for the American team!", pWinner->GetPlayerName());
+							HandleScores(TEAM_AMERICANS, 0, AMERICAN_MAP_WIN, false);
+							break;
+						case TEAM_BRITISH:
+							CSay("%s won for the British team!", pWinner->GetPlayerName());
+							HandleScores(TEAM_BRITISH, 0, BRITISH_MAP_WIN, false);
+							break;
+						}
+					}
+				}
+			}
+			else if (pAmericans->GetScore() < pBritish->GetScore()) {
 				//British Win
 				HandleScores(TEAM_BRITISH, 0, BRITISH_MAP_WIN, false);
 			}
-
-			if (pAmericans->GetScore() > pBritish->GetScore())
-			{
+			else if (pAmericans->GetScore() > pBritish->GetScore()) {
 				//Americans Win
 				HandleScores(TEAM_AMERICANS, 0, AMERICAN_MAP_WIN, false);
 			}
-
-			if (pAmericans->GetScore() == pBritish->GetScore())
-			{
+			else if (pAmericans->GetScore() == pBritish->GetScore()) {
 				//Draw!
 				HandleScores(TEAM_NONE, 0, MAP_DRAW, false);
 			}
@@ -1669,6 +1771,9 @@ void CHL2MPRules::RestartGame()
 
 	//Reset the map time
 	m_flGameStartTime = gpGlobals->curtime;
+
+	//Gun game score reset
+	if (NGunGame::g_bGunGameActive) NGunGame::ResetGunKitsOnPlayers();
 }
 
 void CHL2MPRules::AutobalanceTeams() {
@@ -1886,14 +1991,42 @@ const char *CHL2MPRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 
 #ifndef CLIENT_DLL
 
+void AnticheatDisabledCheck() {
+	extern ConVar sv_disable_anticheat;
+	if (sv_disable_anticheat.GetBool()) {
+		MSay("WARNING: Anticheat is explicitly disabled on this server.");
+
+		/*extern ConVar hostname;
+		std::string serverName = hostname.GetString();
+
+		//append warning to server name
+		//first check if it's already there... assume false
+		bool warningInPlace = false;
+		if (serverName.length() > 6) {
+			auto nameDup = serverName;
+			nameDup[6] = '\0';
+			if (nameDup == std::string("ANTICHEAT DISABLED")) {
+				warningInPlace = true;
+			}
+		}
+			
+		if (!warningInPlace) {
+			serverName = "ANTICHEAT DISABLED " + serverName;
+			hostname.SetValue(serverName.c_str());
+		}*/
+	}
+}
+
 void CHL2MPRules::RestartRound(bool swapTeams, bool bSetLastRoundTime)
 {
+	AnticheatDisabledCheck();
+
 	//restart current round. immediately.
 	ResetMap();
 	ResetFlags();
 	CSDKBot::ResetAllBots();
 
-	Msg("\n\n\n\nRESTARTING ROUND\n");
+	Msg("RESTARTING ROUND\n");
 
 	if (swapTeams)
 		SwapTeams();

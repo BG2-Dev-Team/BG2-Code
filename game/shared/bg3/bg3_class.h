@@ -100,6 +100,7 @@ private:
 
 #define TOTAL_BRIT_CLASSES 6 //same as above
 #define TOTAL_AMER_CLASSES 5 // merged state militia and minuteman classes
+#define TOTAL_NUM_CLASSES (TOTAL_BRIT_CLASSES + TOTAL_AMER_CLASSES) //used to build the list of classes and model lists
 
 /*
 A "class" in BG3 is unique with its own model, skins, weapons, and stats. 

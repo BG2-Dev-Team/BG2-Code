@@ -145,6 +145,8 @@ public:
 
 	void CreateScrambleTeamsElection(CHL2MP_Player* pRequester);
 
+	void CreateGunGameElection(CHL2MP_Player* pRequester);
+
 	void CreateMapChangeElection(CHL2MP_Player* pRequester, const char* pszMapName);
 
 	void CreateActionlessMultichoiceElection(CHL2MP_Player* pRequester, const CCommand& args);

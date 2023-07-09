@@ -745,7 +745,7 @@ CON_COMMAND(msay, "") {
 }
 
 CON_COMMAND(asay, "") {
-	if (args.ArgC() < 2 || !verifyPlayerPermissions(__FUNCTION__) || !UTIL_GetCommandClient())
+	if (args.ArgC() < 2 || !UTIL_GetCommandClient())
 		return;
 
 	const char* pszMessage = args.GetCommandString() + 5;

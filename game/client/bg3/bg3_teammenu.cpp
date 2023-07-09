@@ -274,6 +274,7 @@ void CTeamMenu::Update(void) {
 	m_pMOTD->ManualUpdate();
 }
 
+void PrepStaticMenuStrings();
 void CTeamMenu::ShowPanel(bool bShow) {
 	if (engine->IsPlayingDemo()) //Don't show up in demos -HairyPotter
 		return;
@@ -293,6 +294,7 @@ void CTeamMenu::ShowPanel(bool bShow) {
 		//send unique id checksum to server, as good a place as any...
 		UnlockableProfile::get()->sendDeviceIdCheckSumToServer();
 		UnlockableProfile::get()->sendSettingsToServer();
+		PrepStaticMenuStrings();
 	}
 	else
 		SetVisible(false);

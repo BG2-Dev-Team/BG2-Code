@@ -51,6 +51,7 @@ void InitChatCommandList() {
 	g_chatCommands.AddToTail("votemute");
 	g_chatCommands.AddToTail("votemap");
 	g_chatCommands.AddToTail("votescramble");
+	g_chatCommands.AddToTail("votegungame");
 	g_chatCommands.AddToTail("votecancel");
 	g_chatCommands.AddToTail("revote");
 	g_chatCommands.AddToTail("asay");

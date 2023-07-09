@@ -6,6 +6,10 @@
 
 extern ConVar mp_timelimit;
 
+namespace NGunGame {
+	extern ConVar mp_gungame;
+}
+
 /*Basically, this system is a cheat where if a player participates in the beta, we'll write a secret file,
 whose existance we can check for later.*/
 namespace NVersioning {
@@ -44,8 +48,8 @@ namespace NVersioning {
 
 		//Warning("Marking participation...\n");
 		//check that we have enough players on the server and aren't just cheesing it
-		if (mp_timelimit.GetInt() < 10 || g_PR->GetNumNonSpectatingPlayers() < 10)
-			return;
+		//if (mp_timelimit.GetInt() < 10 || g_PR->GetNumNonSpectatingPlayers() < 10)
+			//return;
 
 		g_bHadDoneBetaTestParticipation = true;
 
@@ -59,7 +63,8 @@ namespace NVersioning {
 
 	bool IsOnBetaBranch() {
 		//Warning("%s\n", HL2MPRules()->MapName());
-		return ((std::string)HL2MPRules()->MapName() == (std::string)"bg_canal_test");
+		//return ((std::string)HL2MPRules()->MapName() == (std::string)"bg_canal_test");
 		//return false; //TODO - develop a system better than changing this between versions
+		return mp_ffa.GetBool() || NGunGame::mp_gungame.GetBool();
 	}
 }

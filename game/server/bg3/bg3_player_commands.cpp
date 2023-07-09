@@ -534,6 +534,14 @@ PLAYER_COMMAND(votescramble) {
 		->CreateScrambleTeamsElection(pPlayer);
 }
 
+PLAYER_COMMAND(votegungame) {
+	if (pPlayer->GetTeamNumber() < TEAM_AMERICANS)
+		return;
+
+	CElectionSystem::GetElectionSystemForPlayer(pPlayer)
+		->CreateGunGameElection(pPlayer);
+}
+
 PLAYER_COMMAND(votemap) {
 	if (pPlayer->GetTeamNumber() < TEAM_AMERICANS)
 		return;

@@ -67,8 +67,6 @@ commented on the following form:
 #define CVAR_FLAGS_HIDDEN (FCVAR_GAMEDLL | FCVAR_REPLICATED)
 #endif
 
-#define TOTAL_NUM_CLASSES (TOTAL_BRIT_CLASSES + TOTAL_AMER_CLASSES) //used to build the list of classes and model lists
-
 //in case the year setting changes while we're in the classmenu, we'll have to force
 //it to update whenever it changes
 #ifndef CLIENT_DLL

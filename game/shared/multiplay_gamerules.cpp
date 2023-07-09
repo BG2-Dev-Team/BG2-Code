@@ -43,9 +43,13 @@
 	//
 	//BG3 - bot population manager
 	#include "bg3/bots/bg3_bot_manager.h"
+	#include "hl2mp/hl2mp_gamerules.h"
 
 	//BG3 - map existance checker
 	#include "bg3/bg3_map_model.h"
+
+	//BG3 - gun game
+	#include "bg3_gungame.h"
 
 #ifdef NEXT_BOT
 	#include "NextBotManager.h"
@@ -793,7 +797,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		{
 			// if a player dies in a deathmatch game and the killer is a client, award the killer some points
 			//BG2 - Draco
-			if (mp_respawnstyle.GetInt() >= 2)
+			if (mp_respawnstyle.GetInt() >= 2 || NGunGame::g_bGunGameActive || IsFFA())
 			{
 				pScorer->IncrementFragCount(1);
 			}

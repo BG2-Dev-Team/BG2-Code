@@ -182,7 +182,7 @@ public:
 
 //extern CUtlLinkedList<CMapEntityRef, unsigned short> g_MapEntityRefs;
 
-extern CUtlVector<CBaseEntity *> g_MultiSpawns, g_AmericanSpawns, g_BritishSpawns, g_MultiPrioritySpawns, g_AmericanPrioritySpawns, g_BritishPrioritySpawns;
+extern CUtlVector<CBaseEntity *> g_MultiSpawns, g_AmericanSpawns, g_BritishSpawns, g_MultiPrioritySpawns, g_AmericanPrioritySpawns, g_BritishPrioritySpawns, g_FFA_Spawns;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -219,6 +219,9 @@ public:
 
 			if (!Q_strcmp(pClassname, "info_player_british"))
 				g_BritishSpawns.AddToTail(pRet);
+
+			if (!Q_strcmp(pClassname, "info_player_ffa"))
+				g_FFA_Spawns.AddToTail(pRet);
 			//
 		}
 

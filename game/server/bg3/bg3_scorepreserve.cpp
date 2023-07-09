@@ -40,7 +40,7 @@ commented on the following form:
 using namespace std;
 
 namespace NScorePreserve {
-	ConVar sv_preserve_score_time("sv_preserve_score_time", "240", FCVAR_GAMEDLL | FCVAR_ARCHIVE | FCVAR_NOTIFY, "How long to remember scores of disconnected players, in seconds");
+	ConVar sv_preserve_score_time("sv_preserve_score_time", "480", FCVAR_GAMEDLL | FCVAR_ARCHIVE | FCVAR_NOTIFY, "How long to remember scores of disconnected players, in seconds");
 
 	//Score preservation data type
 	struct scoreinfo_t {

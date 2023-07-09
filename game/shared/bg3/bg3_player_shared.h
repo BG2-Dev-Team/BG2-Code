@@ -344,6 +344,22 @@ Using this flag to use it as a special case for kill feed icons
 	extern ConVar cvarName
 #endif
 
+//Creates a ConVar which is bound to a normal global variable, instead of being
+//converted from string all the time
+#ifndef CLIENT_DLL
+#define GLOBAL_BOOL(varName, cvarName, defaultValue, defaultValueCpp, flags, min, max) \
+	bool varName = defaultValueCpp; \
+	ConVar cvarName(#cvarName, #defaultValue, flags, "", true, min, true, max, [](IConVar* pVar, const char*, float){varName = ((ConVar*)pVar)->GetBool();})
+#define DECLARE_GLOBAL_BOOL(varName, cvarName) \
+	extern bool varName; \
+	extern ConVar cvarName
+#else
+#define GLOBAL_BOOL(arName, cvarName, defaultValue, defaultValueCpp, flags, min, max) \
+	ConVar cvarName(#cvarName, #defaultValue, flags, "", true, min, true, max)
+#define DECLARE_GLOBAL_BOOL(varName, cvarName) \
+	extern ConVar cvarName
+#endif
+
 #ifndef CLIENT_DLL
 
 #else

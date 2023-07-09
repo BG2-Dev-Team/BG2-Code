@@ -97,6 +97,7 @@ public:
 	//BG2 - returns an abitrary free spawn point from the given list
 #define NUM_SPAWN_LISTS 4 //static value
 	CBaseEntity* HandleSpawnList(const CUtlVector<CBaseEntity *>* spawnLists[NUM_SPAWN_LISTS]);
+	CBaseEntity* HandleSpawnListFFA();
 	//BG2 - Tjoppen - virtuals in CHL2MP_Player
 			bool MayRespawnOnTeamChange(int previousTeam); //BG3 - specialized this function to team changes - Awesome
 			void HandleSpeedChanges(void);
@@ -116,6 +117,7 @@ public:
 	void CreateRagdollEntity( const CTakeDamageInfo& killingInfo );
 	void GiveAllItems( void );
 	void GiveDefaultItems( void );
+	void GiveGunGameItems(void);
 	void SetDefaultAmmoFull(bool bPlaySound = true);
 	bool HasDefaultAmmoFull(void);
 	bool IsAiming() const { return GetActiveWeapon() && GetActiveWeapon()->m_bIsIronsighted; }
@@ -209,6 +211,9 @@ public:
 	int m_iGunKit,
 		m_iAmmoKit,
 		m_iClassSkin;
+
+	int8	m_iGunGameKit; //index in the randomly generated list of gun kits in gun game
+			
 
 	UnlockableProfile m_unlockableProfile;
 

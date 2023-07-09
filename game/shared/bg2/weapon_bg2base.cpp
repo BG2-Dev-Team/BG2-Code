@@ -410,11 +410,7 @@ void CBaseBG2Weapon::Fire( int iAttack )
 		flintlockDelay += RndFloat(0, Def()->m_flRandomAdditionalLockTimeMax) * pingScale;
 	}
 
-#ifndef CLIENT_DLL
-	flintlockDelay += sv_flintlock_delay_offset.GetFloat() + (pPlayer->m_bOppressed);
-#else
 	flintlockDelay += sv_flintlock_delay_offset.GetFloat();
-#endif
 
 	if( sv_turboshots.GetInt() == 0 )
 		m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + max(flintlockDelay, GetAttackRate(iAttack));
@@ -435,7 +431,7 @@ void CBaseBG2Weapon::Fire( int iAttack )
 		pPlayer->SetAnimation( PLAYER_ATTACK1 );
 	}
 	
-	if( sv_infiniteammo.GetInt() == 0 )
+	if( sv_infiniteammo.GetInt() == 0)
 		m_iClip1--;
 
 
@@ -516,33 +512,34 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 	if( sv_simulatedbullets.GetBool() )
 	{
 
+		if (!pPlayer->m_bOppressed || RndBool()) {
+			//Move bullets up slightly so players can shoot over windowcills etc. properly
+			vecSrc.z += 2;
 
-		//Move bullets up slightly so players can shoot over windowcills etc. properly
-		vecSrc.z += 2;
+			CShotManipulator manipulator2(m_vLastForward);
 
-		CShotManipulator manipulator2( m_vLastForward );
+			for (int x = 0; x < numActualShot; x++)
+			{
+				Vector vecDir = manipulator2.ApplySpread(Cone(GetCurrentAmmoSpread()));
 
-		for( int x = 0; x < numActualShot; x++ )
-		{
-			Vector vecDir = manipulator2.ApplySpread( Cone( GetCurrentAmmoSpread() ) );
-
-			QAngle angDir;
-			VectorAngles( vecDir, angDir );
+				QAngle angDir;
+				VectorAngles(vecDir, angDir);
 
 #ifdef USE_ENTITY_BULLET
-			CBullet::BulletCreate( vecSrc, angDir, iDamage,
-									m_Attackinfos[iAttack].m_flConstantDamageRange,
-									m_Attackinfos[iAttack].m_flRelativeDrag, muzzleVelocity,
-									pPlayer, pPlayer->GetActiveWeapon() );
+				CBullet::BulletCreate( vecSrc, angDir, iDamage,
+					m_Attackinfos[iAttack].m_flConstantDamageRange,
+					m_Attackinfos[iAttack].m_flRelativeDrag, muzzleVelocity,
+					pPlayer, pPlayer->GetActiveWeapon() );
 #else
-			SpawnServerBullet( vecSrc, angDir, iDamage,
-									Def()->m_Attackinfos[iAttack].m_flConstantDamageRange,
-									Def()->m_Attackinfos[iAttack].m_flRelativeDrag,
-									muzzleVelocity,
-									Def()->m_flDamageDropoffMultiplier,
-									pPlayer,
-									Def()->m_bPenetrateFlesh);
+				SpawnServerBullet(vecSrc, angDir, iDamage,
+					Def()->m_Attackinfos[iAttack].m_flConstantDamageRange,
+					Def()->m_Attackinfos[iAttack].m_flRelativeDrag,
+					muzzleVelocity,
+					Def()->m_flDamageDropoffMultiplier,
+					pPlayer,
+					Def()->m_bPenetrateFlesh);
 #endif
+			}
 		}
 
 	}

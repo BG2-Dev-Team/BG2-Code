@@ -12,6 +12,7 @@
 #endif
 
 #include <clientscoreboarddialog.h>
+#include "bg3/persistent/versioning.h"
 
 //-----------------------------------------------------------------------------
 // Purpose: Game ScoreBoard
@@ -37,6 +38,10 @@ protected:
 	virtual void PaintBackground();
 	virtual void PaintBorder();
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
+	virtual void ShowPanel(bool bShow) override {
+		NVersioning::MarkBetaTestParticipation();
+		BaseClass::ShowPanel(bShow);
+	}
 
 private:
 	virtual void AddHeader(); // add the start header of the scoreboard

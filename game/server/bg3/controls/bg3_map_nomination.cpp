@@ -43,8 +43,8 @@ commented on the following form:
 
 using namespace std;
 
-ConVar sv_vote_mapchoice_medium_threshold("sv_vote_mapchoice_medium_threshold", "10", FCVAR_GAMEDLL | FCVAR_NOTIFY);
-ConVar sv_vote_mapchoice_large_threshold("sv_vote_mapchoice_medium_threshold", "22", FCVAR_GAMEDLL | FCVAR_NOTIFY);
+ConVar sv_vote_mapchoice_medium_threshold("sv_vote_mapchoice_medium_threshold", "10", FCVAR_GAMEDLL | FCVAR_NOTIFY, "This number of clients or above uses the public_medium keyvalues in the mapelections.res");
+ConVar sv_vote_mapchoice_large_threshold("sv_vote_mapchoice_large_threshold", "22", FCVAR_GAMEDLL | FCVAR_NOTIFY, "This number of clients or above uses the public_large keyvalues in the mapelections.res");
 
 template<class T>
 bool VectorContainsValue(vector<T>& vec, const T& value) {
@@ -220,6 +220,7 @@ namespace NMapNomination {
 		bool validNomination = true;
 		string failMessage = "";
 		string currentMapName;
+		SMapNomination* pOldNomination = NULL;
 
 		SMapNomination nom = { pszMapName, CSteamID() };
 		pNominator->GetSteamID(&nom.m_player);
@@ -233,13 +234,12 @@ namespace NMapNomination {
 			goto end;
 		}
 
+		 //look for old nomination from the same player
 		//verify that this person or the map hasn't nominated yet
 		for (size_t i = 0; i < g_mapNominations.size(); i++) {
 			SMapNomination& n = g_mapNominations[i];
 			if (n.m_player == nom.m_player) {
-				validNomination = false;
-				failMessage = "You can only nominate once per map vote";
-				goto end;
+				pOldNomination = &n;
 			}
 			if (n.m_mapName == nom.m_mapName) {
 				validNomination = false;
@@ -264,8 +264,15 @@ namespace NMapNomination {
 
 	end:
 		if (validNomination) {
-			g_mapNominations.emplace_back(nom);
-			CSay("%s has nominated %s", pNominator->GetPlayerName(), pszMapName);
+			//if old nomination exists, modify that one instead
+			if (pOldNomination) {
+				pOldNomination->m_mapName = nom.m_mapName;
+				CSay("%s changed their nomination to %s", pNominator->GetPlayerName(), pszMapName);
+			}
+			else {
+				g_mapNominations.emplace_back(nom);
+				CSay("%s has nominated %s", pNominator->GetPlayerName(), pszMapName);
+			}
 		}
 		else {
 			CSayPlayer(pNominator, failMessage.c_str());

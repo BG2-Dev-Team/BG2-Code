@@ -46,6 +46,7 @@ extern ConVar mp_respawnstyle, mp_respawntime, mp_rounds, mp_roundtime, mp_ticke
 extern ConVar mp_punish_bad_officer, mp_punish_bad_officer_nextclass;
 
 extern ConVar mp_competitive;
+extern ConVar mp_ffa;
 
 extern ConVar lb_enforce_weapon_amer, lb_enforce_weapon_brit; // , lb_enforce_class_amer, lb_enforce_class_brit;
 extern ConVar lb_enforce_no_buckshot;
@@ -54,12 +55,15 @@ extern ConVar lb_officer_a; //for delegating the american officer for next round
 extern ConVar lb_officer_b;	//for delegating the british officer for next round
 extern ConVar lb_enforce_volley_fire, lb_enforce_volley_fire_tolerance, lb_enforce_no_troll;
 
+
+
 inline bool IsLinebattle()	{ return mp_respawnstyle.GetInt() == 4; }
 inline bool IsTicketMode()	{ return mp_respawnstyle.GetInt() == 3; }
 inline bool IsLMS()			{ return mp_respawnstyle.GetInt() == 2 || IsLinebattle(); }
 inline bool IsLMSstrict()	{ return mp_respawnstyle.GetInt() == 2; }
 inline bool IsSkirmish()	{ return mp_respawnstyle.GetInt() == 1; }
 inline bool UseLineSpawn()	{ return IsLinebattle(); }
+inline bool IsFFA()			{ extern bool g_bFFA; return g_bFFA; }
 
 void CSay(const char* pszFormat, ...);
 void CSayPlayer(CHL2MP_Player* pRecipient, const char* pszFormat, ...);

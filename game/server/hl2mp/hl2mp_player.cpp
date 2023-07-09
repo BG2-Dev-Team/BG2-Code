@@ -50,6 +50,7 @@
 #include "bg3/bg3_scorepreserve.h"
 #include "bg3/Bots/bg3_bot_influencer.h"
 #include "EntityFlame.h"
+#include "bg3_gungame.h"
 //
 
 extern ConVar mp_autobalanceteams;
@@ -63,7 +64,7 @@ ConVar sv_saferespawntime("sv_saferespawntime", "2.5f", FCVAR_GAMEDLL | FCVAR_NO
 //
 
 //BG2 - Spawn point optimization test - HairyPotter
-CUtlVector<CBaseEntity *> g_MultiSpawns, g_MultiPrioritySpawns, g_AmericanSpawns, g_BritishSpawns, g_AmericanPrioritySpawns, g_BritishPrioritySpawns;
+CUtlVector<CBaseEntity *> g_MultiSpawns, g_MultiPrioritySpawns, g_AmericanSpawns, g_BritishSpawns, g_AmericanPrioritySpawns, g_BritishPrioritySpawns, g_FFA_Spawns;
 //
 
 ConVar weapon_test("weapon_test", "0", FCVAR_HIDDEN | FCVAR_GAMEDLL);
@@ -107,6 +108,7 @@ END_DATADESC()
 LINK_ENTITY_TO_CLASS(info_player_american, CSpawnPoint);
 LINK_ENTITY_TO_CLASS(info_player_british, CSpawnPoint);
 LINK_ENTITY_TO_CLASS(info_player_multispawn, CSpawnPoint);
+LINK_ENTITY_TO_CLASS(info_player_ffa, CSpawnPoint);
 //
 
 IMPLEMENT_SERVERCLASS_ST(CHL2MP_Player, DT_HL2MP_Player)
@@ -168,6 +170,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState(this)
 
 	//BG2 - Default weapon kits. -Hairypotter
 	m_iGunKit = 0;
+	m_iGunGameKit = 0;
 	m_bNoJoinMessage = false;
 	m_iCurrentAmmoKit = m_iAmmoKit = AMMO_KIT_BALL;
 	//
@@ -329,7 +332,7 @@ void CHL2MP_Player::GiveDefaultItems(void)
 
 	//if we're a bot, randomize our gun kit
 	ConVar* pWeaponKitEnforcer = GetTeamNumber() == TEAM_AMERICANS ? &lb_enforce_weapon_amer : &lb_enforce_weapon_brit;
-	if ((IsFakeClient() && !pWeaponKitEnforcer->GetBool()) || m_bOppressed) {
+	if ((IsFakeClient() && !pWeaponKitEnforcer->GetBool())) {
 		m_iGunKit = RandomInt(0, m_pCurClass->numChooseableWeapons() - 1);;
 	}
 
@@ -357,8 +360,52 @@ void CHL2MP_Player::GiveDefaultItems(void)
 	//Give extra ammo from kit
 	/*if (k.m_pszAmmoOverrideName) {
 		CBasePlayer::SetAmmoCount(k.m_iAmmoOverrideCount, GetAmmoDef()->Index(k.m_pszAmmoOverrideName));
-	}*/
+	}*/	
+}
+
+void CHL2MP_Player::GiveGunGameItems(void)
+{
+	//BG2 - Tjoppen - default equipment - also strip old equipment
+	RemoveAllItems(false);
+
+	//remember which ammo kit we spawned with
+	m_iCurrentAmmoKit = m_iAmmoKit;
+
+	//give the chosen weapons
+	const NGunGame::SGunGameKit& ggk = *(NGunGame::GetGunKitFromIndex(m_iGunGameKit));
+	const CGunKit* k = (ggk.m_pOrigKit);
 	
+	CBaseEntity* pGrenadeEnt = NULL;
+	if (ggk.m_iWeapon == 0) {
+		GiveNamedItem(k->m_pszWeaponPrimaryName);
+	} 
+	else if (ggk.m_iWeapon == 1) {
+		CBaseEntity* pEnt = GiveNamedItem(k->m_pszWeaponSecondaryName);
+		if (Q_strcmp("weapon_frag", k->m_pszWeaponSecondaryName) == 0) {
+			pGrenadeEnt = pEnt;
+			CBasePlayer::SetAmmoCount(1, GetAmmoDef()->Index("Grenade"));
+			CBasePlayer::SetAmmoCount(99, GetAmmoDef()->Index("Grenade"));
+		}
+	}
+	else if (ggk.m_iWeapon == 2) {
+		GiveNamedItem(k->m_pszWeaponTertiaryName);
+	}
+
+	//always give bottle weapon as backup
+	GiveNamedItem("weapon_bottle");
+
+	//Force switch to grenade if we have it
+	if (pGrenadeEnt)
+		Weapon_Switch((CBaseCombatWeapon*)pGrenadeEnt);
+
+	//Apply kit-specific speed modifier
+	AddSpeedModifier(k->m_iMovementSpeedModifier, ESpeedModID::Weapon);
+
+	//Give primary and secondary ammo
+	//for some reason calling this below overrides our grenade count even when our class doesn't have grenades...
+	if (!pGrenadeEnt)
+		SetDefaultAmmoFull(true);
+
 }
 
 ConVar lb_ammo_multiplier = ConVar("lb_ammo_multiplier", "1", FCVAR_GAMEDLL, "Multipliers starting ammo during linebattle", true, 0.1f, true, 5.0f);
@@ -370,7 +417,7 @@ void CHL2MP_Player::SetDefaultAmmoFull(bool bPlaySound) {
 		if (IsLinebattle()) ammoCount *= lb_ammo_multiplier.GetFloat();
 		CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
 		if (m_pCurClass->m_pszSecondaryAmmo && !mp_disable_firearms.GetBool())
-			CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
+			CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index("Grenade"));
 		
 		if (bPlaySound)
 			EmitSound("AmmoCrate.Give");
@@ -533,27 +580,10 @@ void CHL2MP_Player::Spawn(void)
 	BG3Buffs::RallyPlayer(0, this);
 
 	if (m_bOppressed) {
-		
 		if (RndFloat() < 0.05f) {
-			// instantly join spectators
-			HandleCommand_JoinTeam(TEAM_SPECTATOR);
-		}
-		else {
-			if (RndFloat() < 0.3f) {
-				SetHealth(1);
-			}
-			if (RndFloat() < 0.2f) {
-				RemoveAllWeapons();
-				GiveNamedItem("weapon_knife");
-			}
-			if (RndFloat() < 0.2f) {
-				AddSpeedModifier(-40, ESpeedModID::Weapon);
-			}
-			if (RndFloat() < 0.1f) {
-				Vector pos = GetAbsOrigin();
-				pos.z -= 30;
-				SetAbsOrigin(pos);
-			}
+			Vector pos = GetAbsOrigin();
+			pos.z -= 30;
+			SetAbsOrigin(pos);
 		}
 	}
 }
@@ -952,7 +982,13 @@ void CHL2MP_Player::UpdateToMatchClassWeaponAmmoUniform() {
 	VerifyKitAmmoUniform();
 	PlayermodelTeamClass(); //BG2 - Just set the player models on spawn. We have the technology. -HairyPotter
 	//Sleeve skins dependent on player's skin, so give weapons second
-	GiveDefaultItems();
+	if (NGunGame::g_bGunGameActive) {
+		GiveGunGameItems();
+	}
+	else {
+		GiveDefaultItems();
+	}
+		
 
 	//post-everything unlockable code for bodygroups and special functions
 	CUtlVector<Unlockable*>& bdys = *(Unlockable::unlockablesOfType(EUnlockableType::Bodygroup));
@@ -1670,7 +1706,7 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 			//Check for french officer
 			//checking model is easier, because player could change kit but not have spawned as it yet.
 			if (GetTeamNumber() == TEAM_AMERICANS && strcmp(GetModelName().ToCStr(), MODEL_AFRENCHOFFICER) == 0) {
-				pClassString = "Gre";
+				//pClassString = "Gre";
 				bFrenchOverride = true;
 			}
 			break;
@@ -1681,8 +1717,10 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 			pClassString = "Ski";
 			break;
 		case CLASS_LIGHT_INFANTRY:
-			if (GetTeamNumber() == TEAM_AMERICANS)
+			if (GetTeamNumber() == TEAM_AMERICANS) {
+				bFrenchOverride = true;
 				pClassString = "Gre"; //BG3 - Awesome - french grenadier is in light infantry slot...
+			}
 			else
 				pClassString = "Linf";
 			break;
@@ -1697,7 +1735,7 @@ void CHL2MP_Player::HandleVoicecomm(int comm)
 		switch (GetTeamNumber())
 		{
 		case TEAM_AMERICANS:
-			pTeamString = "American";
+			pTeamString = bFrenchOverride ? "French" : "American";
 			break;
 		case TEAM_BRITISH:
 			pTeamString = "British";
@@ -2301,9 +2339,9 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if (pAttacker->IsPlayer())
 	{
 		CBasePlayer * pAttacker2 = (CBasePlayer *)pAttacker;
-		//subtract 3x damage for attacking teammates!
+		//subtract damage for attacking teammates!
 		pAttacker2->IncrementDamageScoreCount((int)inputInfo.GetDamage()
-			* (GetTeamNumber() == pAttacker2->GetTeamNumber() ? mp_teamdamage_score_multiplier.GetInt() : 1));
+			* (GetTeamNumber() == pAttacker2->GetTeamNumber() && !IsFFA() ? mp_teamdamage_score_multiplier.GetInt() : 1));
 	}
 
 	//BG2 - Tjoppen - take damage => lose some stamina
@@ -2512,6 +2550,54 @@ CBaseEntity* CHL2MP_Player::HandleSpawnList(const CUtlVector<CBaseEntity *>* spa
 	return NULL;
 }
 
+CBaseEntity* CHL2MP_Player::HandleSpawnListFFA()
+{
+	const CUtlVector<CBaseEntity*>& spawns = g_FFA_Spawns;
+
+	//BG2 - Tjoppen - the code below was broken out of EntSelectSpawnPoint()
+	int offset = RandomInt(0, spawns.Count() - 1);	//start at a random offset into the list
+
+	bool competitive = mp_competitive.GetBool();
+
+	for (int x = 0; x < spawns.Count(); x++)
+	{
+		CSpawnPoint *pSpawn = static_cast<CSpawnPoint*>(spawns[(x + offset) % spawns.Count()]);
+		if (pSpawn
+			&& !pSpawn->m_bReserved
+			&& pSpawn->CanSpawnClass(m_iNextClass)
+			&& pSpawn->IsEnabled()
+			&& (!IsFakeClient() || pSpawn->SupportsBots())
+			&& (!pSpawn->BotsOnly() || IsFakeClient())
+			&& ((competitive && pSpawn->IsCompetitive())
+				|| (!competitive && pSpawn->IsCasual())
+				)
+			)
+		{
+
+			CBaseEntity *ent = NULL;
+			bool IsTaken = false;
+			//Sphere did have range of 32 units, but for FFA let's move it farther apart to give more breathing room
+			for (CEntitySphereQuery sphere(pSpawn->GetAbsOrigin(), 256); (ent = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity())
+			{
+				// Check to see if the ent is a player.
+				if (ent->IsPlayer() && ent->IsAlive())
+				{
+					IsTaken = true;
+					//Warning("\tSpawnpoint blocked by %s\n", ((CBasePlayer*)(ent))->GetPlayerName());
+				}
+			}
+			if (IsTaken) //Retry?
+				continue;
+
+			pSpawn->m_bReserved = true;
+			return pSpawn;
+		}
+	}
+	
+
+	return NULL;
+}
+
 ConVar sv_class_switch_time("sv_class_switch_time", "10", FCVAR_GAMEDLL | FCVAR_NOTIFY, "How long after spawning a player will be able to change class\n");
 ConVar sv_class_switch_time_lb_multiplier("sv_class_switch_time_lb_multiplier", "3", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Multiplier for sv_class_switch_time for linebattle mode\n");
 CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint(void)
@@ -2528,37 +2614,50 @@ CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint(void)
 	if (GetTeamNumber() <= TEAM_SPECTATOR)
 		return NULL;	//BG2 - Tjoppen - spectators/unassigned don't spawn..
 
+	
 	CBaseEntity *pSpot = NULL;
-	CUtlVector<CBaseEntity *>* spots;
-	CUtlVector<CBaseEntity *>* prioritySpots;
-
-	if (GetTeamNumber() == TEAM_AMERICANS) {
-		spots = &g_AmericanSpawns;
-		prioritySpots = &g_AmericanPrioritySpawns;
+	if (IsFFA()) {
+		pSpot = HandleSpawnListFFA();
 	}
-	else if (GetTeamNumber() == TEAM_BRITISH) {
-		spots = &g_BritishSpawns;
-		prioritySpots = &g_BritishPrioritySpawns;
-	}	
-	else
-		return NULL;
+	else {
+		CUtlVector<CBaseEntity *>* spots;
+		CUtlVector<CBaseEntity *>* prioritySpots;
 
-	const CUtlVector<CBaseEntity*>* spawnLists[] = { prioritySpots, &g_MultiPrioritySpawns, spots, &g_MultiSpawns };
+		if (GetTeamNumber() == TEAM_AMERICANS) {
+			spots = &g_AmericanSpawns;
+			prioritySpots = &g_AmericanPrioritySpawns;
+		}
+		else if (GetTeamNumber() == TEAM_BRITISH) {
+			spots = &g_BritishSpawns;
+			prioritySpots = &g_BritishPrioritySpawns;
+		}
+		else
+			return NULL;
 
-	pSpot = HandleSpawnList(spawnLists);
+		const CUtlVector<CBaseEntity*>* spawnLists[] = { prioritySpots, &g_MultiPrioritySpawns, spots, &g_MultiSpawns };
+
+		pSpot = HandleSpawnList(spawnLists);
+	}
+	
 
 	if (pSpot)
 		return pSpot;
 
-	switch (GetTeamNumber())
-	{
-	case TEAM_BRITISH:
-		Warning("PutClientInServer: There are too few British spawns or they are too close together, or someone was obstructing them.\n");
-		break;
-	case TEAM_AMERICANS:
-		Warning("PutClientInServer: There are too few American spawns or they are too close together, or someone was obstructing them.\n");
-		break;
+	if (IsFFA()) {
+		CSay("PutClientInServer: There are too few Free-For-All spawns or they are too close together, or someone was obstructing them.\n");
 	}
+	else {
+		switch (GetTeamNumber())
+		{
+		case TEAM_BRITISH:
+			CSay("PutClientInServer: There are too few British spawns or they are too close together, or someone was obstructing them.\n");
+			break;
+		case TEAM_AMERICANS:
+			CSay("PutClientInServer: There are too few American spawns or they are too close together, or someone was obstructing them.\n");
+			break;
+		}
+	}
+	
 
 	//Send them to the info_itermission first, rather than potentially sending them way outside of the borders of the map. -HairyPotter
 	if (m_pIntermission)
@@ -2789,7 +2888,7 @@ bool CHL2MP_Player::CanHearAndReadChatFrom(CBasePlayer *pPlayer)
 	if (!pPlayer)
 		return false;
 
-	return true;
+	return m_bGagged == ToHL2MPPlayer(pPlayer)->m_bGagged;
 }
 
 void CHL2MP_Player::RemoveRagdolls() {
