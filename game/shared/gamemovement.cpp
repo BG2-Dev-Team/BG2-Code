@@ -2489,10 +2489,12 @@ void CGameMovement::PlaySwimSound()
 	MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.Swim" );
 }
 
+static float sqr(float a) { return a*a; }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+ConVar sv_disable_fast_bhop("sv_disable_fast_bhop", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_GAMEDLL, "If non-zero, blocks players from jumping while moving too fast.");
 bool CGameMovement::CheckJumpButton( void )
 {
 #ifndef CLIENT_DLL
@@ -2562,7 +2564,6 @@ bool CGameMovement::CheckJumpButton( void )
 
 	//stamina drain for jumping
 	int drain = STAMINA_DRAIN_JUMP;
-
 	if (pHL2Player->m_iStamina < drain)
 		return false;				//don't drain unless we can cover some height
 	//
@@ -2577,6 +2578,17 @@ bool CGameMovement::CheckJumpButton( void )
 	// Still updating the eye position.
 	if ( player->m_Local.m_flDuckJumpTime > 0.0f )
 		return false;
+
+	//No bhopping or phoon nonsense
+	if (sv_disable_fast_bhop.GetBool()) {
+		float maxSpeedSqr = sqr(player->GetPlayerMaxSpeed()) + 1;
+		Vector xyVelocity = mv->m_vecVelocity;
+		float xySpeedSqr = sqr(xyVelocity.x) + sqr(xyVelocity.y); //comparing squares is faster than doing square roots
+		if (xySpeedSqr > maxSpeedSqr) {
+			return false; //get bg_wrecked
+		}
+	}
+	
 
 
 	// In the air now.

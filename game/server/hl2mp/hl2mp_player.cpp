@@ -409,16 +409,21 @@ void CHL2MP_Player::GiveGunGameItems(void)
 }
 
 ConVar lb_ammo_multiplier = ConVar("lb_ammo_multiplier", "1", FCVAR_GAMEDLL, "Multipliers starting ammo during linebattle", true, 0.1f, true, 5.0f);
+ConVar mp_ammo_override = ConVar("mp_ammo_override", "0", FCVAR_GAMEDLL, "Overrides ammo counts to specified amount, if non-zero");
 void CHL2MP_Player::SetDefaultAmmoFull(bool bPlaySound) {
 	//Msg("Filling ammo for %s\n", GetPlayerName());
 	if (!HasDefaultAmmoFull()) {
 		//Set primary and secondary ammo
 		int ammoCount = m_pCurClass->m_iDefaultPrimaryAmmoCount;
 		if (IsLinebattle()) ammoCount *= lb_ammo_multiplier.GetFloat();
+		if (mp_ammo_override.GetInt() > 0) ammoCount = mp_ammo_override.GetInt() - 1;
 		CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
-		if (m_pCurClass->m_pszSecondaryAmmo && !mp_disable_firearms.GetBool())
-			CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index("Grenade"));
-		
+		if (m_pCurClass->m_pszSecondaryAmmo && !mp_disable_firearms.GetBool()){
+			int secondaryAmmo = m_pCurClass->m_iDefaultSecondaryAmmoCount;
+			if (mp_ammo_override.GetInt() > 0) secondaryAmmo = mp_ammo_override.GetInt();
+			CBasePlayer::SetAmmoCount(secondaryAmmo, GetAmmoDef()->Index("Grenade"));
+		}
+			
 		if (bPlaySound)
 			EmitSound("AmmoCrate.Give");
 	}
@@ -428,9 +433,11 @@ bool CHL2MP_Player::HasDefaultAmmoFull() {
 	int primaryAmmoCount = CBasePlayer::GetAmmoCount(GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
 	int idealPrimaryAmmoCount = m_pCurClass->m_iDefaultPrimaryAmmoCount;
 	if (IsLinebattle()) idealPrimaryAmmoCount *= lb_ammo_multiplier.GetFloat();
+	if (mp_ammo_override.GetInt() > 0) idealPrimaryAmmoCount = mp_ammo_override.GetInt() - 1;
 	if (m_pCurClass->m_pszSecondaryAmmo && !mp_disable_firearms.GetBool()){
 		int secondaryAmmoCount = CBasePlayer::GetAmmoCount(GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));
 		int idealSecondaryAmmoCount = m_pCurClass->m_iDefaultSecondaryAmmoCount;
+		if (mp_ammo_override.GetInt() > 0) idealSecondaryAmmoCount = mp_ammo_override.GetInt();
 		return primaryAmmoCount >= idealPrimaryAmmoCount && secondaryAmmoCount >= idealSecondaryAmmoCount;
 	}
 	else {
