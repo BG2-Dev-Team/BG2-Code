@@ -51,7 +51,7 @@ public:
 	
 	void LocalizeOfficerViewLabels();
 	void LocalizeEffectLabels(int iRallyFlags);
-	void PositionEffectLabels();
+	void PositionEffectLabels(int iRallyFlags);
 	
 	friend void RallyEffectCallback(const CEffectData& data);
 private:
@@ -85,14 +85,14 @@ CBuffIcons* g_pBuffIcons;
 CBuffIcons::CBuffIcons(const char *pElementName) :
 CHudElement(pElementName), BaseClass(NULL, "BuffIcons")
 {
-	Warning("Creating BuffIcons!\n");
+	//Warning("Creating BuffIcons!\n");
 	g_pBuffIcons = this;
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
 	Color ColourWhite(255, 255, 255, 255);
 	SetHiddenBits(HIDEHUD_MISCSTATUS);
 	SetSize(ScreenWidth(), ScreenHeight()); //For whatever reason, this has to be set, otherwise the game won't set the dimensions properly. -HairyPotter
-	
+	SetZPos(1000);
 	m_pCurIcon = NULL;
 	m_flNextCommandLabelUpdate = 0.0f;
 
@@ -368,13 +368,15 @@ void CBuffIcons::LocalizeEffectLabels(int iRallyFlags) {
 		break;
 	case NERF_SLOW:
 		text = BG3Buffs::GetTextForBuff(BG3Buffs::SLOW);
+		break;
 	}
 	m_pBuffEffectLabel->SetText(text);
 	m_pBuffEffectLabel->SizeToContents();
+	Msg("%i", iRallyFlags);
 }
 
-void CBuffIcons::PositionEffectLabels() {
-	if (m_bOfficerView) {
+void CBuffIcons::PositionEffectLabels(int iRallyFlags) {
+	if (m_bOfficerView && iRallyFlags != NERF_SLOW) {
 		m_pBuffEffectLabel->SetPos(ICON_WIDTH_HEIGHT * 4, 0);
 	}
 	else {
@@ -392,10 +394,11 @@ void CBuffIcons::HideShowLabels(bool bVisible) {
 
 void RallyEffectCallBack(const CEffectData& data) {
 	C_HL2MP_Player* pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
+	Msg(__FUNCTION__ "\n");
 
 	if (pPlayer->RallyGetCurrentRallies()) {
 		g_pBuffIcons->LocalizeEffectLabels(pPlayer->RallyGetCurrentRallies());
-		g_pBuffIcons->PositionEffectLabels();
+		g_pBuffIcons->PositionEffectLabels(pPlayer->RallyGetCurrentRallies());
 	}
 	g_flLastBuffTime = gpGlobals->curtime;
 }

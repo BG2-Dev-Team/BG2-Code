@@ -106,6 +106,11 @@ namespace BG3Buffs {
 		if (newRallyFlags == -1)
 			return false;
 
+		//Officer can only buff when nerfed if it's with Rally Round
+		if (pPlayer && pPlayer->m_iCurrentRallies == NERF_SLOW && newRallyFlags != RALLY_RALLY_ROUND) {
+			return false;
+		}
+
 		//Okay, so we can rally our fellow players now...
 		//First determine our buff radius
 		extern ConVar mp_respawnstyle;
@@ -230,8 +235,8 @@ namespace BG3Buffs {
 			return false;
 
 		//slow nerf suppresses officer rally
-		if (pRequester->m_iCurrentRallies == NERF_SLOW)
-			return false;
+		//if (pRequester->m_iCurrentRallies == NERF_SLOW)
+			//return false;
 
 		//we've passed all checks, return true
 			return true;
@@ -417,6 +422,10 @@ CON_COMMAND_F(rallyme, "", FCVAR_CHEAT | FCVAR_HIDDEN) {
 	CHL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_GetCommandClient());
 	if (pPlayer) {
 		BG3Buffs::RallyPlayer(NERF_SLOW, pPlayer);
+		//notify clients of rallying, activating HUD events
+		CEffectData data;
+		CSingleUserRecipientFilter filter = CSingleUserRecipientFilter(pPlayer);
+		DispatchEffect("RalEnab", data, filter);
 
 		//Set end and next rally times
 		ConVar* pcvEndTime = EndRallyTimeCvarFor(pPlayer->GetTeamNumber());

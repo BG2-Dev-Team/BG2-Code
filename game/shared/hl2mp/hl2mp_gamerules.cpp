@@ -690,8 +690,7 @@ void CHL2MPRules::HandleScores(int iTeam, int iScore, int msg_type, bool bRestar
 			m_iCurrentRound++;
 		}
 
-		//swap teams if using tickets
-		// BG2 - VisualMelon - decide whether to swap teams or not
+		// BG3 - Awesome - swap teams if the situation calls for it
 		int iSwapTeam = mp_swapteams.GetInt();
 		bool bSwapTeam = false;
 		if (bCycleRound

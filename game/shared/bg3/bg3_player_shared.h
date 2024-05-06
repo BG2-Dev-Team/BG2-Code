@@ -75,9 +75,9 @@ enum
 */
 #if 1
 #define SPEED_INFANTRY		195
-#define SPEED_OFFICER		200 //BG3 - was 210
+#define SPEED_OFFICER		205 //BG3 - was 210
 #define SPEED_OFFICER_HEAVY	195	//BG3 - speed of officers carrying carbine
-#define SPEED_SNIPER		205
+#define SPEED_SNIPER		200
 #define SPEED_SKIRMISHER	210 //BG3 - was 200 - native and minutemen
 #define SPEED_LIGHT_INF		200 //BG3 - was 198
 #define SPEED_GRENADIER		185
@@ -245,7 +245,7 @@ VCOMM RALLYING DEFINITIONS - these are just mergers of the raw rally types defin
 #define RALLY_RETREAT			(RALLY_SPEED_RELOAD | RALLY_ARMOR)
 #define RALLY_RETREAT_DURATION		RALLY_DURATION
 
-#define NERF_SLOW_DURATION			4.f
+#define NERF_SLOW_DURATION			3.f
 #endif
 
 

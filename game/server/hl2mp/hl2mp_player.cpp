@@ -316,6 +316,8 @@ void CHL2MP_Player::GiveAllItems(void)
 	GiveNamedItem("weapon_frag");
 }
 
+ConVar mp_ammo_override = ConVar("mp_ammo_override", "0", FCVAR_GAMEDLL, "Overrides ammo counts to specified amount, if non-zero");
+
 void CHL2MP_Player::GiveDefaultItems(void)
 {
 	//BG2 - Tjoppen - default equipment - also strip old equipment
@@ -338,7 +340,10 @@ void CHL2MP_Player::GiveDefaultItems(void)
 
 	//give the chosen weapons
 	const CGunKit& k = m_pCurClass->m_aWeapons[m_iGunKit];
-	GiveNamedItem(k.m_pszWeaponPrimaryName);
+	//don't give shooting-only guns when ammo override == -1
+	if (mp_ammo_override.GetInt() != -1 || CWeaponDef::GetDefForWeapon(k.m_pszWeaponPrimaryName)->m_Attackinfos[1].m_iAttacktype != ATTACKTYPE_NONE) {
+		GiveNamedItem(k.m_pszWeaponPrimaryName);
+	}
 	if (k.m_pszWeaponSecondaryName) {
 		GiveNamedItem(k.m_pszWeaponSecondaryName);
 		if (k.m_pszWeaponTertiaryName) {
@@ -350,11 +355,6 @@ void CHL2MP_Player::GiveDefaultItems(void)
 	AddSpeedModifier(k.m_iMovementSpeedModifier, ESpeedModID::Weapon);
 
 	//Give primary and secondary ammo
-	/*extern ConVar lb_ammo_multiplier;
-	int ammoCount = !IsLinebattle() ? m_pCurClass->m_iDefaultPrimaryAmmoCount : m_pCurClass->m_iDefaultPrimaryAmmoCount * lb_ammo_multiplier.GetFloat(); //* 2;
-	CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
-	if (m_pCurClass->m_pszSecondaryAmmo && !mp_disable_firearms.GetBool())
-		CBasePlayer::SetAmmoCount(m_pCurClass->m_iDefaultSecondaryAmmoCount, GetAmmoDef()->Index(m_pCurClass->m_pszSecondaryAmmo));*/
 	SetDefaultAmmoFull(true);
 
 	//Give extra ammo from kit
@@ -409,18 +409,19 @@ void CHL2MP_Player::GiveGunGameItems(void)
 }
 
 ConVar lb_ammo_multiplier = ConVar("lb_ammo_multiplier", "1", FCVAR_GAMEDLL, "Multipliers starting ammo during linebattle", true, 0.1f, true, 5.0f);
-ConVar mp_ammo_override = ConVar("mp_ammo_override", "0", FCVAR_GAMEDLL, "Overrides ammo counts to specified amount, if non-zero");
 void CHL2MP_Player::SetDefaultAmmoFull(bool bPlaySound) {
-	//Msg("Filling ammo for %s\n", GetPlayerName());
-	if (!HasDefaultAmmoFull()) {
+	
+	int ammoOverride = mp_ammo_override.GetInt();
+
+	if (ammoOverride != -1 && !HasDefaultAmmoFull()) {
 		//Set primary and secondary ammo
 		int ammoCount = m_pCurClass->m_iDefaultPrimaryAmmoCount;
 		if (IsLinebattle()) ammoCount *= lb_ammo_multiplier.GetFloat();
-		if (mp_ammo_override.GetInt() > 0) ammoCount = mp_ammo_override.GetInt() - 1;
+		if (ammoOverride > 0) ammoCount = ammoOverride - 1;
 		CBasePlayer::SetAmmoCount(ammoCount, GetAmmoDef()->Index(m_pCurClass->m_pszPrimaryAmmo));
 		if (m_pCurClass->m_pszSecondaryAmmo && !mp_disable_firearms.GetBool()){
 			int secondaryAmmo = m_pCurClass->m_iDefaultSecondaryAmmoCount;
-			if (mp_ammo_override.GetInt() > 0) secondaryAmmo = mp_ammo_override.GetInt();
+			if (ammoOverride > 0) secondaryAmmo = ammoOverride;
 			CBasePlayer::SetAmmoCount(secondaryAmmo, GetAmmoDef()->Index("Grenade"));
 		}
 			
@@ -774,6 +775,11 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 			pVictim->m_iStamina = pAttacker->IsUsingBuckshot() ? min(50, m_iStamina) : 0;
 			BG3Buffs::RallyPlayer(0, pVictim);
 			BG3Buffs::RallyPlayer(NERF_SLOW, pVictim);
+
+			//notify clients of rallying, activating HUD events
+			CEffectData data;
+			CSingleUserRecipientFilter filter = CSingleUserRecipientFilter(pVictim);
+			DispatchEffect("RalEnab", data, filter);
 		}
 
 		//no-fatal arm hits to grenadiers with lit grenade
@@ -1885,7 +1891,7 @@ bool CHL2MP_Player::IsUsingBuckshot() {
 //visual effects, not functionality. Exact functionality depends on m_iRallyFlags
 void CHL2MP_Player::OnRallyEffectEnable() {
 	//snipers don't get FOV adjustments, so that their aiming still works as normal
-	if (m_iClass == CLASS_SNIPER)
+	if (m_iClass == CLASS_SNIPER || mp_competitive.GetBool())
 		return;
 
 	float FOVoffset = FOV_ADJUST_DEFAULT;

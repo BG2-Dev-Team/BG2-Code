@@ -71,7 +71,7 @@ const int CHARLE_FIRE_DAMAGE = 107; //Formally equivelent to REVOL_FIRE_DAMAGE -
 const int CHARLE_BAYONET_DAMAGE = REVOL_BAYONET_DAMAGE;
 const int CHARLE_BAYONET_RANGE = 80;
 
-const int MIQUELET_FIRE_DAMAGE = 102; //Formally equivelent to REVOL_FIRE_DAMAGE - Awesome
+const int MIQUELET_FIRE_DAMAGE = 100; //Formally equivelent to REVOL_FIRE_DAMAGE - Awesome
 const int MIQUELET_BAYONET_DAMAGE = 59;
 const int MIQUELET_BAYONET_RANGE = 81;
 
@@ -520,6 +520,7 @@ DECLARE_BG2_WEAPON(dutch)
 	m_bWeaponHasSights = true;
 
 	m_flLockTime = 0.06;
+	m_flRandomAdditionalLockTimeMax = 0.08f;
 	//
 
 	//primary
@@ -579,7 +580,7 @@ DECLARE_BG2_WEAPON(miquelet)
 	m_flLockTime = 0.05f;
 
 	//Iron sights viewmodel settings.
-	m_flIronsightFOVOffset = -2.5;
+	m_flIronsightFOVOffset = 0;
 
 	m_bWeaponHasSights = true;
 	//
@@ -587,8 +588,8 @@ DECLARE_BG2_WEAPON(miquelet)
 	//primary
 	m_Attackinfos[0].m_iAttacktype = ATTACKTYPE_FIREARM;
 	m_Attackinfos[0].m_iDamage = MIQUELET_FIRE_DAMAGE;//75;
-	m_Attackinfos[0].m_flAttackrate = 1.0;
-	m_Attackinfos[0].m_flRecoil = 0.6;
+	m_Attackinfos[0].m_flAttackrate = 1.2;
+	m_Attackinfos[0].m_flRecoil = 1.5;
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 11.5f;
 	m_Attackinfos[0].m_flCrouchStill = 3.5f;
@@ -647,6 +648,8 @@ DECLARE_BG2_WEAPON( jaeger )
 	m_bWeaponHasSights = true; 
 	//
 
+	m_flReloadMovementSpeedModifier = 0.6f;
+
 	//primary
 	m_Attackinfos[0].m_iAttacktype			= ATTACKTYPE_FIREARM;
 	m_Attackinfos[0].m_iDamage				= JAEGER_FIRE_DAMAGE;//75;
@@ -698,6 +701,8 @@ DECLARE_BG2_WEAPON( pennsylvania )
 
 	m_bWeaponHasSights = true; 
 	//
+
+	m_flReloadMovementSpeedModifier = 0.6f;
 
 	//primary
 	m_Attackinfos[0].m_iAttacktype			= ATTACKTYPE_FIREARM;
@@ -2051,9 +2056,9 @@ DECLARE_BG2_WEAPON(blunderbuss)
 	m_Attackinfos[0].m_flStandMoving = 15.0f * MOVING_ACCURACY_MULTIPLIER;
 	m_Attackinfos[0].m_flStandStill = 5.0f;
 	//Iron Sights.
-	m_Attackinfos[0].m_flStandAimStill = 2.4f;
+	m_Attackinfos[0].m_flStandAimStill = 2.0f;
 	m_Attackinfos[0].m_flStandAimMoving = 8.1f;
-	m_Attackinfos[0].m_flCrouchAimStill = 2.4f;
+	m_Attackinfos[0].m_flCrouchAimStill = 2.0f;
 	m_Attackinfos[0].m_flCrouchAimMoving = 7.3f;
 	//
 	m_Attackinfos[0].m_flConstantDamageRange = DAMAGE_ADJUSTED_RANGE();
@@ -2062,7 +2067,7 @@ DECLARE_BG2_WEAPON(blunderbuss)
 	m_Attackinfos[0].m_iStaminaDrain = MUSKET_RIFLE_STAMINA_DRAIN;
 
 	m_flShotAimModifier = 0.0f;
-	m_flShotSpread = 5.5f; //tight spread
+	m_flShotSpread = 7.5f; //tight spread
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flShotMuzzleVelocity = MUZZLE_VELOCITY_BUCKSHOT;
 	m_flZeroRange = ZERO_RANGE_PISTOL;

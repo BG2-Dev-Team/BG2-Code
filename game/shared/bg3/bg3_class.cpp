@@ -526,6 +526,7 @@ DEC_BG3_PLAYER_CLASS(BOfficer, off, b) {
 	m_aWeapons[1].m_pszWeaponPrimaryName = "weapon_brownbess_carbine_nobayo";
 	m_aWeapons[1].m_pszWeaponSecondaryName = "weapon_sabre";
 	m_aWeapons[2].m_pszWeaponPrimaryName = "weapon_spontoon";
+	m_aWeapons[2].m_iMovementSpeedModifier = -5;
 	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_serjeant_fusil";
 	m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_smallsword";
 	m_aWeapons[3].m_iMovementSpeedModifier = -10;
@@ -772,6 +773,7 @@ DEC_BG3_PLAYER_CLASS(AOfficer, off, a) {
 	m_aWeapons[2].m_pszWeaponSecondaryName = "weapon_sabre";
 
 	m_aWeapons[3].m_pszWeaponPrimaryName = "weapon_spontoon";
+	m_aWeapons[3].m_iMovementSpeedModifier = -5;
 
 	postClassConstruct(this);
 }

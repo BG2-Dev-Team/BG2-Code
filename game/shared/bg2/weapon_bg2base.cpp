@@ -262,10 +262,12 @@ float CBaseBG2Weapon::GetAccuracy(int iAttack) {
 	float modifier = 0;
 	float multiplier = 1.0f;
 
+	bool onGround = pPlayer->GetFlags() & FL_ONGROUND;
+
 	bool moving = false;
 	if (pPlayer->GetLocalVelocity().LengthSqr() > 25.0f ||
-		!(pPlayer->GetFlags() & FL_ONGROUND)) {
-		moving = !m_bIsIronsighted;	//moving fast enough or jumping increases spread..
+		!onGround) {
+		moving = !m_bIsIronsighted || !onGround;	//moving fast enough or jumping increases spread..
 
 		//also check for extra accuracy penalty from speed buff
 		if (pPlayer->RallyGetCurrentRallies() & RALLY_SPEED && !m_bIsIronsighted && !(pPlayer->m_nButtons & IN_WALK)) {
@@ -286,7 +288,7 @@ float CBaseBG2Weapon::GetAccuracy(int iAttack) {
 	float hipfireMuliplier = sv_hipfire_accuracy.GetFloat();
 #endif*/
 
-	if ((pPlayer->GetFlags() & FL_DUCKING)) //we're crouching
+	if ((pPlayer->GetFlags() & FL_DUCKING) && onGround) //we're crouching
 	{
 		if (moving) //we're moving.
 		{
@@ -303,7 +305,7 @@ float CBaseBG2Weapon::GetAccuracy(int iAttack) {
 				base = Def()->m_Attackinfos[iAttack].m_flCrouchStill;
 		}
 	}
-	else if (moving && pPlayer->m_nButtons & IN_WALK){
+	else if (moving && pPlayer->m_nButtons & IN_WALK && onGround){
 		if (m_bIsIronsighted) //So we're aiming...
 			base = FLerp(Def()->m_Attackinfos[iAttack].m_flStandAimMoving, Def()->m_Attackinfos[iAttack].m_flStandAimStill, 0, 1, ACCURACY_WALK_LERP);
 		else //Hip shot.
@@ -313,9 +315,9 @@ float CBaseBG2Weapon::GetAccuracy(int iAttack) {
 	{
 		if (moving) //We're standing and moving.
 		{
-			if (m_bIsIronsighted) //So we're aiming...
-				base = Def()->m_Attackinfos[iAttack].m_flStandAimMoving;
-			else //Hip shot.
+			//if (m_bIsIronsighted) //So we're aiming...
+				//base = Def()->m_Attackinfos[iAttack].m_flStandAimMoving;
+			//else //Hip shot.
 				base = Def()->m_Attackinfos[iAttack].m_flStandMoving;
 		}
 		else // We're not moving.
