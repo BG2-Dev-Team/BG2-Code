@@ -84,6 +84,9 @@ ConVar mp_winbonus("mp_winbonus", "200", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Amount o
 ConVar mp_swapteams("mp_swapteams", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Whether to swap teams at end of round (-1 force no, 0 default, 1 force yes)");
 //
 
+ConVar sv_periodic_message("sv_periodic_message", "", FCVAR_GAMEDLL, "Message to show in chat periodically.");
+ConVar sv_periodic_message_interval("sv_periodic_message_interval", "180", FCVAR_GAMEDLL, "Period between periodic chat messages");
+
 //BG2 - Tjoppen - away with these
 /*extern CBaseEntity	 *g_pLastCombineSpawn;
 extern CBaseEntity	 *g_pLastRebelSpawn;*/
@@ -432,6 +435,7 @@ CHL2MPRules::CHL2MPRules()
 
 	m_hRespawnableItemsAndWeapons.RemoveAll();
 	m_tmNextPeriodicThink = 0;
+	m_flNextPeriodicMessage = 0;
 	m_tmDelayedMapChangeTime = FLT_MAX;
 	m_flRestartGameTime = 0;
 	m_bCompleteReset = false;
@@ -1047,6 +1051,14 @@ void CHL2MPRules::Think( void )
 		g_pBritishVotingSystem->AutoMapchoiceElectionThink();
 
 		SetMaxCmdRateAuto();
+
+		if (m_flNextPeriodicMessage < gpGlobals->curtime) {
+			m_flNextPeriodicMessage = gpGlobals->curtime + sv_periodic_message_interval.GetFloat();
+			auto psz = sv_periodic_message.GetString();
+			if (psz && psz[0]) {
+				CSay(psz);
+			}
+		}
 	}
 
 	if (gpGlobals->curtime > m_tmDelayedMapChangeTime) {

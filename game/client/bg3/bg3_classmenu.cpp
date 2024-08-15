@@ -871,7 +871,12 @@ namespace NClassWeaponStats {
 			Q_snprintf(buffer, sizeof(buffer), "%.1fs", pWeapon->m_flApproximateReloadTime);
 			g_pnReloadSpeed->SetText(buffer);
 
-			Q_snprintf(buffer, sizeof(buffer), "%.2fs", pWeapon->m_flLockTime + pWeapon->m_flRandomAdditionalLockTimeMax);
+			if (pWeapon->m_flRandomAdditionalLockTimeMax) {
+				Q_snprintf(buffer, sizeof(buffer), "%.2fs-%.2fs", pWeapon->m_flLockTime, pWeapon->m_flLockTime + pWeapon->m_flRandomAdditionalLockTimeMax);
+			}
+			else {
+				Q_snprintf(buffer, sizeof(buffer), "%.2fs", pWeapon->m_flLockTime);
+			}
 			g_pnLockTime->SetText(buffer);
 		}
 		if (melee) {
@@ -1383,12 +1388,13 @@ Button(pParent, "UnlockMenuButton", "") {
 	SetPaintBackgroundEnabled(false);
 	SetPaintBorderEnabled(false);
 	m_tab = tab;
-	m_bMouseOver = false;
+	m_bMouseOver = m_bBlink = false;
 	g_pTabButtonImage = scheme()->GetImage("classmenu/tab", false);
 	g_pSelectedTabButtonImage = scheme()->GetImage("classmenu/tab_selected", false);
 }
 
 void CTabButton::OnMousePressed(MouseCode code) {
+	m_bBlink = false;
 	g_pClassMenu->ShowTab(m_tab);
 	PlaySelectSound();
 }
@@ -1400,8 +1406,15 @@ void CTabButton::OnCursorEntered() {
 
 void CTabButton::ManualPaint() {
 	IImage* pImage = g_pTabButtonImage;
-	if (m_tab == g_pClassMenu->GetCurrentTab() || m_bMouseOver)
+	if (m_tab == g_pClassMenu->GetCurrentTab() || m_bMouseOver) {
 		pImage = g_pSelectedTabButtonImage;
+	}
+	else if (m_bBlink) {
+		int halftime = (int)(gpGlobals->curtime * 2);
+		if (halftime & 1) {
+			pImage = g_pSelectedTabButtonImage;
+		}
+	}
 
 	pImage->SetSize(GetWide(), GetTall());
 	pImage->SetPos(GetXPos(), GetYPos());
@@ -1515,6 +1528,7 @@ CClassMenu::CClassMenu(vgui::VPANEL pParent) : Frame(NULL, PANEL_CLASSES) {
 	m_aTabButtons[0]->SetText("#BG3_ClassmenuTabMain");
 	m_aTabButtons[1]->SetText("#BG3_ClassmenuTabDamageOverRange");
 	m_aTabButtons[2]->SetText("#BG3_ClassmenuTabUnlockables");
+	m_aTabButtons[2]->m_bBlink = true;
 
 
 	AddChildToTab((m_pDamageOverRangeMenu = new CDamageOverRangeMenu(this)), EClassmenuTab::DAMAGE_OVER_RANGE);

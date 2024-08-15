@@ -217,7 +217,7 @@ public:
 
 	UnlockableProfile m_unlockableProfile;
 
-	void DrainStamina(int iAmount);
+	void DrainStamina(int iAmount, bool noMax = false);
 	//BG2 - Tjoppen - made m_iStamina a network cvar
 	CNetworkVar(int, m_iStamina);
 

@@ -279,6 +279,7 @@ private:
 	
 	CUtlVector<EHANDLE> m_hRespawnableItemsAndWeapons;
 	float m_tmNextPeriodicThink;
+	float m_flNextPeriodicMessage;
 	float m_tmDelayedMapChangeTime;
 	float m_flRestartGameTime;
 	bool m_bCompleteReset;

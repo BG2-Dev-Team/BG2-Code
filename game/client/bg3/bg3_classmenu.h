@@ -390,6 +390,7 @@ public:
 	void OnCursorEntered() override;
 	void OnCursorExited() override { m_bMouseOver = false; }
 	void ManualPaint();
+	bool m_bBlink;
 private:
 	EClassmenuTab m_tab;
 	bool m_bMouseOver;

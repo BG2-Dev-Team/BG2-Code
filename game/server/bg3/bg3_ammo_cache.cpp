@@ -43,11 +43,18 @@ END_DATADESC()
 LINK_ENTITY_TO_CLASS(info_ammo_cache, CAmmoCache);
 
 ConVar mp_ammo_cache_refresh_time("mp_ammo_cache_refresh_time", "30", FCVAR_GAMEDLL);
+ConVar mp_disable_ammo_cache("mp_disable_ammo_cache_on_restart", "0", FCVAR_GAMEDLL);
 
 void CAmmoCache::Spawn() {
 	ThinkSet((BASEPTR) &CAmmoCache::Think);
 	
-	SetNextThink(gpGlobals->curtime + 1.0f);
+	if (mp_disable_ammo_cache.GetBool()) {
+		SetNextThink(FLT_MAX);
+	}
+	else {
+		SetNextThink(gpGlobals->curtime + 1.0f);
+	}
+	
 
 	//clamp our radius to a minimum
 	Clamp(m_flRadius, 0.f, m_flRadius);

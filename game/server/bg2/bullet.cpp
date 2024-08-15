@@ -322,6 +322,9 @@ private:
 				dmg = m_iDamage - (m_iDamage - dmg) * m_flDamageDropoffMultiplier; //scale damage dropof\f
 			}
 
+			//apply global multiplier
+			dmg *= g_flDamageMultiplierShooting;
+
 			//no force!
 			CTakeDamageInfo	dmgInfo( m_pOwner, m_pOwner, m_pWeapon, dmg, DMG_BULLET | /*DMG_PREVENT_PHYSICS_FORCE |*/DMG_CRUSH | DMG_NEVERGIB ); //Changed to avoid asserts. -HairyPotter
 			dmgInfo.SetDamagePosition( tr.endpos );

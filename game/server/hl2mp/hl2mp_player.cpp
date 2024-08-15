@@ -1858,14 +1858,14 @@ void CHL2MP_Player::VerifyKitAmmoUniform() {
 }*/
 
 //BG2 - handle stamina change
-void CHL2MP_Player::DrainStamina(int iAmount)
+void CHL2MP_Player::DrainStamina(int iAmount, bool noMax)
 {
 	extern ConVar sv_stamina;
 	if (!sv_stamina.GetBool())
 		return;
 
 	//limit drain to be no more than 50 at once
-	if (iAmount > 50)
+	if (iAmount > 50 && !noMax)
 		iAmount = 50;
 
 	//scale the stamina if we have the stamina buff

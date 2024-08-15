@@ -55,6 +55,11 @@
 static const Vector g_bludgeonMins(-BLUDGEON_HULL_DIM,-BLUDGEON_HULL_DIM,-BLUDGEON_HULL_DIM);
 static const Vector g_bludgeonMaxs(BLUDGEON_HULL_DIM,BLUDGEON_HULL_DIM,BLUDGEON_HULL_DIM);
 
+DECLARE_GLOBAL_FLOAT(g_flDamageMultiplierMelee, mp_damage_multiplier_melee);
+DECLARE_GLOBAL_FLOAT(g_flDamageMultiplierShooting, mp_damage_multiplier_shooting);
+
+DECLARE_GLOBAL_FLOAT(g_flShootingStaminaDrainMultiplier, mp_stamina_multiplier_shooting);
+
 #ifdef CLIENT_DLL
 #define CBaseBG2Weapon C_BaseBG2Weapon
 #endif

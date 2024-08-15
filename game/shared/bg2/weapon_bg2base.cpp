@@ -115,6 +115,12 @@ ConVar sv_show_damages("sv_show_damages", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, 
 ConVar sv_show_enemy_names("sv_show_enemy_names", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow people to view enemy names in crosshair?");
 ConVar sv_show_friend_names("sv_show_friend_names", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow people to view friendly names in crosshair?");
 
+GLOBAL_FLOAT(g_flDamageMultiplierMelee, mp_damage_multiplier_melee, 1.0, FCVAR_REPLICATED | FCVAR_NOTIFY, 0, 2);
+GLOBAL_FLOAT(g_flDamageMultiplierShooting, mp_damage_multiplier_shooting, 1.0, FCVAR_REPLICATED | FCVAR_NOTIFY, 0, 2);
+
+GLOBAL_FLOAT(g_flShootingStaminaDrainMultiplier, mp_stamina_multiplier_shooting, 1.0, FCVAR_REPLICATED | FCVAR_NOTIFY, 0, 2);
+
+
 ConVar sv_muzzle_velocity_override("sv_muzzle_velocity_override", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "If non-zero, overide muzzle velocities with this value (inch per seconds)");
 //ConVar sv_flintlock_delay("sv_flintlock_delay", "0.135", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "Delay in seconds of the flintlock mechanism (delay bullet firing by this amount)");
 //ConVar sv_flintlock_delay_rifle("sv_flintlock_delay_rifle", "0.0675", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "Delay in seconds of a rifle's flintlock mechanism");
@@ -212,8 +218,8 @@ void CBaseBG2Weapon::DoAttack( int iAttack )
 //
 	if( GetAttackType( iAttack ) == ATTACKTYPE_STAB || GetAttackType( iAttack ) == ATTACKTYPE_SLASH )
 	{
-		if( GetOwner() && (GetOwner()->GetFlags() & FL_DUCKING) )
-			return;
+		//if( GetOwner() && (GetOwner()->GetFlags() & FL_DUCKING) )
+			//return;
 
 		if( mp_disable_melee.GetInt() )
 			return;
@@ -562,6 +568,13 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 		// Fire the bullets, and force the first shot to be perfectly accurate
 		pPlayer->FireBullets( info );
 	}
+
+#endif
+	//recoil-based stamina
+	float recoil = GetRecoil(m_iLastAttack);
+#ifndef CLIENT_DLL
+	pPlayer->DrainStamina(60 * GetRecoil(m_iLastAttack) * g_flShootingStaminaDrainMultiplier, true);
+
 #endif
 	//Disorient the player
 	if (sv_steadyhand.GetInt() == 0)
@@ -572,7 +585,7 @@ void CBaseBG2Weapon::FireBullets( int iAttack )
 		//BG2 - Tjoppen - HACKHACK: weapon attacks get called multiple times on client. until we figure out
 		//							why, multiple recoils must be supressed.
 		if (m_flLastRecoil + 0.1f < gpGlobals->curtime) {
-			pPlayer->ViewPunch(QAngle(-8, random->RandomFloat(-2, 2), 0) * GetRecoil(m_iLastAttack));
+			pPlayer->ViewPunch(QAngle(-8, random->RandomFloat(-2, 2), 0) * recoil);
 		}
 		m_flLastRecoil = gpGlobals->curtime;
 	}
@@ -624,6 +637,9 @@ void CBaseBG2Weapon::Hit( trace_t &traceHit, int iAttack )
 
 		//BG3 - apply aerial damage mod early on
 		if (!(pPlayer->GetFlags() & FL_ONGROUND) && pPlayer->GetMoveType() != MOVETYPE_LADDER) damage += Def()->m_iAerialDamageMod;
+
+		//apply global multiplier
+		damage *= g_flDamageMultiplierMelee;
 
 		//BG2 - Tjoppen - apply no force
 		CTakeDamageInfo info( GetOwner(), GetOwner(), this, damage, DMG_CLUB | DMG_PREVENT_PHYSICS_FORCE | DMG_NEVERGIB | Def()->m_iExtraDamageTypes );
