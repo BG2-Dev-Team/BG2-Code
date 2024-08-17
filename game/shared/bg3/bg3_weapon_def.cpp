@@ -76,6 +76,7 @@ CWeaponDef::CWeaponDef(const char* pszWeaponName) {
 	m_pszWeaponDefName = pszWeaponName;
 
 	m_bShotOnly = false;
+	m_bSlowNerf = false;
 
 	m_iExtraDamageTypes = 0;
 

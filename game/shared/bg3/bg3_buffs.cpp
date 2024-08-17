@@ -339,9 +339,10 @@ namespace BG3Buffs {
 	}
 
 	float	GetRallyInterval(int rallyFlags) {
-		float interval = RALLY_INTERVAL;
+		return RALLY_INTERVAL;
+		/*float interval = RALLY_INTERVAL;
 		if (rallyFlags == RALLY_RALLY_ROUND) interval = RALLY_ROUND_INTERVAL;
-		return interval;
+		return interval;*/
 	}
 
 	float	GetRallyDuration(int rallyFlags) {

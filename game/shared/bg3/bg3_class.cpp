@@ -531,6 +531,16 @@ DEC_BG3_PLAYER_CLASS(BOfficer, off, b) {
 	m_aWeapons[3].m_pszWeaponSecondaryName = "weapon_smallsword";
 	m_aWeapons[3].m_iMovementSpeedModifier = -10;
 
+	m_aWeapons[4].m_pszWeaponPrimaryName = "weapon_serjeant_fusil";
+	m_aWeapons[4].m_pszWeaponSecondaryName = "weapon_rapier";
+	m_aWeapons[4].m_iControllingBit = ULK_3_WEP_FRE_CARB;
+	m_aWeapons[4].m_iMinYear = 1778;
+
+#ifdef CLIENT_DLL
+	m_aWeapons[4].SetLocalizedName("weapon_rapier_brit");
+	m_aWeapons[4].SetLocalizedDesc("i_weapon_rapier_brit");
+#endif
+
 	postClassConstruct(this);
 }
 

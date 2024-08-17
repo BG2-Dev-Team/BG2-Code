@@ -151,7 +151,7 @@ HITGROUP MODIFIERS - used player.cpp - don't change these unless you have a real
 /*
 GRENADE INFORMATION - used in basegrenade_shared.h and other places - I tried to put these definitions in weapon_bg2base.cpp but it wouldn't resolve the externals - Awesome
 */
-#define DMG_GRENADE 172.50f
+#define DMG_GRENADE 175.f
 #define GRENADE_FUSE_LENGTH 5.0f
 
 /*
@@ -171,8 +171,8 @@ m_iCurrentRallies is a bit field so that a player can have multiple rallies at o
 #define RALLY_NUM				8	//Data tables need this, so keep it up-to-date
 
 #define RALLY_DURATION			10.0f	//default until you change the derived macros
-#define RALLY_INTERVAL			50.0f //time a team must wait before their officer can do another rally
-#define RALLY_ROUND_INTERVAL	30.0f //time a team must wait before their officer can do another rally round buff
+#define RALLY_INTERVAL			30.0f //time a team must wait before their officer can do another rally
+//#define RALLY_ROUND_INTERVAL	30.0f //time a team must wait before their officer can do another rally round buff
 
 #define	RALLY_SPEED				(1 << 0)
 #define RALLY_SPEED_MOD			1.09f //Speed multiplier for affected players

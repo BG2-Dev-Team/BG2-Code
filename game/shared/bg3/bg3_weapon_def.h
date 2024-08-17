@@ -143,6 +143,7 @@ public:
 	//bool	m_bSlowDraw;
 	float	m_flIronsightsTime;
 	bool	m_bBreakable;
+	bool	m_bSlowNerf;
 
 	bool	m_bFiresUnderwater,
 			m_bAltFiresUnderwater;

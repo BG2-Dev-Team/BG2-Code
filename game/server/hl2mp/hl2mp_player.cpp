@@ -765,8 +765,8 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 			newInfo.SetDamage(pVictim->GetHealth());
 		}
 		else if (!bFatal
-			&& ((newInfo.GetDamageType() & DMG_BLAST) || (pAttacker->IsUsingBuckshot() && BuckshotHitDrainsStamina(newInfo)))
-			&& (newInfo.GetDamage() > 20 || pAttacker->IsUsingBuckshot())
+			&& ((newInfo.GetDamageType() & DMG_BLAST) || (pAttacker->WeaponHasSlowNerf() && BuckshotHitDrainsStamina(newInfo)))
+			&& (newInfo.GetDamage() > 35 || pAttacker->WeaponHasSlowNerf())
 			&& pVictim->RallyGetCurrentRallies() != RALLY_RALLY_ROUND
 			&& !pVictim->GetPlayerClass()->m_bNerfResistance
 			&& (friendlyfire.GetBool() || !friendly)
@@ -782,8 +782,8 @@ void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &vecDi
 			DispatchEffect("RalEnab", data, filter);
 		}
 
-		//no-fatal arm hits to grenadiers with lit grenade
-		if (!bFatal && !buddha && ptr->hitgroup == HITGROUP_RIGHTARM) {
+		//non-fatal hits to grenadiers with lit grenade
+		if (!bFatal && !buddha && newInfo.GetDamage() > 30 /*&& ptr->hitgroup == HITGROUP_RIGHTARM*/) {
 			CBaseCombatWeapon* pWeapon = pVictim->GetActiveWeapon();
 			CWeaponFrag * pGrenade = dynamic_cast<CWeaponFrag*>(pWeapon);
 			if (pGrenade && pGrenade->IsPrimed()) {
@@ -1886,6 +1886,10 @@ CBaseBG2Weapon* CHL2MP_Player::GetActiveBG3Weapon() {
 bool CHL2MP_Player::IsUsingBuckshot() {										
 	return (m_iCurrentAmmoKit == AMMO_KIT_BUCKSHOT || (GetActiveWeapon() && GetActiveWeapon()->Def()->m_bShotOnly)) 
 		&& (GetActiveBG3Weapon() && GetActiveBG3Weapon()->GetLastAttackType() == ATTACKTYPE_FIREARM); 
+}
+
+bool CHL2MP_Player::WeaponHasSlowNerf() {
+	return (GetActiveBG3Weapon() && GetActiveBG3Weapon()->Def()->m_bSlowNerf && GetActiveBG3Weapon()->GetLastAttackType() == ATTACKTYPE_FIREARM);
 }
 
 //visual effects, not functionality. Exact functionality depends on m_iRallyFlags

@@ -108,7 +108,7 @@ ConVar sv_perfectaim( "sv_perfectaim", "0", FCVAR_CHEAT | FCVAR_NOTIFY | FCVAR_R
 ConVar sv_perfectaim_training("sv_perfectaim_training", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "No spread for bullet weapons, but only when all players are on one team\n");
 ConVar sv_steadyhand( "sv_steadyhand", "0", FCVAR_CHEAT | FCVAR_NOTIFY | FCVAR_REPLICATED, "No recoil for bullet weapons\n" );
 
-ConVar mp_disable_melee( "mp_disable_melee", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "When non-zero, melee weapons are disabled" );
+ConVar mp_disable_melee( "mp_disable_melee", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "1 = melee while crouched disabled, 2 = all melee disabled" );
 ConVar mp_disable_firearms( "mp_disable_firearms", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "When non-zero, firearms are disabled" );
 
 ConVar sv_show_damages("sv_show_damages", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow people to view enemy damages in scoreboard?");
@@ -218,10 +218,12 @@ void CBaseBG2Weapon::DoAttack( int iAttack )
 //
 	if( GetAttackType( iAttack ) == ATTACKTYPE_STAB || GetAttackType( iAttack ) == ATTACKTYPE_SLASH )
 	{
-		//if( GetOwner() && (GetOwner()->GetFlags() & FL_DUCKING) )
-			//return;
+		int disableMelee = mp_disable_melee.GetInt();
 
-		if( mp_disable_melee.GetInt() )
+		if (disableMelee >= 2)
+			return;
+
+		if (disableMelee == 1 && GetOwner() && (GetOwner()->GetFlags() & FL_DUCKING))
 			return;
 
 		//do tracelines for so many seconds
@@ -786,9 +788,9 @@ void CBaseBG2Weapon::Swing( int iAttack, bool bIsFirstAttempt )
 
 	//only allow slashing weapons to hit to head on the first frame
 	//any subsequent hit to the head gets demoted a hit to the chest
-	if( GetAttackType( iAttack ) == ATTACKTYPE_SLASH && traceHit.hitgroup == HITGROUP_HEAD &&
+	/*if( GetAttackType( iAttack ) == ATTACKTYPE_SLASH && traceHit.hitgroup == HITGROUP_HEAD &&
 			gpGlobals->curtime >= m_flStartDemotingHeadhits && !bIsFirstAttempt )
-		traceHit.hitgroup = HITGROUP_CHEST;
+		traceHit.hitgroup = HITGROUP_CHEST;*/
 
 	if ( traceHit.fraction == 1.0f )
 	{

@@ -261,6 +261,7 @@ private:
 
 	CBaseBG2Weapon* GetActiveBG3Weapon();
 	bool IsUsingBuckshot();
+	bool WeaponHasSlowNerf();
 
 public:
 	void	OnRallyEffectEnable(); //visual effects, not functionality. Exact behavior depends on m_iCurrentRallies
