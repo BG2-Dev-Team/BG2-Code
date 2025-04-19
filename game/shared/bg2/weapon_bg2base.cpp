@@ -261,6 +261,7 @@ void CBaseBG2Weapon::DoAttack( int iAttack )
 
 GLOBAL_FLOAT(g_flAccuracyDecay, sv_accuracy_decay, 7.5f, CVAR_FLAGS | FCVAR_CHEAT, 0.0f, 10.f);
 //GLOBAL_FLOAT(g_flHipFireAccuracy, sv_hipfire_accuracy, 1.5f, CVAR_FLAGS | FCVAR_CHEAT, 0.0f, 10.f);
+GLOBAL_BOOL(g_bJumpshooting, sv_jumpshooting, "0", false, CVAR_FLAGS, 0, 1);
 
 float CBaseBG2Weapon::GetAccuracy(int iAttack) {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
@@ -270,7 +271,11 @@ float CBaseBG2Weapon::GetAccuracy(int iAttack) {
 	float modifier = 0;
 	float multiplier = 1.0f;
 
-	bool onGround = pPlayer->GetFlags() & FL_ONGROUND;
+#ifndef CLIENT_DLL
+	bool onGround = (m_bIsIronsighted && g_bJumpshooting) || pPlayer->GetFlags() & FL_ONGROUND;
+#else
+	bool onGround = (m_bIsIronsighted && sv_jumpshooting.GetBool()) || pPlayer->GetFlags() & FL_ONGROUND;
+#endif
 
 	bool moving = false;
 	if (pPlayer->GetLocalVelocity().LengthSqr() > 25.0f ||
@@ -1026,7 +1031,9 @@ void CBaseBG2Weapon::Equip( CBaseCombatCharacter *pOwner )
 #endif
 }
 
+ConVar sv_grenade_damage_multiplier("sv_grenade_damage_multiplier", "1.0", CVAR_FLAGS);
+
 float CBaseBG2Weapon::GetGrenadeDamage()
 {
-	return DMG_GRENADE;
+	return DMG_GRENADE * sv_grenade_damage_multiplier.GetFloat();
 }

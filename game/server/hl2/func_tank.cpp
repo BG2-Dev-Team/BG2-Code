@@ -1183,7 +1183,7 @@ void CFuncTank::ControllerPostFrame( void )
 	{
 		if( !(m_iAmmoCount % 10) )
 		{
-			Msg("Ammo Remaining: %d\n", m_iAmmoCount );
+			//Msg("Ammo Remaining: %d\n", m_iAmmoCount );
 		}
 		
 		if( --m_iAmmoCount == 0 )

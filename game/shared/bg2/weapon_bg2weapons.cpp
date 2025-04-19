@@ -126,7 +126,7 @@ const int FRE_CARBINE_FIRE_DAMAGE = 100;		//damage per ball. between fowler and 
 const int FRE_CARBINE_SHOT_DAMAGE = 28;			//damage per shot. 11 * 1.85 -> 20 -> 8*20 = 160 - VisualMelon - changed to 22 (formlery 20)
 const int FRE_CARBINE_NUM_SHOT = 7;				// BG2 - VisualMelon - formerly 10
 
-const int BLUNDERBUSS_SHOT_DAMAGE = 46;
+const int BLUNDERBUSS_SHOT_DAMAGE = 50;
 
 const int PATTERN_FIRE_DAMAGE = 103;
 
@@ -648,7 +648,7 @@ DECLARE_BG2_WEAPON( jaeger )
 	m_bWeaponHasSights = true; 
 	//
 
-	m_flReloadMovementSpeedModifier = 0.75f;
+	//m_flReloadMovementSpeedModifier = 0.75f;
 
 	//primary
 	m_Attackinfos[0].m_iAttacktype			= ATTACKTYPE_FIREARM;
@@ -702,7 +702,7 @@ DECLARE_BG2_WEAPON( pennsylvania )
 	m_bWeaponHasSights = true; 
 	//
 
-	m_flReloadMovementSpeedModifier = 0.75f;
+	//m_flReloadMovementSpeedModifier = 0.75f;
 
 	//primary
 	m_Attackinfos[0].m_iAttacktype			= ATTACKTYPE_FIREARM;
@@ -2052,9 +2052,9 @@ DECLARE_BG2_WEAPON(blunderbuss)
 	m_Attackinfos[0].m_flRecoil = 1.4;
 	m_Attackinfos[0].m_flRange = MUSKET_RANGE;
 	m_Attackinfos[0].m_flCrouchMoving = 15.0f;
-	m_Attackinfos[0].m_flCrouchStill = 5.0f;
+	m_Attackinfos[0].m_flCrouchStill = 4.0f;
 	m_Attackinfos[0].m_flStandMoving = 15.0f * MOVING_ACCURACY_MULTIPLIER;
-	m_Attackinfos[0].m_flStandStill = 5.0f;
+	m_Attackinfos[0].m_flStandStill = 4.0f;
 	//Iron Sights.
 	m_Attackinfos[0].m_flStandAimStill = 2.0f;
 	m_Attackinfos[0].m_flStandAimMoving = 8.1f;
@@ -2068,7 +2068,7 @@ DECLARE_BG2_WEAPON(blunderbuss)
 
 	m_bSlowNerf = true;
 	m_flShotAimModifier = 0.0f;
-	m_flShotSpread = 14.5f; //wide spread
+	m_flShotSpread = 12.5f; //wide spread
 	m_flMuzzleVelocity = MUZZLE_VELOCITY_SMOOTHBORE;
 	m_flShotMuzzleVelocity = MUZZLE_VELOCITY_BUCKSHOT;
 	m_flZeroRange = ZERO_RANGE_PISTOL;

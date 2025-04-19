@@ -95,14 +95,14 @@ LINK_ENTITY_TO_CLASS( grenade, CBaseGrenade );
 
 BEGIN_PREDICTION_DATA( CBaseGrenade  )
 
-	DEFINE_PRED_FIELD( m_hThrower, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_bIsLive, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_DmgRadius, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+DEFINE_PRED_FIELD( m_hThrower, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
+DEFINE_PRED_FIELD( m_bIsLive, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+DEFINE_PRED_FIELD( m_DmgRadius, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 //	DEFINE_PRED_FIELD_TOL( m_flDetonateTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),
-	DEFINE_PRED_FIELD( m_flDamage, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+DEFINE_PRED_FIELD( m_flDamage, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 
-	DEFINE_PRED_FIELD_TOL( m_vecVelocity, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.5f ),
-	DEFINE_PRED_FIELD_TOL( m_flNextAttack, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),
+DEFINE_PRED_FIELD_TOL( m_vecVelocity, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.5f ),
+DEFINE_PRED_FIELD_TOL( m_flNextAttack, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),
 
 //	DEFINE_FIELD( m_fRegisteredSound, FIELD_BOOLEAN ),
 //	DEFINE_FIELD( m_iszBounceSound, FIELD_STRING ),
@@ -113,6 +113,9 @@ END_PREDICTION_DATA()
 
 // Grenades flagged with this will be triggered when the owner calls detonateSatchelCharges
 #define SF_DETONATE		0x0001
+
+#define CVAR_FLAGS	(FCVAR_GAMEDLL | FCVAR_REPLICATED | FCVAR_NOTIFY)
+ConVar sv_grenade_range_multiplier("sv_grenade_range_multiplier", "1.0", CVAR_FLAGS);
 
 // UNDONE: temporary scorching for PreAlpha - find a less sleazy permenant solution.
 void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
@@ -180,7 +183,7 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 	CBasePlayer *pPlayer = ToBasePlayer(m_hThrower.Get());
 	CTakeDamageInfo info( this, m_hThrower, this, GetBlastForce(), GetAbsOrigin(), /*m_flDamage*/ CBaseBG2Weapon::GetGrenadeDamage(), bitsDamageType, 0, &vecReported );
 
-	RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
+	RadiusDamage(info, GetAbsOrigin(), m_DmgRadius.Get() * sv_grenade_range_multiplier.GetFloat(), CLASS_NONE, NULL);
 
 	UTIL_DecalTrace( pTrace, "Scorch" );
 
